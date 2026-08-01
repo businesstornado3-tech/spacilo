@@ -10,33 +10,257 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FindStorageRouteImport } from './routes/find-storage'
+import { Route as HostRouteImport } from './routes/host'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as ListSpaceRouteImport } from './routes/list-space'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as RenterRouteImport } from './routes/renter'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as TrustRouteImport } from './routes/trust'
+import { Route as HostIndexRouteImport } from './routes/host.index'
+import { Route as HostBookingsRouteImport } from './routes/host.bookings'
+import { Route as HostEarningsRouteImport } from './routes/host.earnings'
+import { Route as HostMessagesRouteImport } from './routes/host.messages'
+import { Route as HostSpacesRouteImport } from './routes/host.spaces'
+import { Route as RenterIndexRouteImport } from './routes/renter.index'
+import { Route as RenterBookingsRouteImport } from './routes/renter.bookings'
+import { Route as RenterMessagesRouteImport } from './routes/renter.messages'
+import { Route as RenterProfileRouteImport } from './routes/renter.profile'
+import { Route as RenterSearchRouteImport } from './routes/renter.search'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FindStorageRoute = FindStorageRouteImport.update({
+  id: '/find-storage',
+  path: '/find-storage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HostRoute = HostRouteImport.update({
+  id: '/host',
+  path: '/host',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListSpaceRoute = ListSpaceRouteImport.update({
+  id: '/list-space',
+  path: '/list-space',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RenterRoute = RenterRouteImport.update({
+  id: '/renter',
+  path: '/renter',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrustRoute = TrustRouteImport.update({
+  id: '/trust',
+  path: '/trust',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HostIndexRoute = HostIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => HostRoute,
+} as any)
+const HostBookingsRoute = HostBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => HostRoute,
+} as any)
+const HostEarningsRoute = HostEarningsRouteImport.update({
+  id: '/earnings',
+  path: '/earnings',
+  getParentRoute: () => HostRoute,
+} as any)
+const HostMessagesRoute = HostMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => HostRoute,
+} as any)
+const HostSpacesRoute = HostSpacesRouteImport.update({
+  id: '/spaces',
+  path: '/spaces',
+  getParentRoute: () => HostRoute,
+} as any)
+const RenterIndexRoute = RenterIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RenterRoute,
+} as any)
+const RenterBookingsRoute = RenterBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => RenterRoute,
+} as any)
+const RenterMessagesRoute = RenterMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => RenterRoute,
+} as any)
+const RenterProfileRoute = RenterProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => RenterRoute,
+} as any)
+const RenterSearchRoute = RenterSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => RenterRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/find-storage': typeof FindStorageRoute
+  '/host': typeof HostRouteWithChildren
+  '/how-it-works': typeof HowItWorksRoute
+  '/list-space': typeof ListSpaceRoute
+  '/login': typeof LoginRoute
+  '/renter': typeof RenterRouteWithChildren
+  '/signup': typeof SignupRoute
+  '/trust': typeof TrustRoute
+  '/host/bookings': typeof HostBookingsRoute
+  '/host/earnings': typeof HostEarningsRoute
+  '/host/messages': typeof HostMessagesRoute
+  '/host/spaces': typeof HostSpacesRoute
+  '/renter/bookings': typeof RenterBookingsRoute
+  '/renter/messages': typeof RenterMessagesRoute
+  '/renter/profile': typeof RenterProfileRoute
+  '/renter/search': typeof RenterSearchRoute
+  '/host/': typeof HostIndexRoute
+  '/renter/': typeof RenterIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/find-storage': typeof FindStorageRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/list-space': typeof ListSpaceRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/trust': typeof TrustRoute
+  '/host/bookings': typeof HostBookingsRoute
+  '/host/earnings': typeof HostEarningsRoute
+  '/host/messages': typeof HostMessagesRoute
+  '/host/spaces': typeof HostSpacesRoute
+  '/renter/bookings': typeof RenterBookingsRoute
+  '/renter/messages': typeof RenterMessagesRoute
+  '/renter/profile': typeof RenterProfileRoute
+  '/renter/search': typeof RenterSearchRoute
+  '/host': typeof HostIndexRoute
+  '/renter': typeof RenterIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/find-storage': typeof FindStorageRoute
+  '/host': typeof HostRouteWithChildren
+  '/how-it-works': typeof HowItWorksRoute
+  '/list-space': typeof ListSpaceRoute
+  '/login': typeof LoginRoute
+  '/renter': typeof RenterRouteWithChildren
+  '/signup': typeof SignupRoute
+  '/trust': typeof TrustRoute
+  '/host/bookings': typeof HostBookingsRoute
+  '/host/earnings': typeof HostEarningsRoute
+  '/host/messages': typeof HostMessagesRoute
+  '/host/spaces': typeof HostSpacesRoute
+  '/renter/bookings': typeof RenterBookingsRoute
+  '/renter/messages': typeof RenterMessagesRoute
+  '/renter/profile': typeof RenterProfileRoute
+  '/renter/search': typeof RenterSearchRoute
+  '/host/': typeof HostIndexRoute
+  '/renter/': typeof RenterIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/find-storage'
+    | '/host'
+    | '/how-it-works'
+    | '/list-space'
+    | '/login'
+    | '/renter'
+    | '/signup'
+    | '/trust'
+    | '/host/bookings'
+    | '/host/earnings'
+    | '/host/messages'
+    | '/host/spaces'
+    | '/renter/bookings'
+    | '/renter/messages'
+    | '/renter/profile'
+    | '/renter/search'
+    | '/host/'
+    | '/renter/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/find-storage'
+    | '/how-it-works'
+    | '/list-space'
+    | '/login'
+    | '/signup'
+    | '/trust'
+    | '/host/bookings'
+    | '/host/earnings'
+    | '/host/messages'
+    | '/host/spaces'
+    | '/renter/bookings'
+    | '/renter/messages'
+    | '/renter/profile'
+    | '/renter/search'
+    | '/host'
+    | '/renter'
+  id:
+    | '__root__'
+    | '/'
+    | '/find-storage'
+    | '/host'
+    | '/how-it-works'
+    | '/list-space'
+    | '/login'
+    | '/renter'
+    | '/signup'
+    | '/trust'
+    | '/host/bookings'
+    | '/host/earnings'
+    | '/host/messages'
+    | '/host/spaces'
+    | '/renter/bookings'
+    | '/renter/messages'
+    | '/renter/profile'
+    | '/renter/search'
+    | '/host/'
+    | '/renter/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FindStorageRoute: typeof FindStorageRoute
+  HostRoute: typeof HostRouteWithChildren
+  HowItWorksRoute: typeof HowItWorksRoute
+  ListSpaceRoute: typeof ListSpaceRoute
+  LoginRoute: typeof LoginRoute
+  RenterRoute: typeof RenterRouteWithChildren
+  SignupRoute: typeof SignupRoute
+  TrustRoute: typeof TrustRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +272,182 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/find-storage': {
+      id: '/find-storage'
+      path: '/find-storage'
+      fullPath: '/find-storage'
+      preLoaderRoute: typeof FindStorageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/host': {
+      id: '/host'
+      path: '/host'
+      fullPath: '/host'
+      preLoaderRoute: typeof HostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/list-space': {
+      id: '/list-space'
+      path: '/list-space'
+      fullPath: '/list-space'
+      preLoaderRoute: typeof ListSpaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/renter': {
+      id: '/renter'
+      path: '/renter'
+      fullPath: '/renter'
+      preLoaderRoute: typeof RenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trust': {
+      id: '/trust'
+      path: '/trust'
+      fullPath: '/trust'
+      preLoaderRoute: typeof TrustRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/host/': {
+      id: '/host/'
+      path: '/'
+      fullPath: '/host/'
+      preLoaderRoute: typeof HostIndexRouteImport
+      parentRoute: typeof HostRoute
+    }
+    '/host/bookings': {
+      id: '/host/bookings'
+      path: '/bookings'
+      fullPath: '/host/bookings'
+      preLoaderRoute: typeof HostBookingsRouteImport
+      parentRoute: typeof HostRoute
+    }
+    '/host/earnings': {
+      id: '/host/earnings'
+      path: '/earnings'
+      fullPath: '/host/earnings'
+      preLoaderRoute: typeof HostEarningsRouteImport
+      parentRoute: typeof HostRoute
+    }
+    '/host/messages': {
+      id: '/host/messages'
+      path: '/messages'
+      fullPath: '/host/messages'
+      preLoaderRoute: typeof HostMessagesRouteImport
+      parentRoute: typeof HostRoute
+    }
+    '/host/spaces': {
+      id: '/host/spaces'
+      path: '/spaces'
+      fullPath: '/host/spaces'
+      preLoaderRoute: typeof HostSpacesRouteImport
+      parentRoute: typeof HostRoute
+    }
+    '/renter/': {
+      id: '/renter/'
+      path: '/'
+      fullPath: '/renter/'
+      preLoaderRoute: typeof RenterIndexRouteImport
+      parentRoute: typeof RenterRoute
+    }
+    '/renter/bookings': {
+      id: '/renter/bookings'
+      path: '/bookings'
+      fullPath: '/renter/bookings'
+      preLoaderRoute: typeof RenterBookingsRouteImport
+      parentRoute: typeof RenterRoute
+    }
+    '/renter/messages': {
+      id: '/renter/messages'
+      path: '/messages'
+      fullPath: '/renter/messages'
+      preLoaderRoute: typeof RenterMessagesRouteImport
+      parentRoute: typeof RenterRoute
+    }
+    '/renter/profile': {
+      id: '/renter/profile'
+      path: '/profile'
+      fullPath: '/renter/profile'
+      preLoaderRoute: typeof RenterProfileRouteImport
+      parentRoute: typeof RenterRoute
+    }
+    '/renter/search': {
+      id: '/renter/search'
+      path: '/search'
+      fullPath: '/renter/search'
+      preLoaderRoute: typeof RenterSearchRouteImport
+      parentRoute: typeof RenterRoute
+    }
   }
 }
 
+interface HostRouteChildren {
+  HostBookingsRoute: typeof HostBookingsRoute
+  HostEarningsRoute: typeof HostEarningsRoute
+  HostMessagesRoute: typeof HostMessagesRoute
+  HostSpacesRoute: typeof HostSpacesRoute
+  HostIndexRoute: typeof HostIndexRoute
+}
+
+const HostRouteChildren: HostRouteChildren = {
+  HostBookingsRoute: HostBookingsRoute,
+  HostEarningsRoute: HostEarningsRoute,
+  HostMessagesRoute: HostMessagesRoute,
+  HostSpacesRoute: HostSpacesRoute,
+  HostIndexRoute: HostIndexRoute,
+}
+
+const HostRouteWithChildren = HostRoute._addFileChildren(HostRouteChildren)
+
+interface RenterRouteChildren {
+  RenterBookingsRoute: typeof RenterBookingsRoute
+  RenterMessagesRoute: typeof RenterMessagesRoute
+  RenterProfileRoute: typeof RenterProfileRoute
+  RenterSearchRoute: typeof RenterSearchRoute
+  RenterIndexRoute: typeof RenterIndexRoute
+}
+
+const RenterRouteChildren: RenterRouteChildren = {
+  RenterBookingsRoute: RenterBookingsRoute,
+  RenterMessagesRoute: RenterMessagesRoute,
+  RenterProfileRoute: RenterProfileRoute,
+  RenterSearchRoute: RenterSearchRoute,
+  RenterIndexRoute: RenterIndexRoute,
+}
+
+const RenterRouteWithChildren =
+  RenterRoute._addFileChildren(RenterRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FindStorageRoute: FindStorageRoute,
+  HostRoute: HostRouteWithChildren,
+  HowItWorksRoute: HowItWorksRoute,
+  ListSpaceRoute: ListSpaceRoute,
+  LoginRoute: LoginRoute,
+  RenterRoute: RenterRouteWithChildren,
+  SignupRoute: SignupRoute,
+  TrustRoute: TrustRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

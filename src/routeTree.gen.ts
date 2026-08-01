@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as FindStorageRouteImport } from './routes/find-storage'
 import { Route as HostRouteImport } from './routes/host'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
@@ -32,6 +33,11 @@ import { Route as RenterSearchRouteImport } from './routes/renter.search'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesignSystemRoute = DesignSystemRouteImport.update({
+  id: '/design-system',
+  path: '/design-system',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FindStorageRoute = FindStorageRouteImport.update({
@@ -127,6 +133,7 @@ const RenterSearchRoute = RenterSearchRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/design-system': typeof DesignSystemRoute
   '/find-storage': typeof FindStorageRoute
   '/host': typeof HostRouteWithChildren
   '/how-it-works': typeof HowItWorksRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/design-system': typeof DesignSystemRoute
   '/find-storage': typeof FindStorageRoute
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
@@ -168,6 +176,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/design-system': typeof DesignSystemRoute
   '/find-storage': typeof FindStorageRoute
   '/host': typeof HostRouteWithChildren
   '/how-it-works': typeof HowItWorksRoute
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/design-system'
     | '/find-storage'
     | '/host'
     | '/how-it-works'
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/design-system'
     | '/find-storage'
     | '/how-it-works'
     | '/list-space'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/design-system'
     | '/find-storage'
     | '/host'
     | '/how-it-works'
@@ -253,6 +265,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DesignSystemRoute: typeof DesignSystemRoute
   FindStorageRoute: typeof FindStorageRoute
   HostRoute: typeof HostRouteWithChildren
   HowItWorksRoute: typeof HowItWorksRoute
@@ -270,6 +283,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/design-system': {
+      id: '/design-system'
+      path: '/design-system'
+      fullPath: '/design-system'
+      preLoaderRoute: typeof DesignSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/find-storage': {
@@ -440,6 +460,7 @@ const RenterRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DesignSystemRoute: DesignSystemRoute,
   FindStorageRoute: FindStorageRoute,
   HostRoute: HostRouteWithChildren,
   HowItWorksRoute: HowItWorksRoute,

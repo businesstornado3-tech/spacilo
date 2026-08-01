@@ -20,7 +20,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "Find affordable storage nearby, or earn money from space you're not using.",
+          "Find affordable storage in garages, lofts and spare rooms near you, or earn money from space you're not using. A UK peer-to-peer storage marketplace built around trust.",
       },
     ],
   }),

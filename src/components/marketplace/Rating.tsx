@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils";
 
 interface RatingProps {
   value: number;
-  reviewCount?: number;
-  className?: string;
-  size?: "sm" | "md";
+  reviewCount?: number | undefined;
+  className?: string | undefined;
+  size?: "sm" | "md" | undefined;
 }
 
 /** Compact numeric rating: ★ 4.9 · 27 reviews */

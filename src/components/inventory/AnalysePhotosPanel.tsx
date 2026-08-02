@@ -78,7 +78,7 @@ export function AnalysePhotosPanel({
       )}
 
       {failure ? (
-        <Alert variant="warning" className="mt-4" title="We couldn't finish that scan">
+        <Alert tone="warning" className="mt-4" title="We couldn't finish that scan">
           {failure}
         </Alert>
       ) : null}

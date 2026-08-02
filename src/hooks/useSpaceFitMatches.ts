@@ -61,7 +61,7 @@ function useCoverUrls(paths: string[]) {
 }
 
 export interface MatchEntry {
-  row: PublishedSpaceRow;
+  row: MatchRow;
   result: SpaceFitResult;
   coverUrl?: string;
 }

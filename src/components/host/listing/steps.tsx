@@ -346,7 +346,7 @@ export function StepFeatures({ form, patch }: StepProps) {
               id="temperature"
               value={form.temperature_condition ?? "unknown"}
               onChange={(e) =>
-                patch({ temperature_condition: e.target.value as SpacePatch["temperature_condition"] })
+                patch({ temperature_condition: e.target.value as NonNullable<SpacePatch["temperature_condition"]> })
               }
             >
               {TEMPERATURE_OPTIONS.map((o) => (
@@ -360,7 +360,7 @@ export function StepFeatures({ form, patch }: StepProps) {
             <NativeSelect
               id="moisture"
               value={form.moisture_condition ?? "unknown"}
-              onChange={(e) => patch({ moisture_condition: e.target.value as SpacePatch["moisture_condition"] })}
+              onChange={(e) => patch({ moisture_condition: e.target.value as NonNullable<SpacePatch["moisture_condition"]> })}
             >
               {MOISTURE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>

@@ -1,10 +1,9 @@
-import { MapPin, Ruler } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { formatArea, formatDistance } from "@/lib/format";
-import { PriceDisplay } from "@/components/marketplace/PriceDisplay";
+import { formatDistance, formatPrice } from "@/lib/format";
 import { Rating } from "@/components/marketplace/Rating";
-import { SecurityFeatureIcons } from "@/components/marketplace/SecurityFeatures";
+import { SecurityFeatureChips } from "@/components/marketplace/SecurityFeatures";
 import { SpaceFitBadge } from "@/components/trust/SpaceFit";
 import { VerificationBadge } from "@/components/trust/VerificationBadge";
 import type { Pence, SecurityFeature } from "@/types/models";
@@ -12,10 +11,10 @@ import type { Pence, SecurityFeature } from "@/types/models";
 export interface ListingCardProps {
   id: string;
   title: string;
-  spaceTypeLabel: string;
+  spaceTypeLabel?: string;
   areaName: string;
   distanceMiles: number;
-  areaSqFt: number;
+  areaSqFt?: number;
   pricePerMonth: Pence;
   rating?: number;
   reviewCount?: number;
@@ -25,15 +24,17 @@ export interface ListingCardProps {
   photoUrl?: string;
   photoAlt: string;
   href?: string;
-  className?: string;
+  className?: string | undefined;
 }
 
+/**
+ * Photography-first marketplace card.
+ * Large image, then place, price, rating, trust, SpaceFit — nothing else.
+ */
 export function ListingCard({
   title,
-  spaceTypeLabel,
   areaName,
   distanceMiles,
-  areaSqFt,
   pricePerMonth,
   rating,
   reviewCount,
@@ -47,7 +48,7 @@ export function ListingCard({
   return (
     <article
       className={cn(
-        "group overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-shadow hover:shadow-raised",
+        "group flex h-full flex-col overflow-hidden rounded-2xl bg-card shadow-card transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-1 hover:shadow-raised focus-within:-translate-y-1",
         className,
       )}
     >
@@ -57,7 +58,7 @@ export function ListingCard({
             src={photoUrl}
             alt={photoAlt}
             loading="lazy"
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="size-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04]"
           />
         ) : (
           <div className="grid size-full place-items-center type-body-sm text-muted-foreground">
@@ -67,40 +68,35 @@ export function ListingCard({
         {spaceFitScore !== undefined ? (
           <SpaceFitBadge
             score={spaceFitScore}
-            className="absolute left-3 top-3 shadow-card backdrop-blur"
+            className="absolute left-3 top-3 bg-card/92 shadow-card backdrop-blur-[2px]"
           />
         ) : null}
       </div>
 
-      <div className="space-y-3 p-4">
-        <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-1 flex-col gap-2.5 p-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
-            <p className="type-overline text-muted-foreground">{spaceTypeLabel}</p>
-            <h3 className="mt-1 type-card-title truncate">{title}</h3>
+            <h3 className="truncate type-card-title">{title}</h3>
+            <p className="mt-0.5 flex min-w-0 items-center gap-1 type-body-sm text-muted-foreground">
+              <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
+              <span className="truncate">
+                {areaName} · {formatDistance(distanceMiles)}
+              </span>
+            </p>
           </div>
-          <PriceDisplay amount={pricePerMonth} className="shrink-0 text-right" />
+          <p className="shrink-0 text-right">
+            <span className="type-price">{formatPrice(pricePerMonth)}</span>
+            <span className="block type-body-sm text-muted-foreground">/month</span>
+          </p>
         </div>
-
-        <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 type-body-sm text-muted-foreground">
-          <li className="flex items-center gap-1">
-            <MapPin className="size-4" aria-hidden="true" />
-            {areaName} · {formatDistance(distanceMiles)}
-          </li>
-          <li className="flex items-center gap-1">
-            <Ruler className="size-4" aria-hidden="true" />
-            approx. {formatArea(areaSqFt)}
-          </li>
-        </ul>
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           {rating !== undefined ? <Rating value={rating} reviewCount={reviewCount} size="sm" /> : null}
-          {hostVerified ? <VerificationBadge type="generic" /> : null}
+          {hostVerified ? <VerificationBadge type="host" size="sm" /> : null}
         </div>
 
         {securityFeatures.length > 0 ? (
-          <div className="flex items-center justify-between border-t border-border pt-3">
-            <SecurityFeatureIcons features={securityFeatures} />
-          </div>
+          <SecurityFeatureChips features={securityFeatures} className="mt-auto pt-1" />
         ) : null}
       </div>
     </article>

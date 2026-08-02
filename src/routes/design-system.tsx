@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Boxes, Inbox } from "lucide-react";
+import { Boxes, Inbox, MapPinOff, PackageCheck, ShieldCheck } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { MarketingLayout, PageSection } from "@/components/layout/MarketingLayout";
@@ -29,7 +29,15 @@ import {
   VerificationBadge,
   VERIFICATION_DISCLAIMER,
 } from "@/components/trust/VerificationBadge";
+import { SpaceFitAiMark, SpaceFitScanning, SpaceFitResult, AnimatedSpaceFitScore } from "@/components/trust/SpaceFitAI";
+import { TrustIndicatorRow, TrustCard } from "@/components/trust/TrustIndicators";
+import { CardCarousel } from "@/components/marketplace/Carousel";
+import { SpaceCategoryCard } from "@/components/marketplace/SpaceCategoryCard";
+import { AccessIndicator } from "@/components/marketplace/AccessIndicator";
+import { HostEarningsCard } from "@/components/host/HostEarningsCard";
 import garagePhoto from "@/assets/sample-garage.jpg";
+import roomPhoto from "@/assets/sample-spare-room.jpg";
+import shedPhoto from "@/assets/sample-shed.jpg";
 import loftPhoto from "@/assets/sample-loft.jpg";
 
 export const Route = createFileRoute("/design-system")({
@@ -80,6 +88,8 @@ const swatches = [
   ["Warning", "bg-warning"],
   ["Destructive", "bg-destructive"],
   ["Info", "bg-info"],
+  ["Signal", "bg-signal"],
+  ["Accent soft", "bg-accent-soft"],
   ["Muted", "bg-muted"],
 ];
 
@@ -237,6 +247,69 @@ function DesignSystemPage() {
           </div>
         </Block>
 
+        <Block
+          title="SpaceFit AI"
+          description="The intelligent layer of the product: a scanning state, an analysis summary and an animated score. Always framed as an estimate."
+        >
+          <div className="flex flex-wrap items-center gap-3">
+            <SpaceFitAiMark />
+            <SpaceFitAiMark size="sm" />
+            <SpaceFitAiMark tone="plain" />
+          </div>
+          <div className="mt-6 grid gap-5 lg:grid-cols-2">
+            <SpaceFitScanning />
+            <SpaceFitResult
+              analysis={{ itemCount: 12, estimatedVolumeM3: 5.4, nearbySpaceCount: 11, score: 96 }}
+            />
+          </div>
+          <div className="mt-6 flex flex-wrap items-end gap-8">
+            <AnimatedSpaceFitScore score={96} size="lg" />
+            <AnimatedSpaceFitScore score={78} />
+            <AnimatedSpaceFitScore score={54} size="sm" />
+          </div>
+        </Block>
+
+        <Block
+          title="Trust indicators"
+          description="Reassurance woven into the interface — compact chips and editorial cards rather than security shields."
+        >
+          <TrustIndicatorRow kinds={["secure_payment", "digital_inventory", "address_hidden", "cover"]} />
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            <TrustCard icon={ShieldCheck} title="Checks, not promises">
+              We verify ID, address and the space itself. Verification confirms a check happened.
+            </TrustCard>
+            <TrustCard icon={PackageCheck} title="Digital inventory">
+              Photograph what you store. Both sides agree the list before handover.
+            </TrustCard>
+            <TrustCard icon={MapPinOff} title="Address stays private" tone="accent">
+              Only the approximate area is shown until a booking is confirmed.
+            </TrustCard>
+          </div>
+        </Block>
+
+        <Block title="Access indicators">
+          <div className="flex flex-wrap items-center gap-3">
+            <AccessIndicator level="24_7" />
+            <AccessIndicator level="daytime" />
+            <AccessIndicator level="by_arrangement" />
+            <AccessIndicator level="24_7" compact />
+          </div>
+        </Block>
+
+        <Block
+          title="Host earnings"
+          description="Aspirational, on the warm accent surface, and clearly illustrative."
+        >
+          <div className="grid gap-5 lg:grid-cols-2">
+            <HostEarningsCard amount={8500} ctaLabel="List my space" />
+            <HostEarningsCard
+              headline="Your unused loft could earn"
+              amount={4200}
+              note="Illustrative estimate based on nearby listings"
+            />
+          </div>
+        </Block>
+
         <Block title="Status, price and rating">
           <div className="flex flex-wrap items-center gap-3">
             <StatusBadge status="pending_host" />
@@ -291,6 +364,63 @@ function DesignSystemPage() {
               photoAlt="Converted loft with wooden floor and neatly stacked storage boxes"
             />
             <ListingCardSkeleton />
+          </div>
+        </Block>
+
+
+        <Block
+          title="Mobile carousel and categories"
+          description="Cards snap horizontally on touch devices. Category tiles are photography-led."
+        >
+          <CardCarousel title="Spaces near PO4" ariaLabel="Nearby spaces">
+            <ListingCard
+              id="c1"
+              title="Garage Space"
+              areaName="Southsea"
+              distanceMiles={0.6}
+              pricePerMonth={4900}
+              rating={4.9}
+              reviewCount={27}
+              hostVerified
+              spaceFitScore={96}
+              securityFeatures={["cctv", "dry", "vehicle_access"]}
+              photoUrl={garagePhoto}
+              photoAlt="Empty white-brick garage with a concrete floor"
+            />
+            <ListingCard
+              id="c2"
+              title="Spare Room"
+              areaName="Milton"
+              distanceMiles={1.1}
+              pricePerMonth={3800}
+              rating={4.8}
+              reviewCount={9}
+              hostVerified
+              spaceFitScore={88}
+              securityFeatures={["locked_door", "dry", "ground_floor"]}
+              photoUrl={roomPhoto}
+              photoAlt="Bright spare room with stacked boxes, a suitcase and a bicycle"
+            />
+            <ListingCard
+              id="c3"
+              title="Garden Shed"
+              areaName="Fratton"
+              distanceMiles={1.9}
+              pricePerMonth={2200}
+              rating={4.6}
+              reviewCount={5}
+              spaceFitScore={64}
+              securityFeatures={["locked_door", "lighting"]}
+              photoUrl={shedPhoto}
+              photoAlt="Tidy wooden garden shed interior with bikes and storage boxes"
+            />
+          </CardCarousel>
+
+          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <SpaceCategoryCard label="Garages" meta="24 nearby" photoUrl={garagePhoto} photoAlt="UK garage interior" />
+            <SpaceCategoryCard label="Spare rooms" meta="18 nearby" photoUrl={roomPhoto} photoAlt="Spare room used for storage" />
+            <SpaceCategoryCard label="Lofts" meta="9 nearby" photoUrl={loftPhoto} photoAlt="Converted loft with storage boxes" />
+            <SpaceCategoryCard label="Sheds" meta="12 nearby" photoUrl={shedPhoto} photoAlt="Garden shed interior" />
           </div>
         </Block>
 

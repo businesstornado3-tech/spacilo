@@ -1,19 +1,19 @@
 import { BadgeCheck, Mail, Phone, IdCard, MapPinHouse, Warehouse, CreditCard } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { VerificationType } from "@/types/models";
 
-export type VerificationBadgeType = VerificationType | "generic";
+export type VerificationBadgeType = VerificationType | "generic" | "host";
 
 const CONFIG: Record<VerificationBadgeType, { label: string; icon: LucideIcon }> = {
   email: { label: "Email Verified", icon: Mail },
   phone: { label: "Phone Verified", icon: Phone },
   id: { label: "ID Verified", icon: IdCard },
   address: { label: "Address Verified", icon: MapPinHouse },
-  space: { label: "Space Verified", icon: Warehouse },
+  space: { label: "Verified Space", icon: Warehouse },
   payment: { label: "Payment Verified", icon: CreditCard },
+  host: { label: "Verified Host", icon: BadgeCheck },
   generic: { label: "Verified", icon: BadgeCheck },
 };
 
@@ -22,31 +22,39 @@ interface VerificationBadgeProps {
   /** Renders a muted "not yet completed" state */
   pending?: boolean;
   showLabel?: boolean;
-  className?: string;
+  size?: "sm" | "md";
+  className?: string | undefined;
 }
 
 /**
  * Verification badges confirm that a specific check was completed.
- * They intentionally make no claim about safety or character.
+ * Deliberately compact and quiet — they make no claim about safety.
  */
 export function VerificationBadge({
   type,
   pending = false,
   showLabel = true,
+  size = "md",
   className,
 }: VerificationBadgeProps) {
   const { label, icon: Icon } = CONFIG[type];
-  const text = pending ? `${label.replace(" Verified", "")} not verified` : label;
+  const text = pending ? `${label.replace(/\s?Verified\s?/, "")} not verified` : label;
 
   return (
-    <Badge
-      variant={pending ? "neutral" : "success"}
-      className={cn(pending && "text-muted-foreground", className)}
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full type-badge transition-[background-color,color,transform] duration-150 ease-out hover:-translate-y-px",
+        size === "sm" ? "px-2 py-0.5 text-[0.6875rem]" : "px-2.5 py-1",
+        pending
+          ? "bg-secondary text-muted-foreground"
+          : "bg-success-soft text-success-soft-foreground hover:bg-success-soft/80",
+        className,
+      )}
       title={pending ? `${label} check not completed` : `${label} check completed`}
     >
-      <Icon aria-hidden="true" />
+      <Icon className="size-3.5 shrink-0" aria-hidden="true" />
       {showLabel ? text : <span className="sr-only">{text}</span>}
-    </Badge>
+    </span>
   );
 }
 
@@ -55,7 +63,7 @@ export function VerificationBadgeList({
   className,
 }: {
   types: VerificationBadgeType[];
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <ul className={cn("flex flex-wrap gap-1.5", className)}>

@@ -72,7 +72,8 @@ export function useSpaceFitMatches() {
   const run = React.useMemo(() => {
     if (!spaces || confirmed.length === 0) return null;
     const matchInventory = buildMatchInventory(confirmed);
-    return { matchInventory, ...runMatching(spaces.map((row) => ({ ...row, ...toMatchSpace(row) })), matchInventory) };
+    const rows: MatchRow[] = spaces.map((row) => ({ ...row, ...toMatchSpace(row) }) as MatchRow);
+    return { matchInventory, ...runMatching(rows, matchInventory) };
   }, [spaces, confirmed]);
 
   const coverPaths = React.useMemo(
@@ -84,7 +85,7 @@ export function useSpaceFitMatches() {
   );
   const { data: covers } = useCoverUrls(coverPaths);
 
-  const decorate = (entries: { space: PublishedSpaceRow & MatchSpace; result: SpaceFitResult }[]): MatchEntry[] =>
+  const decorate = (entries: { space: MatchRow; result: SpaceFitResult }[]): MatchEntry[] =>
     entries.map((entry) => ({
       row: entry.space,
       result: entry.result,
@@ -92,6 +93,7 @@ export function useSpaceFitMatches() {
         ? { coverUrl: covers[entry.space.cover_path] as string }
         : {}),
     }));
+
 
   return {
     inventoryId: inventory?.id,

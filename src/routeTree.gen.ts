@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as FindStorageRouteImport } from './routes/find-storage'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ListSpaceRouteImport } from './routes/list-space'
@@ -48,6 +49,11 @@ const DesignSystemRoute = DesignSystemRouteImport.update({
 const FindStorageRoute = FindStorageRouteImport.update({
   id: '/find-storage',
   path: '/find-storage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GetStartedRoute = GetStartedRouteImport.update({
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/design-system': typeof DesignSystemRoute
   '/find-storage': typeof FindStorageRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/get-started': typeof GetStartedRoute
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/design-system': typeof DesignSystemRoute
   '/find-storage': typeof FindStorageRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/get-started': typeof GetStartedRoute
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/design-system': typeof DesignSystemRoute
   '/find-storage': typeof FindStorageRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/get-started': typeof GetStartedRoute
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/'
     | '/design-system'
     | '/find-storage'
+    | '/forgot-password'
     | '/get-started'
     | '/how-it-works'
     | '/list-space'
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/'
     | '/design-system'
     | '/find-storage'
+    | '/forgot-password'
     | '/get-started'
     | '/how-it-works'
     | '/list-space'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/design-system'
     | '/find-storage'
+    | '/forgot-password'
     | '/get-started'
     | '/how-it-works'
     | '/list-space'
@@ -282,6 +294,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   DesignSystemRoute: typeof DesignSystemRoute
   FindStorageRoute: typeof FindStorageRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   GetStartedRoute: typeof GetStartedRoute
   HowItWorksRoute: typeof HowItWorksRoute
   ListSpaceRoute: typeof ListSpaceRoute
@@ -318,6 +331,13 @@ declare module '@tanstack/react-router' {
       path: '/find-storage'
       fullPath: '/find-storage'
       preLoaderRoute: typeof FindStorageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/get-started': {
@@ -497,6 +517,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   DesignSystemRoute: DesignSystemRoute,
   FindStorageRoute: FindStorageRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   GetStartedRoute: GetStartedRoute,
   HowItWorksRoute: HowItWorksRoute,
   ListSpaceRoute: ListSpaceRoute,

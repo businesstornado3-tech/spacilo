@@ -75,7 +75,7 @@ export function entranceCheck(space: MatchSpace, inventory: MatchInventory): Ent
     if (!fits) {
       return {
         state: "fail",
-        blockingItemName: item.name,
+        blockingItemName: item.item_name,
         doorWidthCm: width,
         doorHeightCm: height,
       };

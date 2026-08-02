@@ -77,10 +77,13 @@ export function InventoryPhotoManager({
   };
 
   const move = async (index: number, direction: -1 | 1) => {
-    const next = [...photos];
     const target = index + direction;
-    if (target < 0 || target >= next.length) return;
-    [next[index], next[target]] = [next[target], next[index]];
+    if (target < 0 || target >= photos.length) return;
+    const next = [...photos];
+    const a = next[index]!;
+    const b = next[target]!;
+    next[index] = b;
+    next[target] = a;
     await reorderInventoryPhotos(next);
     await refresh();
   };

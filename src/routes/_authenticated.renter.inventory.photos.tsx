@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Check, Info } from "lucide-react";
 
 import { brand } from "@/config/brand";
@@ -6,7 +6,9 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/common/Skeletons";
 import { InventoryPhotoManager } from "@/components/inventory/InventoryPhotoManager";
+import { AnalysePhotosPanel } from "@/components/inventory/AnalysePhotosPanel";
 import { useEnsuredInventory, useInventoryPhotos } from "@/hooks/useInventory";
+
 
 const title = "Inventory photos — " + brand.name;
 const description = "Upload photos of the belongings you want to store.";
@@ -34,9 +36,11 @@ const GUIDANCE = [
 ];
 
 function InventoryPhotosPage() {
+  const navigate = useNavigate();
   const { data: inventory, isLoading } = useEnsuredInventory();
   const { data: photos } = useInventoryPhotos(inventory?.id);
   const list = photos ?? [];
+
 
   return (
     <AppLayout
@@ -63,26 +67,35 @@ function InventoryPhotosPage() {
           <InventoryPhotoManager inventoryId={inventory.id} photos={list} />
 
           {list.length > 0 ? (
-            <section className="rounded-2xl border border-border bg-card p-5">
-              <h2 className="type-h2">Photos ready</h2>
-              <p className="mt-1 type-body text-muted-foreground">
-                {list.length} {list.length === 1 ? "photo" : "photos"} uploaded.
-              </p>
-              <p className="mt-3 flex gap-2 type-body-sm text-muted-foreground">
-                <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                Automatic item detection is coming in the SpaceFit AI build. Your photos are stored
-                privately until then.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Button asChild>
-                  <Link to="/renter/inventory/add">Add items manually</Link>
-                </Button>
-                <Button asChild variant="secondary">
-                  <Link to="/renter/inventory">View my inventory</Link>
-                </Button>
-              </div>
-            </section>
+            <>
+              <AnalysePhotosPanel
+                inventoryId={inventory.id}
+                photos={list}
+                onReviewReady={() => void navigate({ to: "/renter/inventory/review" })}
+              />
+
+              <section className="rounded-2xl border border-border bg-card p-5">
+                <h2 className="type-h2">Prefer to do it yourself?</h2>
+                <p className="mt-1 type-body text-muted-foreground">
+                  {list.length} {list.length === 1 ? "photo" : "photos"} uploaded.
+                </p>
+                <p className="mt-3 flex gap-2 type-body-sm text-muted-foreground">
+                  <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                  You can always add items by hand — SpaceFit AI is there to save time, not to
+                  decide for you.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button asChild variant="secondary">
+                    <Link to="/renter/inventory/add">Add items manually</Link>
+                  </Button>
+                  <Button asChild variant="secondary">
+                    <Link to="/renter/inventory">View my inventory</Link>
+                  </Button>
+                </div>
+              </section>
+            </>
           ) : null}
+
         </div>
       )}
     </AppLayout>

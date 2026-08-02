@@ -39,6 +39,7 @@ import { Route as AuthenticatedRenterInventoryIndexRouteImport } from './routes/
 import { Route as AuthenticatedRenterInventoryAddRouteImport } from './routes/_authenticated.renter.inventory.add'
 import { Route as AuthenticatedRenterInventoryMatchingRouteImport } from './routes/_authenticated.renter.inventory.matching'
 import { Route as AuthenticatedRenterInventoryPhotosRouteImport } from './routes/_authenticated.renter.inventory.photos'
+import { Route as AuthenticatedRenterInventoryReviewRouteImport } from './routes/_authenticated.renter.inventory.review'
 import { Route as AuthenticatedHostSpacesSpaceIdEditRouteImport } from './routes/_authenticated.host.spaces.$spaceId.edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -203,6 +204,12 @@ const AuthenticatedRenterInventoryPhotosRoute =
     path: '/inventory/photos',
     getParentRoute: () => AuthenticatedRenterRoute,
   } as any)
+const AuthenticatedRenterInventoryReviewRoute =
+  AuthenticatedRenterInventoryReviewRouteImport.update({
+    id: '/inventory/review',
+    path: '/inventory/review',
+    getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
 const AuthenticatedHostSpacesSpaceIdEditRoute =
   AuthenticatedHostSpacesSpaceIdEditRouteImport.update({
     id: '/spaces/$spaceId/edit',
@@ -238,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/renter/inventory/matching': typeof AuthenticatedRenterInventoryMatchingRoute
   '/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
+  '/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
   '/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/renter/inventory/': typeof AuthenticatedRenterInventoryIndexRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
@@ -268,6 +276,7 @@ export interface FileRoutesByTo {
   '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/renter/inventory/matching': typeof AuthenticatedRenterInventoryMatchingRoute
   '/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
+  '/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
   '/host/spaces': typeof AuthenticatedHostSpacesIndexRoute
   '/renter/inventory': typeof AuthenticatedRenterInventoryIndexRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
@@ -302,6 +311,7 @@ export interface FileRoutesById {
   '/_authenticated/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/_authenticated/renter/inventory/matching': typeof AuthenticatedRenterInventoryMatchingRoute
   '/_authenticated/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
+  '/_authenticated/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
   '/_authenticated/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/_authenticated/renter/inventory/': typeof AuthenticatedRenterInventoryIndexRoute
   '/_authenticated/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
@@ -336,6 +346,7 @@ export interface FileRouteTypes {
     | '/renter/inventory/add'
     | '/renter/inventory/matching'
     | '/renter/inventory/photos'
+    | '/renter/inventory/review'
     | '/host/spaces/'
     | '/renter/inventory/'
     | '/host/spaces/$spaceId/edit'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/renter/inventory/add'
     | '/renter/inventory/matching'
     | '/renter/inventory/photos'
+    | '/renter/inventory/review'
     | '/host/spaces'
     | '/renter/inventory'
     | '/host/spaces/$spaceId/edit'
@@ -399,6 +411,7 @@ export interface FileRouteTypes {
     | '/_authenticated/renter/inventory/add'
     | '/_authenticated/renter/inventory/matching'
     | '/_authenticated/renter/inventory/photos'
+    | '/_authenticated/renter/inventory/review'
     | '/_authenticated/host/spaces/'
     | '/_authenticated/renter/inventory/'
     | '/_authenticated/host/spaces/$spaceId/edit'
@@ -632,6 +645,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRenterInventoryPhotosRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
     }
+    '/_authenticated/renter/inventory/review': {
+      id: '/_authenticated/renter/inventory/review'
+      path: '/inventory/review'
+      fullPath: '/renter/inventory/review'
+      preLoaderRoute: typeof AuthenticatedRenterInventoryReviewRouteImport
+      parentRoute: typeof AuthenticatedRenterRoute
+    }
     '/_authenticated/host/spaces/$spaceId/edit': {
       id: '/_authenticated/host/spaces/$spaceId/edit'
       path: '/spaces/$spaceId/edit'
@@ -674,6 +694,7 @@ interface AuthenticatedRenterRouteChildren {
   AuthenticatedRenterInventoryAddRoute: typeof AuthenticatedRenterInventoryAddRoute
   AuthenticatedRenterInventoryMatchingRoute: typeof AuthenticatedRenterInventoryMatchingRoute
   AuthenticatedRenterInventoryPhotosRoute: typeof AuthenticatedRenterInventoryPhotosRoute
+  AuthenticatedRenterInventoryReviewRoute: typeof AuthenticatedRenterInventoryReviewRoute
   AuthenticatedRenterInventoryIndexRoute: typeof AuthenticatedRenterInventoryIndexRoute
 }
 
@@ -687,6 +708,8 @@ const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
     AuthenticatedRenterInventoryMatchingRoute,
   AuthenticatedRenterInventoryPhotosRoute:
     AuthenticatedRenterInventoryPhotosRoute,
+  AuthenticatedRenterInventoryReviewRoute:
+    AuthenticatedRenterInventoryReviewRoute,
   AuthenticatedRenterInventoryIndexRoute:
     AuthenticatedRenterInventoryIndexRoute,
 }

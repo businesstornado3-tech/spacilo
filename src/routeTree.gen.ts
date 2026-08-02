@@ -28,7 +28,6 @@ import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedHostBookingsRouteImport } from './routes/_authenticated.host.bookings'
 import { Route as AuthenticatedHostEarningsRouteImport } from './routes/_authenticated.host.earnings'
 import { Route as AuthenticatedHostMessagesRouteImport } from './routes/_authenticated.host.messages'
-import { Route as AuthenticatedHostSpacesRouteImport } from './routes/_authenticated.host.spaces'
 import { Route as AuthenticatedRenterIndexRouteImport } from './routes/_authenticated.renter.index'
 import { Route as AuthenticatedRenterBookingsRouteImport } from './routes/_authenticated.renter.bookings'
 import { Route as AuthenticatedRenterMessagesRouteImport } from './routes/_authenticated.renter.messages'
@@ -131,11 +130,6 @@ const AuthenticatedHostMessagesRoute =
     path: '/messages',
     getParentRoute: () => AuthenticatedHostRoute,
   } as any)
-const AuthenticatedHostSpacesRoute = AuthenticatedHostSpacesRouteImport.update({
-  id: '/spaces',
-  path: '/spaces',
-  getParentRoute: () => AuthenticatedHostRoute,
-} as any)
 const AuthenticatedRenterIndexRoute =
   AuthenticatedRenterIndexRouteImport.update({
     id: '/',
@@ -179,7 +173,6 @@ export interface FileRoutesByFullPath {
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/host/messages': typeof AuthenticatedHostMessagesRoute
-  '/host/spaces': typeof AuthenticatedHostSpacesRoute
   '/renter/bookings': typeof AuthenticatedRenterBookingsRoute
   '/renter/messages': typeof AuthenticatedRenterMessagesRoute
   '/renter/search': typeof AuthenticatedRenterSearchRoute
@@ -202,7 +195,6 @@ export interface FileRoutesByTo {
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/host/messages': typeof AuthenticatedHostMessagesRoute
-  '/host/spaces': typeof AuthenticatedHostSpacesRoute
   '/renter/bookings': typeof AuthenticatedRenterBookingsRoute
   '/renter/messages': typeof AuthenticatedRenterMessagesRoute
   '/renter/search': typeof AuthenticatedRenterSearchRoute
@@ -229,7 +221,6 @@ export interface FileRoutesById {
   '/_authenticated/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/_authenticated/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/_authenticated/host/messages': typeof AuthenticatedHostMessagesRoute
-  '/_authenticated/host/spaces': typeof AuthenticatedHostSpacesRoute
   '/_authenticated/renter/bookings': typeof AuthenticatedRenterBookingsRoute
   '/_authenticated/renter/messages': typeof AuthenticatedRenterMessagesRoute
   '/_authenticated/renter/search': typeof AuthenticatedRenterSearchRoute
@@ -256,7 +247,6 @@ export interface FileRouteTypes {
     | '/host/bookings'
     | '/host/earnings'
     | '/host/messages'
-    | '/host/spaces'
     | '/renter/bookings'
     | '/renter/messages'
     | '/renter/search'
@@ -279,7 +269,6 @@ export interface FileRouteTypes {
     | '/host/bookings'
     | '/host/earnings'
     | '/host/messages'
-    | '/host/spaces'
     | '/renter/bookings'
     | '/renter/messages'
     | '/renter/search'
@@ -305,7 +294,6 @@ export interface FileRouteTypes {
     | '/_authenticated/host/bookings'
     | '/_authenticated/host/earnings'
     | '/_authenticated/host/messages'
-    | '/_authenticated/host/spaces'
     | '/_authenticated/renter/bookings'
     | '/_authenticated/renter/messages'
     | '/_authenticated/renter/search'
@@ -463,13 +451,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHostMessagesRouteImport
       parentRoute: typeof AuthenticatedHostRoute
     }
-    '/_authenticated/host/spaces': {
-      id: '/_authenticated/host/spaces'
-      path: '/spaces'
-      fullPath: '/host/spaces'
-      preLoaderRoute: typeof AuthenticatedHostSpacesRouteImport
-      parentRoute: typeof AuthenticatedHostRoute
-    }
     '/_authenticated/renter/': {
       id: '/_authenticated/renter/'
       path: '/'
@@ -505,7 +486,6 @@ interface AuthenticatedHostRouteChildren {
   AuthenticatedHostBookingsRoute: typeof AuthenticatedHostBookingsRoute
   AuthenticatedHostEarningsRoute: typeof AuthenticatedHostEarningsRoute
   AuthenticatedHostMessagesRoute: typeof AuthenticatedHostMessagesRoute
-  AuthenticatedHostSpacesRoute: typeof AuthenticatedHostSpacesRoute
   AuthenticatedHostIndexRoute: typeof AuthenticatedHostIndexRoute
 }
 
@@ -513,7 +493,6 @@ const AuthenticatedHostRouteChildren: AuthenticatedHostRouteChildren = {
   AuthenticatedHostBookingsRoute: AuthenticatedHostBookingsRoute,
   AuthenticatedHostEarningsRoute: AuthenticatedHostEarningsRoute,
   AuthenticatedHostMessagesRoute: AuthenticatedHostMessagesRoute,
-  AuthenticatedHostSpacesRoute: AuthenticatedHostSpacesRoute,
   AuthenticatedHostIndexRoute: AuthenticatedHostIndexRoute,
 }
 

@@ -28,7 +28,7 @@ export const renterNav: NavItem[] = [
   { label: "Search", to: "/renter/search", icon: Search },
   { label: "Bookings", to: "/renter/bookings", icon: CalendarCheck },
   { label: "Messages", to: "/renter/messages", icon: MessageSquare },
-  { label: "Profile", to: "/renter/profile", icon: User },
+  { label: "Profile", to: "/profile", icon: User },
 ];
 
 export const hostNav: NavItem[] = [

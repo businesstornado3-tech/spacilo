@@ -79,13 +79,13 @@ export function TrustIndicatorRow({
 }
 
 /** Named single-purpose indicators for readability at call sites. */
-export const SecurePaymentIndicator = (props: { className?: string }) => (
+export const SecurePaymentIndicator = (props: { className?: string | undefined }) => (
   <TrustIndicator kind="secure_payment" {...props} />
 );
-export const DigitalInventoryIndicator = (props: { className?: string }) => (
+export const DigitalInventoryIndicator = (props: { className?: string | undefined }) => (
   <TrustIndicator kind="digital_inventory" {...props} />
 );
-export const PrivacyIndicator = (props: { className?: string }) => (
+export const PrivacyIndicator = (props: { className?: string | undefined }) => (
   <TrustIndicator kind="address_hidden" {...props} />
 );
 

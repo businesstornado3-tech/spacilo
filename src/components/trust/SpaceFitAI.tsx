@@ -7,7 +7,7 @@ import { spaceFitBand, SPACEFIT_DISCLAIMER } from "@/lib/spacefit";
 import type { SpaceFitBand } from "@/types/models";
 
 /** The four-point sparkle that marks anything SpaceFit AI touches. */
-export function SpaceFitSpark({ className }: { className?: string }) {
+export function SpaceFitSpark({ className }: { className?: string | undefined }) {
   return (
     <span aria-hidden="true" className={cn("animate-twinkle text-signal", className)}>
       ✦

@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as FindStorageRouteImport } from './routes/find-storage'
+import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ListSpaceRouteImport } from './routes/list-space'
 import { Route as LoginRouteImport } from './routes/login'
@@ -47,6 +48,11 @@ const DesignSystemRoute = DesignSystemRouteImport.update({
 const FindStorageRoute = FindStorageRouteImport.update({
   id: '/find-storage',
   path: '/find-storage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GetStartedRoute = GetStartedRouteImport.update({
+  id: '/get-started',
+  path: '/get-started',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HowItWorksRoute = HowItWorksRouteImport.update({
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/design-system': typeof DesignSystemRoute
   '/find-storage': typeof FindStorageRoute
+  '/get-started': typeof GetStartedRoute
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/design-system': typeof DesignSystemRoute
   '/find-storage': typeof FindStorageRoute
+  '/get-started': typeof GetStartedRoute
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/design-system': typeof DesignSystemRoute
   '/find-storage': typeof FindStorageRoute
+  '/get-started': typeof GetStartedRoute
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/'
     | '/design-system'
     | '/find-storage'
+    | '/get-started'
     | '/how-it-works'
     | '/list-space'
     | '/login'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/'
     | '/design-system'
     | '/find-storage'
+    | '/get-started'
     | '/how-it-works'
     | '/list-space'
     | '/login'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/design-system'
     | '/find-storage'
+    | '/get-started'
     | '/how-it-works'
     | '/list-space'
     | '/login'
@@ -270,6 +282,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   DesignSystemRoute: typeof DesignSystemRoute
   FindStorageRoute: typeof FindStorageRoute
+  GetStartedRoute: typeof GetStartedRoute
   HowItWorksRoute: typeof HowItWorksRoute
   ListSpaceRoute: typeof ListSpaceRoute
   LoginRoute: typeof LoginRoute
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       path: '/find-storage'
       fullPath: '/find-storage'
       preLoaderRoute: typeof FindStorageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/get-started': {
+      id: '/get-started'
+      path: '/get-started'
+      fullPath: '/get-started'
+      preLoaderRoute: typeof GetStartedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/how-it-works': {
@@ -477,6 +497,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   DesignSystemRoute: DesignSystemRoute,
   FindStorageRoute: FindStorageRoute,
+  GetStartedRoute: GetStartedRoute,
   HowItWorksRoute: HowItWorksRoute,
   ListSpaceRoute: ListSpaceRoute,
   LoginRoute: LoginRoute,

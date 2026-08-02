@@ -111,7 +111,9 @@ function MyStuffPage() {
         </div>
       ) : (
         <div className="space-y-8 pb-28">
+          <PendingSuggestionsBanner inventoryId={inventory?.id} />
           <InventorySummary totals={totals} largest={largest} readiness={readiness} />
+
 
           <div className="space-y-6">
             {grouped.map((group) => (

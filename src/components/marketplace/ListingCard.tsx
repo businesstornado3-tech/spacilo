@@ -21,6 +21,8 @@ export interface ListingCardProps {
   hostVerified?: boolean;
   spaceFitScore?: number;
   securityFeatures?: SecurityFeature[];
+  /** Plain-language extras such as "Indoor" or "Host present". */
+  extraFeatures?: string[];
   photoUrl?: string;
   photoAlt: string;
   href?: string;
@@ -41,6 +43,7 @@ export function ListingCard({
   hostVerified,
   spaceFitScore,
   securityFeatures = [],
+  extraFeatures = [],
   photoUrl,
   photoAlt,
   className,
@@ -95,8 +98,20 @@ export function ListingCard({
           {hostVerified ? <VerificationBadge type="host" size="sm" /> : null}
         </div>
 
-        {securityFeatures.length > 0 ? (
-          <SecurityFeatureChips features={securityFeatures} className="mt-auto pt-1" />
+        {securityFeatures.length > 0 || extraFeatures.length > 0 ? (
+          <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-1">
+            {extraFeatures.map((f) => (
+              <span
+                key={f}
+                className="inline-flex items-center rounded-md bg-surface px-2 py-1 type-badge text-muted-foreground"
+              >
+                {f}
+              </span>
+            ))}
+            {securityFeatures.length > 0 ? (
+              <SecurityFeatureChips features={securityFeatures} />
+            ) : null}
+          </div>
         ) : null}
       </div>
     </article>

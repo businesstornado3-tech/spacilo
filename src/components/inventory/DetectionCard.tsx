@@ -1,5 +1,14 @@
 import * as React from "react";
-import { AlertTriangle, Copy, Images, Sparkles, Trash2, Undo2 } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  Copy,
+  HelpCircle,
+  Images,
+  Sparkles,
+  Trash2,
+  Undo2,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -7,7 +16,13 @@ import { Button } from "@/components/ui/button";
 import { QuantityStepper } from "@/components/inventory/QuantityStepper";
 import { CATALOGUE_BY_KEY } from "@/lib/inventory-catalogue";
 import { CATEGORY_LABELS, type ItemCategory } from "@/lib/inventory-model";
-import { duplicateNotice, REVIEW_BAND_LABEL, reviewBand } from "@/lib/spacefit-vision/normalise";
+import {
+  duplicateNotice,
+  INTENT_PROMPT,
+  quantityDisplay,
+  reviewStatus,
+} from "@/lib/spacefit-vision/normalise";
+import { scoreToBand, type ConfidenceBand, type InventoryIntent } from "@/lib/spacefit-vision/schema";
 import type { DetectionWithPhotos } from "@/lib/detections-api";
 
 export interface DetectionDraft {
@@ -19,18 +34,33 @@ export interface DetectionDraft {
   edited: boolean;
 }
 
-const BAND_STYLES = {
-  high: "bg-success-soft text-success-soft-foreground",
-  medium: "bg-warning-soft text-warning-soft-foreground",
-  low: "bg-secondary text-muted-foreground",
-} as const;
+/** Small status pill: green when clear, amber when the renter should check. */
+function StatusPill({ ok, children }: { ok: boolean; children: React.ReactNode }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 type-body-xs",
+        ok
+          ? "bg-success-soft text-success-soft-foreground"
+          : "bg-warning-soft text-warning-soft-foreground",
+      )}
+    >
+      {ok ? (
+        <Check className="size-3" aria-hidden="true" />
+      ) : (
+        <AlertTriangle className="size-3" aria-hidden="true" />
+      )}
+      {children}
+    </span>
+  );
+}
 
 /**
  * One AI suggestion awaiting the renter's decision.
  *
- * Everything is presented as a suggestion the renter owns: the label is
- * editable, the count is editable, and nothing is added to My Stuff until
- * they confirm.
+ * Identification and quantity are shown as SEPARATE statements: SpaceFit can
+ * be sure a group is cardboard boxes while being unsure how many there are.
+ * Nothing is added to My Stuff until the renter confirms.
  */
 export function DetectionCard({
   detection,
@@ -43,13 +73,27 @@ export function DetectionCard({
   onChange: (next: DetectionDraft) => void;
   thumbnails: string[];
 }) {
-  const band = reviewBand(detection.confidence_score);
+  const objectBand = (detection.object_confidence as ConfidenceBand | null) ??
+    scoreToBand(detection.confidence_score);
+  const quantityBand = (detection.quantity_confidence as ConfidenceBand | null) ?? "medium";
+  const intent = (detection.inventory_intent as InventoryIntent | null) ?? "likely_inventory";
+  const repeated = detection.suggested_quantity > 1;
+
+  const status = reviewStatus({
+    object_confidence: objectBand,
+    quantity_confidence: quantityBand,
+    quantity: draft.quantity,
+  });
+
   const catalogue = draft.catalogueKey ? CATALOGUE_BY_KEY.get(draft.catalogueKey) : undefined;
   const duplicate = duplicateNotice({
     duplicate_certainty: detection.duplicate_certainty as never,
     source_photo_indexes: detection.photo_ids.map((_, index) => index),
     label: detection.detected_label,
+    repeated_item_group: repeated,
+    quantity_confidence: quantityBand,
   });
+  const intentPrompt = INTENT_PROMPT[intent];
   const labelId = React.useId();
 
   return (
@@ -75,13 +119,19 @@ export function DetectionCard({
 
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={cn("rounded-full px-2 py-0.5 type-body-xs", BAND_STYLES[band])}
-              title="How confident SpaceFit AI is about this suggestion"
-            >
-              <Sparkles className="mr-1 inline size-3" aria-hidden="true" />
-              {REVIEW_BAND_LABEL[band]}
-            </span>
+            {status.allClear ? (
+              <StatusPill ok>
+                <Sparkles className="size-3" aria-hidden="true" />
+                Looks clear
+              </StatusPill>
+            ) : (
+              <>
+                <StatusPill ok={status.itemOk}>{status.itemLabel}</StatusPill>
+                {status.quantityLabel ? (
+                  <StatusPill ok={status.quantityOk}>{status.quantityLabel}</StatusPill>
+                ) : null}
+              </>
+            )}
             {thumbnails.length > 1 ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 type-body-xs text-muted-foreground">
                 <Copy className="size-3" aria-hidden="true" />
@@ -106,6 +156,24 @@ export function DetectionCard({
               ? ` · ${catalogue.name} — typical estimate ${catalogue.lengthCm}×${catalogue.widthCm}×${catalogue.heightCm} cm`
               : " · size unknown, we'll ask you for this"}
           </p>
+
+          {intentPrompt ? (
+            <p className="flex gap-2 rounded-xl bg-secondary px-3 py-2 type-body-sm text-muted-foreground">
+              <HelpCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              {intentPrompt}
+            </p>
+          ) : null}
+
+          {!status.quantityOk && status.quantityLabel ? (
+            <p className="type-body-sm text-muted-foreground">
+              {quantityDisplay(draft.quantity, quantityBand)}
+              {detection.min_plausible_quantity !== null &&
+              detection.max_plausible_quantity !== null &&
+              detection.max_plausible_quantity > detection.min_plausible_quantity
+                ? ` (likely ${detection.min_plausible_quantity}–${detection.max_plausible_quantity})`
+                : ""}
+            </p>
+          ) : null}
 
           {duplicate ? (
             <p className="flex gap-2 rounded-xl bg-warning-soft px-3 py-2 type-body-sm text-warning-soft-foreground">

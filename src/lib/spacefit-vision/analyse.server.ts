@@ -8,6 +8,7 @@
 import { CATALOGUE } from "@/lib/inventory-catalogue";
 import { reconcileDetections } from "@/lib/spacefit-vision/normalise";
 import {
+  BAND_SCORE,
   ITEM_CATEGORIES,
   MAX_PHOTOS_PER_ANALYSIS,
   type VisionErrorCategory,

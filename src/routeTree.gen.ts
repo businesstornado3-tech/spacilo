@@ -33,6 +33,7 @@ import { Route as AuthenticatedRenterBookingsRouteImport } from './routes/_authe
 import { Route as AuthenticatedRenterMessagesRouteImport } from './routes/_authenticated.renter.messages'
 import { Route as AuthenticatedRenterSearchRouteImport } from './routes/_authenticated.renter.search'
 import { Route as AuthenticatedHostSpacesNewRouteImport } from './routes/_authenticated.host.spaces.new'
+import { Route as AuthenticatedHostSpacesSpaceIdEditRouteImport } from './routes/_authenticated.host.spaces.$spaceId.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -161,6 +162,12 @@ const AuthenticatedHostSpacesNewRoute =
     path: '/spaces/new',
     getParentRoute: () => AuthenticatedHostRoute,
   } as any)
+const AuthenticatedHostSpacesSpaceIdEditRoute =
+  AuthenticatedHostSpacesSpaceIdEditRouteImport.update({
+    id: '/spaces/$spaceId/edit',
+    path: '/spaces/$spaceId/edit',
+    getParentRoute: () => AuthenticatedHostRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/host/': typeof AuthenticatedHostIndexRoute
   '/renter/': typeof AuthenticatedRenterIndexRoute
   '/host/spaces/new': typeof AuthenticatedHostSpacesNewRoute
+  '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -209,6 +217,7 @@ export interface FileRoutesByTo {
   '/host': typeof AuthenticatedHostIndexRoute
   '/renter': typeof AuthenticatedRenterIndexRoute
   '/host/spaces/new': typeof AuthenticatedHostSpacesNewRoute
+  '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -236,6 +245,7 @@ export interface FileRoutesById {
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
   '/_authenticated/renter/': typeof AuthenticatedRenterIndexRoute
   '/_authenticated/host/spaces/new': typeof AuthenticatedHostSpacesNewRoute
+  '/_authenticated/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/host/'
     | '/renter/'
     | '/host/spaces/new'
+    | '/host/spaces/$spaceId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/host'
     | '/renter'
     | '/host/spaces/new'
+    | '/host/spaces/$spaceId/edit'
   id:
     | '__root__'
     | '/'
@@ -312,6 +324,7 @@ export interface FileRouteTypes {
     | '/_authenticated/host/'
     | '/_authenticated/renter/'
     | '/_authenticated/host/spaces/new'
+    | '/_authenticated/host/spaces/$spaceId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -499,6 +512,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHostSpacesNewRouteImport
       parentRoute: typeof AuthenticatedHostRoute
     }
+    '/_authenticated/host/spaces/$spaceId/edit': {
+      id: '/_authenticated/host/spaces/$spaceId/edit'
+      path: '/spaces/$spaceId/edit'
+      fullPath: '/host/spaces/$spaceId/edit'
+      preLoaderRoute: typeof AuthenticatedHostSpacesSpaceIdEditRouteImport
+      parentRoute: typeof AuthenticatedHostRoute
+    }
   }
 }
 
@@ -508,6 +528,7 @@ interface AuthenticatedHostRouteChildren {
   AuthenticatedHostMessagesRoute: typeof AuthenticatedHostMessagesRoute
   AuthenticatedHostIndexRoute: typeof AuthenticatedHostIndexRoute
   AuthenticatedHostSpacesNewRoute: typeof AuthenticatedHostSpacesNewRoute
+  AuthenticatedHostSpacesSpaceIdEditRoute: typeof AuthenticatedHostSpacesSpaceIdEditRoute
 }
 
 const AuthenticatedHostRouteChildren: AuthenticatedHostRouteChildren = {
@@ -516,6 +537,8 @@ const AuthenticatedHostRouteChildren: AuthenticatedHostRouteChildren = {
   AuthenticatedHostMessagesRoute: AuthenticatedHostMessagesRoute,
   AuthenticatedHostIndexRoute: AuthenticatedHostIndexRoute,
   AuthenticatedHostSpacesNewRoute: AuthenticatedHostSpacesNewRoute,
+  AuthenticatedHostSpacesSpaceIdEditRoute:
+    AuthenticatedHostSpacesSpaceIdEditRoute,
 }
 
 const AuthenticatedHostRouteWithChildren =

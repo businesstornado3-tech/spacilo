@@ -96,16 +96,33 @@ export function SiteHeader({ className }: { className?: string }) {
               </Link>
             ))}
             <div className="flex gap-2 pt-2">
-              <Button variant="secondary" block asChild>
-                <Link to="/login" onClick={() => setMenuOpen(false)}>
-                  Log in
-                </Link>
-              </Button>
-              <Button block asChild>
-                <Link to="/signup" onClick={() => setMenuOpen(false)}>
-                  Get Started
-                </Link>
-              </Button>
+              {signedIn ? (
+                <>
+                  <Button variant="secondary" block asChild>
+                    <Link to="/profile" onClick={() => setMenuOpen(false)}>
+                      Profile
+                    </Link>
+                  </Button>
+                  <Button block asChild>
+                    <Link to={dashboardTo} onClick={() => setMenuOpen(false)}>
+                      Dashboard
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="secondary" block asChild>
+                    <Link to="/login" onClick={() => setMenuOpen(false)}>
+                      Log in
+                    </Link>
+                  </Button>
+                  <Button block asChild>
+                    <Link to="/get-started" onClick={() => setMenuOpen(false)}>
+                      Get Started
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
             <button
               type="button"

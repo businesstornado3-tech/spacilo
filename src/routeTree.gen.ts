@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as FindStorageRouteImport } from './routes/find-storage'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
@@ -32,6 +33,10 @@ import { Route as AuthenticatedRenterSearchRouteImport } from './routes/_authent
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DesignSystemRoute = DesignSystemRouteImport.update({
@@ -70,14 +75,14 @@ const TrustRoute = TrustRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedHostRoute = AuthenticatedHostRouteImport.update({
-  id: '/_authenticated/host',
+  id: '/host',
   path: '/host',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedRenterRoute = AuthenticatedRenterRouteImport.update({
-  id: '/_authenticated/renter',
+  id: '/renter',
   path: '/renter',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedHostIndexRoute = AuthenticatedHostIndexRouteImport.update({
   id: '/',
@@ -175,6 +180,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/design-system': typeof DesignSystemRoute
   '/find-storage': typeof FindStorageRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -238,6 +244,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/design-system'
     | '/find-storage'
     | '/how-it-works'
@@ -260,6 +267,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   DesignSystemRoute: typeof DesignSystemRoute
   FindStorageRoute: typeof FindStorageRoute
   HowItWorksRoute: typeof HowItWorksRoute
@@ -267,8 +275,6 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   TrustRoute: typeof TrustRoute
-  AuthenticatedHostRoute: typeof AuthenticatedHostRouteWithChildren
-  AuthenticatedRenterRoute: typeof AuthenticatedRenterRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -278,6 +284,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/design-system': {
@@ -334,14 +347,14 @@ declare module '@tanstack/react-router' {
       path: '/host'
       fullPath: '/host'
       preLoaderRoute: typeof AuthenticatedHostRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/renter': {
       id: '/_authenticated/renter'
       path: '/renter'
       fullPath: '/renter'
       preLoaderRoute: typeof AuthenticatedRenterRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/host/': {
       id: '/_authenticated/host/'
@@ -445,8 +458,23 @@ const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
 const AuthenticatedRenterRouteWithChildren =
   AuthenticatedRenterRoute._addFileChildren(AuthenticatedRenterRouteChildren)
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedHostRoute: typeof AuthenticatedHostRouteWithChildren
+  AuthenticatedRenterRoute: typeof AuthenticatedRenterRouteWithChildren
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedHostRoute: AuthenticatedHostRouteWithChildren,
+  AuthenticatedRenterRoute: AuthenticatedRenterRouteWithChildren,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
   DesignSystemRoute: DesignSystemRoute,
   FindStorageRoute: FindStorageRoute,
   HowItWorksRoute: HowItWorksRoute,
@@ -454,8 +482,6 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   TrustRoute: TrustRoute,
-  AuthenticatedHostRoute: AuthenticatedHostRouteWithChildren,
-  AuthenticatedRenterRoute: AuthenticatedRenterRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -122,7 +122,8 @@ function MatchesPage() {
                 </ul>
               ) : null}
             </section>
-          )}
+          ) : null}
+
         </div>
       )}
     </AppLayout>

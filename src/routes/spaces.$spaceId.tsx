@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { ListingPreview, type ListingView } from "@/components/host/listing/ListingPreview";
 import { publicLocation } from "@/lib/spaces";
 import { getPublishedSpace, signedPhotoUrls } from "@/lib/spaces-api";
+import { ListingSpaceFitPanel } from "@/components/spacefit/ListingSpaceFitPanel";
+import { toMatchSpace, type PublishedSpaceRow } from "@/hooks/useSpaceFitMatches";
 
 export const Route = createFileRoute("/spaces/$spaceId")({
   head: () => ({
@@ -27,7 +29,7 @@ export const Route = createFileRoute("/spaces/$spaceId")({
 function PublicSpacePage() {
   const { spaceId } = Route.useParams();
   const [state, setState] = React.useState<
-    { kind: "loading" } | { kind: "missing" } | { kind: "error" } | { kind: "ready"; view: ListingView }
+    { kind: "loading" } | { kind: "missing" } | { kind: "error" } | { kind: "ready"; view: ListingView; matchSpace: ReturnType<typeof toMatchSpace> }
   >({ kind: "loading" });
 
   const load = React.useCallback(async () => {
@@ -39,6 +41,7 @@ function PublicSpacePage() {
       const signed = await signedPhotoUrls(paths);
       setState({
         kind: "ready",
+        matchSpace: toMatchSpace(row as unknown as PublishedSpaceRow),
         view: {
           title: row.title ?? "",
           spaceType: row.space_type,

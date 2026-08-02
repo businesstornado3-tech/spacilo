@@ -13,7 +13,12 @@
  */
 import { CATALOGUE, CATALOGUE_BY_KEY, type CatalogueItem } from "@/lib/inventory-catalogue";
 import type { ItemCategory } from "@/lib/inventory-model";
-import type { VisionDetection } from "@/lib/spacefit-vision/schema";
+import {
+  scoreToBand,
+  type ConfidenceBand,
+  type InventoryIntent,
+  type VisionDetection,
+} from "@/lib/spacefit-vision/schema";
 
 /** Extra words that should steer a label towards a catalogue entry. */
 const ALIASES: Record<string, string[]> = {

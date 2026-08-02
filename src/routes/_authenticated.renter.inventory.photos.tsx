@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Check, Info } from "lucide-react";
 
 import { brand } from "@/config/brand";
@@ -6,7 +6,9 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/common/Skeletons";
 import { InventoryPhotoManager } from "@/components/inventory/InventoryPhotoManager";
+import { AnalysePhotosPanel } from "@/components/inventory/AnalysePhotosPanel";
 import { useEnsuredInventory, useInventoryPhotos } from "@/hooks/useInventory";
+
 
 const title = "Inventory photos — " + brand.name;
 const description = "Upload photos of the belongings you want to store.";

@@ -43,6 +43,7 @@ export function ListingCard({
   hostVerified,
   spaceFitScore,
   securityFeatures = [],
+  extraFeatures = [],
   photoUrl,
   photoAlt,
   className,

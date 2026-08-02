@@ -7,11 +7,18 @@
  * The schema deliberately carries NO physical measurements: an ordinary
  * photograph cannot give reliable dimensions, so the provider only identifies
  * objects and Project Stow's own catalogue supplies typical sizes.
+ *
+ * Two kinds of certainty are modelled SEPARATELY:
+ *  - object_confidence   — how sure the provider is about WHAT it is
+ *  - quantity_confidence — how sure the provider is about HOW MANY there are
+ *
+ * A stack of overlapping cardboard boxes is a very common case where the first
+ * is high and the second is low.
  */
 import { z } from "zod";
 
-export const SPACEFIT_VISION_SCHEMA_VERSION = "v1";
-export const SPACEFIT_VISION_PROMPT_VERSION = "v1";
+export const SPACEFIT_VISION_SCHEMA_VERSION = "v2";
+export const SPACEFIT_VISION_PROMPT_VERSION = "v2";
 
 export const MAX_PHOTOS_PER_ANALYSIS = 10;
 
@@ -31,6 +38,22 @@ export const ITEM_CATEGORIES = [
 
 export const TRI_STATE = ["yes", "no", "unknown"] as const;
 export const DUPLICATE_CERTAINTY = ["likely_same", "possibly_same", "likely_different"] as const;
+
+/** Coarse, renter-friendly certainty bands. Raw probabilities stay internal. */
+export const CONFIDENCE_BANDS = ["high", "medium", "low"] as const;
+export type ConfidenceBand = (typeof CONFIDENCE_BANDS)[number];
+
+/**
+ * Whether a detection looks like something the renter is presenting for
+ * storage, or part of the room/garage around it.
+ */
+export const INVENTORY_INTENTS = [
+  "likely_inventory",
+  "uncertain_inventory",
+  "likely_environment",
+] as const;
+export type InventoryIntent = (typeof INVENTORY_INTENTS)[number];
+
 export const RESTRICTED_REASONS = [
   "flammable_fuel",
   "gas_cylinder",
@@ -45,8 +68,16 @@ export const detectionSchema = z.object({
   label: z.string().trim().min(1).max(80),
   suggested_category: z.enum(ITEM_CATEGORIES).default("other"),
   suggested_catalogue_key: z.string().trim().max(60).nullable().default(null),
-  quantity: z.number().int().min(1).max(999).default(1),
-  confidence: z.number().min(0).max(1).nullable().default(null),
+  /** Best estimate of DISTINCT physical objects across the whole photo set. */
+  estimated_quantity: z.number().int().min(1).max(999).default(1),
+  minimum_plausible_quantity: z.number().int().min(0).max(999).nullable().default(null),
+  maximum_plausible_quantity: z.number().int().min(0).max(999).nullable().default(null),
+  object_confidence: z.enum(CONFIDENCE_BANDS).default("medium"),
+  quantity_confidence: z.enum(CONFIDENCE_BANDS).default("medium"),
+  /** Is this a belonging, or part of the room it is standing in? */
+  inventory_intent: z.enum(INVENTORY_INTENTS).default("likely_inventory"),
+  /** True for homogeneous, repeated goods (boxes, crates, bags, chairs…). */
+  repeated_item_group: z.boolean().default(false),
   stackable_suggestion: z.enum(TRI_STATE).default("unknown"),
   fragile_suggestion: z.enum(TRI_STATE).default("unknown"),
   orientation_flexible_suggestion: z.enum(TRI_STATE).default("unknown"),
@@ -66,6 +97,19 @@ export const visionResultSchema = z.object({
 export type VisionDetection = z.infer<typeof detectionSchema>;
 export type VisionResult = z.infer<typeof visionResultSchema>;
 
+/**
+ * Representative numeric score kept only for backwards compatibility with the
+ * stored `confidence_score` column. Never shown to renters.
+ */
+export const BAND_SCORE: Record<ConfidenceBand, number> = { high: 0.9, medium: 0.65, low: 0.35 };
+
+export function scoreToBand(score: number | null | undefined): ConfidenceBand {
+  if (score === null || score === undefined) return "medium";
+  if (score >= 0.8) return "high";
+  if (score >= 0.55) return "medium";
+  return "low";
+}
+
 /** JSON Schema mirror handed to providers that support structured output. */
 export const VISION_JSON_SCHEMA = {
   type: "object",
@@ -81,8 +125,13 @@ export const VISION_JSON_SCHEMA = {
           "label",
           "suggested_category",
           "suggested_catalogue_key",
-          "quantity",
-          "confidence",
+          "estimated_quantity",
+          "minimum_plausible_quantity",
+          "maximum_plausible_quantity",
+          "object_confidence",
+          "quantity_confidence",
+          "inventory_intent",
+          "repeated_item_group",
           "stackable_suggestion",
           "fragile_suggestion",
           "orientation_flexible_suggestion",
@@ -97,8 +146,13 @@ export const VISION_JSON_SCHEMA = {
           label: { type: "string" },
           suggested_category: { type: "string", enum: [...ITEM_CATEGORIES] },
           suggested_catalogue_key: { type: ["string", "null"] },
-          quantity: { type: "integer", minimum: 1, maximum: 999 },
-          confidence: { type: ["number", "null"], minimum: 0, maximum: 1 },
+          estimated_quantity: { type: "integer", minimum: 1, maximum: 999 },
+          minimum_plausible_quantity: { type: ["integer", "null"], minimum: 0, maximum: 999 },
+          maximum_plausible_quantity: { type: ["integer", "null"], minimum: 0, maximum: 999 },
+          object_confidence: { type: "string", enum: [...CONFIDENCE_BANDS] },
+          quantity_confidence: { type: "string", enum: [...CONFIDENCE_BANDS] },
+          inventory_intent: { type: "string", enum: [...INVENTORY_INTENTS] },
+          repeated_item_group: { type: "boolean" },
           stackable_suggestion: { type: "string", enum: [...TRI_STATE] },
           fragile_suggestion: { type: "string", enum: [...TRI_STATE] },
           orientation_flexible_suggestion: { type: "string", enum: [...TRI_STATE] },

@@ -137,12 +137,17 @@ export type Database = {
           fragile_suggestion: Database["public"]["Enums"]["item_tri_state"]
           id: string
           inventory_id: string
+          inventory_intent: string
+          max_plausible_quantity: number | null
+          min_plausible_quantity: number | null
           model: string
           notes: string | null
+          object_confidence: string | null
           orientation_suggestion: Database["public"]["Enums"]["item_tri_state"]
           possible_duplicate_group: string | null
           possible_restricted_item: boolean
           provider: string
+          quantity_confidence: string | null
           restricted_reason: string | null
           resulting_item_id: string | null
           review_status: Database["public"]["Enums"]["detection_review_status"]
@@ -163,12 +168,17 @@ export type Database = {
           fragile_suggestion?: Database["public"]["Enums"]["item_tri_state"]
           id?: string
           inventory_id: string
+          inventory_intent?: string
+          max_plausible_quantity?: number | null
+          min_plausible_quantity?: number | null
           model: string
           notes?: string | null
+          object_confidence?: string | null
           orientation_suggestion?: Database["public"]["Enums"]["item_tri_state"]
           possible_duplicate_group?: string | null
           possible_restricted_item?: boolean
           provider: string
+          quantity_confidence?: string | null
           restricted_reason?: string | null
           resulting_item_id?: string | null
           review_status?: Database["public"]["Enums"]["detection_review_status"]
@@ -189,12 +199,17 @@ export type Database = {
           fragile_suggestion?: Database["public"]["Enums"]["item_tri_state"]
           id?: string
           inventory_id?: string
+          inventory_intent?: string
+          max_plausible_quantity?: number | null
+          min_plausible_quantity?: number | null
           model?: string
           notes?: string | null
+          object_confidence?: string | null
           orientation_suggestion?: Database["public"]["Enums"]["item_tri_state"]
           possible_duplicate_group?: string | null
           possible_restricted_item?: boolean
           provider?: string
+          quantity_confidence?: string | null
           restricted_reason?: string | null
           resulting_item_id?: string | null
           review_status?: Database["public"]["Enums"]["detection_review_status"]

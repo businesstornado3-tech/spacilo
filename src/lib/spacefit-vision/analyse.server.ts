@@ -8,6 +8,7 @@
 import { CATALOGUE } from "@/lib/inventory-catalogue";
 import { reconcileDetections } from "@/lib/spacefit-vision/normalise";
 import {
+  BAND_SCORE,
   ITEM_CATEGORIES,
   MAX_PHOTOS_PER_ANALYSIS,
   type VisionErrorCategory,
@@ -230,8 +231,21 @@ export async function runInventoryAnalysis(args: AnalyseArgs): Promise<AnalyseSu
       detected_label: detection.label.slice(0, 80),
       suggested_category: detection.category,
       suggested_catalogue_key: detection.catalogue_key,
-      suggested_quantity: clampInt(detection.quantity, 1, 999),
-      confidence_score: detection.confidence === null ? null : clampNumber(detection.confidence, 0, 1),
+      suggested_quantity: clampInt(detection.estimated_quantity, 1, 999),
+      min_plausible_quantity:
+        detection.minimum_plausible_quantity === null
+          ? null
+          : clampInt(detection.minimum_plausible_quantity, 0, 999),
+      max_plausible_quantity:
+        detection.maximum_plausible_quantity === null
+          ? null
+          : clampInt(detection.maximum_plausible_quantity, 0, 999),
+      object_confidence: detection.object_confidence,
+      quantity_confidence: detection.quantity_confidence,
+      inventory_intent: detection.inventory_intent,
+      // Kept for backwards compatibility with existing readers; bands are the
+      // source of truth and raw probabilities are never shown to renters.
+      confidence_score: BAND_SCORE[detection.object_confidence],
       stackable_suggestion: detection.stackable_suggestion,
       fragile_suggestion: detection.fragile_suggestion,
       orientation_suggestion: detection.orientation_flexible_suggestion,
@@ -345,6 +359,4 @@ function clampInt(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, Math.round(value)));
 }
 
-function clampNumber(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
+

@@ -25,7 +25,7 @@ export function SpaceFitAiMark({
 }: {
   size?: "sm" | "md";
   tone?: "soft" | "plain";
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <span
@@ -71,7 +71,7 @@ export function AnimatedSpaceFitScore({
   score: number;
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
-  className?: string;
+  className?: string | undefined;
 }) {
   const target = Math.max(0, Math.min(100, score));
   const animated = useCountUp(target);
@@ -131,7 +131,7 @@ export function SpaceFitScanning({
   className,
 }: {
   label?: string;
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <div
@@ -172,7 +172,7 @@ export function SpaceFitResult({
   className,
 }: {
   analysis: SpaceFitAnalysis;
-  className?: string;
+  className?: string | undefined;
 }) {
   const stats = [
     { icon: Boxes, value: `${analysis.itemCount} items`, label: "identified" },
@@ -221,7 +221,7 @@ export function SpaceFitAnalysisPanel({
 }: {
   analysis: SpaceFitAnalysis;
   scanMs?: number;
-  className?: string;
+  className?: string | undefined;
 }) {
   const [done, setDone] = React.useState(false);
 

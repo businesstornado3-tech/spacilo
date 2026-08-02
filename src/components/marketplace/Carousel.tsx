@@ -9,7 +9,7 @@ interface CardCarouselProps {
   action?: React.ReactNode;
   /** Tailwind width classes applied to each item */
   itemClassName?: string;
-  className?: string;
+  className?: string | undefined;
   ariaLabel?: string;
 }
 

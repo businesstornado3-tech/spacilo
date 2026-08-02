@@ -13,7 +13,7 @@ interface HostEarningsCardProps {
   note?: string;
   ctaLabel?: string;
   onCta?: () => void;
-  className?: string;
+  className?: string | undefined;
 }
 
 /**

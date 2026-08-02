@@ -43,7 +43,7 @@ export function TrustIndicator({
   className,
 }: {
   kind: TrustIndicatorKind;
-  className?: string;
+  className?: string | undefined;
 }) {
   const { label, icon: Icon, hint } = INDICATORS[kind];
   return (
@@ -65,7 +65,7 @@ export function TrustIndicatorRow({
   className,
 }: {
   kinds?: TrustIndicatorKind[];
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <ul className={cn("flex flex-wrap gap-1.5", className)}>
@@ -101,7 +101,7 @@ export function TrustCard({
   title: string;
   children: React.ReactNode;
   tone?: "plain" | "accent";
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <article

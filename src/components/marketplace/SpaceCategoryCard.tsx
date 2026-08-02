@@ -7,7 +7,7 @@ interface SpaceCategoryCardProps {
   photoUrl?: string;
   photoAlt: string;
   onSelect?: () => void;
-  className?: string;
+  className?: string | undefined;
 }
 
 /**

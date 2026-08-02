@@ -21,7 +21,7 @@ export function AccessIndicator({
 }: {
   level: AccessLevel;
   compact?: boolean;
-  className?: string;
+  className?: string | undefined;
 }) {
   const { label, icon: Icon, hint } = ACCESS[level];
   return (

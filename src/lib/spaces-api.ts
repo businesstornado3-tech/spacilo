@@ -173,7 +173,10 @@ export async function listPublishedSpaces(limit = 60) {
   return data ?? [];
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function getPublishedSpace(spaceId: string) {
+  if (!UUID_RE.test(spaceId)) return null;
   const { data, error } = await supabase.rpc("get_published_space", { space_id: spaceId });
   if (error) throw error;
   return data?.[0] ?? null;

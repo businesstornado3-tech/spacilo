@@ -186,10 +186,19 @@ export const formatM2 = (value: number | null | undefined) =>
   value === null || value === undefined ? "—" : `${value.toFixed(1)} m²`;
 
 /** Public location label — never derived from the private address lines. */
-export function publicLocation(area?: string | null, district?: string | null) {
+export function publicLocation(area?: string | null, district?: string | null, postcode?: string | null) {
   if (area && area.trim()) return area.trim();
-  if (district) return `${district} area`;
+  const code = district ?? districtFromPostcode(postcode);
+  if (code) return `${code} area`;
   return "Location on request";
+}
+
+/** Mirrors the database trigger so previews match what renters will see. */
+export function districtFromPostcode(postcode?: string | null): string | null {
+  if (!postcode) return null;
+  const raw = postcode.replace(/\s+/g, "").toUpperCase();
+  if (raw.length < 5) return null;
+  return raw.slice(0, raw.length - 3);
 }
 
 export const LISTING_STATUS_LABEL: Record<ListingStatusValue, string> = {

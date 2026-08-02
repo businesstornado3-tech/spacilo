@@ -280,7 +280,7 @@ export function toListingView(
     title: form.title ?? "",
     spaceType: form.space_type ?? null,
     description: form.description ?? "",
-    location: publicLocation(form.approximate_area, form.postcode_district),
+    location: publicLocation(form.approximate_area, form.postcode_district, form.postcode),
     pricePence: form.monthly_price_pence ?? null,
     minimumMonths: form.minimum_storage_period_months ?? 1,
     storageMode: form.storage_mode ?? null,

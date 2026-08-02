@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Sparkles } from "lucide-react";
 
 import { Field, TextInput, TextArea, NativeSelect } from "@/components/form/Field";

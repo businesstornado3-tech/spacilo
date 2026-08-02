@@ -4,12 +4,17 @@ import { Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/Logo";
+import { AccountMenu } from "@/components/account/AccountMenu";
 import { marketingNav } from "@/config/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 /** Top navigation for logged-out / marketing pages. */
 export function SiteHeader({ className }: { className?: string }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const { session, mode, loading } = useAuth();
+  const dashboardTo = mode === "host" ? "/host" : "/renter";
+  const signedIn = Boolean(session);
 
   return (
     <header

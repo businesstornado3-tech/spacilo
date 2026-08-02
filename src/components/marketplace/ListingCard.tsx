@@ -21,6 +21,8 @@ export interface ListingCardProps {
   hostVerified?: boolean;
   spaceFitScore?: number;
   securityFeatures?: SecurityFeature[];
+  /** Plain-language extras such as "Indoor" or "Host present". */
+  extraFeatures?: string[];
   photoUrl?: string;
   photoAlt: string;
   href?: string;

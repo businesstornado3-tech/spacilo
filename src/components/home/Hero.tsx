@@ -62,7 +62,7 @@ export function Hero() {
           </Link>
         </div>
 
-        <div className="relative order-first overflow-hidden rounded-3xl shadow-raised lg:order-none">
+        <div className="relative overflow-hidden rounded-3xl shadow-raised">
           <img
             src={heroPhoto}
             alt="Household boxes, a bicycle and suitcases stored neatly in a British home garage"

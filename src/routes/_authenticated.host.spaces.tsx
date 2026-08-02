@@ -4,7 +4,7 @@ import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PagePlaceholder } from "@/components/common/PagePlaceholder";
 
-export const Route = createFileRoute("/host/spaces")({
+export const Route = createFileRoute("/_authenticated/host/spaces")({
   head: () => ({
     meta: [
       { title: "My Spaces — Hosting — " + brand.name },

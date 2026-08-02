@@ -102,7 +102,7 @@ function RenterHomePage() {
               </div>
               <div className="mt-5 flex flex-wrap gap-2">
                 <Button asChild>
-                  <Link to="/renter/inventory/matching">
+                  <Link to="/renter/matches">
                     Find matching spaces
                     <ArrowRight aria-hidden="true" />
                   </Link>

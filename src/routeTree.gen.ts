@@ -35,6 +35,7 @@ import { Route as AuthenticatedRenterMessagesRouteImport } from './routes/_authe
 import { Route as AuthenticatedRenterSearchRouteImport } from './routes/_authenticated.renter.search'
 import { Route as AuthenticatedHostSpacesIndexRouteImport } from './routes/_authenticated.host.spaces.index'
 import { Route as AuthenticatedHostSpacesNewRouteImport } from './routes/_authenticated.host.spaces.new'
+import { Route as AuthenticatedRenterInventoryAddRouteImport } from './routes/_authenticated.renter.inventory.add'
 import { Route as AuthenticatedHostSpacesSpaceIdEditRouteImport } from './routes/_authenticated.host.spaces.$spaceId.edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -175,6 +176,12 @@ const AuthenticatedHostSpacesNewRoute =
     path: '/spaces/new',
     getParentRoute: () => AuthenticatedHostRoute,
   } as any)
+const AuthenticatedRenterInventoryAddRoute =
+  AuthenticatedRenterInventoryAddRouteImport.update({
+    id: '/inventory/add',
+    path: '/inventory/add',
+    getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
 const AuthenticatedHostSpacesSpaceIdEditRoute =
   AuthenticatedHostSpacesSpaceIdEditRouteImport.update({
     id: '/spaces/$spaceId/edit',
@@ -207,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/host/': typeof AuthenticatedHostIndexRoute
   '/renter/': typeof AuthenticatedRenterIndexRoute
   '/host/spaces/new': typeof AuthenticatedHostSpacesNewRoute
+  '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
 }
@@ -233,6 +241,7 @@ export interface FileRoutesByTo {
   '/host': typeof AuthenticatedHostIndexRoute
   '/renter': typeof AuthenticatedRenterIndexRoute
   '/host/spaces/new': typeof AuthenticatedHostSpacesNewRoute
+  '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/host/spaces': typeof AuthenticatedHostSpacesIndexRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
 }
@@ -263,6 +272,7 @@ export interface FileRoutesById {
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
   '/_authenticated/renter/': typeof AuthenticatedRenterIndexRoute
   '/_authenticated/host/spaces/new': typeof AuthenticatedHostSpacesNewRoute
+  '/_authenticated/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/_authenticated/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/_authenticated/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
 }
@@ -293,6 +303,7 @@ export interface FileRouteTypes {
     | '/host/'
     | '/renter/'
     | '/host/spaces/new'
+    | '/renter/inventory/add'
     | '/host/spaces/'
     | '/host/spaces/$spaceId/edit'
   fileRoutesByTo: FileRoutesByTo
@@ -319,6 +330,7 @@ export interface FileRouteTypes {
     | '/host'
     | '/renter'
     | '/host/spaces/new'
+    | '/renter/inventory/add'
     | '/host/spaces'
     | '/host/spaces/$spaceId/edit'
   id:
@@ -348,6 +360,7 @@ export interface FileRouteTypes {
     | '/_authenticated/host/'
     | '/_authenticated/renter/'
     | '/_authenticated/host/spaces/new'
+    | '/_authenticated/renter/inventory/add'
     | '/_authenticated/host/spaces/'
     | '/_authenticated/host/spaces/$spaceId/edit'
   fileRoutesById: FileRoutesById
@@ -552,6 +565,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHostSpacesNewRouteImport
       parentRoute: typeof AuthenticatedHostRoute
     }
+    '/_authenticated/renter/inventory/add': {
+      id: '/_authenticated/renter/inventory/add'
+      path: '/inventory/add'
+      fullPath: '/renter/inventory/add'
+      preLoaderRoute: typeof AuthenticatedRenterInventoryAddRouteImport
+      parentRoute: typeof AuthenticatedRenterRoute
+    }
     '/_authenticated/host/spaces/$spaceId/edit': {
       id: '/_authenticated/host/spaces/$spaceId/edit'
       path: '/spaces/$spaceId/edit'
@@ -591,6 +611,7 @@ interface AuthenticatedRenterRouteChildren {
   AuthenticatedRenterMessagesRoute: typeof AuthenticatedRenterMessagesRoute
   AuthenticatedRenterSearchRoute: typeof AuthenticatedRenterSearchRoute
   AuthenticatedRenterIndexRoute: typeof AuthenticatedRenterIndexRoute
+  AuthenticatedRenterInventoryAddRoute: typeof AuthenticatedRenterInventoryAddRoute
 }
 
 const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
@@ -598,6 +619,7 @@ const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
   AuthenticatedRenterMessagesRoute: AuthenticatedRenterMessagesRoute,
   AuthenticatedRenterSearchRoute: AuthenticatedRenterSearchRoute,
   AuthenticatedRenterIndexRoute: AuthenticatedRenterIndexRoute,
+  AuthenticatedRenterInventoryAddRoute: AuthenticatedRenterInventoryAddRoute,
 }
 
 const AuthenticatedRenterRouteWithChildren =

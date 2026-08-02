@@ -737,23 +737,34 @@ export type Database = {
           cover_path: string
           currency: string
           description: string
+          door_height_cm: number
+          door_width_cm: number
           estimated_available_volume_m3: number
           features: string[]
           floor_area_m2: number
+          ground_floor_access: boolean
           host_available_percentage: number
           host_display_name: string
           host_phone_verified: boolean
+          host_restrictions: string[]
           id: string
           latitude: number
+          lift_available: Database["public"]["Enums"]["tri_state"]
           longitude: number
           minimum_storage_period_months: number
+          moisture_condition: Database["public"]["Enums"]["moisture_condition"]
           monthly_price_pence: number
+          photo_count: number
           postcode_district: string
           published_at: string
+          restriction_notes: string
           space_type: Database["public"]["Enums"]["space_type"]
+          stairs_required: boolean
           storage_mode: Database["public"]["Enums"]["storage_mode"]
+          temperature_condition: Database["public"]["Enums"]["temperature_condition"]
           title: string
           total_volume_m3: number
+          vehicle_access_close: boolean
         }[]
       }
       inventory_recalculate: { Args: { target: string }; Returns: undefined }

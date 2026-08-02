@@ -167,7 +167,7 @@ function MyStuffPage() {
                 We&apos;ll use your inventory to help identify suitable nearby storage.
               </p>
               <Button asChild className="ml-auto">
-                <Link to="/renter/inventory/matching">
+                <Link to="/renter/matches">
                   Find matching spaces
                   <ArrowRight aria-hidden="true" />
                 </Link>

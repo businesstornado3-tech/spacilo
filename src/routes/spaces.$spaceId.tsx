@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { ListingPreview, type ListingView } from "@/components/host/listing/ListingPreview";
 import { publicLocation } from "@/lib/spaces";
 import { getPublishedSpace, signedPhotoUrls } from "@/lib/spaces-api";
+import { ListingSpaceFitPanel } from "@/components/spacefit/ListingSpaceFitPanel";
+import { toMatchSpace, type PublishedSpaceRow } from "@/hooks/useSpaceFitMatches";
 
 export const Route = createFileRoute("/spaces/$spaceId")({
   head: () => ({
@@ -27,7 +29,7 @@ export const Route = createFileRoute("/spaces/$spaceId")({
 function PublicSpacePage() {
   const { spaceId } = Route.useParams();
   const [state, setState] = React.useState<
-    { kind: "loading" } | { kind: "missing" } | { kind: "error" } | { kind: "ready"; view: ListingView }
+    { kind: "loading" } | { kind: "missing" } | { kind: "error" } | { kind: "ready"; view: ListingView; matchSpace: ReturnType<typeof toMatchSpace> }
   >({ kind: "loading" });
 
   const load = React.useCallback(async () => {
@@ -39,6 +41,7 @@ function PublicSpacePage() {
       const signed = await signedPhotoUrls(paths);
       setState({
         kind: "ready",
+        matchSpace: toMatchSpace(row as unknown as PublishedSpaceRow),
         view: {
           title: row.title ?? "",
           spaceType: row.space_type,
@@ -101,6 +104,7 @@ function PublicSpacePage() {
             <h1 className="sr-only">{state.view.title}</h1>
             <div className="mx-auto max-w-3xl">
               <ListingPreview view={state.view} />
+              {state.matchSpace ? <ListingSpaceFitPanel space={state.matchSpace} /> : null}
               <div className="mt-6 rounded-2xl border border-border bg-card p-5 text-center shadow-card">
                 <p className="type-body-sm text-muted-foreground">
                   Enquiries and booking open in a later release.
@@ -109,6 +113,7 @@ function PublicSpacePage() {
             </div>
           </>
         ) : null}
+
       </PageSection>
     </MarketingLayout>
   );

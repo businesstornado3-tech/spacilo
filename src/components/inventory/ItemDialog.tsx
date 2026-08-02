@@ -48,7 +48,7 @@ export function ItemDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Undefined = creating a custom item. */
-  item?: InventoryItem;
+  item?: InventoryItem | undefined;
   onSubmit: (row: Row, dimensionsChanged: boolean) => void | Promise<void>;
   saving?: boolean;
 }) {

@@ -17,7 +17,7 @@ import type { InventoryItem } from "@/lib/inventory-model";
 export type PublishedSpaceRow = Awaited<ReturnType<typeof listPublishedSpaces>>[number];
 
 /** RPC row overlaid with the engine's public-safe view of the same space. */
-type MatchRow = Omit<PublishedSpaceRow, keyof MatchSpace> & MatchSpace;
+export type MatchRow = Omit<PublishedSpaceRow, keyof MatchSpace> & MatchSpace;
 
 
 /** Narrows an RPC row to the public-safe fields the engine consumes. */

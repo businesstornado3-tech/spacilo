@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ScanLine, Search, Boxes } from "lucide-react";
+import { ScanLine, Plus, Boxes, ArrowRight, Search } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { EmptyState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { useActiveInventory, useInventoryItems, useInventorySummary } from "@/hooks/useInventory";
+import { formatVolume } from "@/lib/inventory-model";
 
 export const Route = createFileRoute("/_authenticated/renter/")({
   head: () => ({
@@ -21,23 +24,30 @@ export const Route = createFileRoute("/_authenticated/renter/")({
 
 const actions = [
   {
-    to: "/renter/search" as const,
+    to: "/renter/inventory/photos" as const,
     icon: ScanLine,
     title: "Scan my stuff",
-    body: "Use SpaceFit AI to estimate what you need.",
-    note: "Coming soon",
+    body: "Upload photos of what you want to store.",
+    note: "SpaceFit AI analysis will be added in the next stage.",
+    cta: "Upload photos",
   },
   {
-    to: "/renter/search" as const,
-    icon: Search,
-    title: "Search storage",
-    body: "Find spaces near you.",
+    to: "/renter/inventory/add" as const,
+    icon: Plus,
+    title: "Add items manually",
+    body: "Tell us what you need to store and we'll estimate the space required.",
+    cta: "Build my inventory",
   },
 ];
 
 function RenterHomePage() {
   const { profile } = useAuth();
   const firstName = profile?.first_name?.trim();
+
+  const { data: inventory } = useActiveInventory();
+  const { data: items } = useInventoryItems(inventory?.id);
+  const { totals, readiness } = useInventorySummary(items);
+  const hasItems = (items?.length ?? 0) > 0;
 
   return (
     <AppLayout
@@ -55,33 +65,76 @@ function RenterHomePage() {
               <span className="grid size-11 place-items-center rounded-xl bg-primary-soft text-primary-soft-foreground">
                 <action.icon className="size-5" aria-hidden="true" />
               </span>
-              <span className="mt-4 flex items-center gap-2 type-h3">
-                {action.title}
-                {action.note ? (
-                  <span className="rounded-full bg-secondary px-2 py-0.5 text-[0.6875rem] font-semibold text-muted-foreground">
-                    {action.note}
-                  </span>
-                ) : null}
-              </span>
+              <span className="mt-4 type-h3">{action.title}</span>
               <span className="mt-1.5 type-body-sm text-muted-foreground">{action.body}</span>
+              {action.note ? (
+                <span className="mt-2 type-body-sm text-muted-foreground/80">{action.note}</span>
+              ) : null}
+              <span className="mt-4 flex items-center gap-1.5 type-body-sm font-semibold text-primary">
+                {action.cta}
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+              </span>
             </Link>
           </li>
         ))}
       </ul>
 
       <section className="mt-10">
-        <h2 className="type-h2">Your storage</h2>
+        <h2 className="type-h2">My Stuff</h2>
         <div className="mt-4">
-          <EmptyState
-            icon={Boxes}
-            title="No bookings yet"
-            description="When you book storage, you'll see it here."
-          />
-          <div className="mt-4 flex justify-center">
-            <Button asChild>
-              <Link to="/renter/search">Find storage</Link>
-            </Button>
-          </div>
+          {hasItems ? (
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
+              <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+                <p className="type-h1">{totals.itemCount}</p>
+                <div>
+                  <p className="type-body-sm text-muted-foreground">items</p>
+                  <p className="type-body font-semibold">
+                    {formatVolume(totals.storageRequirementM3, { approx: true })} estimated storage
+                    requirement
+                  </p>
+                </div>
+                <Badge
+                  variant={readiness.level === "ready" ? "success" : "warning"}
+                  className="ml-auto"
+                >
+                  {readiness.label}
+                </Badge>
+              </div>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Button asChild>
+                  <Link to="/renter/inventory/matching">
+                    Find matching spaces
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                </Button>
+                <Button asChild variant="secondary">
+                  <Link to="/renter/inventory">View my stuff</Link>
+                </Button>
+                <Button asChild variant="ghost">
+                  <Link to="/renter/inventory/add">Add more items</Link>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <EmptyState
+                icon={Boxes}
+                title="You haven't added anything yet."
+                description="Build a quick inventory and we'll estimate how much space you need."
+              />
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <Button asChild>
+                  <Link to="/renter/inventory/add">Build my inventory</Link>
+                </Button>
+                <Button asChild variant="secondary">
+                  <Link to="/renter/search">
+                    <Search aria-hidden="true" />
+                    Browse storage
+                  </Link>
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </section>
     </AppLayout>

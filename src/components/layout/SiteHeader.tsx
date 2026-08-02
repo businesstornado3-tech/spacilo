@@ -40,18 +40,35 @@ export function SiteHeader({ className }: { className?: string }) {
         </nav>
 
         <div className="ml-auto hidden items-center gap-2 lg:flex">
-          <Button variant="text" asChild>
-            <Link to="/login">Log in</Link>
-          </Button>
-          <Button asChild>
-            <Link to="/signup">Get Started</Link>
-          </Button>
+          {loading ? null : signedIn ? (
+            <>
+              <Button variant="secondary" asChild>
+                <Link to={dashboardTo}>Dashboard</Link>
+              </Button>
+              <AccountMenu />
+            </>
+          ) : (
+            <>
+              <Button variant="text" asChild>
+                <Link to="/login">Log in</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/get-started">Get Started</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <div className="ml-auto flex items-center gap-2 lg:hidden">
-          <Button size="sm" asChild>
-            <Link to="/signup">Get Started</Link>
-          </Button>
+          {signedIn ? (
+            <Button size="sm" variant="secondary" asChild>
+              <Link to={dashboardTo}>Dashboard</Link>
+            </Button>
+          ) : (
+            <Button size="sm" asChild>
+              <Link to="/get-started">Get Started</Link>
+            </Button>
+          )}
           <Button
             variant="secondary"
             size="icon"
@@ -59,7 +76,7 @@ export function SiteHeader({ className }: { className?: string }) {
             aria-controls="mobile-menu"
             onClick={() => setMenuOpen((v) => !v)}
           >
-            {menuOpen ? <Menu aria-hidden="true" /> : <Menu aria-hidden="true" />}
+            <Menu aria-hidden="true" />
             <span className="sr-only">{menuOpen ? "Close menu" : "Open menu"}</span>
           </Button>
         </div>

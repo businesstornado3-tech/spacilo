@@ -1,6 +1,7 @@
 import {
   Home,
   Search,
+  Boxes,
   CalendarCheck,
   MessageSquare,
   User,

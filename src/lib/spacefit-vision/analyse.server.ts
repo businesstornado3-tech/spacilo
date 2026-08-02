@@ -6,7 +6,6 @@
  * every read here goes through the caller's own (RLS-scoped) Supabase client.
  */
 import { CATALOGUE } from "@/lib/inventory-catalogue";
-import { INVENTORY_PHOTO_BUCKET } from "@/lib/inventory-api";
 import { reconcileDetections } from "@/lib/spacefit-vision/normalise";
 import {
   ITEM_CATEGORIES,
@@ -18,6 +17,9 @@ import {
   VisionProviderError,
   type VisionImage,
 } from "@/lib/spacefit-vision/provider.server";
+
+/** Private bucket holding renter inventory photos. */
+const INVENTORY_PHOTO_BUCKET = "inventory-photos";
 
 /** Max analyses a single renter may start in a rolling window. */
 const RATE_LIMIT_WINDOW_MINUTES = 10;

@@ -22,6 +22,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated.host'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedRenterRouteImport } from './routes/_authenticated.renter'
 import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated.host.index'
 import { Route as AuthenticatedHostBookingsRouteImport } from './routes/_authenticated.host.bookings'
@@ -97,6 +98,11 @@ const AuthenticatedHostRoute = AuthenticatedHostRouteImport.update({
   path: '/host',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedRenterRoute = AuthenticatedRenterRouteImport.update({
   id: '/renter',
   path: '/renter',
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/trust': typeof TrustRoute
   '/host': typeof AuthenticatedHostRouteWithChildren
+  '/profile': typeof AuthenticatedProfileRoute
   '/renter': typeof AuthenticatedRenterRouteWithChildren
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/trust': typeof TrustRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/host/messages': typeof AuthenticatedHostMessagesRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/trust': typeof TrustRoute
   '/_authenticated/host': typeof AuthenticatedHostRouteWithChildren
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/renter': typeof AuthenticatedRenterRouteWithChildren
   '/_authenticated/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/_authenticated/host/earnings': typeof AuthenticatedHostEarningsRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/trust'
     | '/host'
+    | '/profile'
     | '/renter'
     | '/host/bookings'
     | '/host/earnings'
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/trust'
+    | '/profile'
     | '/host/bookings'
     | '/host/earnings'
     | '/host/messages'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/trust'
     | '/_authenticated/host'
+    | '/_authenticated/profile'
     | '/_authenticated/renter'
     | '/_authenticated/host/bookings'
     | '/_authenticated/host/earnings'
@@ -409,6 +421,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHostRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/renter': {
       id: '/_authenticated/renter'
       path: '/renter'
@@ -520,11 +539,13 @@ const AuthenticatedRenterRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedHostRoute: typeof AuthenticatedHostRouteWithChildren
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRenterRoute: typeof AuthenticatedRenterRouteWithChildren
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedHostRoute: AuthenticatedHostRouteWithChildren,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRenterRoute: AuthenticatedRenterRouteWithChildren,
 }
 

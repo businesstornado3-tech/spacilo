@@ -14,6 +14,222 @@ export type Database = {
   }
   public: {
     Tables: {
+      inventory_analysis_runs: {
+        Row: {
+          analysed_photo_count: number
+          client_request_id: string | null
+          completed_at: string | null
+          created_at: string
+          detection_count: number
+          duration_ms: number | null
+          error_category: string | null
+          failed_photo_count: number
+          id: string
+          inventory_id: string
+          model: string
+          photo_count: number
+          prompt_version: string
+          provider: string
+          schema_version: string
+          started_at: string
+          status: Database["public"]["Enums"]["analysis_run_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysed_photo_count?: number
+          client_request_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          detection_count?: number
+          duration_ms?: number | null
+          error_category?: string | null
+          failed_photo_count?: number
+          id?: string
+          inventory_id: string
+          model: string
+          photo_count?: number
+          prompt_version?: string
+          provider: string
+          schema_version?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["analysis_run_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analysed_photo_count?: number
+          client_request_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          detection_count?: number
+          duration_ms?: number | null
+          error_category?: string | null
+          failed_photo_count?: number
+          id?: string
+          inventory_id?: string
+          model?: string
+          photo_count?: number
+          prompt_version?: string
+          provider?: string
+          schema_version?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["analysis_run_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_analysis_runs_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "renter_inventories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_detection_photos: {
+        Row: {
+          created_at: string
+          detection_id: string
+          id: string
+          photo_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detection_id: string
+          id?: string
+          photo_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          detection_id?: string
+          id?: string
+          photo_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_detection_photos_detection_id_fkey"
+            columns: ["detection_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_detections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_detection_photos_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_detections: {
+        Row: {
+          confidence_score: number | null
+          confirmed_quantity: number | null
+          created_at: string
+          detected_label: string
+          duplicate_certainty: string | null
+          fragile_suggestion: Database["public"]["Enums"]["item_tri_state"]
+          id: string
+          inventory_id: string
+          model: string
+          notes: string | null
+          orientation_suggestion: Database["public"]["Enums"]["item_tri_state"]
+          possible_duplicate_group: string | null
+          possible_restricted_item: boolean
+          provider: string
+          restricted_reason: string | null
+          resulting_item_id: string | null
+          review_status: Database["public"]["Enums"]["detection_review_status"]
+          run_id: string
+          stackable_suggestion: Database["public"]["Enums"]["item_tri_state"]
+          suggested_catalogue_key: string | null
+          suggested_category: Database["public"]["Enums"]["inventory_item_category"]
+          suggested_quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          confirmed_quantity?: number | null
+          created_at?: string
+          detected_label: string
+          duplicate_certainty?: string | null
+          fragile_suggestion?: Database["public"]["Enums"]["item_tri_state"]
+          id?: string
+          inventory_id: string
+          model: string
+          notes?: string | null
+          orientation_suggestion?: Database["public"]["Enums"]["item_tri_state"]
+          possible_duplicate_group?: string | null
+          possible_restricted_item?: boolean
+          provider: string
+          restricted_reason?: string | null
+          resulting_item_id?: string | null
+          review_status?: Database["public"]["Enums"]["detection_review_status"]
+          run_id: string
+          stackable_suggestion?: Database["public"]["Enums"]["item_tri_state"]
+          suggested_catalogue_key?: string | null
+          suggested_category?: Database["public"]["Enums"]["inventory_item_category"]
+          suggested_quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          confirmed_quantity?: number | null
+          created_at?: string
+          detected_label?: string
+          duplicate_certainty?: string | null
+          fragile_suggestion?: Database["public"]["Enums"]["item_tri_state"]
+          id?: string
+          inventory_id?: string
+          model?: string
+          notes?: string | null
+          orientation_suggestion?: Database["public"]["Enums"]["item_tri_state"]
+          possible_duplicate_group?: string | null
+          possible_restricted_item?: boolean
+          provider?: string
+          restricted_reason?: string | null
+          resulting_item_id?: string | null
+          review_status?: Database["public"]["Enums"]["detection_review_status"]
+          run_id?: string
+          stackable_suggestion?: Database["public"]["Enums"]["item_tri_state"]
+          suggested_catalogue_key?: string | null
+          suggested_category?: Database["public"]["Enums"]["inventory_item_category"]
+          suggested_quantity?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_detections_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "renter_inventories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_detections_resulting_item_id_fkey"
+            columns: ["resulting_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_detections_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_analysis_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_items: {
         Row: {
           ai_confirmed: boolean
@@ -105,31 +321,40 @@ export type Database = {
       }
       inventory_photos: {
         Row: {
+          analysed_at: string | null
           analysis_status: Database["public"]["Enums"]["inventory_photo_status"]
           created_at: string
           display_order: number
           id: string
           inventory_id: string
+          last_error_category: string | null
+          last_run_id: string | null
           storage_path: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          analysed_at?: string | null
           analysis_status?: Database["public"]["Enums"]["inventory_photo_status"]
           created_at?: string
           display_order?: number
           id?: string
           inventory_id: string
+          last_error_category?: string | null
+          last_run_id?: string | null
           storage_path: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          analysed_at?: string | null
           analysis_status?: Database["public"]["Enums"]["inventory_photo_status"]
           created_at?: string
           display_order?: number
           id?: string
           inventory_id?: string
+          last_error_category?: string | null
+          last_run_id?: string | null
           storage_path?: string
           updated_at?: string
           user_id?: string
@@ -140,6 +365,13 @@ export type Database = {
             columns: ["inventory_id"]
             isOneToOne: false
             referencedRelation: "renter_inventories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_photos_last_run_id_fkey"
+            columns: ["last_run_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_analysis_runs"
             referencedColumns: ["id"]
           },
         ]
@@ -512,6 +744,13 @@ export type Database = {
       inventory_recalculate: { Args: { target: string }; Returns: undefined }
     }
     Enums: {
+      analysis_run_status:
+        | "queued"
+        | "running"
+        | "completed"
+        | "partial"
+        | "failed"
+      detection_review_status: "pending" | "confirmed" | "edited" | "rejected"
       inventory_item_category:
         | "boxes"
         | "bags"
@@ -524,7 +763,13 @@ export type Database = {
         | "business"
         | "documents"
         | "other"
-      inventory_photo_status: "uploaded" | "pending" | "analysed" | "failed"
+      inventory_photo_status:
+        | "uploaded"
+        | "pending"
+        | "analysed"
+        | "failed"
+        | "queued"
+        | "analysing"
       inventory_status: "draft" | "ready" | "archived"
       item_size_source: "catalogue_estimate" | "user_measured" | "unknown"
       item_tri_state: "yes" | "no" | "unknown"
@@ -683,6 +928,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      analysis_run_status: [
+        "queued",
+        "running",
+        "completed",
+        "partial",
+        "failed",
+      ],
+      detection_review_status: ["pending", "confirmed", "edited", "rejected"],
       inventory_item_category: [
         "boxes",
         "bags",
@@ -696,7 +949,14 @@ export const Constants = {
         "documents",
         "other",
       ],
-      inventory_photo_status: ["uploaded", "pending", "analysed", "failed"],
+      inventory_photo_status: [
+        "uploaded",
+        "pending",
+        "analysed",
+        "failed",
+        "queued",
+        "analysing",
+      ],
       inventory_status: ["draft", "ready", "archived"],
       item_size_source: ["catalogue_estimate", "user_measured", "unknown"],
       item_tri_state: ["yes", "no", "unknown"],

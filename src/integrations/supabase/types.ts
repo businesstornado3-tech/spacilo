@@ -14,7 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          current_mode: Database["public"]["Enums"]["user_mode"]
+          display_name: string | null
+          first_name: string
+          host_enabled: boolean
+          id: string
+          initial_mode: Database["public"]["Enums"]["user_mode"]
+          last_name: string
+          marketing_opt_in: boolean
+          onboarding_completed: boolean
+          phone: string | null
+          phone_verified: boolean
+          profile_photo_url: string | null
+          renter_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_mode?: Database["public"]["Enums"]["user_mode"]
+          display_name?: string | null
+          first_name?: string
+          host_enabled?: boolean
+          id: string
+          initial_mode?: Database["public"]["Enums"]["user_mode"]
+          last_name?: string
+          marketing_opt_in?: boolean
+          onboarding_completed?: boolean
+          phone?: string | null
+          phone_verified?: boolean
+          profile_photo_url?: string | null
+          renter_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_mode?: Database["public"]["Enums"]["user_mode"]
+          display_name?: string | null
+          first_name?: string
+          host_enabled?: boolean
+          id?: string
+          initial_mode?: Database["public"]["Enums"]["user_mode"]
+          last_name?: string
+          marketing_opt_in?: boolean
+          onboarding_completed?: boolean
+          phone?: string | null
+          phone_verified?: boolean
+          profile_photo_url?: string | null
+          renter_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +76,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_mode: "renter" | "host"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +203,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_mode: ["renter", "host"],
+    },
   },
 } as const

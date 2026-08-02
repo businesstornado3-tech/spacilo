@@ -75,7 +75,7 @@ function LoginPage() {
   return (
     <AuthShell title="Log in" subtitle="Welcome back. Pick up where you left off.">
       <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-        {error ? <Alert variant="error">{error}</Alert> : null}
+        {error ? <Alert tone="error" title={error} /> : null}
 
         <Field label="Email" htmlFor="email" required>
           <TextInput

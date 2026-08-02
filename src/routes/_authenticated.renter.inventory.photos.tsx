@@ -36,9 +36,11 @@ const GUIDANCE = [
 ];
 
 function InventoryPhotosPage() {
+  const navigate = useNavigate();
   const { data: inventory, isLoading } = useEnsuredInventory();
   const { data: photos } = useInventoryPhotos(inventory?.id);
   const list = photos ?? [];
+
 
   return (
     <AppLayout

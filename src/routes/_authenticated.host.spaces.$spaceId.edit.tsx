@@ -1,0 +1,67 @@
+import * as React from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
+
+import { brand } from "@/config/brand";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { ErrorState } from "@/components/common/States";
+import { SpaceWizard } from "@/components/host/listing/SpaceWizard";
+import { getMySpace, listSpacePhotos, type Space, type SpacePhoto } from "@/lib/spaces-api";
+
+export const Route = createFileRoute("/_authenticated/host/spaces/$spaceId/edit")({
+  head: () => ({
+    meta: [
+      { title: "Edit your space — Hosting — " + brand.name },
+      { name: "description", content: "Update the details, photos, access and price for your storage space." },
+      { property: "og:title", content: "Edit your space — Hosting — " + brand.name },
+      { property: "og:description", content: "Update the details, photos, access and price for your storage space." },
+    ],
+  }),
+  component: EditSpacePage,
+});
+
+function EditSpacePage() {
+  const { spaceId } = Route.useParams();
+  const [state, setState] = React.useState<
+    { kind: "loading" } | { kind: "error" } | { kind: "ready"; space: Space; photos: SpacePhoto[] }
+  >({ kind: "loading" });
+
+  const load = React.useCallback(async () => {
+    setState({ kind: "loading" });
+    try {
+      const space = await getMySpace(spaceId);
+      if (!space) return setState({ kind: "error" });
+      setState({ kind: "ready", space, photos: await listSpacePhotos(spaceId) });
+    } catch {
+      setState({ kind: "error" });
+    }
+  }, [spaceId]);
+
+  React.useEffect(() => {
+    void load();
+  }, [load]);
+
+  return (
+    <AppLayout mode="host" title="Edit your space" description="Changes save as you go.">
+      {state.kind === "loading" ? (
+        <div className="flex justify-center py-16">
+          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
+        </div>
+      ) : null}
+
+      {state.kind === "error" ? (
+        <ErrorState
+          title="We couldn't open this listing"
+          description="It may have been removed, or it belongs to another account."
+          onRetry={() => void load()}
+        />
+      ) : null}
+
+      {state.kind === "ready" ? (
+        <div className="mx-auto max-w-3xl">
+          <SpaceWizard space={state.space} initialPhotos={state.photos} />
+        </div>
+      ) : null}
+    </AppLayout>
+  );
+}

@@ -5,7 +5,8 @@ import { navForMode, type UserMode } from "@/config/navigation";
 
 /** Fixed bottom navigation for signed-in mobile users. */
 export function MobileBottomNav({ mode, className }: { mode: UserMode; className?: string }) {
-  const items = navForMode(mode);
+  // Profile lives in the account menu, so the mobile bar keeps to five targets.
+  const items = navForMode(mode).filter((item) => item.to !== "/profile").slice(0, 5);
 
   return (
     <nav

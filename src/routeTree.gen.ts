@@ -35,6 +35,10 @@ import { Route as AuthenticatedRenterMessagesRouteImport } from './routes/_authe
 import { Route as AuthenticatedRenterSearchRouteImport } from './routes/_authenticated.renter.search'
 import { Route as AuthenticatedHostSpacesIndexRouteImport } from './routes/_authenticated.host.spaces.index'
 import { Route as AuthenticatedHostSpacesNewRouteImport } from './routes/_authenticated.host.spaces.new'
+import { Route as AuthenticatedRenterInventoryIndexRouteImport } from './routes/_authenticated.renter.inventory.index'
+import { Route as AuthenticatedRenterInventoryAddRouteImport } from './routes/_authenticated.renter.inventory.add'
+import { Route as AuthenticatedRenterInventoryMatchingRouteImport } from './routes/_authenticated.renter.inventory.matching'
+import { Route as AuthenticatedRenterInventoryPhotosRouteImport } from './routes/_authenticated.renter.inventory.photos'
 import { Route as AuthenticatedHostSpacesSpaceIdEditRouteImport } from './routes/_authenticated.host.spaces.$spaceId.edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -175,6 +179,30 @@ const AuthenticatedHostSpacesNewRoute =
     path: '/spaces/new',
     getParentRoute: () => AuthenticatedHostRoute,
   } as any)
+const AuthenticatedRenterInventoryIndexRoute =
+  AuthenticatedRenterInventoryIndexRouteImport.update({
+    id: '/inventory/',
+    path: '/inventory/',
+    getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
+const AuthenticatedRenterInventoryAddRoute =
+  AuthenticatedRenterInventoryAddRouteImport.update({
+    id: '/inventory/add',
+    path: '/inventory/add',
+    getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
+const AuthenticatedRenterInventoryMatchingRoute =
+  AuthenticatedRenterInventoryMatchingRouteImport.update({
+    id: '/inventory/matching',
+    path: '/inventory/matching',
+    getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
+const AuthenticatedRenterInventoryPhotosRoute =
+  AuthenticatedRenterInventoryPhotosRouteImport.update({
+    id: '/inventory/photos',
+    path: '/inventory/photos',
+    getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
 const AuthenticatedHostSpacesSpaceIdEditRoute =
   AuthenticatedHostSpacesSpaceIdEditRouteImport.update({
     id: '/spaces/$spaceId/edit',
@@ -207,7 +235,11 @@ export interface FileRoutesByFullPath {
   '/host/': typeof AuthenticatedHostIndexRoute
   '/renter/': typeof AuthenticatedRenterIndexRoute
   '/host/spaces/new': typeof AuthenticatedHostSpacesNewRoute
+  '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
+  '/renter/inventory/matching': typeof AuthenticatedRenterInventoryMatchingRoute
+  '/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
+  '/renter/inventory/': typeof AuthenticatedRenterInventoryIndexRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -233,7 +265,11 @@ export interface FileRoutesByTo {
   '/host': typeof AuthenticatedHostIndexRoute
   '/renter': typeof AuthenticatedRenterIndexRoute
   '/host/spaces/new': typeof AuthenticatedHostSpacesNewRoute
+  '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
+  '/renter/inventory/matching': typeof AuthenticatedRenterInventoryMatchingRoute
+  '/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/host/spaces': typeof AuthenticatedHostSpacesIndexRoute
+  '/renter/inventory': typeof AuthenticatedRenterInventoryIndexRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
 }
 export interface FileRoutesById {
@@ -263,7 +299,11 @@ export interface FileRoutesById {
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
   '/_authenticated/renter/': typeof AuthenticatedRenterIndexRoute
   '/_authenticated/host/spaces/new': typeof AuthenticatedHostSpacesNewRoute
+  '/_authenticated/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
+  '/_authenticated/renter/inventory/matching': typeof AuthenticatedRenterInventoryMatchingRoute
+  '/_authenticated/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/_authenticated/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
+  '/_authenticated/renter/inventory/': typeof AuthenticatedRenterInventoryIndexRoute
   '/_authenticated/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
 }
 export interface FileRouteTypes {
@@ -293,7 +333,11 @@ export interface FileRouteTypes {
     | '/host/'
     | '/renter/'
     | '/host/spaces/new'
+    | '/renter/inventory/add'
+    | '/renter/inventory/matching'
+    | '/renter/inventory/photos'
     | '/host/spaces/'
+    | '/renter/inventory/'
     | '/host/spaces/$spaceId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -319,7 +363,11 @@ export interface FileRouteTypes {
     | '/host'
     | '/renter'
     | '/host/spaces/new'
+    | '/renter/inventory/add'
+    | '/renter/inventory/matching'
+    | '/renter/inventory/photos'
     | '/host/spaces'
+    | '/renter/inventory'
     | '/host/spaces/$spaceId/edit'
   id:
     | '__root__'
@@ -348,7 +396,11 @@ export interface FileRouteTypes {
     | '/_authenticated/host/'
     | '/_authenticated/renter/'
     | '/_authenticated/host/spaces/new'
+    | '/_authenticated/renter/inventory/add'
+    | '/_authenticated/renter/inventory/matching'
+    | '/_authenticated/renter/inventory/photos'
     | '/_authenticated/host/spaces/'
+    | '/_authenticated/renter/inventory/'
     | '/_authenticated/host/spaces/$spaceId/edit'
   fileRoutesById: FileRoutesById
 }
@@ -552,6 +604,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHostSpacesNewRouteImport
       parentRoute: typeof AuthenticatedHostRoute
     }
+    '/_authenticated/renter/inventory/': {
+      id: '/_authenticated/renter/inventory/'
+      path: '/inventory'
+      fullPath: '/renter/inventory/'
+      preLoaderRoute: typeof AuthenticatedRenterInventoryIndexRouteImport
+      parentRoute: typeof AuthenticatedRenterRoute
+    }
+    '/_authenticated/renter/inventory/add': {
+      id: '/_authenticated/renter/inventory/add'
+      path: '/inventory/add'
+      fullPath: '/renter/inventory/add'
+      preLoaderRoute: typeof AuthenticatedRenterInventoryAddRouteImport
+      parentRoute: typeof AuthenticatedRenterRoute
+    }
+    '/_authenticated/renter/inventory/matching': {
+      id: '/_authenticated/renter/inventory/matching'
+      path: '/inventory/matching'
+      fullPath: '/renter/inventory/matching'
+      preLoaderRoute: typeof AuthenticatedRenterInventoryMatchingRouteImport
+      parentRoute: typeof AuthenticatedRenterRoute
+    }
+    '/_authenticated/renter/inventory/photos': {
+      id: '/_authenticated/renter/inventory/photos'
+      path: '/inventory/photos'
+      fullPath: '/renter/inventory/photos'
+      preLoaderRoute: typeof AuthenticatedRenterInventoryPhotosRouteImport
+      parentRoute: typeof AuthenticatedRenterRoute
+    }
     '/_authenticated/host/spaces/$spaceId/edit': {
       id: '/_authenticated/host/spaces/$spaceId/edit'
       path: '/spaces/$spaceId/edit'
@@ -591,6 +671,10 @@ interface AuthenticatedRenterRouteChildren {
   AuthenticatedRenterMessagesRoute: typeof AuthenticatedRenterMessagesRoute
   AuthenticatedRenterSearchRoute: typeof AuthenticatedRenterSearchRoute
   AuthenticatedRenterIndexRoute: typeof AuthenticatedRenterIndexRoute
+  AuthenticatedRenterInventoryAddRoute: typeof AuthenticatedRenterInventoryAddRoute
+  AuthenticatedRenterInventoryMatchingRoute: typeof AuthenticatedRenterInventoryMatchingRoute
+  AuthenticatedRenterInventoryPhotosRoute: typeof AuthenticatedRenterInventoryPhotosRoute
+  AuthenticatedRenterInventoryIndexRoute: typeof AuthenticatedRenterInventoryIndexRoute
 }
 
 const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
@@ -598,6 +682,13 @@ const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
   AuthenticatedRenterMessagesRoute: AuthenticatedRenterMessagesRoute,
   AuthenticatedRenterSearchRoute: AuthenticatedRenterSearchRoute,
   AuthenticatedRenterIndexRoute: AuthenticatedRenterIndexRoute,
+  AuthenticatedRenterInventoryAddRoute: AuthenticatedRenterInventoryAddRoute,
+  AuthenticatedRenterInventoryMatchingRoute:
+    AuthenticatedRenterInventoryMatchingRoute,
+  AuthenticatedRenterInventoryPhotosRoute:
+    AuthenticatedRenterInventoryPhotosRoute,
+  AuthenticatedRenterInventoryIndexRoute:
+    AuthenticatedRenterInventoryIndexRoute,
 }
 
 const AuthenticatedRenterRouteWithChildren =
@@ -637,13 +728,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

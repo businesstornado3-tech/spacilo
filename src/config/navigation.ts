@@ -1,6 +1,7 @@
 import {
   Home,
   Search,
+  Boxes,
   CalendarCheck,
   MessageSquare,
   User,
@@ -25,6 +26,7 @@ export const marketingNav: NavItem[] = [
 
 export const renterNav: NavItem[] = [
   { label: "Home", to: "/renter", icon: Home },
+  { label: "My Stuff", to: "/renter/inventory", icon: Boxes },
   { label: "Search", to: "/renter/search", icon: Search },
   { label: "Bookings", to: "/renter/bookings", icon: CalendarCheck },
   { label: "Messages", to: "/renter/messages", icon: MessageSquare },

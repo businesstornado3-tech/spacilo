@@ -12,14 +12,13 @@ import { COMPONENT_LABELS } from "@/lib/spacefit/explanations";
 import { SPACEFIT_MATCH_DISCLAIMER } from "@/lib/spacefit/config";
 import type { ComponentKey, SpaceFitResult } from "@/lib/spacefit/types";
 
-const TONE: Record<string, string> = {
+const TONE = {
   excellent: "bg-success-soft text-success-soft-foreground",
   great: "bg-primary-soft text-primary-soft-foreground",
   good: "bg-primary-soft text-primary-soft-foreground",
   possible: "bg-warning-soft text-warning-soft-foreground",
-  low: "bg-warning-soft text-warning-soft-foreground",
   none: "bg-destructive-soft text-destructive-soft-foreground",
-};
+} as const;
 
 function tone(result: SpaceFitResult) {
   if (!result.compatible) return TONE.none;
@@ -29,6 +28,7 @@ function tone(result: SpaceFitResult) {
   if (score >= 70) return TONE.good;
   return TONE.possible;
 }
+
 
 /** Score pill — "92% SpaceFit" or "Not suitable". */
 export function SpaceFitResultBadge({

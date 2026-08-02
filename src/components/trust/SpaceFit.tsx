@@ -1,6 +1,7 @@
 import { Info } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useCountUp } from "@/hooks/use-motion";
 import { spaceFitBand, SPACEFIT_DISCLAIMER } from "@/lib/spacefit";
 import type { SpaceFitBand } from "@/types/models";
 
@@ -20,7 +21,7 @@ const BAR_CLASSES: Record<SpaceFitBand, string> = {
 
 interface SpaceFitProps {
   score: number;
-  className?: string;
+  className?: string | undefined;
 }
 
 /** Compact pill, e.g. "96% SpaceFit" — for cards and lists. */
@@ -40,7 +41,7 @@ export function SpaceFitBadge({ score, className }: SpaceFitProps) {
   );
 }
 
-/** Expanded presentation with score bar and supporting text. */
+/** Expanded presentation with an animated score bar and supporting text. */
 export function SpaceFitMeter({
   score,
   className,
@@ -48,11 +49,12 @@ export function SpaceFitMeter({
 }: SpaceFitProps & { showDisclaimer?: boolean }) {
   const { band, description } = spaceFitBand(score);
   const value = Math.max(0, Math.min(100, Math.round(score)));
+  const animated = useCountUp(value);
 
   return (
-    <div className={cn("rounded-xl border border-border bg-card p-4", className)}>
+    <div className={cn("rounded-2xl border border-border bg-card p-4", className)}>
       <div className="flex items-baseline justify-between gap-3">
-        <p className="type-price">{value}% SpaceFit</p>
+        <p className="type-price tabular-nums">{Math.round(animated)}% SpaceFit</p>
         <SpaceFitBadge score={value} className="shrink-0" />
       </div>
       <div
@@ -63,7 +65,10 @@ export function SpaceFitMeter({
         aria-valuemax={100}
         aria-label="SpaceFit compatibility estimate"
       >
-        <div className={cn("h-full rounded-full", BAR_CLASSES[band])} style={{ width: `${value}%` }} />
+        <div
+          className={cn("h-full rounded-full transition-none", BAR_CLASSES[band])}
+          style={{ width: `${animated}%` }}
+        />
       </div>
       <p className="mt-2 type-body-sm text-muted-foreground">{description}</p>
       {showDisclaimer ? (

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Boxes, Plus, Camera, Trash2, ArrowRight } from "lucide-react";
+import { Boxes, Plus, Camera, Trash2, ArrowRight, Sparkles } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -26,6 +26,7 @@ import {
   useInventoryMutations,
   useInventorySummary,
 } from "@/hooks/useInventory";
+import { usePendingDetections } from "@/hooks/useSpaceFitVision";
 import {
   CATEGORY_LABELS,
   CATEGORY_ORDER,
@@ -213,5 +214,25 @@ function MyStuffPage() {
         </AlertDialogContent>
       </AlertDialog>
     </AppLayout>
+  );
+}
+
+/** Nudge back into the review screen when AI suggestions are still waiting. */
+function PendingSuggestionsBanner({ inventoryId }: { inventoryId: string | undefined }) {
+  const { data } = usePendingDetections(inventoryId);
+  const count = data?.length ?? 0;
+  if (count === 0) return null;
+
+  return (
+    <section className="flex flex-wrap items-center gap-3 rounded-2xl border border-signal/25 bg-signal-soft/40 p-4">
+      <Sparkles className="size-5 text-primary" aria-hidden="true" />
+      <p className="min-w-0 flex-1 type-body-sm">
+        SpaceFit AI has {count} {count === 1 ? "suggestion" : "suggestions"} waiting for you to
+        check.
+      </p>
+      <Button asChild size="sm">
+        <Link to="/renter/inventory/review">Review suggestions</Link>
+      </Button>
+    </section>
   );
 }

@@ -4,7 +4,7 @@ import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PagePlaceholder } from "@/components/common/PagePlaceholder";
 
-export const Route = createFileRoute("/renter/search")({
+export const Route = createFileRoute("/_authenticated/renter/search")({
   head: () => ({
     meta: [
       { title: "Search — Renting — " + brand.name },

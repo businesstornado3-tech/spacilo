@@ -4,12 +4,17 @@ import { Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/Logo";
+import { AccountMenu } from "@/components/account/AccountMenu";
 import { marketingNav } from "@/config/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 /** Top navigation for logged-out / marketing pages. */
 export function SiteHeader({ className }: { className?: string }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const { session, mode, loading } = useAuth();
+  const dashboardTo = mode === "host" ? "/host" : "/renter";
+  const signedIn = Boolean(session);
 
   return (
     <header
@@ -35,18 +40,35 @@ export function SiteHeader({ className }: { className?: string }) {
         </nav>
 
         <div className="ml-auto hidden items-center gap-2 lg:flex">
-          <Button variant="text" asChild>
-            <Link to="/login">Log in</Link>
-          </Button>
-          <Button asChild>
-            <Link to="/signup">Get Started</Link>
-          </Button>
+          {loading ? null : signedIn ? (
+            <>
+              <Button variant="secondary" asChild>
+                <Link to={dashboardTo}>Dashboard</Link>
+              </Button>
+              <AccountMenu />
+            </>
+          ) : (
+            <>
+              <Button variant="text" asChild>
+                <Link to="/login">Log in</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/get-started">Get Started</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <div className="ml-auto flex items-center gap-2 lg:hidden">
-          <Button size="sm" asChild>
-            <Link to="/signup">Get Started</Link>
-          </Button>
+          {signedIn ? (
+            <Button size="sm" variant="secondary" asChild>
+              <Link to={dashboardTo}>Dashboard</Link>
+            </Button>
+          ) : (
+            <Button size="sm" asChild>
+              <Link to="/get-started">Get Started</Link>
+            </Button>
+          )}
           <Button
             variant="secondary"
             size="icon"
@@ -54,7 +76,7 @@ export function SiteHeader({ className }: { className?: string }) {
             aria-controls="mobile-menu"
             onClick={() => setMenuOpen((v) => !v)}
           >
-            {menuOpen ? <Menu aria-hidden="true" /> : <Menu aria-hidden="true" />}
+            <Menu aria-hidden="true" />
             <span className="sr-only">{menuOpen ? "Close menu" : "Open menu"}</span>
           </Button>
         </div>
@@ -74,16 +96,33 @@ export function SiteHeader({ className }: { className?: string }) {
               </Link>
             ))}
             <div className="flex gap-2 pt-2">
-              <Button variant="secondary" block asChild>
-                <Link to="/login" onClick={() => setMenuOpen(false)}>
-                  Log in
-                </Link>
-              </Button>
-              <Button block asChild>
-                <Link to="/signup" onClick={() => setMenuOpen(false)}>
-                  Get Started
-                </Link>
-              </Button>
+              {signedIn ? (
+                <>
+                  <Button variant="secondary" block asChild>
+                    <Link to="/profile" onClick={() => setMenuOpen(false)}>
+                      Profile
+                    </Link>
+                  </Button>
+                  <Button block asChild>
+                    <Link to={dashboardTo} onClick={() => setMenuOpen(false)}>
+                      Dashboard
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="secondary" block asChild>
+                    <Link to="/login" onClick={() => setMenuOpen(false)}>
+                      Log in
+                    </Link>
+                  </Button>
+                  <Button block asChild>
+                    <Link to="/get-started" onClick={() => setMenuOpen(false)}>
+                      Get Started
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
             <button
               type="button"

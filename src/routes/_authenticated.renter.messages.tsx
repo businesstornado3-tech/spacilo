@@ -4,7 +4,7 @@ import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PagePlaceholder } from "@/components/common/PagePlaceholder";
 
-export const Route = createFileRoute("/renter/messages")({
+export const Route = createFileRoute("/_authenticated/renter/messages")({
   head: () => ({
     meta: [
       { title: "Messages — Renting — " + brand.name },

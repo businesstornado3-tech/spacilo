@@ -18,6 +18,7 @@ import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ListSpaceRouteImport } from './routes/list-space'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated.host'
@@ -74,6 +75,11 @@ const ListSpaceRoute = ListSpaceRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/trust': typeof TrustRoute
   '/host': typeof AuthenticatedHostRouteWithChildren
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/trust': typeof TrustRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/trust': typeof TrustRoute
   '/_authenticated/host': typeof AuthenticatedHostRouteWithChildren
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/list-space'
     | '/login'
+    | '/reset-password'
     | '/signup'
     | '/trust'
     | '/host'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/list-space'
     | '/login'
+    | '/reset-password'
     | '/signup'
     | '/trust'
     | '/host/bookings'
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/list-space'
     | '/login'
+    | '/reset-password'
     | '/signup'
     | '/trust'
     | '/_authenticated/host'
@@ -299,6 +311,7 @@ export interface RootRouteChildren {
   HowItWorksRoute: typeof HowItWorksRoute
   ListSpaceRoute: typeof ListSpaceRoute
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   TrustRoute: typeof TrustRoute
 }
@@ -366,6 +379,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -522,6 +542,7 @@ const rootRouteChildren: RootRouteChildren = {
   HowItWorksRoute: HowItWorksRoute,
   ListSpaceRoute: ListSpaceRoute,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   TrustRoute: TrustRoute,
 }

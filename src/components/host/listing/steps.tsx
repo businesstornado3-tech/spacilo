@@ -1,8 +1,7 @@
 import * as React from "react";
 import { Sparkles } from "lucide-react";
 
-import { Field } from "@/components/form/Field";
-import { TextInput, TextArea, NativeSelect } from "@/components/form/Field";
+import { Field, TextInput, TextArea, NativeSelect } from "@/components/form/Field";
 import { Alert } from "@/components/common/Alert";
 import { Badge } from "@/components/ui/badge";
 import { PriceDisplay } from "@/components/marketplace/PriceDisplay";

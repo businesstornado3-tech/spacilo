@@ -159,8 +159,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+const signedOutFallback: AuthContextValue = {
+  loading: true,
+  session: null,
+  user: null,
+  profile: null,
+  mode: "renter",
+  refreshProfile: async () => {},
+  updateProfile: async () => {
+    throw new Error("Not signed in");
+  },
+  switchMode: async () => {
+    throw new Error("Not signed in");
+  },
+  signOut: async () => {},
+};
+
 export function useAuth(): AuthContextValue {
-  const ctx = React.useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
-  return ctx;
+  // Falls back to a signed-out state rather than throwing, so a component
+  // rendered outside the provider (e.g. an error boundary) never blanks the app.
+  return React.useContext(AuthContext) ?? signedOutFallback;
 }

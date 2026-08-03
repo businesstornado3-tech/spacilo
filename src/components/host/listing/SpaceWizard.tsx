@@ -141,9 +141,14 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
     }
   }
 
+  async function handleSaveChanges() {
+    const saved = await flush();
+    if (saved) toast.success("Changes saved", "Your live listing has been updated.");
+  }
+
   const view = toListingView(form, previewUrls, profile?.display_name || profile?.first_name || "You", profile?.phone_verified ?? false);
 
-  if (published) {
+  if (justPublished) {
     return (
       <div className="mx-auto max-w-xl text-center">
         <span className="mx-auto grid size-14 place-items-center rounded-full bg-success text-success-foreground">

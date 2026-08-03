@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,10 @@ import {
   StepSpace,
 } from "@/components/host/listing/steps";
 import { ListingPreview, type ListingView } from "@/components/host/listing/ListingPreview";
+import { geocodeMySpace } from "@/lib/location.functions";
+
+/** Address fields that invalidate a previously geocoded position. */
+const LOCATION_FIELDS = ["address_line1", "address_line2", "city", "postcode"] as const;
 
 const AUTOSAVE_MS = 1200;
 
@@ -39,6 +44,7 @@ function sanitise(patch: SpacePatch): SpacePatch {
 export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPhotos: SpacePhoto[] }) {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const geocode = useServerFn(geocodeMySpace);
 
   const [form, setForm] = React.useState<SpacePatch>(() => sanitise(space as SpacePatch));
   const [photos, setPhotos] = React.useState<SpacePhoto[]>(initialPhotos);
@@ -67,6 +73,15 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
     try {
       await updateSpace(space.id, patch);
       setError(null);
+      // Geocoding happens server-side and stores exact coordinates privately;
+      // only the fuzzed approximate position is ever exposed publicly.
+      if (LOCATION_FIELDS.some((field) => field in patch)) {
+        try {
+          await geocode({ data: { spaceId: space.id, force: true } });
+        } catch {
+          /* a failed lookup is recorded server-side; never block the host */
+        }
+      }
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "We couldn't save your progress.");
@@ -74,7 +89,7 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
     } finally {
       setSaving(false);
     }
-  }, [space.id]);
+  }, [space.id, geocode]);
 
   const patch = React.useCallback(
     (next: SpacePatch) => {

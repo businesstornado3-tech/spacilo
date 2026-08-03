@@ -1,13 +1,24 @@
-import { useNavigate } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import * as React from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { ArrowRight, Boxes, Home } from "lucide-react";
 
 import heroPhoto from "@/assets/hero-storage.jpg";
-import { PostcodeSearch } from "@/components/form/SearchFields";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { SearchControls } from "@/components/search/SearchControls";
 import { SpaceFitSpark } from "@/components/trust/SpaceFitAI";
+import { track } from "@/lib/analytics";
+
+type Intent = "renter" | "host";
 
 export function Hero() {
   const navigate = useNavigate();
+  const [intent, setIntent] = React.useState<Intent>("renter");
+
+  function choose(next: Intent) {
+    setIntent(next);
+    track(next === "renter" ? "homepage_need_storage_selected" : "homepage_have_space_selected");
+  }
 
   return (
     <section className="relative overflow-hidden">
@@ -22,16 +33,70 @@ export function Hero() {
           </h1>
 
           <p className="mt-4 max-w-md type-body text-muted-foreground">
-            Find trusted storage in unused spaces around your neighbourhood — garages, spare rooms,
-            lofts and sheds.
+            Find trusted storage in unused spaces around your neighbourhood — or earn from the space you
+            already have.
           </p>
 
           <div className="mt-7 rounded-2xl bg-card p-4 shadow-card sm:p-5">
-            <PostcodeSearch
-              label="Enter your postcode"
-              buttonLabel="Find storage"
-              onSearch={() => navigate({ to: "/find-storage" })}
-            />
+            <div
+              role="tablist"
+              aria-label="What brings you here?"
+              className="grid grid-cols-2 gap-1 rounded-xl bg-surface p-1"
+            >
+              {[
+                { value: "renter" as const, label: "I need storage", icon: Boxes },
+                { value: "host" as const, label: "I have space", icon: Home },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={intent === option.value}
+                  aria-controls={`hero-panel-${option.value}`}
+                  id={`hero-tab-${option.value}`}
+                  onClick={() => choose(option.value)}
+                  className={cn(
+                    "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 type-nav transition-colors",
+                    intent === option.value
+                      ? "bg-card text-foreground shadow-card"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <option.icon className="size-4" aria-hidden="true" />
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            {intent === "renter" ? (
+              <div id="hero-panel-renter" role="tabpanel" aria-labelledby="hero-tab-renter" className="mt-4">
+                <SearchControls
+                  submitLabel="Find storage"
+                  onSubmit={({ location, radius }) => {
+                    track("location_search_submitted", { radius, from: "homepage" });
+                    void navigate({ to: "/search", search: { location, radius } });
+                  }}
+                />
+              </div>
+            ) : (
+              <div id="hero-panel-host" role="tabpanel" aria-labelledby="hero-tab-host" className="mt-4">
+                <p className="type-body-sm text-muted-foreground">
+                  List a garage, loft, shed, spare room or part of one. You choose who stores with you, and you
+                  can pause your listing at any time.
+                </p>
+                <Button
+                  asChild
+                  block
+                  className="mt-4"
+                  onClick={() => track("list_space_selected", { from: "homepage_hero" })}
+                >
+                  <Link to="/list-space">
+                    See what your space could earn
+                    <ArrowRight className="size-4" aria-hidden="true" />
+                  </Link>
+                </Button>
+              </div>
+            )}
           </div>
 
           <Link
@@ -51,14 +116,6 @@ export function Hero() {
               className="ml-auto size-4 shrink-0 text-signal-soft-foreground transition-transform duration-200 group-hover:translate-x-0.5"
               aria-hidden="true"
             />
-          </Link>
-
-          <Link
-            to="/list-space"
-            className="mt-4 inline-flex items-center gap-1.5 type-nav text-primary underline-offset-4 hover:underline"
-          >
-            Got unused space? Start earning
-            <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </div>
 

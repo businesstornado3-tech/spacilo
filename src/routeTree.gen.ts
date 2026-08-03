@@ -19,6 +19,7 @@ import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ListSpaceRouteImport } from './routes/list-space'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated.host'
@@ -89,6 +90,11 @@ const LoginRoute = LoginRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
   '/trust': typeof TrustRoute
   '/host': typeof AuthenticatedHostRouteWithChildren
@@ -260,6 +267,7 @@ export interface FileRoutesByTo {
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
   '/trust': typeof TrustRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
   '/trust': typeof TrustRoute
   '/_authenticated/host': typeof AuthenticatedHostRouteWithChildren
@@ -328,6 +337,7 @@ export interface FileRouteTypes {
     | '/list-space'
     | '/login'
     | '/reset-password'
+    | '/search'
     | '/signup'
     | '/trust'
     | '/host'
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/list-space'
     | '/login'
     | '/reset-password'
+    | '/search'
     | '/signup'
     | '/trust'
     | '/profile'
@@ -393,6 +404,7 @@ export interface FileRouteTypes {
     | '/list-space'
     | '/login'
     | '/reset-password'
+    | '/search'
     | '/signup'
     | '/trust'
     | '/_authenticated/host'
@@ -428,6 +440,7 @@ export interface RootRouteChildren {
   ListSpaceRoute: typeof ListSpaceRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SearchRoute: typeof SearchRoute
   SignupRoute: typeof SignupRoute
   TrustRoute: typeof TrustRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
@@ -503,6 +516,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -743,6 +763,7 @@ const rootRouteChildren: RootRouteChildren = {
   ListSpaceRoute: ListSpaceRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SearchRoute: SearchRoute,
   SignupRoute: SignupRoute,
   TrustRoute: TrustRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,

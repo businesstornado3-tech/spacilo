@@ -62,7 +62,8 @@ function RenterBookingsPage() {
         <div className="space-y-8">
           <BookingGroup title="Awaiting payment" bookings={awaiting} />
           <BookingGroup title="Other bookings" bookings={other} />
-        </div>
+          <BookingGroup title="Cancelled bookings" bookings={cancelled} />
+
       ) : null}
     </AppLayout>
   );

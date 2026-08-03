@@ -26,6 +26,8 @@ import {
   PAYOUT_STATUS_LABEL,
   PAYOUT_STATUS_NOTE,
   earningHoldNote,
+  earningRefundOutcome,
+  refundSettlement,
   summariseEarnings,
 } from "@/lib/payments/payout-policy";
 
@@ -185,7 +187,10 @@ function EarningRow({
 }) {
   const booking = earning.bookings;
   const released = earning.status === "transferred";
-  const hold = earningHoldNote(earning);
+  // The refund ledger is the authority: only a settled refund ends the hold.
+  const settlement = refundSettlement(booking?.booking_refunds);
+  const refundOutcome = earningRefundOutcome(earning, settlement);
+  const hold = earningHoldNote(earning, settlement.settled && !settlement.pending);
 
   return (
     <li className="rounded-2xl border border-border bg-card p-5 shadow-card">
@@ -195,7 +200,7 @@ function EarningRow({
           {booking?.space_title_snapshot ? ` — ${booking.space_title_snapshot}` : ""}
         </p>
         <span className="type-label rounded-full bg-muted px-3 py-1 text-muted-foreground">
-          {EARNING_STATUS_LABEL[earning.status]}
+          {refundOutcome ? refundOutcome.label : EARNING_STATUS_LABEL[earning.status]}
         </span>
       </div>
 
@@ -236,7 +241,9 @@ function EarningRow({
       ) : null}
 
       <p className="mt-3 type-body-sm text-muted-foreground">
-        {released && earning.transfer_created_at
+        {refundOutcome
+          ? refundOutcome.note
+          : released && earning.transfer_created_at
           ? `Sent to your Stripe account on ${formatDate(earning.transfer_created_at)}.`
           : hold
             ? "We'll release anything still due once this is resolved."
@@ -245,7 +252,7 @@ function EarningRow({
               : `Available after ${formatDate(earning.eligible_at)}.`}
       </p>
 
-      {!payoutReady && !released ? (
+      {!payoutReady && !released && !refundOutcome ? (
         <p className="mt-2 type-body-sm text-muted-foreground">
           Complete payout setup to receive your earnings.
         </p>

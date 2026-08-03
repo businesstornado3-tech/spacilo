@@ -34,7 +34,11 @@ export function BookingSummary({ booking }: { booking: Booking }) {
               {spaceTypeLabel(view.spaceType as SpaceTypeValue)}
               {view.area ? ` · ${view.area}` : ""}
             </p>
-            {booking.status === "confirmed" ? null : (
+            {booking.status === "confirmed" ? null : booking.status === "cancelled" ? (
+              <p className="type-body-sm text-muted-foreground">
+                The storage address is no longer available because this booking was cancelled.
+              </p>
+            ) : (
               <p className="type-body-sm text-muted-foreground">
                 Approximate location only. The exact address is released once the booking is
                 confirmed and paid.

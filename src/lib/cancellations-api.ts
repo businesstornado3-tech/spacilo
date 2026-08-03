@@ -24,6 +24,16 @@ export async function getBookingCancellation(
   return data ?? null;
 }
 
+/** All cancellations visible to the signed-in user (RLS: renter or host). */
+export async function listMyBookingCancellations(): Promise<BookingCancellationRow[]> {
+  const { data, error } = await supabase
+    .from("booking_cancellations")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function listBookingRefunds(bookingId: string): Promise<BookingRefundRow[]> {
   const { data, error } = await supabase
     .from("booking_refunds")

@@ -1,4 +1,4 @@
-/** Compact benefit section — accurate, no unimplemented guarantees. */
+/** Compact benefit section — claims stay within what the product actually does. */
 import { MapPin, MapPinOff, Ruler, Tag } from "lucide-react";
 
 import { Reveal } from "@/components/common/Reveal";

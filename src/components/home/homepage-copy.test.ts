@@ -20,7 +20,8 @@ const FILES = [
 
 const BANNED = [
   /insured/i,
-  /guarantee(d|s)?\b(?! )/i,
+  /guaranteed/i,
+  /fully protected/i,
   /background check/i,
   /book instantly/i,
   /instant booking/i,
@@ -34,7 +35,7 @@ const copy = FILES.map((file) => readFileSync(file, "utf8")).join("\n");
 describe("homepage copy", () => {
   it("makes no unsupported trust, insurance or payment claims", () => {
     for (const pattern of BANNED) {
-      expect(copy.replace(/not a guarantee/gi, "")).not.toMatch(pattern);
+      expect(copy).not.toMatch(pattern);
     }
   });
 

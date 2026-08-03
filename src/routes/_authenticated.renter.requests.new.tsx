@@ -13,6 +13,7 @@ import { ErrorState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { Field, TextArea, TextInput } from "@/components/form/Field";
 import { PriceDisplay } from "@/components/marketplace/PriceDisplay";
+import { StoragePriceBreakdown } from "@/components/payments/StoragePriceBreakdown";
 import { toast } from "@/components/overlay/toast";
 import { useActiveInventory, useInventoryItems, useInventorySummary } from "@/hooks/useInventory";
 import { useSpaceFitForSpace } from "@/hooks/useSpaceFitMatches";
@@ -21,6 +22,13 @@ import { getPublishedSpace } from "@/lib/spaces-api";
 import { toMatchSpace } from "@/lib/spacefit/adapters";
 import { publicLocation, spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import { track } from "@/lib/analytics";
+import {
+  durationDays,
+  meetsMinimumStay,
+  minimumStayDays,
+  minimumStayMessage,
+  priceStorage,
+} from "@/lib/pricing/duration";
 import {
   REQUEST_DISCLAIMER,
   REQUEST_NOTE_MAX,
@@ -88,12 +96,33 @@ function NewRequestPage() {
 
   const dateErrors = validateRequestDates(startDate, endDate, today);
   const showErrors = submitted;
+
+  // Client-side mirror of the server pricing engine, purely so the renter can
+  // see what they'd pay before sending. `create_storage_request` prices again
+  // and its number is the one that gets stored.
+  const minimumStay = space ? minimumStayDays(space) : 1;
+  const days =
+    hasDateErrors(dateErrors) ? 0 : durationDays(startDate, endDate);
+  const belowMinimum = days > 0 && !meetsMinimumStay(days, minimumStay);
+  const price = React.useMemo(() => {
+    if (!space || hasDateErrors(dateErrors)) return null;
+    try {
+      return priceStorage(startDate, endDate, {
+        dailyPricePence: space.daily_price_pence,
+        weeklyPricePence: space.weekly_price_pence,
+        monthlyPricePence: space.monthly_price_pence,
+      });
+    } catch {
+      return null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [space, startDate, endDate, dateErrors.start, dateErrors.end]);
   const hasItems = (items?.length ?? 0) > 0;
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitted(true);
-    if (hasDateErrors(dateErrors) || !space || !inventory) return;
+    if (hasDateErrors(dateErrors) || belowMinimum || !space || !inventory) return;
     try {
       const request = await create.mutateAsync({
         spaceId: space.id,
@@ -222,10 +251,24 @@ function NewRequestPage() {
               </div>
               {!hasDateErrors(dateErrors) ? (
                 <p className="type-body-sm text-muted-foreground">
-                  {formatApproximateDuration(startDate, endDate)} at{" "}
-                  {space.monthly_price_pence ? "" : "an unpublished "}monthly price.
+                  {formatApproximateDuration(startDate, endDate)} · you can store by the day, week
+                  or month.
                 </p>
               ) : null}
+              {belowMinimum ? (
+                <p className="type-body-sm text-destructive">{minimumStayMessage(minimumStay)}</p>
+              ) : null}
+            </section>
+
+            <section className="space-y-3">
+              {price ? (
+                <StoragePriceBreakdown price={price} />
+              ) : (
+                <p className="type-body-sm text-muted-foreground">
+                  We can&apos;t price these dates yet. Check your dates, or ask the host — their
+                  price may not be published.
+                </p>
+              )}
             </section>
 
             <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
@@ -252,7 +295,7 @@ function NewRequestPage() {
             <div className="flex flex-wrap gap-3">
               <Button
                 type="submit"
-                disabled={!hasItems || create.isPending}
+                disabled={!hasItems || belowMinimum || create.isPending}
                 className="w-full sm:w-auto"
               >
                 {create.isPending ? "Sending…" : "Send request"}

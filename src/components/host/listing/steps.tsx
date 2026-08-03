@@ -586,6 +586,16 @@ export function StepRules({ form, patch }: StepProps) {
 
 /* -------------------------------------------------------------- 7. Price */
 
+const poundsValue = (pence: number | null | undefined) =>
+  pence === null || pence === undefined ? "" : String(pence / 100);
+
+const parsePounds = (value: string): number | null => {
+  if (value === "") return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return Math.round(parsed * 100);
+};
+
 export function StepPrice({ form, patch }: StepProps) {
   const pounds =
     form.monthly_price_pence === null || form.monthly_price_pence === undefined
@@ -620,6 +630,65 @@ export function StepPrice({ form, patch }: StepProps) {
           </div>
         </Field>
 
+        <div className="mt-5 grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+          <Field
+            label="Daily price (optional)"
+            htmlFor="price-daily"
+            hint="Useful for short stays. Leave blank and we'll work one out from your monthly price."
+          >
+            <div className="flex items-center gap-2">
+              <span className="type-body">£</span>
+              <TextInput
+                id="price-daily"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="0.5"
+                className="max-w-32"
+                value={poundsValue(form.daily_price_pence)}
+                onChange={(e) => patch({ daily_price_pence: parsePounds(e.target.value) })}
+              />
+            </div>
+          </Field>
+          <Field
+            label="Weekly price (optional)"
+            htmlFor="price-weekly"
+            hint="Renters are always charged the cheapest combination of your rates."
+          >
+            <div className="flex items-center gap-2">
+              <span className="type-body">£</span>
+              <TextInput
+                id="price-weekly"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="1"
+                className="max-w-32"
+                value={poundsValue(form.weekly_price_pence)}
+                onChange={(e) => patch({ weekly_price_pence: parsePounds(e.target.value) })}
+              />
+            </div>
+          </Field>
+          <Field
+            label="Minimum stay (days)"
+            htmlFor="min-stay"
+            hint="The shortest booking you'll accept."
+          >
+            <TextInput
+              id="min-stay"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={365}
+              className="max-w-32"
+              value={form.minimum_stay_days ?? 1}
+              onChange={(e) =>
+                patch({ minimum_stay_days: Math.min(365, Math.max(1, Number(e.target.value) || 1)) })
+              }
+            />
+          </Field>
+        </div>
+
         {form.monthly_price_pence ? (
           <div className="mt-5 border-t border-border pt-4">
             <p className="type-body-sm text-muted-foreground">Renters will see</p>
@@ -629,6 +698,11 @@ export function StepPrice({ form, patch }: StepProps) {
       </div>
 
       <p className="mt-4 type-body-sm text-muted-foreground">
+        Renters can book by the day, week or month. We always quote the cheapest combination of the
+        rates you set, so a longer stay never costs more than a shorter one.
+      </p>
+
+      <p className="mt-2 type-body-sm text-muted-foreground">
         We don't have enough local market data yet to suggest an accurate price, so this is entirely your
         call. Anything shown as an “example estimate” elsewhere is illustrative only.
       </p>

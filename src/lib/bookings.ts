@@ -10,6 +10,7 @@
  */
 import type { Tables } from "@/integrations/supabase/types";
 import { formatDate, formatPrice } from "@/lib/format";
+import { durationDays, formatDuration } from "@/lib/pricing/duration";
 import {
   effectiveStatus,
   formatApproximateDuration,
@@ -30,9 +31,14 @@ export const BOOKING_STATUS_META: Record<string, { label: string; tone: Tone; de
     label: "Awaiting payment",
     tone: "warning",
     detail:
-      "The host accepted your request. Pay the first month to confirm this booking.",
+      "The host accepted your request. Pay to confirm this booking.",
   },
   confirmed: { label: "Confirmed", tone: "success", detail: "This booking is confirmed." },
+  active: {
+    label: "In storage",
+    tone: "success",
+    detail: "Your belongings are in storage until the end date.",
+  },
   cancelled: { label: "Cancelled", tone: "neutral", detail: "This booking was cancelled." },
   completed: { label: "Completed", tone: "neutral", detail: "This booking has finished." },
 };
@@ -43,8 +49,9 @@ export const bookingStatusMeta = (status: string) =>
 /** Host-facing wording for the same statuses. */
 export const HOST_BOOKING_DETAIL: Record<string, string> = {
   pending_payment:
-    "The renter has started a booking and still needs to pay the first month. Nothing is confirmed yet and no action is needed from you.",
-  confirmed: "This booking is confirmed and the first month has been paid.",
+    "The renter has started a booking and still needs to pay. Nothing is confirmed yet and no action is needed from you.",
+  confirmed: "This booking is confirmed and the first payment has been made.",
+  active: "Storage is under way. This booking is using your space until the end date.",
   cancelled: "This booking was cancelled.",
   completed: "This booking has finished.",
 };
@@ -53,7 +60,7 @@ export const hostBookingDetail = (status: string) => HOST_BOOKING_DETAIL[status]
 
 /** Continuing creates the booking; payment is taken on the booking itself. */
 export const BOOKING_PAYMENT_NOTE =
-  "Creating the booking doesn't charge you. You'll see the first month's total, including the Project Stow service fee, before you pay.";
+  "Creating the booking doesn't charge you. You'll see the total for your storage period, including the service fee, before you pay.";
 
 /* -------------------------------------------------------- booking finances */
 
@@ -89,7 +96,7 @@ export function bookingFinancials(
   };
 }
 
-/** What the host is entitled to for the first month — never the renter total. */
+/** What the host is entitled to for the storage period — never the renter total. */
 export const hostStorageEntitlementPence = (
   booking: Pick<Booking, "storage_amount_pence" | "monthly_price_snapshot">,
 ): number | null => booking.storage_amount_pence ?? booking.monthly_price_snapshot;
@@ -165,6 +172,25 @@ export interface BookingView {
   spaceFitLabel: string | null;
 }
 
+/**
+ * What the renter agreed to pay for the WHOLE stay. Bookings created before
+ * flexible durations existed only ever carried a monthly price, so they still
+ * read as a monthly rate.
+ */
+export function bookingPriceLabel(
+  booking: Pick<
+    Booking,
+    "storage_amount_pence" | "monthly_price_snapshot" | "duration_days_snapshot" | "start_date" | "end_date"
+  >,
+): string {
+  const days = booking.duration_days_snapshot ?? durationDays(booking.start_date, booking.end_date);
+  if (booking.storage_amount_pence !== null && days > 0) {
+    return `${formatPrice(booking.storage_amount_pence)} for ${formatDuration(days)}`;
+  }
+  if (booking.monthly_price_snapshot === null) return "Price not published";
+  return `${formatPrice(booking.monthly_price_snapshot)}/month`;
+}
+
 export function bookingView(booking: Booking): BookingView {
   return {
     status: booking.status,
@@ -173,10 +199,7 @@ export function bookingView(booking: Booking): BookingView {
     spaceType: booking.space_type_snapshot,
     area: booking.space_area_snapshot ?? booking.space_postcode_district_snapshot,
     period: formatRequestPeriod(booking.start_date, booking.end_date),
-    priceLabel:
-      booking.monthly_price_snapshot === null
-        ? "Price not published"
-        : `${formatPrice(booking.monthly_price_snapshot)}/month`,
+    priceLabel: bookingPriceLabel(booking),
     itemCount: booking.inventory_item_count_snapshot,
     requirementM3: Number(booking.estimated_storage_requirement_m3_snapshot),
     spaceFitScore: booking.spacefit_score_snapshot,
@@ -201,6 +224,9 @@ export const bookingsByRequest = (bookings: Booking[]): Record<string, Booking> 
   Object.fromEntries(bookings.map((booking) => [booking.request_id, booking]));
 
 /** "about 3 months" — presentational only; billing rules aren't defined yet. */
-export function formatBookingDuration(booking: Pick<Booking, "start_date" | "end_date">): string {
-  return formatApproximateDuration(booking.start_date, booking.end_date);
+export function formatBookingDuration(
+  booking: Pick<Booking, "start_date" | "end_date" | "duration_days_snapshot">,
+): string {
+  const days = booking.duration_days_snapshot ?? durationDays(booking.start_date, booking.end_date);
+  return days > 0 ? formatDuration(days) : formatApproximateDuration(booking.start_date, booking.end_date);
 }

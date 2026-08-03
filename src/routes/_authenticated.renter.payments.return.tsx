@@ -71,7 +71,7 @@ function PaymentReturnPage() {
               Booking confirmed
             </h2>
             <p className="type-body-sm text-muted-foreground">
-              Your first month has been paid and the host has been notified.
+              Your storage period has been paid for and the host has been notified.
             </p>
             <Button asChild>
               <Link to="/renter/bookings/$bookingId" params={{ bookingId }}>

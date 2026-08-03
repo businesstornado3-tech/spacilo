@@ -13,6 +13,8 @@
  */
 
 /** 12% expressed in basis points. */
+import { brand } from "@/config/brand";
+
 export const SERVICE_FEE_RATE_BPS = 1200;
 
 /** £5.00 floor, in pence. */
@@ -74,11 +76,12 @@ export function feeBreakdown(
   };
 }
 
-/** The label shown on the payment — this collects the FIRST MONTH only. */
-export const FIRST_MONTH_LABEL = "First month";
+/**
+ * The label shown on the payment. Storage is priced for the whole booked
+ * period by the pricing engine, so this is no longer a monthly instalment.
+ */
+export const FIRST_MONTH_LABEL = "Storage period";
 
-export const FIRST_MONTH_NOTE =
-  "This payment covers the first month of storage plus the Project Stow service fee. Later months are not charged yet.";
+export const FIRST_MONTH_NOTE = `This payment covers the whole storage period you booked plus the ${brand.name} service fee. Extending later is priced separately and only after the host agrees.`;
 
-export const SERVICE_FEE_NOTE =
-  "The Project Stow service fee covers running the platform. It isn't insurance, tax or a deposit.";
+export const SERVICE_FEE_NOTE = `The ${brand.name} service fee covers running the platform. It isn't insurance, tax or a deposit.`;

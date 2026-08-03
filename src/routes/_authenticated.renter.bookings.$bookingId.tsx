@@ -15,6 +15,7 @@ import { ErrorState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/overlay/toast";
 import { BookingSummary } from "@/components/bookings/BookingSummary";
+import { BookingLifecyclePanel } from "@/components/bookings/BookingLifecyclePanel";
 import { PaymentBreakdown } from "@/components/payments/PaymentBreakdown";
 import { CancellationPanel } from "@/components/payments/CancellationPanel";
 import { useBooking } from "@/hooks/useBookings";
@@ -58,7 +59,11 @@ function BookingDetailPage() {
 
   const succeeded = (payments ?? []).find((p) => p.status === "succeeded") ?? null;
   const confirmed = booking?.status === "confirmed";
-  const { data: address } = useBookingExactAddress(bookingId, confirmed && Boolean(succeeded));
+  const inStorage = booking?.status === "active";
+  const { data: address } = useBookingExactAddress(
+    bookingId,
+    (confirmed || inStorage) && Boolean(succeeded),
+  );
 
   const finances = booking ? bookingFinancials(booking) : null;
 
@@ -141,7 +146,7 @@ function BookingDetailPage() {
             </section>
           ) : null}
 
-          {confirmed && finances ? (
+          {(confirmed || inStorage) && finances ? (
             <section className="space-y-4">
               <PaymentBreakdown amounts={finances} totalLabel="Total paid" showNotes={false} />
               {succeeded?.succeeded_at ? (
@@ -153,8 +158,8 @@ function BookingDetailPage() {
                 </p>
               ) : null}
               <p className="type-body-sm text-muted-foreground">
-                Later months aren&apos;t charged yet. We&apos;ll tell you before anything else is
-                collected.
+                This covers the storage period you booked. If you extend it later, we&apos;ll show
+                you the extra cost before anything else is collected.
               </p>
             </section>
           ) : null}
@@ -166,7 +171,7 @@ function BookingDetailPage() {
                 Storage address
               </h2>
               <p className="mt-1 type-body-sm text-muted-foreground">
-                Released to you because this booking is confirmed and paid.
+                Released to you because this booking is paid and running.
               </p>
               <address className="mt-3 flex items-start gap-2 not-italic type-body">
                 <MapPin className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -185,6 +190,14 @@ function BookingDetailPage() {
               ) : null}
             </section>
           ) : null}
+
+          <BookingLifecyclePanel
+            booking={booking}
+            viewerId={user?.id ?? null}
+            paid={Boolean(succeeded)}
+            financiallyBlocked={Boolean(cancellation)}
+            audience="renter"
+          />
 
           <BookingSummary booking={booking} />
 

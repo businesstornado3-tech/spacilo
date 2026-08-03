@@ -12,8 +12,10 @@ import { EmptyState, ErrorState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { BookingStatusBadge } from "@/components/bookings/BookingSummary";
 import { useMyBookings } from "@/hooks/useBookings";
+import { useMyPayments } from "@/hooks/usePayments";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
-import { bookingView, type Booking } from "@/lib/bookings";
+import { bookingView, formatBookingDuration, type Booking } from "@/lib/bookings";
+import { paidStoragePence, paymentsByBooking } from "@/lib/payments/history";
 import { GROUP_LABEL, GROUP_ORDER, groupBookings } from "@/lib/bookings-lifecycle";
 
 const description = "Bookings you've started from accepted storage requests.";
@@ -34,8 +36,12 @@ export const Route = createFileRoute("/_authenticated/renter/bookings/")({
 
 function RenterBookingsPage() {
   const { data, isLoading, error, refetch } = useMyBookings();
+  const { data: payments } = useMyPayments();
   const bookings = data ?? [];
   const groups = groupBookings(bookings);
+  // Cumulative paid storage comes from the payment ledger, never from the
+  // booking's original agreed amount.
+  const byBooking = paymentsByBooking(payments);
 
   return (
     <AppLayout mode="renter" title="Bookings" description={description}>
@@ -58,7 +64,12 @@ function RenterBookingsPage() {
       {bookings.length > 0 ? (
         <div className="space-y-8">
           {GROUP_ORDER.map((group) => (
-            <BookingGroup key={group} title={GROUP_LABEL[group]} bookings={groups[group]} />
+            <BookingGroup
+              key={group}
+              title={GROUP_LABEL[group]}
+              bookings={groups[group]}
+              paymentsByBooking={byBooking}
+            />
           ))}
         </div>
       ) : null}
@@ -66,14 +77,23 @@ function RenterBookingsPage() {
   );
 }
 
-function BookingGroup({ title, bookings }: { title: string; bookings: Booking[] }) {
+function BookingGroup({
+  title,
+  bookings,
+  paymentsByBooking: payments,
+}: {
+  title: string;
+  bookings: Booking[];
+  paymentsByBooking: Record<string, import("@/lib/payments/history").PaymentRow[]>;
+}) {
   if (bookings.length === 0) return null;
   return (
     <section>
       <h2 className="type-h3">{title}</h2>
       <ul className="mt-3 space-y-3">
         {bookings.map((booking) => {
-          const view = bookingView(booking);
+          const paidStorage = paidStoragePence(payments[booking.id]);
+          const view = bookingView(booking, paidStorage);
           return (
             <li key={booking.id}>
               <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
@@ -90,8 +110,10 @@ function BookingGroup({ title, bookings }: { title: string; bookings: Booking[] 
 
                 <p className="mt-3 type-body-sm">{view.period}</p>
                 <p className="type-body-sm text-muted-foreground">
-                  {view.priceLabel} · {view.itemCount} items · {view.requirementM3.toFixed(2)} m³
+                  {formatBookingDuration(booking)} · {view.itemCount} items ·{" "}
+                  {view.requirementM3.toFixed(2)} m³
                 </p>
+                <p className="type-body-sm text-muted-foreground">{view.priceLabel}</p>
 
                 <Button asChild variant="secondary" size="sm" className="mt-4">
                   <Link to="/renter/bookings/$bookingId" params={{ bookingId: booking.id }}>

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { SearchControls } from "@/components/search/SearchControls";
 import { SpaceFitSpark } from "@/components/trust/SpaceFitAI";
 import { track } from "@/lib/analytics";
-import { hostEntryTarget } from "@/lib/host-entry";
+import { HostEntryButton } from "@/components/home/HostEntryButton";
 import { useAuth } from "@/hooks/useAuth";
 
 
@@ -18,7 +18,6 @@ export function Hero() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [intent, setIntent] = React.useState<Intent>("renter");
-  const hostTarget = hostEntryTarget(Boolean(user));
 
 
   function choose(next: Intent) {
@@ -39,8 +38,8 @@ export function Hero() {
           </h1>
 
           <p className="mt-4 max-w-md type-body text-muted-foreground">
-            Find trusted storage in unused spaces around your neighbourhood — or earn from the space you
-            already have.
+            Find trusted storage in unused spaces around your neighbourhood — or earn from space
+            you're not using.
           </p>
 
           <div className="mt-7 rounded-2xl bg-card p-4 shadow-card sm:p-5">
@@ -76,6 +75,10 @@ export function Hero() {
 
             {intent === "renter" ? (
               <div id="hero-panel-renter" role="tabpanel" aria-labelledby="hero-tab-renter" className="mt-4">
+                <p className="type-label">Find storage closer to home</p>
+                <p className="mt-1 mb-3 type-body-sm text-muted-foreground">
+                  Search garages, spare rooms and other unused spaces offered around your neighbourhood.
+                </p>
                 <SearchControls
                   submitLabel="Find storage"
                   onSubmit={({ location, radius }) => {
@@ -86,28 +89,19 @@ export function Hero() {
               </div>
             ) : (
               <div id="hero-panel-host" role="tabpanel" aria-labelledby="hero-tab-host" className="mt-4">
-                <p className="type-body-sm text-muted-foreground">
-                  List a garage, loft, shed, spare room or part of one. You choose who stores with you, and you
-                  can pause your listing at any time.
+                <p className="type-label">Turn unused space into monthly income.</p>
+                <p className="mt-1 type-body-sm text-muted-foreground">
+                  List your garage, loft, shed, spare room or other suitable space. You choose your monthly
+                  price and stay in control.
                 </p>
-                <Button
-                  asChild
-                  block
-                  className="mt-4"
-                  onClick={() => track("list_space_selected", { from: "homepage_hero" })}
-                >
-                  {hostTarget.to === "/host/spaces/new" ? (
-                    <Link to="/host/spaces/new">
-                      List your space
-                      <ArrowRight className="size-4" aria-hidden="true" />
-                    </Link>
-                  ) : (
-                    <Link to="/signup" search={{ mode: "host" }}>
-                      List your space
-                      <ArrowRight className="size-4" aria-hidden="true" />
-                    </Link>
-                  )}
-                </Button>
+                <div className="mt-4">
+                  <HostEntryButton
+                    label="List your space"
+                    from="homepage_hero"
+                    size="default"
+                    block
+                  />
+                </div>
               </div>
             )}
           </div>

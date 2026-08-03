@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { RequestStatusBadge } from "@/components/requests/RequestSummary";
 import { useHostRequests } from "@/hooks/useStorageRequests";
 import { useMyBookings } from "@/hooks/useBookings";
+import { useMyBookingCancellations } from "@/hooks/useCancellation";
+import type { BookingCancellationRow } from "@/lib/cancellations-api";
 import {
   bookingView,
   bookingsByRequest,
@@ -47,6 +49,8 @@ export const Route = createFileRoute("/_authenticated/host/bookings")({
 function HostBookingsPage() {
   const { data, isLoading, error, refetch } = useHostRequests();
   const { data: bookingsData } = useMyBookings();
+  const { data: cancellationRows } = useMyBookingCancellations();
+  const cancellations = new Map((cancellationRows ?? []).map((c) => [c.booking_id, c]));
   const bookings = bookingsData ?? [];
   const awaitingPayment = bookings.filter((b) => b.status === "pending_payment");
   const confirmedBookings = bookings.filter((b) => b.status === "confirmed");
@@ -118,7 +122,11 @@ function HostBookingsPage() {
               <ul className="mt-3 space-y-3">
                 {cancelledBookings.map((booking) => (
                   <li key={booking.id}>
-                    <HostBookingCard booking={booking} cancelled />
+                    <HostBookingCard
+                      booking={booking}
+                      cancelled
+                      cancellation={cancellations.get(booking.id) ?? null}
+                    />
                   </li>
                 ))}
               </ul>
@@ -140,14 +148,23 @@ function HostBookingsPage() {
   );
 }
 
+/** Who asked for the cancellation, in host-facing words. */
+function cancellationActorLabel(role: string): string {
+  if (role === "renter") return "the renter";
+  if (role === "host") return "you";
+  return `${brand.name}`;
+}
+
 function HostBookingCard({
   booking,
   confirmed = false,
   cancelled = false,
+  cancellation = null,
 }: {
   booking: Booking;
   confirmed?: boolean;
   cancelled?: boolean;
+  cancellation?: BookingCancellationRow | null;
 }) {
   const view = bookingView(booking);
   const entitlement = hostStorageEntitlementPence(booking);
@@ -174,6 +191,27 @@ function HostBookingCard({
       <p className="type-body-sm text-muted-foreground">
         {renter ? `Requested by ${renter}` : "Requested by a renter"}
       </p>
+      {cancelled && cancellation ? (
+        <div className="mt-3 rounded-xl bg-muted/60 p-3">
+          <p className="type-body-sm">
+            Cancelled by {cancellationActorLabel(cancellation.requested_by_role)} on{" "}
+            {new Date(cancellation.created_at).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </p>
+          {cancellation.reason?.trim() ? (
+            <p className="mt-1 type-body-sm text-muted-foreground">
+              Reason given: {cancellation.reason.trim()}
+            </p>
+          ) : null}
+          <p className="mt-1 type-body-sm text-muted-foreground">
+            These dates are available to book again.
+          </p>
+        </div>
+      ) : null}
+
       {confirmed && entitlement !== null ? (
         <p className="mt-1 type-body-sm text-muted-foreground">
           First month storage: {formatPrice(entitlement)} (the renter also paid a separate

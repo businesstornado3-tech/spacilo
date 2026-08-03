@@ -49,8 +49,11 @@ export const Route = createFileRoute("/_authenticated/renter/bookings/$bookingId
 function BookingDetailPage() {
   const { bookingId } = Route.useParams();
   const { checkout } = Route.useSearch();
+  const { user } = useAuth();
   const { data: booking, isLoading, error, refetch } = useBooking(bookingId);
   const { data: payments } = useBookingPayments(bookingId);
+  const { data: cancellation } = useBookingCancellation(bookingId);
+  const { data: refunds } = useBookingRefunds(bookingId);
   const startCheckout = useStartCheckout();
 
   const succeeded = (payments ?? []).find((p) => p.status === "succeeded") ?? null;

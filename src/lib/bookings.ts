@@ -10,7 +10,12 @@
  */
 import type { Tables } from "@/integrations/supabase/types";
 import { formatDate, formatPrice } from "@/lib/format";
-import { effectiveStatus, formatRequestPeriod, type StorageRequest } from "@/lib/storage-requests";
+import {
+  effectiveStatus,
+  formatApproximateDuration,
+  formatRequestPeriod,
+  type StorageRequest,
+} from "@/lib/storage-requests";
 
 export type Booking = Tables<"bookings">;
 export type BookingStatus = Booking["status"];
@@ -154,3 +159,8 @@ export function bookingItems(booking: Pick<Booking, "inventory_items_snapshot">)
 
 export const bookingsByRequest = (bookings: Booking[]): Record<string, Booking> =>
   Object.fromEntries(bookings.map((booking) => [booking.request_id, booking]));
+
+/** "about 3 months" — presentational only; billing rules aren't defined yet. */
+export function formatBookingDuration(booking: Pick<Booking, "start_date" | "end_date">): string {
+  return formatApproximateDuration(booking.start_date, booking.end_date);
+}

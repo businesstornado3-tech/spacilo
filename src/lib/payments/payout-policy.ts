@@ -248,15 +248,70 @@ export function earningHoldNote(
     Tables<"host_earnings">,
     "hold_refund" | "hold_dispute" | "hold_review"
   >,
+  /** True once the refund ledger says nothing is still in flight. */
+  refundSettled = false,
 ): string | null {
   if (earning.hold_dispute) {
     return "A payment for this booking is being queried with the card provider. We'll release anything still due once it's settled.";
   }
-  if (earning.hold_refund) {
+  if (earning.hold_refund && !refundSettled) {
     return "A refund for this booking is being processed, so this earning is paused until it completes.";
   }
   if (earning.hold_review) {
     return "This booking was cancelled after storage had started, so we're reviewing what's due.";
   }
   return null;
+}
+
+/* ------------------------------------------- final refund reconciliation */
+
+export interface RefundLedgerEntry {
+  status: string;
+  storage_refund_pence: number;
+}
+
+export interface RefundSettlement {
+  /** A refund is still in flight with Stripe. */
+  pending: boolean;
+  /** At least one refund has actually settled. */
+  settled: boolean;
+  storagePence: number;
+}
+
+/**
+ * Reads the persisted refund ledger for a booking. Never infers success from
+ * the booking merely being cancelled.
+ */
+export function refundSettlement(refunds: RefundLedgerEntry[] | null | undefined): RefundSettlement {
+  const rows = refunds ?? [];
+  return {
+    pending: rows.some((r) => r.status === "pending"),
+    settled: rows.some((r) => r.status === "succeeded"),
+    storagePence: rows
+      .filter((r) => r.status === "succeeded")
+      .reduce((total, r) => total + r.storage_refund_pence, 0),
+  };
+}
+
+/**
+ * Final host-facing state once a refund has completed. Returns null while a
+ * refund is still pending, or when no refund settled — in those cases the
+ * normal status/hold wording applies.
+ */
+export function earningRefundOutcome(
+  earning: Pick<Tables<"host_earnings">, "host_entitlement_pence" | "hold_dispute">,
+  settlement: RefundSettlement,
+): { label: string; note: string } | null {
+  if (earning.hold_dispute) return null;
+  if (settlement.pending || !settlement.settled || settlement.storagePence <= 0) return null;
+  if (earning.host_entitlement_pence <= 0) {
+    return {
+      label: "Refunded",
+      note: "This booking was cancelled and fully refunded. No earnings are due for this booking.",
+    };
+  }
+  return {
+    label: "Partly refunded",
+    note: "This booking was partly refunded, so your earnings for it have been reduced. The remaining amount follows the normal release schedule.",
+  };
 }

@@ -131,6 +131,174 @@ export type Database = {
           },
         ]
       }
+      host_earnings: {
+        Row: {
+          blocked_reason: string | null
+          booking_id: string
+          connected_account_id: string | null
+          created_at: string
+          currency: string
+          eligible_at: string
+          gross_storage_amount_pence: number
+          host_entitlement_pence: number
+          host_user_id: string
+          id: string
+          last_error: string | null
+          livemode: boolean | null
+          payment_id: string
+          period_index: number
+          period_label: string
+          platform_fee_pence: number
+          refunded_storage_pence: number
+          reversed_amount_pence: number
+          service_fee_minimum_pence: number
+          service_fee_rate_bps: number
+          space_id: string
+          status: Database["public"]["Enums"]["host_earning_status"]
+          stripe_transfer_id: string | null
+          transfer_attempted_at: string | null
+          transfer_attempts: number
+          transfer_created_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          blocked_reason?: string | null
+          booking_id: string
+          connected_account_id?: string | null
+          created_at?: string
+          currency?: string
+          eligible_at: string
+          gross_storage_amount_pence: number
+          host_entitlement_pence: number
+          host_user_id: string
+          id?: string
+          last_error?: string | null
+          livemode?: boolean | null
+          payment_id: string
+          period_index?: number
+          period_label?: string
+          platform_fee_pence: number
+          refunded_storage_pence?: number
+          reversed_amount_pence?: number
+          service_fee_minimum_pence: number
+          service_fee_rate_bps: number
+          space_id: string
+          status?: Database["public"]["Enums"]["host_earning_status"]
+          stripe_transfer_id?: string | null
+          transfer_attempted_at?: string | null
+          transfer_attempts?: number
+          transfer_created_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          blocked_reason?: string | null
+          booking_id?: string
+          connected_account_id?: string | null
+          created_at?: string
+          currency?: string
+          eligible_at?: string
+          gross_storage_amount_pence?: number
+          host_entitlement_pence?: number
+          host_user_id?: string
+          id?: string
+          last_error?: string | null
+          livemode?: boolean | null
+          payment_id?: string
+          period_index?: number
+          period_label?: string
+          platform_fee_pence?: number
+          refunded_storage_pence?: number
+          reversed_amount_pence?: number
+          service_fee_minimum_pence?: number
+          service_fee_rate_bps?: number
+          space_id?: string
+          status?: Database["public"]["Enums"]["host_earning_status"]
+          stripe_transfer_id?: string | null
+          transfer_attempted_at?: string | null
+          transfer_attempts?: number
+          transfer_created_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "host_earnings_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "host_earnings_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: true
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      host_payout_accounts: {
+        Row: {
+          charges_enabled: boolean
+          country: string | null
+          created_at: string
+          currently_due: Json
+          details_submitted: boolean
+          disabled_reason: string | null
+          eventually_due: Json
+          host_user_id: string
+          id: string
+          last_synced_at: string | null
+          livemode: boolean | null
+          onboarding_started_at: string | null
+          payouts_enabled: boolean
+          pending_verification: Json
+          status: Database["public"]["Enums"]["host_payout_status"]
+          stripe_account_id: string
+          transfers_capability: string | null
+          updated_at: string
+        }
+        Insert: {
+          charges_enabled?: boolean
+          country?: string | null
+          created_at?: string
+          currently_due?: Json
+          details_submitted?: boolean
+          disabled_reason?: string | null
+          eventually_due?: Json
+          host_user_id: string
+          id?: string
+          last_synced_at?: string | null
+          livemode?: boolean | null
+          onboarding_started_at?: string | null
+          payouts_enabled?: boolean
+          pending_verification?: Json
+          status?: Database["public"]["Enums"]["host_payout_status"]
+          stripe_account_id: string
+          transfers_capability?: string | null
+          updated_at?: string
+        }
+        Update: {
+          charges_enabled?: boolean
+          country?: string | null
+          created_at?: string
+          currently_due?: Json
+          details_submitted?: boolean
+          disabled_reason?: string | null
+          eventually_due?: Json
+          host_user_id?: string
+          id?: string
+          last_synced_at?: string | null
+          livemode?: boolean | null
+          onboarding_started_at?: string | null
+          payouts_enabled?: boolean
+          pending_verification?: Json
+          status?: Database["public"]["Enums"]["host_payout_status"]
+          stripe_account_id?: string
+          transfers_capability?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory_analysis_runs: {
         Row: {
           analysed_photo_count: number
@@ -1108,6 +1276,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_storage_refund_to_earning: {
+        Args: {
+          p_payment_id: string
+          p_reason?: string
+          p_refunded_storage_pence: number
+        }
+        Returns: Json
+      }
       begin_booking_checkout: {
         Args: { p_booking_id: string }
         Returns: {
@@ -1148,6 +1324,52 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      claim_host_earnings_for_transfer: {
+        Args: { p_limit?: number }
+        Returns: {
+          blocked_reason: string | null
+          booking_id: string
+          connected_account_id: string | null
+          created_at: string
+          currency: string
+          eligible_at: string
+          gross_storage_amount_pence: number
+          host_entitlement_pence: number
+          host_user_id: string
+          id: string
+          last_error: string | null
+          livemode: boolean | null
+          payment_id: string
+          period_index: number
+          period_label: string
+          platform_fee_pence: number
+          refunded_storage_pence: number
+          reversed_amount_pence: number
+          service_fee_minimum_pence: number
+          service_fee_rate_bps: number
+          space_id: string
+          status: Database["public"]["Enums"]["host_earning_status"]
+          stripe_transfer_id: string | null
+          transfer_attempted_at: string | null
+          transfer_attempts: number
+          transfer_created_at: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "host_earnings"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      complete_host_earning_transfer: {
+        Args: {
+          p_connected_account_id: string
+          p_earning_id: string
+          p_transfer_id: string
+        }
+        Returns: Json
       }
       confirm_booking_payment: {
         Args: {
@@ -1259,6 +1481,10 @@ export type Database = {
         }
       }
       expire_stale_storage_requests: { Args: never; Returns: number }
+      fail_host_earning_transfer: {
+        Args: { p_block?: boolean; p_earning_id: string; p_reason: string }
+        Returns: Json
+      }
       get_booking_exact_address: {
         Args: { p_booking_id: string }
         Returns: {
@@ -1355,6 +1581,12 @@ export type Database = {
         Returns: number
       }
       inventory_recalculate: { Args: { target: string }; Returns: undefined }
+      mark_host_earnings_eligible: { Args: never; Returns: number }
+      record_host_earning: { Args: { p_payment_id: string }; Returns: string }
+      record_host_earning_reversal: {
+        Args: { p_earning_id: string; p_reversed_pence: number }
+        Returns: Json
+      }
       record_payment_failure: {
         Args: {
           p_event_id: string
@@ -1472,6 +1704,11 @@ export type Database = {
         }
         Returns: number
       }
+      stow_payout_eligible_at: {
+        Args: { p_start_date: string }
+        Returns: string
+      }
+      stow_payout_release_delay_hours: { Args: never; Returns: number }
       stow_service_fee_pence: {
         Args: {
           p_minimum_pence?: number
@@ -1479,6 +1716,48 @@ export type Database = {
           p_storage_pence: number
         }
         Returns: number
+      }
+      upsert_host_payout_account: {
+        Args: {
+          p_charges_enabled: boolean
+          p_country: string
+          p_currently_due: Json
+          p_details_submitted: boolean
+          p_disabled_reason: string
+          p_eventually_due: Json
+          p_host_user_id: string
+          p_livemode: boolean
+          p_payouts_enabled: boolean
+          p_pending_verification: Json
+          p_stripe_account_id: string
+          p_transfers_capability: string
+        }
+        Returns: {
+          charges_enabled: boolean
+          country: string | null
+          created_at: string
+          currently_due: Json
+          details_submitted: boolean
+          disabled_reason: string | null
+          eventually_due: Json
+          host_user_id: string
+          id: string
+          last_synced_at: string | null
+          livemode: boolean | null
+          onboarding_started_at: string | null
+          payouts_enabled: boolean
+          pending_verification: Json
+          status: Database["public"]["Enums"]["host_payout_status"]
+          stripe_account_id: string
+          transfers_capability: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "host_payout_accounts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
@@ -1494,6 +1773,20 @@ export type Database = {
         | "cancelled"
         | "completed"
       detection_review_status: "pending" | "confirmed" | "edited" | "rejected"
+      host_earning_status:
+        | "pending"
+        | "eligible"
+        | "transferring"
+        | "transferred"
+        | "reversed"
+        | "partially_reversed"
+        | "blocked"
+      host_payout_status:
+        | "not_started"
+        | "incomplete"
+        | "pending_verification"
+        | "restricted"
+        | "ready"
       inventory_item_category:
         | "boxes"
         | "bags"
@@ -1704,6 +1997,22 @@ export const Constants = {
         "completed",
       ],
       detection_review_status: ["pending", "confirmed", "edited", "rejected"],
+      host_earning_status: [
+        "pending",
+        "eligible",
+        "transferring",
+        "transferred",
+        "reversed",
+        "partially_reversed",
+        "blocked",
+      ],
+      host_payout_status: [
+        "not_started",
+        "incomplete",
+        "pending_verification",
+        "restricted",
+        "ready",
+      ],
       inventory_item_category: [
         "boxes",
         "bags",

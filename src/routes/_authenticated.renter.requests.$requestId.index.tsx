@@ -22,7 +22,8 @@ import {
   bookingActionState,
   bookingWindowLabel,
 } from "@/lib/bookings";
-import { isWithdrawable, statusMeta, effectiveStatus } from "@/lib/storage-requests";
+import { isWithdrawable } from "@/lib/storage-requests";
+import { requestStatusDetail } from "@/lib/request-booking-copy";
 import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/renter/requests/$requestId/")({
@@ -92,7 +93,7 @@ function RequestDetailPage() {
       {request ? (
         <div className="max-w-2xl space-y-6">
           <p className="type-body-sm text-muted-foreground">
-            {statusMeta(effectiveStatus(request)).detail}
+            {requestStatusDetail(request, booking ?? null)}
           </p>
 
           {(() => {
@@ -142,7 +143,7 @@ function RequestDetailPage() {
             return null;
           })()}
 
-          <RequestSummary request={request} />
+          <RequestSummary request={request} booking={booking ?? null} />
 
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="secondary">

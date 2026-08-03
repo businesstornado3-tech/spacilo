@@ -211,7 +211,7 @@ function BookingDetailPage() {
             refunds={refunds ?? []}
             viewerId={user?.id ?? null}
             audience="renter"
-            payments={payments ?? []}
+
           />
 
 

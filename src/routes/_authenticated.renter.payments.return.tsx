@@ -14,7 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { bookingKeys, useBooking } from "@/hooks/useBookings";
+import { bookingKeys, changeRequestKeys, useBooking } from "@/hooks/useBookings";
 import { useBookingPayments } from "@/hooks/usePayments";
 import { formatDate, formatPrice } from "@/lib/format";
 
@@ -58,7 +58,9 @@ function PaymentReturnPage() {
   useEffect(() => {
     if (!bookingId) return;
     const timer = window.setInterval(() => {
-      if (!confirmed) void queryClient.invalidateQueries({ queryKey: bookingKeys.detail(bookingId) });
+      if (confirmed) return;
+      void queryClient.invalidateQueries({ queryKey: bookingKeys.detail(bookingId) });
+      void queryClient.invalidateQueries({ queryKey: changeRequestKeys.forBooking(bookingId) });
     }, 3000);
     return () => window.clearInterval(timer);
   }, [bookingId, confirmed, queryClient]);

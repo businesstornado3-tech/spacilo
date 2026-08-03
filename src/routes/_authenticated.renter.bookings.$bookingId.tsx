@@ -188,6 +188,16 @@ function BookingDetailPage() {
 
           <BookingSummary booking={booking} />
 
+          <CancellationPanel
+            booking={booking}
+            payment={succeeded}
+            cancellation={cancellation ?? null}
+            refunds={refunds ?? []}
+            viewerId={user?.id ?? null}
+            audience="renter"
+          />
+
+
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="secondary">
               <Link to="/renter/requests/$requestId" params={{ requestId: booking.request_id }}>

@@ -64,7 +64,7 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
 
   const spaceFitHref = session
     ? { to: "/renter/inventory" }
-    : { to: "/signup", search: { mode: "renter", redirect: "/renter/inventory" } };
+    : { to: "/signup", search: { mode: "renter" } };
 
   function handleMarker(id: string) {
     setSelectedId(id);

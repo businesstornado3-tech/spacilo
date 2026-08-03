@@ -13,6 +13,8 @@ import { buildMatchInventory, evaluateSpace, runMatching } from "@/lib/spacefit/
 import type { MatchSpace, SpaceFitResult } from "@/lib/spacefit/types";
 import { useActiveInventory, useInventoryItems } from "@/hooks/useInventory";
 import type { InventoryItem } from "@/lib/inventory-model";
+import { toMatchSpace } from "@/lib/spacefit/adapters";
+
 
 export type PublishedSpaceRow = Awaited<ReturnType<typeof listPublishedSpaces>>[number];
 

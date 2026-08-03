@@ -35,7 +35,6 @@ import {
   hostEarningsLabel,
   type Booking,
 } from "@/lib/bookings";
-import { formatPrice } from "@/lib/format";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import {
   REQUEST_LIST_DISCLAIMER,

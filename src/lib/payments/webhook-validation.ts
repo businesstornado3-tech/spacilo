@@ -88,3 +88,33 @@ export type RefundEventType = (typeof REFUND_EVENT_TYPES)[number];
 
 export const isRefundEvent = (type: string): type is RefundEventType =>
   (REFUND_EVENT_TYPES as readonly string[]).includes(type);
+
+/**
+ * Dispute lifecycle events (Prompt 13). A dispute puts money at risk, so an
+ * affected earning is held until Stripe tells us the outcome.
+ */
+export const DISPUTE_EVENT_TYPES = [
+  "charge.dispute.created",
+  "charge.dispute.updated",
+  "charge.dispute.closed",
+] as const;
+
+export type DisputeEventType = (typeof DISPUTE_EVENT_TYPES)[number];
+
+export const isDisputeEvent = (type: string): type is DisputeEventType =>
+  (DISPUTE_EVENT_TYPES as readonly string[]).includes(type);
+
+/** Only `charge.dispute.closed` carries Stripe's final won/lost outcome. */
+export const isDisputeClosedEvent = (type: string): boolean =>
+  type === "charge.dispute.closed";
+
+/**
+ * Every Stripe event type this endpoint acts on. Enable exactly these in the
+ * Stripe dashboard — nothing broader is required.
+ */
+export const ALL_SUBSCRIBED_EVENT_TYPES = [
+  ...HANDLED_EVENT_TYPES,
+  ...CONNECT_EVENT_TYPES,
+  ...REFUND_EVENT_TYPES,
+  ...DISPUTE_EVENT_TYPES,
+] as const;

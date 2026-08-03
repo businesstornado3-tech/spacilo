@@ -13,10 +13,11 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import {
   isConnectAccountEvent,
+  isDisputeClosedEvent,
+  isDisputeEvent,
   isHandledEvent,
   isRefundEvent,
 } from "@/lib/payments/webhook-validation";
-import { allocateRefund } from "@/lib/payments/refunds";
 
 /**
  * Records the event id once. Returns false when Stripe has already delivered
@@ -91,6 +92,10 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
         }
 
         // ------------------------------------------------------- refunds
+        // `charge.refunded` reports a CUMULATIVE amount_refunded, not a delta,
+        // and may arrive for a refund created in the Stripe Dashboard. The
+        // database applies only the difference against what is already
+        // recorded, so a duplicate or out-of-order delivery is a no-op.
         if (isRefundEvent(event.type)) {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           try {
@@ -98,38 +103,90 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               return new Response("duplicate", { status: 200 });
             }
             const charge = event.data.object as import("stripe").Stripe.Charge;
-            const paymentId = charge.metadata?.["payment_id"] ?? null;
+            const intentId =
+              typeof charge.payment_intent === "string"
+                ? charge.payment_intent
+                : (charge.payment_intent?.id ?? null);
+
+            let paymentId = charge.metadata?.["payment_id"] ?? null;
+            if (!paymentId && intentId) {
+              const { data: byIntent } = await supabaseAdmin
+                .from("payments")
+                .select("id")
+                .eq("stripe_payment_intent_id", intentId)
+                .maybeSingle();
+              paymentId = byIntent?.id ?? null;
+            }
             if (!paymentId) {
+              // Unknown Stripe object: acknowledged, but no booking is touched.
+              console.error("charge.refunded without a resolvable payment", charge.id);
               return new Response("no payment reference", { status: 200 });
             }
 
-            const { data: payment } = await supabaseAdmin
-              .from("payments")
-              .select("storage_amount_pence, service_fee_amount_pence")
-              .eq("id", paymentId)
-              .maybeSingle();
-            if (!payment) return new Response("payment not found", { status: 200 });
-
-            const allocation = allocateRefund(
-              charge.amount_refunded ?? 0,
-              payment.storage_amount_pence,
-              payment.service_fee_amount_pence,
-            );
-
-            const { error } = await supabaseAdmin.rpc("apply_storage_refund_to_earning", {
+            const { data: outcome, error } = await supabaseAdmin.rpc("reconcile_charge_refund", {
               p_payment_id: paymentId,
-              p_refunded_storage_pence: allocation.refundedStoragePence,
-              p_reason: "stripe charge.refunded",
+              p_charge_id: charge.id,
+              p_refunded_total_pence: charge.amount_refunded ?? 0,
+              p_currency: (charge.currency ?? "gbp").toUpperCase(),
+              p_event_id: event.id,
             });
             if (error) throw new Error(error.message);
 
             await supabaseAdmin
               .from("stripe_webhook_events")
-              .update({ processed_at: new Date().toISOString(), outcome: "refund_applied" })
+              .update({
+                processed_at: new Date().toISOString(),
+                outcome: JSON.stringify(outcome).slice(0, 200),
+              })
               .eq("id", event.id);
             return new Response("ok", { status: 200 });
           } catch (error) {
             console.error("Refund webhook error", (error as Error).message);
+            return new Response("retry", { status: 500 });
+          }
+        }
+
+        // ------------------------------------------------------ disputes
+        // A dispute puts money at risk immediately. The earning is held until
+        // Stripe reports the outcome; nothing is ever debited from a host.
+        if (isDisputeEvent(event.type)) {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          try {
+            if (!(await claimEvent(supabaseAdmin, event))) {
+              return new Response("duplicate", { status: 200 });
+            }
+            const dispute = event.data.object as import("stripe").Stripe.Dispute;
+            const chargeId =
+              typeof dispute.charge === "string" ? dispute.charge : (dispute.charge?.id ?? null);
+            const intentId =
+              typeof dispute.payment_intent === "string"
+                ? dispute.payment_intent
+                : (dispute.payment_intent?.id ?? null);
+
+            const { data: outcome, error } = await supabaseAdmin.rpc("record_stripe_dispute", {
+              p_dispute_id: dispute.id,
+              // Empty strings simply match no payment row, exactly as NULL does.
+              p_charge_id: chargeId ?? "",
+              p_payment_intent_id: intentId ?? "",
+              p_amount_pence: dispute.amount ?? 0,
+              p_currency: (dispute.currency ?? "gbp").toUpperCase(),
+              p_status: dispute.status,
+              p_reason: dispute.reason ?? "",
+              p_livemode: event.livemode,
+              p_closed: isDisputeClosedEvent(event.type),
+            });
+            if (error) throw new Error(error.message);
+
+            await supabaseAdmin
+              .from("stripe_webhook_events")
+              .update({
+                processed_at: new Date().toISOString(),
+                outcome: JSON.stringify(outcome).slice(0, 200),
+              })
+              .eq("id", event.id);
+            return new Response("ok", { status: 200 });
+          } catch (error) {
+            console.error("Dispute webhook error", (error as Error).message);
             return new Response("retry", { status: 500 });
           }
         }

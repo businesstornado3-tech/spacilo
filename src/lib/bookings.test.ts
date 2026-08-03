@@ -43,6 +43,8 @@ const request: StorageRequest = {
   renter_first_name_snapshot: "Sam",
   renter_id: "renter-1",
   renter_note: null,
+  requested_start_date: "2026-09-15",
+  requested_end_date: "2026-12-15",
   responded_at: hours(-4),
   space_accepted_categories_snapshot: ["boxes"],
   space_access_summary_snapshot: null,

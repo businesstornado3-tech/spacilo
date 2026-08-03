@@ -109,7 +109,23 @@ function HostBookingsPage() {
             </section>
           ) : null}
 
-          <RequestGroup
+          {cancelledBookings.length > 0 ? (
+            <section>
+              <h2 className="type-h3">Cancelled bookings</h2>
+              <p className="mt-1 type-body-sm text-muted-foreground">
+                {hostBookingDetail("cancelled")} The dates are available to book again.
+              </p>
+              <ul className="mt-3 space-y-3">
+                {cancelledBookings.map((booking) => (
+                  <li key={booking.id}>
+                    <HostBookingCard booking={booking} cancelled />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+
             title="Incoming requests"
             emptyNote="Nothing needs your response right now."
             requests={incoming}

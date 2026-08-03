@@ -13,6 +13,8 @@ import {
   cancellationEligibility,
   hostEntitlementAfterRefund,
   refundIdempotencyKey,
+  refundableFromPayments,
+  serviceFeeNoun,
   storageHasStarted,
   validateRefund,
   type CancellationSubject,
@@ -229,5 +231,126 @@ describe("webhook event routing", () => {
     expect(unique.size).toBe(ALL_SUBSCRIBED_EVENT_TYPES.length);
     expect(unique.has("charge.refunded")).toBe(true);
     expect(unique.has("charge.dispute.created")).toBe(true);
+  });
+});
+
+/* --------------------------------- cumulative refundable across payments */
+
+const succeededPayment = (
+  storage: number,
+  fee: number,
+  over: Partial<{ status: string; refunded_storage_pence: number; refunded_service_fee_pence: number }> = {},
+) => ({
+  status: "succeeded",
+  storage_amount_pence: storage,
+  service_fee_amount_pence: fee,
+  refunded_storage_pence: 0,
+  refunded_service_fee_pence: 0,
+  ...over,
+});
+
+describe("cumulative refundable amount across a booking's payments", () => {
+  it("refunds the original payment when nothing extended the booking", () => {
+    const summary = refundableFromPayments([succeededPayment(10_300, 1_236)]);
+    const decision = cancellationDecision(
+      { status: "confirmed", startDate: "2026-09-01", paid: summary.paid },
+      NOW,
+    );
+    expect(decision.refund.totalRefundPence).toBe(11_536);
+    expect(summary.refundableFeeCount).toBe(1);
+    expect(serviceFeeNoun(summary.refundableFeeCount)).toBe("service fee");
+  });
+
+  it("sums the original booking AND a paid extension", () => {
+    const summary = refundableFromPayments([
+      succeededPayment(10_300, 1_236),
+      succeededPayment(5_300, 636),
+    ]);
+    expect(summary.paid).toEqual({
+      storageAmountPence: 15_600,
+      serviceFeeAmountPence: 1_872,
+      refundedStoragePence: 0,
+      refundedServiceFeePence: 0,
+    });
+    const decision = cancellationDecision(
+      { status: "confirmed", startDate: "2026-09-01", paid: summary.paid },
+      NOW,
+    );
+    expect(decision.refund).toEqual({
+      storageRefundPence: 15_600,
+      serviceFeeRefundPence: 1_872,
+      totalRefundPence: 17_472,
+    });
+    expect(serviceFeeNoun(summary.refundableFeeCount)).toBe("service fees");
+  });
+
+  it("sums multiple paid extensions", () => {
+    const summary = refundableFromPayments([
+      succeededPayment(10_300, 1_236),
+      succeededPayment(5_300, 636),
+      succeededPayment(2_000, 500),
+    ]);
+    const decision = cancellationDecision(
+      { status: "confirmed", startDate: "2026-09-01", paid: summary.paid },
+      NOW,
+    );
+    expect(decision.refund.totalRefundPence).toBe(19_972);
+    expect(summary.refundablePaymentCount).toBe(3);
+  });
+
+  it("excludes failed, expired, cancelled and still-open attempts", () => {
+    const summary = refundableFromPayments([
+      succeededPayment(10_300, 1_236),
+      succeededPayment(5_300, 636, { status: "failed" }),
+      succeededPayment(5_300, 636, { status: "expired" }),
+      succeededPayment(5_300, 636, { status: "cancelled" }),
+      succeededPayment(5_300, 636, { status: "requires_payment" }),
+    ]);
+    expect(summary.paid?.storageAmountPence).toBe(10_300);
+    expect(summary.refundablePaymentCount).toBe(1);
+  });
+
+  it("never refunds a payment that is already fully refunded a second time", () => {
+    const summary = refundableFromPayments([
+      succeededPayment(10_300, 1_236, {
+        refunded_storage_pence: 10_300,
+        refunded_service_fee_pence: 1_236,
+      }),
+      succeededPayment(5_300, 636),
+    ]);
+    const decision = cancellationDecision(
+      { status: "confirmed", startDate: "2026-09-01", paid: summary.paid },
+      NOW,
+    );
+    expect(decision.refund.totalRefundPence).toBe(5_936);
+    expect(summary.refundablePaymentCount).toBe(1);
+    expect(serviceFeeNoun(summary.refundableFeeCount)).toBe("service fee");
+  });
+
+  it("returns nothing refundable when no payment ever succeeded", () => {
+    expect(refundableFromPayments([succeededPayment(10_300, 1_236, { status: "failed" })]).paid)
+      .toBeNull();
+    expect(refundableFromPayments([]).paid).toBeNull();
+  });
+
+  it("reverses host entitlement for the storage of every refunded payment", () => {
+    const earnings = [10_300, 5_300];
+    const summary = refundableFromPayments([
+      succeededPayment(10_300, 1_236),
+      succeededPayment(5_300, 636),
+    ]);
+    const decision = cancellationDecision(
+      { status: "confirmed", startDate: "2026-09-01", paid: summary.paid },
+      NOW,
+    );
+    // Each earning is reduced by its own payment's storage refund; the service
+    // fee is platform revenue and never comes out of host earnings.
+    const remaining = earnings.reduce(
+      (total, gross) => total + hostEntitlementAfterRefund(gross, gross),
+      0,
+    );
+    expect(remaining).toBe(0);
+    expect(decision.refund.storageRefundPence).toBe(15_600);
+    expect(decision.removesHostEntitlement).toBe(true);
   });
 });

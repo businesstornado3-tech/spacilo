@@ -200,7 +200,7 @@ function BookingDetailPage() {
 
           <CancellationPanel
             booking={booking}
-            payment={succeeded}
+            payments={payments ?? []}
             cancellation={cancellation ?? null}
             refunds={refunds ?? []}
             viewerId={user?.id ?? null}

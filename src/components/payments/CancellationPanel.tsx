@@ -21,6 +21,8 @@ import {
   RESOLUTION_LABEL,
   cancellationDecision,
   cancellationEligibility,
+  refundableFromPayments,
+  serviceFeeNoun,
   storageHasStarted,
   type CancellationSubject,
 } from "@/lib/payments/cancellation";
@@ -31,7 +33,8 @@ import type { Tables } from "@/integrations/supabase/types";
 
 interface Props {
   booking: Tables<"bookings">;
-  payment: Tables<"payments"> | null;
+  /** EVERY payment on the booking — original plus each paid extension. */
+  payments: Tables<"payments">[] | null | undefined;
   cancellation: BookingCancellationRow | null;
   refunds: BookingRefundRow[];
   viewerId: string | null;
@@ -40,7 +43,7 @@ interface Props {
 
 export function CancellationPanel({
   booking,
-  payment,
+  payments,
   cancellation,
   refunds,
   viewerId,
@@ -53,17 +56,14 @@ export function CancellationPanel({
   const eligibility = cancellationEligibility(booking, viewerId);
   const started = storageHasStarted(booking.start_date);
 
+  // Cumulative across every succeeded payment on this booking, so an extended
+  // booking previews the full amount it will refund — never just the last one.
+  const refundable = refundableFromPayments(payments);
+  const paidAnything = refundable.paid !== null;
   const subject: CancellationSubject = {
     status: booking.status,
     startDate: booking.start_date,
-    paid: payment
-      ? {
-          storageAmountPence: payment.storage_amount_pence,
-          serviceFeeAmountPence: payment.service_fee_amount_pence,
-          refundedStoragePence: payment.refunded_storage_pence ?? 0,
-          refundedServiceFeePence: payment.refunded_service_fee_pence ?? 0,
-        }
-      : null,
+    paid: refundable.paid,
   };
   const preview = cancellationDecision(subject);
   const settled = settledRefundTotals(refunds);
@@ -164,13 +164,13 @@ export function CancellationPanel({
     <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
       <h2 className="type-h3">Need to cancel?</h2>
       <p className="mt-1 type-body-sm text-muted-foreground">
-        {!payment
+        {!paidAnything
           ? "Nothing has been charged for this booking, so cancelling costs nothing."
           : started
             ? POST_START_REVIEW_COPY
             : `Cancelling before your storage starts refunds the full ${formatPrice(
                 preview.refund.totalRefundPence,
-              )} you paid, including the ${"service fee"}.`}
+              )} you paid, including the ${serviceFeeNoun(refundable.refundableFeeCount)}.`}
       </p>
 
       <Button variant="secondary" className="mt-4" onClick={() => setOpen(true)}>
@@ -180,7 +180,7 @@ export function CancellationPanel({
       <Modal open={open} onOpenChange={setOpen} title="Cancel this booking?">
         <div className="space-y-4">
           <p className="type-body-sm text-muted-foreground">
-            {!payment
+            {!paidAnything
               ? "This booking hasn't been paid, so nothing will be refunded and the space is released."
               : started
                 ? POST_START_REVIEW_COPY

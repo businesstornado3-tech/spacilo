@@ -166,12 +166,16 @@ function ExtensionSection({
   const { data: changes } = useBookingChangeRequests(booking.id);
   const request = useRequestExtension();
   const respond = useRespondToExtension();
+  const startExtensionCheckout = useStartExtensionCheckout();
   const [newEndDate, setNewEndDate] = React.useState("");
   const [note, setNote] = React.useState("");
 
   const open = booking.status === "confirmed" || booking.status === "active";
   const rows = changes ?? [];
   const pending = rows.find((row) => row.status === "pending") ?? null;
+  const awaitingPayment = rows.find((row) => row.status === "accepted_awaiting_payment") ?? null;
+  // One extension at a time: no new request while one is open or unpaid.
+  const blocked = Boolean(pending || awaitingPayment);
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -196,6 +200,16 @@ function ExtensionSection({
       toast.success(accept ? "Extension accepted" : "Extension declined");
     } catch (cause) {
       toast.error("We couldn't record that response", errorMessage(cause, "Please try again."));
+    }
+  };
+
+  const onPayExtension = async () => {
+    if (!awaitingPayment) return;
+    try {
+      const { url } = await startExtensionCheckout.mutateAsync(awaitingPayment.id);
+      window.location.href = url;
+    } catch (cause) {
+      toast.error("We couldn't start that payment", errorMessage(cause, "Please try again."));
     }
   };
 
@@ -224,7 +238,14 @@ function ExtensionSection({
                 <p className="mt-1 type-body-sm text-muted-foreground">
                   Extra storage {formatPrice(row.additional_storage_amount_pence ?? 0)} plus a{" "}
                   {formatPrice(row.additional_service_fee_pence ?? 0)} service fee ={" "}
-                  {formatPrice(row.additional_total_pence)}. Nothing is charged yet.
+                  {formatPrice(row.additional_total_pence)}.{" "}
+                  {row.status === "applied"
+                    ? "Paid."
+                    : row.status === "accepted_awaiting_payment"
+                      ? audience === "host"
+                        ? "Renter payment pending."
+                        : "Not charged yet."
+                      : "Nothing is charged yet."}
                 </p>
               ) : null}
               {row.renter_note ? (
@@ -258,7 +279,51 @@ function ExtensionSection({
         </div>
       ) : null}
 
-      {audience === "renter" && open && !pending ? (
+      {audience === "host" && awaitingPayment ? (
+        <p className="type-body-sm text-muted-foreground">
+          You&apos;ve accepted this extension. The storage period stays{" "}
+          {formatDate(booking.start_date)} – {formatDate(booking.end_date)} until the renter pays.
+        </p>
+      ) : null}
+
+      {audience === "renter" && awaitingPayment ? (
+        <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+          <div>
+            <h4 className="type-h3">Extension accepted</h4>
+            <p className="mt-1 type-body-sm text-muted-foreground">
+              Your host has accepted your request to extend your storage until{" "}
+              {formatDate(awaitingPayment.proposed_end_date)}.
+            </p>
+          </div>
+          <dl className="space-y-1 type-body-sm">
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-muted-foreground">Extra storage</dt>
+              <dd>{formatPrice(awaitingPayment.additional_storage_amount_pence ?? 0)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-muted-foreground">{brand.name} service fee</dt>
+              <dd>{formatPrice(awaitingPayment.additional_service_fee_pence ?? 0)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-border pt-1 font-medium">
+              <dt>Total to pay</dt>
+              <dd>{formatPrice(awaitingPayment.additional_total_pence ?? 0)}</dd>
+            </div>
+          </dl>
+          <Button
+            onClick={() => void onPayExtension()}
+            disabled={startExtensionCheckout.isPending}
+          >
+            {startExtensionCheckout.isPending
+              ? "Opening secure checkout…"
+              : `Pay ${formatPrice(awaitingPayment.additional_total_pence ?? 0)} securely`}
+          </Button>
+          <p className="type-body-sm text-muted-foreground">
+            Your booking will be extended once payment is completed.
+          </p>
+        </div>
+      ) : null}
+
+      {audience === "renter" && open && !blocked ? (
         <form onSubmit={onSubmit} className="space-y-3">
           <Field
             label="New end date"
@@ -289,6 +354,13 @@ function ExtensionSection({
           </p>
         </form>
       ) : null}
+
+      {audience === "renter" && open && pending ? (
+        <p className="type-body-sm text-muted-foreground">
+          You can ask for another extension once this one is answered.
+        </p>
+      ) : null}
+
     </div>
   );
 }

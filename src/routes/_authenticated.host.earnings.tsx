@@ -112,7 +112,7 @@ function HostEarningsPage() {
         ) : null}
 
         {onboarding.isError ? (
-          <Alert variant="warning" className="mt-4">
+          <Alert tone="warning" title="Payout setup couldn't start" className="mt-4">
             {(onboarding.error as Error).message}
           </Alert>
         ) : null}

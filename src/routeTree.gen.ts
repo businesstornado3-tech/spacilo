@@ -34,6 +34,7 @@ import { Route as AuthenticatedRenterIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedRenterMatchesRouteImport } from './routes/_authenticated.renter.matches'
 import { Route as AuthenticatedRenterMessagesRouteImport } from './routes/_authenticated.renter.messages'
 import { Route as AuthenticatedRenterSearchRouteImport } from './routes/_authenticated.renter.search'
+import { Route as AuthenticatedHostPayoutsReturnRouteImport } from './routes/_authenticated.host.payouts.return'
 import { Route as AuthenticatedHostRequestsRequestIdRouteImport } from './routes/_authenticated.host.requests.$requestId'
 import { Route as AuthenticatedHostSpacesIndexRouteImport } from './routes/_authenticated.host.spaces.index'
 import { Route as AuthenticatedHostSpacesNewRouteImport } from './routes/_authenticated.host.spaces.new'
@@ -184,6 +185,12 @@ const AuthenticatedRenterSearchRoute =
     path: '/search',
     getParentRoute: () => AuthenticatedRenterRoute,
   } as any)
+const AuthenticatedHostPayoutsReturnRoute =
+  AuthenticatedHostPayoutsReturnRouteImport.update({
+    id: '/payouts/return',
+    path: '/payouts/return',
+    getParentRoute: () => AuthenticatedHostRoute,
+  } as any)
 const AuthenticatedHostRequestsRequestIdRoute =
   AuthenticatedHostRequestsRequestIdRouteImport.update({
     id: '/requests/$requestId',
@@ -316,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/renter/search': typeof AuthenticatedRenterSearchRoute
   '/host/': typeof AuthenticatedHostIndexRoute
   '/renter/': typeof AuthenticatedRenterIndexRoute
+  '/host/payouts/return': typeof AuthenticatedHostPayoutsReturnRoute
   '/host/requests/$requestId': typeof AuthenticatedHostRequestsRequestIdRoute
   '/host/spaces/new': typeof AuthenticatedHostSpacesNewRoute
   '/renter/bookings/$bookingId': typeof AuthenticatedRenterBookingsBookingIdRoute
@@ -358,6 +366,7 @@ export interface FileRoutesByTo {
   '/renter/search': typeof AuthenticatedRenterSearchRoute
   '/host': typeof AuthenticatedHostIndexRoute
   '/renter': typeof AuthenticatedRenterIndexRoute
+  '/host/payouts/return': typeof AuthenticatedHostPayoutsReturnRoute
   '/host/requests/$requestId': typeof AuthenticatedHostRequestsRequestIdRoute
   '/host/spaces/new': typeof AuthenticatedHostSpacesNewRoute
   '/renter/bookings/$bookingId': typeof AuthenticatedRenterBookingsBookingIdRoute
@@ -403,6 +412,7 @@ export interface FileRoutesById {
   '/_authenticated/renter/search': typeof AuthenticatedRenterSearchRoute
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
   '/_authenticated/renter/': typeof AuthenticatedRenterIndexRoute
+  '/_authenticated/host/payouts/return': typeof AuthenticatedHostPayoutsReturnRoute
   '/_authenticated/host/requests/$requestId': typeof AuthenticatedHostRequestsRequestIdRoute
   '/_authenticated/host/spaces/new': typeof AuthenticatedHostSpacesNewRoute
   '/_authenticated/renter/bookings/$bookingId': typeof AuthenticatedRenterBookingsBookingIdRoute
@@ -449,6 +459,7 @@ export interface FileRouteTypes {
     | '/renter/search'
     | '/host/'
     | '/renter/'
+    | '/host/payouts/return'
     | '/host/requests/$requestId'
     | '/host/spaces/new'
     | '/renter/bookings/$bookingId'
@@ -491,6 +502,7 @@ export interface FileRouteTypes {
     | '/renter/search'
     | '/host'
     | '/renter'
+    | '/host/payouts/return'
     | '/host/requests/$requestId'
     | '/host/spaces/new'
     | '/renter/bookings/$bookingId'
@@ -535,6 +547,7 @@ export interface FileRouteTypes {
     | '/_authenticated/renter/search'
     | '/_authenticated/host/'
     | '/_authenticated/renter/'
+    | '/_authenticated/host/payouts/return'
     | '/_authenticated/host/requests/$requestId'
     | '/_authenticated/host/spaces/new'
     | '/_authenticated/renter/bookings/$bookingId'
@@ -751,6 +764,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRenterSearchRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
     }
+    '/_authenticated/host/payouts/return': {
+      id: '/_authenticated/host/payouts/return'
+      path: '/payouts/return'
+      fullPath: '/host/payouts/return'
+      preLoaderRoute: typeof AuthenticatedHostPayoutsReturnRouteImport
+      parentRoute: typeof AuthenticatedHostRoute
+    }
     '/_authenticated/host/requests/$requestId': {
       id: '/_authenticated/host/requests/$requestId'
       path: '/requests/$requestId'
@@ -885,6 +905,7 @@ interface AuthenticatedHostRouteChildren {
   AuthenticatedHostEarningsRoute: typeof AuthenticatedHostEarningsRoute
   AuthenticatedHostMessagesRoute: typeof AuthenticatedHostMessagesRoute
   AuthenticatedHostIndexRoute: typeof AuthenticatedHostIndexRoute
+  AuthenticatedHostPayoutsReturnRoute: typeof AuthenticatedHostPayoutsReturnRoute
   AuthenticatedHostRequestsRequestIdRoute: typeof AuthenticatedHostRequestsRequestIdRoute
   AuthenticatedHostSpacesNewRoute: typeof AuthenticatedHostSpacesNewRoute
   AuthenticatedHostSpacesIndexRoute: typeof AuthenticatedHostSpacesIndexRoute
@@ -896,6 +917,7 @@ const AuthenticatedHostRouteChildren: AuthenticatedHostRouteChildren = {
   AuthenticatedHostEarningsRoute: AuthenticatedHostEarningsRoute,
   AuthenticatedHostMessagesRoute: AuthenticatedHostMessagesRoute,
   AuthenticatedHostIndexRoute: AuthenticatedHostIndexRoute,
+  AuthenticatedHostPayoutsReturnRoute: AuthenticatedHostPayoutsReturnRoute,
   AuthenticatedHostRequestsRequestIdRoute:
     AuthenticatedHostRequestsRequestIdRoute,
   AuthenticatedHostSpacesNewRoute: AuthenticatedHostSpacesNewRoute,

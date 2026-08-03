@@ -19,32 +19,10 @@ export type PublishedSpaceRow = Awaited<ReturnType<typeof listPublishedSpaces>>[
 /** RPC row overlaid with the engine's public-safe view of the same space. */
 export type MatchRow = Omit<PublishedSpaceRow, keyof MatchSpace> & MatchSpace;
 
+// Row → MatchSpace normalisation is canonical and shared with the listing
+// detail page; it must never be re-implemented per surface.
+export { toMatchSpace } from "@/lib/spacefit/adapters";
 
-/** Narrows an RPC row to the public-safe fields the engine consumes. */
-export function toMatchSpace(row: PublishedSpaceRow): MatchSpace {
-  return {
-    id: row.id,
-    title: row.title,
-    space_type: row.space_type,
-    postcode_district: row.postcode_district,
-    approximate_area: row.approximate_area,
-    monthly_price_pence: row.monthly_price_pence,
-    estimated_available_volume_m3:
-      row.estimated_available_volume_m3 === null ? null : Number(row.estimated_available_volume_m3),
-    total_volume_m3: row.total_volume_m3 === null ? null : Number(row.total_volume_m3),
-    accepted_categories: row.accepted_categories,
-    host_restrictions: row.host_restrictions,
-    restriction_notes: row.restriction_notes,
-    features: row.features,
-    access_type: row.access_type,
-    moisture_condition: row.moisture_condition,
-    temperature_condition: row.temperature_condition,
-    door_width_cm: row.door_width_cm,
-    door_height_cm: row.door_height_cm,
-    photo_count: row.photo_count,
-    cover_path: row.cover_path,
-  };
-}
 
 function usePublishedSpaces() {
   return useQuery({ queryKey: ["spaces", "published"], queryFn: () => listPublishedSpaces(120) });

@@ -1,0 +1,81 @@
+/**
+ * Project Stow service fee (Prompt 11).
+ *
+ * The renter pays the agreed monthly storage price PLUS a Project Stow service
+ * fee. The host's storage entitlement is never reduced by the fee.
+ *
+ *   service fee = max(£5.00, 12% of the storage price)
+ *
+ * All arithmetic is integer pence. Nothing here is authoritative on its own —
+ * the database repeats the same calculation in `stow_service_fee_pence` and the
+ * server never trusts an amount supplied by the browser. This module exists so
+ * the UI can show the same figures before checkout starts.
+ */
+
+/** 12% expressed in basis points. */
+export const SERVICE_FEE_RATE_BPS = 1200;
+
+/** £5.00 floor, in pence. */
+export const SERVICE_FEE_MINIMUM_PENCE = 500;
+
+export const PAYMENT_CURRENCY = "GBP";
+
+export interface FeeRule {
+  rateBps: number;
+  minimumPence: number;
+}
+
+export const CURRENT_FEE_RULE: FeeRule = {
+  rateBps: SERVICE_FEE_RATE_BPS,
+  minimumPence: SERVICE_FEE_MINIMUM_PENCE,
+};
+
+/**
+ * Integer-only percentage, rounded half up, mirroring the SQL:
+ *   ((storage * bps) + 5000) / 10000
+ */
+export function percentageOfPence(storagePence: number, rateBps: number): number {
+  if (!Number.isInteger(storagePence) || !Number.isInteger(rateBps)) {
+    throw new Error("Fee arithmetic requires integer pence and integer basis points");
+  }
+  return Math.floor((storagePence * rateBps + 5000) / 10000);
+}
+
+export function serviceFeePence(storagePence: number, rule: FeeRule = CURRENT_FEE_RULE): number {
+  return Math.max(rule.minimumPence, percentageOfPence(storagePence, rule.rateBps));
+}
+
+export interface FeeBreakdown {
+  storageAmountPence: number;
+  serviceFeeAmountPence: number;
+  renterTotalAmountPence: number;
+  serviceFeeRateBps: number;
+  serviceFeeMinimumPence: number;
+  currency: string;
+}
+
+/** Full first-month breakdown for a given storage price. */
+export function feeBreakdown(
+  storagePence: number,
+  rule: FeeRule = CURRENT_FEE_RULE,
+  currency: string = PAYMENT_CURRENCY,
+): FeeBreakdown {
+  const serviceFeeAmountPence = serviceFeePence(storagePence, rule);
+  return {
+    storageAmountPence: storagePence,
+    serviceFeeAmountPence,
+    renterTotalAmountPence: storagePence + serviceFeeAmountPence,
+    serviceFeeRateBps: rule.rateBps,
+    serviceFeeMinimumPence: rule.minimumPence,
+    currency,
+  };
+}
+
+/** The label shown on the payment — this collects the FIRST MONTH only. */
+export const FIRST_MONTH_LABEL = "First month";
+
+export const FIRST_MONTH_NOTE =
+  "This payment covers the first month of storage plus the Project Stow service fee. Later months are not charged yet.";
+
+export const SERVICE_FEE_NOTE =
+  "The Project Stow service fee covers running the platform. It isn't insurance, tax or a deposit.";

@@ -8,12 +8,18 @@ import { Button } from "@/components/ui/button";
 import { SearchControls } from "@/components/search/SearchControls";
 import { SpaceFitSpark } from "@/components/trust/SpaceFitAI";
 import { track } from "@/lib/analytics";
+import { hostEntryTarget } from "@/lib/host-entry";
+import { useAuth } from "@/hooks/useAuth";
+
 
 type Intent = "renter" | "host";
 
 export function Hero() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [intent, setIntent] = React.useState<Intent>("renter");
+  const hostTarget = hostEntryTarget(Boolean(user));
+
 
   function choose(next: Intent) {
     setIntent(next);

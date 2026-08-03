@@ -14,8 +14,172 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_cancellations: {
+        Row: {
+          booking_id: string
+          category: string | null
+          created_at: string
+          effective_at: string
+          financial_resolution_state: Database["public"]["Enums"]["cancellation_resolution"]
+          id: string
+          payment_id: string | null
+          policy_version: string
+          reason: string | null
+          requested_at: string
+          requested_by: string
+          requested_by_role: string
+          resolved_at: string | null
+          storage_started: boolean
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          category?: string | null
+          created_at?: string
+          effective_at?: string
+          financial_resolution_state?: Database["public"]["Enums"]["cancellation_resolution"]
+          id?: string
+          payment_id?: string | null
+          policy_version: string
+          reason?: string | null
+          requested_at?: string
+          requested_by: string
+          requested_by_role: string
+          resolved_at?: string | null
+          storage_started?: boolean
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          category?: string | null
+          created_at?: string
+          effective_at?: string
+          financial_resolution_state?: Database["public"]["Enums"]["cancellation_resolution"]
+          id?: string
+          payment_id?: string | null
+          policy_version?: string
+          reason?: string | null
+          requested_at?: string
+          requested_by?: string
+          requested_by_role?: string
+          resolved_at?: string | null
+          storage_started?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_cancellations_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_cancellations_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_refunds: {
+        Row: {
+          booking_id: string
+          cancellation_id: string | null
+          completed_at: string | null
+          created_at: string
+          currency: string
+          externally_initiated: boolean
+          failure_reason: string | null
+          id: string
+          initiated_by: Database["public"]["Enums"]["refund_initiator"]
+          payment_id: string
+          policy_version: string
+          reason: string | null
+          service_fee_refund_pence: number
+          status: Database["public"]["Enums"]["refund_status"]
+          storage_refund_pence: number
+          stripe_charge_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_refund_id: string | null
+          total_refund_pence: number
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          cancellation_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          externally_initiated?: boolean
+          failure_reason?: string | null
+          id?: string
+          initiated_by: Database["public"]["Enums"]["refund_initiator"]
+          payment_id: string
+          policy_version: string
+          reason?: string | null
+          service_fee_refund_pence: number
+          status?: Database["public"]["Enums"]["refund_status"]
+          storage_refund_pence: number
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_refund_id?: string | null
+          total_refund_pence: number
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          cancellation_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          externally_initiated?: boolean
+          failure_reason?: string | null
+          id?: string
+          initiated_by?: Database["public"]["Enums"]["refund_initiator"]
+          payment_id?: string
+          policy_version?: string
+          reason?: string | null
+          service_fee_refund_pence?: number
+          status?: Database["public"]["Enums"]["refund_status"]
+          storage_refund_pence?: number
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_refund_id?: string | null
+          total_refund_pence?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_refunds_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_refunds_cancellation_id_fkey"
+            columns: ["cancellation_id"]
+            isOneToOne: false
+            referencedRelation: "booking_cancellations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_refunds_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
+          cancellation_policy_version: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          cancelled_by_role: string | null
           confirmed_at: string | null
           created_at: string
           currency: string
@@ -49,6 +213,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cancellation_policy_version?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cancelled_by_role?: string | null
           confirmed_at?: string | null
           created_at?: string
           currency?: string
@@ -82,6 +250,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cancellation_policy_version?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cancelled_by_role?: string | null
           confirmed_at?: string | null
           created_at?: string
           currency?: string
@@ -131,6 +303,79 @@ export type Database = {
           },
         ]
       }
+      host_balance_adjustments: {
+        Row: {
+          amount_pence: number
+          booking_id: string | null
+          created_at: string
+          currency: string
+          earning_id: string | null
+          host_user_id: string
+          id: string
+          notes: string | null
+          offset_earning_id: string | null
+          resolved_at: string | null
+          source_id: string
+          source_type: Database["public"]["Enums"]["host_liability_source"]
+          status: Database["public"]["Enums"]["host_liability_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount_pence: number
+          booking_id?: string | null
+          created_at?: string
+          currency?: string
+          earning_id?: string | null
+          host_user_id: string
+          id?: string
+          notes?: string | null
+          offset_earning_id?: string | null
+          resolved_at?: string | null
+          source_id: string
+          source_type: Database["public"]["Enums"]["host_liability_source"]
+          status?: Database["public"]["Enums"]["host_liability_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount_pence?: number
+          booking_id?: string | null
+          created_at?: string
+          currency?: string
+          earning_id?: string | null
+          host_user_id?: string
+          id?: string
+          notes?: string | null
+          offset_earning_id?: string | null
+          resolved_at?: string | null
+          source_id?: string
+          source_type?: Database["public"]["Enums"]["host_liability_source"]
+          status?: Database["public"]["Enums"]["host_liability_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "host_balance_adjustments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "host_balance_adjustments_earning_id_fkey"
+            columns: ["earning_id"]
+            isOneToOne: false
+            referencedRelation: "host_earnings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "host_balance_adjustments_offset_earning_id_fkey"
+            columns: ["offset_earning_id"]
+            isOneToOne: false
+            referencedRelation: "host_earnings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       host_earnings: {
         Row: {
           blocked_reason: string | null
@@ -140,6 +385,9 @@ export type Database = {
           currency: string
           eligible_at: string
           gross_storage_amount_pence: number
+          hold_dispute: boolean
+          hold_refund: boolean
+          hold_review: boolean
           host_entitlement_pence: number
           host_user_id: string
           id: string
@@ -159,6 +407,7 @@ export type Database = {
           transfer_attempted_at: string | null
           transfer_attempts: number
           transfer_created_at: string | null
+          transferred_amount_pence: number
           updated_at: string
         }
         Insert: {
@@ -169,6 +418,9 @@ export type Database = {
           currency?: string
           eligible_at: string
           gross_storage_amount_pence: number
+          hold_dispute?: boolean
+          hold_refund?: boolean
+          hold_review?: boolean
           host_entitlement_pence: number
           host_user_id: string
           id?: string
@@ -188,6 +440,7 @@ export type Database = {
           transfer_attempted_at?: string | null
           transfer_attempts?: number
           transfer_created_at?: string | null
+          transferred_amount_pence?: number
           updated_at?: string
         }
         Update: {
@@ -198,6 +451,9 @@ export type Database = {
           currency?: string
           eligible_at?: string
           gross_storage_amount_pence?: number
+          hold_dispute?: boolean
+          hold_refund?: boolean
+          hold_review?: boolean
           host_entitlement_pence?: number
           host_user_id?: string
           id?: string
@@ -217,6 +473,7 @@ export type Database = {
           transfer_attempted_at?: string | null
           transfer_attempts?: number
           transfer_created_at?: string | null
+          transferred_amount_pence?: number
           updated_at?: string
         }
         Relationships: [
@@ -684,6 +941,7 @@ export type Database = {
           created_at: string
           currency: string
           currency_received: string | null
+          disputed: boolean
           failed_at: string | null
           failure_reason: string | null
           hold_expires_at: string | null
@@ -696,6 +954,10 @@ export type Database = {
           period_index: number
           period_label: string
           provider: string
+          refund_state: Database["public"]["Enums"]["payment_refund_state"]
+          refunded_service_fee_pence: number
+          refunded_storage_pence: number
+          refunded_total_pence: number
           renter_id: string
           renter_total_amount_pence: number
           service_fee_amount_pence: number
@@ -704,6 +966,7 @@ export type Database = {
           space_id: string
           status: Database["public"]["Enums"]["payment_status"]
           storage_amount_pence: number
+          stripe_charge_id: string | null
           stripe_checkout_session_id: string | null
           stripe_payment_intent_id: string | null
           succeeded_at: string | null
@@ -716,6 +979,7 @@ export type Database = {
           created_at?: string
           currency?: string
           currency_received?: string | null
+          disputed?: boolean
           failed_at?: string | null
           failure_reason?: string | null
           hold_expires_at?: string | null
@@ -728,6 +992,10 @@ export type Database = {
           period_index?: number
           period_label?: string
           provider?: string
+          refund_state?: Database["public"]["Enums"]["payment_refund_state"]
+          refunded_service_fee_pence?: number
+          refunded_storage_pence?: number
+          refunded_total_pence?: number
           renter_id: string
           renter_total_amount_pence: number
           service_fee_amount_pence: number
@@ -736,6 +1004,7 @@ export type Database = {
           space_id: string
           status?: Database["public"]["Enums"]["payment_status"]
           storage_amount_pence: number
+          stripe_charge_id?: string | null
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
           succeeded_at?: string | null
@@ -748,6 +1017,7 @@ export type Database = {
           created_at?: string
           currency?: string
           currency_received?: string | null
+          disputed?: boolean
           failed_at?: string | null
           failure_reason?: string | null
           hold_expires_at?: string | null
@@ -760,6 +1030,10 @@ export type Database = {
           period_index?: number
           period_label?: string
           provider?: string
+          refund_state?: Database["public"]["Enums"]["payment_refund_state"]
+          refunded_service_fee_pence?: number
+          refunded_storage_pence?: number
+          refunded_total_pence?: number
           renter_id?: string
           renter_total_amount_pence?: number
           service_fee_amount_pence?: number
@@ -768,6 +1042,7 @@ export type Database = {
           space_id?: string
           status?: Database["public"]["Enums"]["payment_status"]
           storage_amount_pence?: number
+          stripe_charge_id?: string | null
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
           succeeded_at?: string | null
@@ -1223,6 +1498,78 @@ export type Database = {
           },
         ]
       }
+      stripe_disputes: {
+        Row: {
+          amount_pence: number
+          booking_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          livemode: boolean | null
+          opened_at: string
+          outcome: string | null
+          payment_id: string | null
+          reason: string | null
+          resolved_at: string | null
+          status: string
+          stripe_charge_id: string | null
+          stripe_dispute_id: string
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_pence?: number
+          booking_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          livemode?: boolean | null
+          opened_at?: string
+          outcome?: string | null
+          payment_id?: string | null
+          reason?: string | null
+          resolved_at?: string | null
+          status: string
+          stripe_charge_id?: string | null
+          stripe_dispute_id: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_pence?: number
+          booking_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          livemode?: boolean | null
+          opened_at?: string
+          outcome?: string | null
+          payment_id?: string | null
+          reason?: string | null
+          resolved_at?: string | null
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_dispute_id?: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_disputes_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stripe_disputes_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stripe_webhook_events: {
         Row: {
           booking_id: string | null
@@ -1293,6 +1640,7 @@ export type Database = {
           created_at: string
           currency: string
           currency_received: string | null
+          disputed: boolean
           failed_at: string | null
           failure_reason: string | null
           hold_expires_at: string | null
@@ -1305,6 +1653,10 @@ export type Database = {
           period_index: number
           period_label: string
           provider: string
+          refund_state: Database["public"]["Enums"]["payment_refund_state"]
+          refunded_service_fee_pence: number
+          refunded_storage_pence: number
+          refunded_total_pence: number
           renter_id: string
           renter_total_amount_pence: number
           service_fee_amount_pence: number
@@ -1313,6 +1665,7 @@ export type Database = {
           space_id: string
           status: Database["public"]["Enums"]["payment_status"]
           storage_amount_pence: number
+          stripe_charge_id: string | null
           stripe_checkout_session_id: string | null
           stripe_payment_intent_id: string | null
           succeeded_at: string | null
@@ -1325,6 +1678,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      cancel_booking: {
+        Args: { p_booking_id: string; p_reason?: string }
+        Returns: Json
+      }
       claim_host_earnings_for_transfer: {
         Args: { p_limit?: number }
         Returns: {
@@ -1335,6 +1692,9 @@ export type Database = {
           currency: string
           eligible_at: string
           gross_storage_amount_pence: number
+          hold_dispute: boolean
+          hold_refund: boolean
+          hold_review: boolean
           host_entitlement_pence: number
           host_user_id: string
           id: string
@@ -1354,6 +1714,7 @@ export type Database = {
           transfer_attempted_at: string | null
           transfer_attempts: number
           transfer_created_at: string | null
+          transferred_amount_pence: number
           updated_at: string
         }[]
         SetofOptions: {
@@ -1387,6 +1748,10 @@ export type Database = {
       create_booking_from_request: {
         Args: { p_request_id: string }
         Returns: {
+          cancellation_policy_version: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          cancelled_by_role: string | null
           confirmed_at: string | null
           created_at: string
           currency: string
@@ -1483,6 +1848,10 @@ export type Database = {
       expire_stale_storage_requests: { Args: never; Returns: number }
       fail_host_earning_transfer: {
         Args: { p_block?: boolean; p_earning_id: string; p_reason: string }
+        Returns: Json
+      }
+      fail_refund: {
+        Args: { p_reason: string; p_refund_id: string }
         Returns: Json
       }
       get_booking_exact_address: {
@@ -1582,6 +1951,24 @@ export type Database = {
       }
       inventory_recalculate: { Args: { target: string }; Returns: undefined }
       mark_host_earnings_eligible: { Args: never; Returns: number }
+      mark_refund_submitted: {
+        Args: {
+          p_charge_id?: string
+          p_refund_id: string
+          p_stripe_refund_id: string
+        }
+        Returns: Json
+      }
+      reconcile_charge_refund: {
+        Args: {
+          p_charge_id: string
+          p_currency: string
+          p_event_id: string
+          p_payment_id: string
+          p_refunded_total_pence: number
+        }
+        Returns: Json
+      }
       record_host_earning: { Args: { p_payment_id: string }; Returns: string }
       record_host_earning_reversal: {
         Args: { p_earning_id: string; p_reversed_pence: number }
@@ -1595,6 +1982,20 @@ export type Database = {
           p_payment_id: string
           p_reason: string
           p_status: Database["public"]["Enums"]["payment_status"]
+        }
+        Returns: Json
+      }
+      record_stripe_dispute: {
+        Args: {
+          p_amount_pence: number
+          p_charge_id: string
+          p_closed?: boolean
+          p_currency: string
+          p_dispute_id: string
+          p_livemode: boolean
+          p_payment_intent_id: string
+          p_reason: string
+          p_status: string
         }
         Returns: Json
       }
@@ -1704,11 +2105,16 @@ export type Database = {
         }
         Returns: number
       }
+      stow_cancellation_policy_version: { Args: never; Returns: string }
       stow_payout_eligible_at: {
         Args: { p_start_date: string }
         Returns: string
       }
       stow_payout_release_delay_hours: { Args: never; Returns: number }
+      stow_recompute_earning_status: {
+        Args: { p_earning_id: string }
+        Returns: Database["public"]["Enums"]["host_earning_status"]
+      }
       stow_service_fee_pence: {
         Args: {
           p_minimum_pence?: number
@@ -1772,6 +2178,12 @@ export type Database = {
         | "confirmed"
         | "cancelled"
         | "completed"
+      cancellation_resolution:
+        | "not_required"
+        | "refund_pending"
+        | "refunded"
+        | "review_required"
+        | "resolved"
       detection_review_status: "pending" | "confirmed" | "edited" | "rejected"
       host_earning_status:
         | "pending"
@@ -1781,6 +2193,17 @@ export type Database = {
         | "reversed"
         | "partially_reversed"
         | "blocked"
+      host_liability_source:
+        | "refund"
+        | "dispute"
+        | "chargeback"
+        | "manual_adjustment"
+      host_liability_status:
+        | "outstanding"
+        | "offset"
+        | "recovered"
+        | "cancelled"
+        | "written_off"
       host_payout_status:
         | "not_started"
         | "incomplete"
@@ -1811,6 +2234,11 @@ export type Database = {
       item_tri_state: "yes" | "no" | "unknown"
       listing_status: "draft" | "published" | "paused" | "archived"
       moisture_condition: "dry" | "some_humidity" | "unknown"
+      payment_refund_state:
+        | "none"
+        | "pending"
+        | "partially_refunded"
+        | "refunded"
       payment_status:
         | "requires_payment"
         | "processing"
@@ -1818,6 +2246,13 @@ export type Database = {
         | "failed"
         | "cancelled"
         | "expired"
+      refund_initiator:
+        | "renter"
+        | "host"
+        | "admin"
+        | "stripe_dispute"
+        | "system"
+      refund_status: "pending" | "succeeded" | "failed" | "cancelled"
       space_access_frequency:
         | "occasional"
         | "monthly"
@@ -1996,6 +2431,13 @@ export const Constants = {
         "cancelled",
         "completed",
       ],
+      cancellation_resolution: [
+        "not_required",
+        "refund_pending",
+        "refunded",
+        "review_required",
+        "resolved",
+      ],
       detection_review_status: ["pending", "confirmed", "edited", "rejected"],
       host_earning_status: [
         "pending",
@@ -2005,6 +2447,19 @@ export const Constants = {
         "reversed",
         "partially_reversed",
         "blocked",
+      ],
+      host_liability_source: [
+        "refund",
+        "dispute",
+        "chargeback",
+        "manual_adjustment",
+      ],
+      host_liability_status: [
+        "outstanding",
+        "offset",
+        "recovered",
+        "cancelled",
+        "written_off",
       ],
       host_payout_status: [
         "not_started",
@@ -2039,6 +2494,12 @@ export const Constants = {
       item_tri_state: ["yes", "no", "unknown"],
       listing_status: ["draft", "published", "paused", "archived"],
       moisture_condition: ["dry", "some_humidity", "unknown"],
+      payment_refund_state: [
+        "none",
+        "pending",
+        "partially_refunded",
+        "refunded",
+      ],
       payment_status: [
         "requires_payment",
         "processing",
@@ -2047,6 +2508,8 @@ export const Constants = {
         "cancelled",
         "expired",
       ],
+      refund_initiator: ["renter", "host", "admin", "stripe_dispute", "system"],
+      refund_status: ["pending", "succeeded", "failed", "cancelled"],
       space_access_frequency: [
         "occasional",
         "monthly",

@@ -64,6 +64,10 @@ const request: StorageRequest = {
 };
 
 const booking: Booking = {
+  cancellation_policy_version: null,
+  cancelled_at: null,
+  cancelled_by: null,
+  cancelled_by_role: null,
   confirmed_at: null,
   created_at: "2026-08-03T11:00:00Z",
   currency: "GBP",

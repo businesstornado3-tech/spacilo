@@ -235,3 +235,28 @@ export function summariseEarnings(
   }
   return summary;
 }
+
+/* ------------------------------------------------------ holds (Prompt 13) */
+
+/**
+ * Neutral host-facing explanation for why an earning is held. Never exposes
+ * Stripe identifiers, dispute reasons or renter details. Returns null when
+ * nothing is holding the earning back.
+ */
+export function earningHoldNote(
+  earning: Pick<
+    Tables<"host_earnings">,
+    "hold_refund" | "hold_dispute" | "hold_review"
+  >,
+): string | null {
+  if (earning.hold_dispute) {
+    return "A payment for this booking is being queried with the card provider. We'll release anything still due once it's settled.";
+  }
+  if (earning.hold_refund) {
+    return "A refund for this booking is being processed, so this earning is paused until it completes.";
+  }
+  if (earning.hold_review) {
+    return "This booking was cancelled after storage had started, so we're reviewing what's due.";
+  }
+  return null;
+}

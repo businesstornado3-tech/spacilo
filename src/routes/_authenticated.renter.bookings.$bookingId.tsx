@@ -16,7 +16,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/overlay/toast";
 import { BookingSummary } from "@/components/bookings/BookingSummary";
 import { PaymentBreakdown } from "@/components/payments/PaymentBreakdown";
+import { CancellationPanel } from "@/components/payments/CancellationPanel";
 import { useBooking } from "@/hooks/useBookings";
+import { useAuth } from "@/hooks/useAuth";
+import { useBookingCancellation, useBookingRefunds } from "@/hooks/useCancellation";
 import { useBookingExactAddress, useBookingPayments, useStartCheckout } from "@/hooks/usePayments";
 import { bookingFinancials, bookingStatusMeta } from "@/lib/bookings";
 import { formatDate } from "@/lib/format";
@@ -46,8 +49,11 @@ export const Route = createFileRoute("/_authenticated/renter/bookings/$bookingId
 function BookingDetailPage() {
   const { bookingId } = Route.useParams();
   const { checkout } = Route.useSearch();
+  const { user } = useAuth();
   const { data: booking, isLoading, error, refetch } = useBooking(bookingId);
   const { data: payments } = useBookingPayments(bookingId);
+  const { data: cancellation } = useBookingCancellation(bookingId);
+  const { data: refunds } = useBookingRefunds(bookingId);
   const startCheckout = useStartCheckout();
 
   const succeeded = (payments ?? []).find((p) => p.status === "succeeded") ?? null;
@@ -181,6 +187,16 @@ function BookingDetailPage() {
           ) : null}
 
           <BookingSummary booking={booking} />
+
+          <CancellationPanel
+            booking={booking}
+            payment={succeeded}
+            cancellation={cancellation ?? null}
+            refunds={refunds ?? []}
+            viewerId={user?.id ?? null}
+            audience="renter"
+          />
+
 
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="secondary">

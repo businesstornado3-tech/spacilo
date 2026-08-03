@@ -21,6 +21,7 @@ import {
   useStartPayoutOnboarding,
 } from "@/hooks/useHostPayouts";
 import { bookingReference, type HostEarningWithBooking } from "@/lib/host-earnings-api";
+import { earningPeriodLabel } from "@/lib/payments/history";
 import {
   EARNING_STATUS_LABEL,
   PAYOUT_STATUS_LABEL,
@@ -204,16 +205,27 @@ function EarningRow({
         </span>
       </div>
 
-      {booking ? (
+      {/* The period this earning was paid for is immutable history — never the
+          booking's current dates, which move when an extension is paid. */}
+      {earning.period_start && earning.period_end ? (
+        <p className="mt-1 type-body-sm text-muted-foreground">
+          {formatDate(earning.period_start)} – {formatDate(earning.period_end)} ·{" "}
+          {earningPeriodLabel(earning)}
+        </p>
+      ) : booking ? (
         <p className="mt-1 type-body-sm text-muted-foreground">
           {formatDate(booking.start_date)} – {formatDate(booking.end_date)} ·{" "}
-          {earning.period_label}
+          {earningPeriodLabel(earning)}
         </p>
       ) : null}
 
       <dl className="mt-4 space-y-2">
         <Line label="Storage amount" pence={earning.gross_storage_amount_pence} />
-        <Line label={`${brand.name} service fee`} pence={earning.platform_fee_pence} muted />
+        <Line
+          label={`${brand.name} service fee paid by the renter`}
+          pence={earning.platform_fee_pence}
+          muted
+        />
         <div className="flex items-baseline justify-between gap-3 border-t border-border pt-3">
           <dt className="type-body font-semibold">Your earnings</dt>
           <dd className="type-price tabular-nums">

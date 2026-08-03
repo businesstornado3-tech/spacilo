@@ -4,19 +4,16 @@ import { ArrowRight, Boxes, Home } from "lucide-react";
 
 import heroPhoto from "@/assets/hero-storage.jpg";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { SearchControls } from "@/components/search/SearchControls";
 import { SpaceFitSpark } from "@/components/trust/SpaceFitAI";
 import { track } from "@/lib/analytics";
 import { HostEntryButton } from "@/components/home/HostEntryButton";
-import { useAuth } from "@/hooks/useAuth";
 
 
 type Intent = "renter" | "host";
 
 export function Hero() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [intent, setIntent] = React.useState<Intent>("renter");
 
 

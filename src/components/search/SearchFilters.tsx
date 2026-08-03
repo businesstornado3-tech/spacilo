@@ -7,8 +7,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CheckboxField } from "@/components/form/Controls";
 import { controlBase } from "@/components/form/Field";
-import { SPACE_TYPES, ACCESS_TYPES, SPACE_FEATURES } from "@/lib/spaces";
-import { ITEM_CATEGORIES } from "@/lib/inventory-model";
+import { SPACE_TYPES, ACCESS_TYPES, SPACE_FEATURES, ITEM_CATEGORIES } from "@/lib/spaces";
 import { track } from "@/lib/analytics";
 import type { SearchFilters } from "@/hooks/useStorageSearch";
 

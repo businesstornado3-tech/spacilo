@@ -34,9 +34,12 @@ export function BookingSummary({ booking }: { booking: Booking }) {
               {spaceTypeLabel(view.spaceType as SpaceTypeValue)}
               {view.area ? ` · ${view.area}` : ""}
             </p>
-            <p className="type-body-sm text-muted-foreground">
-              Approximate location only. The exact address stays private.
-            </p>
+            {booking.status === "confirmed" ? null : (
+              <p className="type-body-sm text-muted-foreground">
+                Approximate location only. The exact address is released once the booking is
+                confirmed and paid.
+              </p>
+            )}
           </div>
           <BookingStatusBadge booking={booking} />
         </div>

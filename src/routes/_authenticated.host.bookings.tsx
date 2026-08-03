@@ -17,8 +17,10 @@ import {
   bookingView,
   bookingsByRequest,
   hostBookingDetail,
+  hostStorageEntitlementPence,
   type Booking,
 } from "@/lib/bookings";
+import { formatPrice } from "@/lib/format";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import {
   REQUEST_LIST_DISCLAIMER,
@@ -47,6 +49,7 @@ function HostBookingsPage() {
   const { data: bookingsData } = useMyBookings();
   const bookings = bookingsData ?? [];
   const awaitingPayment = bookings.filter((b) => b.status === "pending_payment");
+  const confirmedBookings = bookings.filter((b) => b.status === "confirmed");
   const byRequest = bookingsByRequest(bookings);
   const requests = data ?? [];
   const incoming = requests.filter((r) => effectiveStatus(r) === "pending");
@@ -88,6 +91,22 @@ function HostBookingsPage() {
             </section>
           ) : null}
 
+          {confirmedBookings.length > 0 ? (
+            <section>
+              <h2 className="type-h3">Confirmed bookings</h2>
+              <p className="mt-1 type-body-sm text-muted-foreground">
+                {hostBookingDetail("confirmed")}
+              </p>
+              <ul className="mt-3 space-y-3">
+                {confirmedBookings.map((booking) => (
+                  <li key={booking.id}>
+                    <HostBookingCard booking={booking} confirmed />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
           <RequestGroup
             title="Incoming requests"
             emptyNote="Nothing needs your response right now."
@@ -102,8 +121,9 @@ function HostBookingsPage() {
   );
 }
 
-function HostBookingCard({ booking }: { booking: Booking }) {
+function HostBookingCard({ booking, confirmed = false }: { booking: Booking; confirmed?: boolean }) {
   const view = bookingView(booking);
+  const entitlement = hostStorageEntitlementPence(booking);
   const renter = booking.renter_first_name_snapshot?.trim();
   return (
     <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
@@ -115,7 +135,9 @@ function HostBookingCard({ booking }: { booking: Booking }) {
             {view.area ? ` · ${view.area}` : ""}
           </p>
         </div>
-        <Badge variant="warning">Awaiting payment</Badge>
+        <Badge variant={confirmed ? "success" : "warning"}>
+          {confirmed ? "Confirmed" : "Awaiting payment"}
+        </Badge>
       </div>
       <p className="mt-3 type-body-sm">{view.period}</p>
       <p className="type-body-sm text-muted-foreground">
@@ -124,6 +146,12 @@ function HostBookingCard({ booking }: { booking: Booking }) {
       <p className="type-body-sm text-muted-foreground">
         {renter ? `Requested by ${renter}` : "Requested by a renter"}
       </p>
+      {confirmed && entitlement !== null ? (
+        <p className="mt-1 type-body-sm text-muted-foreground">
+          First month storage: {formatPrice(entitlement)} (the renter also paid a separate
+          {" "}{brand.name} service fee, which isn't part of your earnings).
+        </p>
+      ) : null}
     </article>
   );
 }

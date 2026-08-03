@@ -106,11 +106,19 @@ export function CancellationPanel({
           .
         </p>
 
+        {cancellation.reason?.trim() ? (
+          <p className="mt-3 type-body-sm">
+            <span className="text-muted-foreground">Reason given: </span>
+            {cancellation.reason.trim()}
+          </p>
+        ) : null}
+
         {cancellation.financial_resolution_state === "review_required" ? (
           <Alert className="mt-4" tone="warning" title="Under review">
             {POST_START_REVIEW_COPY}
           </Alert>
         ) : null}
+
 
         {refunds.length > 0 ? (
           <dl className="mt-4 space-y-2 type-body-sm">

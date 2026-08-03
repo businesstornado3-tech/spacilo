@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, TextArea, TextInput } from "@/components/form/Field";
 import { toast } from "@/components/overlay/toast";
+import { brand } from "@/config/brand";
+import { useStartExtensionCheckout } from "@/hooks/usePayments";
 import {
   useActivateBooking,
   useBookingChangeRequests,

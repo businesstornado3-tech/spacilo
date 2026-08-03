@@ -1,29 +1,150 @@
-import { createFileRoute } from "@tanstack/react-router";
+/**
+ * Host bookings — at this stage, the incoming storage request inbox.
+ * Every figure comes from each request's immutable snapshot.
+ */
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Inbox, Loader2 } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { PagePlaceholder } from "@/components/common/PagePlaceholder";
+import { EmptyState, ErrorState } from "@/components/common/States";
+import { Button } from "@/components/ui/button";
+import { RequestStatusBadge } from "@/components/requests/RequestSummary";
+import { useHostRequests } from "@/hooks/useStorageRequests";
+import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
+import {
+  REQUEST_DISCLAIMER,
+  effectiveStatus,
+  expiryLabel,
+  requestSnapshotView,
+  type StorageRequest,
+} from "@/lib/storage-requests";
 
 export const Route = createFileRoute("/_authenticated/host/bookings")({
   head: () => ({
     meta: [
       { title: "Bookings — Hosting — " + brand.name },
-      { name: "description", content: "Requests, active bookings and completed stays." },
+      { name: "description", content: "Review incoming storage requests for your spaces and respond to renters." },
       { property: "og:title", content: "Bookings — Hosting — " + brand.name },
-      { property: "og:description", content: "Requests, active bookings and completed stays." },
+      { property: "og:description", content: "Review incoming storage requests for your spaces and respond to renters." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: HostBookingsPage,
 });
 
 function HostBookingsPage() {
+  const { data, isLoading, error, refetch } = useHostRequests();
+  const requests = data ?? [];
+  const incoming = requests.filter((r) => effectiveStatus(r) === "pending");
+  const past = requests.filter((r) => effectiveStatus(r) !== "pending");
+
   return (
-    <AppLayout mode="host" title="Bookings" description="Requests, active bookings and completed stays.">
-      <PagePlaceholder
-        title="Not built yet"
-        description="This area is scaffolded so navigation works end to end. Functionality arrives in a later step."
-        planned={["Accept or decline requests", "Declared belongings", "Check-in and check-out", "Reviews"]}
-      />
+    <AppLayout mode="host" title="Bookings" description="Manage storage requests and bookings.">
+      {isLoading ? (
+        <div className="flex justify-center py-20">
+          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
+        </div>
+      ) : null}
+
+      {error ? <ErrorState onRetry={() => void refetch()} /> : null}
+
+      {!isLoading && !error && requests.length === 0 ? (
+        <EmptyState
+          icon={Inbox}
+          title="No requests yet"
+          description="When a renter asks to store their belongings in one of your spaces, it'll appear here."
+        />
+      ) : null}
+
+      {requests.length > 0 ? (
+        <div className="space-y-8">
+          <RequestGroup
+            title="Incoming requests"
+            emptyNote="Nothing needs your response right now."
+            requests={incoming}
+            showEmpty
+          />
+          <RequestGroup title="Past requests" requests={past} />
+          <p className="type-body-sm text-muted-foreground">{REQUEST_DISCLAIMER}</p>
+        </div>
+      ) : null}
     </AppLayout>
+  );
+}
+
+function RequestGroup({
+  title,
+  requests,
+  emptyNote,
+  showEmpty = false,
+}: {
+  title: string;
+  requests: StorageRequest[];
+  emptyNote?: string;
+  showEmpty?: boolean;
+}) {
+  if (requests.length === 0 && !showEmpty) return null;
+  return (
+    <section>
+      <h2 className="type-h3">{title}</h2>
+      {requests.length === 0 ? (
+        <p className="mt-2 type-body-sm text-muted-foreground">{emptyNote}</p>
+      ) : (
+        <ul className="mt-3 space-y-3">
+          {requests.map((request) => (
+            <li key={request.id}>
+              <HostRequestCard request={request} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function HostRequestCard({ request }: { request: StorageRequest }) {
+  const view = requestSnapshotView(request);
+  const expiry = expiryLabel(request);
+  const renter = request.renter_first_name_snapshot?.trim();
+
+  return (
+    <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="type-h3 truncate">{view.spaceTitle}</h3>
+          <p className="type-body-sm text-muted-foreground">
+            {spaceTypeLabel(view.spaceType as SpaceTypeValue)}
+            {view.area ? ` · ${view.area}` : ""}
+          </p>
+        </div>
+        <RequestStatusBadge request={request} />
+      </div>
+
+      <p className="mt-3 type-body-sm">{view.period}</p>
+      <p className="type-body-sm text-muted-foreground">
+        {view.priceLabel} · {view.itemCount} items · {view.requirementM3.toFixed(2)} m³
+        {view.spaceFitScore !== null ? ` · ${view.spaceFitScore}% SpaceFit` : ""}
+      </p>
+      <p className="type-body-sm text-muted-foreground">
+        {renter ? `Requested by ${renter}` : "Requested by a verified renter"}
+      </p>
+      {expiry ? (
+        <p className="mt-1 type-body-sm text-muted-foreground">
+          Response requested by {new Date(request.expires_at).toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}
+        </p>
+      ) : null}
+
+      <Button asChild variant="secondary" size="sm" className="mt-4">
+        <Link to="/host/requests/$requestId" params={{ requestId: request.id }}>
+          Review request
+        </Link>
+      </Button>
+    </article>
   );
 }

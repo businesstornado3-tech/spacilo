@@ -77,11 +77,12 @@ function entryPeriod(
     return { start: payment.period_start, end: payment.period_end };
   }
   // Legacy rows written before periods were recorded. Only the ORIGINAL
-  // payment can safely fall back to the booking, and only when the booking
-  // has never been extended (an extension would have moved the end date).
+  // payment can fall back to the booking's dates, and only when nothing has
+  // extended it — an extension would already have moved the end date.
   if (paymentKind(payment) === "original" && fallback) {
-    return { start: payment.period_start ?? fallback.start_date, end: payment.period_end ?? null };
+    return { start: fallback.start_date, end: fallback.end_date };
   }
+
   return { start: payment.period_start, end: payment.period_end };
 }
 

@@ -8,12 +8,18 @@ import { Button } from "@/components/ui/button";
 import { SearchControls } from "@/components/search/SearchControls";
 import { SpaceFitSpark } from "@/components/trust/SpaceFitAI";
 import { track } from "@/lib/analytics";
+import { hostEntryTarget } from "@/lib/host-entry";
+import { useAuth } from "@/hooks/useAuth";
+
 
 type Intent = "renter" | "host";
 
 export function Hero() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [intent, setIntent] = React.useState<Intent>("renter");
+  const hostTarget = hostEntryTarget(Boolean(user));
+
 
   function choose(next: Intent) {
     setIntent(next);
@@ -90,33 +96,43 @@ export function Hero() {
                   className="mt-4"
                   onClick={() => track("list_space_selected", { from: "homepage_hero" })}
                 >
-                  <Link to="/list-space">
-                    See what your space could earn
-                    <ArrowRight className="size-4" aria-hidden="true" />
-                  </Link>
+                  {hostTarget.to === "/host/spaces/new" ? (
+                    <Link to="/host/spaces/new">
+                      List your space
+                      <ArrowRight className="size-4" aria-hidden="true" />
+                    </Link>
+                  ) : (
+                    <Link to="/signup" search={{ mode: "host" }}>
+                      List your space
+                      <ArrowRight className="size-4" aria-hidden="true" />
+                    </Link>
+                  )}
                 </Button>
               </div>
             )}
           </div>
 
-          <Link
-            to="/how-it-works"
-            className="group mt-4 flex items-center gap-3 rounded-2xl border border-signal/25 bg-signal-soft/50 px-4 py-3.5 transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-signal-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <SpaceFitSpark className="text-lg" />
-            <span className="min-w-0">
-              <span className="block type-label text-foreground">
-                Not sure how much space you need?
+          {intent === "renter" ? (
+            <Link
+              to="/how-it-works"
+              className="group mt-4 flex items-center gap-3 rounded-2xl border border-signal/25 bg-signal-soft/50 px-4 py-3.5 transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-signal-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <SpaceFitSpark className="text-lg" />
+              <span className="min-w-0">
+                <span className="block type-label text-foreground">
+                  Not sure how much space you need?
+                </span>
+                <span className="block type-body-sm text-signal-soft-foreground">
+                  Scan your stuff with SpaceFit AI
+                </span>
               </span>
-              <span className="block type-body-sm text-signal-soft-foreground">
-                Scan your stuff with SpaceFit AI
-              </span>
-            </span>
-            <ArrowRight
-              className="ml-auto size-4 shrink-0 text-signal-soft-foreground transition-transform duration-200 group-hover:translate-x-0.5"
-              aria-hidden="true"
-            />
-          </Link>
+              <ArrowRight
+                className="ml-auto size-4 shrink-0 text-signal-soft-foreground transition-transform duration-200 group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </Link>
+          ) : null}
+
         </div>
 
         <div className="relative overflow-hidden rounded-3xl shadow-raised">

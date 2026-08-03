@@ -4,6 +4,8 @@ import { brand } from "@/config/brand";
 import { MarketingLayout, PageSection } from "@/components/layout/MarketingLayout";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { hostEntryTarget } from "@/lib/host-entry";
+
 
 export const Route = createFileRoute("/list-space")({
   head: () => ({
@@ -37,7 +39,7 @@ function ListSpacePage() {
 
         <div className="mt-7">
           <Button asChild size="lg">
-            {user ? (
+            {hostEntryTarget(Boolean(user)).to === "/host/spaces/new" ? (
               <Link to="/host/spaces/new">List my space</Link>
             ) : (
               <Link to="/signup" search={{ mode: "host" }}>
@@ -46,6 +48,7 @@ function ListSpacePage() {
             )}
           </Button>
         </div>
+
 
         <ol className="mt-12 grid gap-4 sm:grid-cols-3">
           {steps.map((step, index) => (

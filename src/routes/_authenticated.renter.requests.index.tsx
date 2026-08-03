@@ -11,6 +11,13 @@ import { EmptyState, ErrorState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { RequestStatusBadge } from "@/components/requests/RequestSummary";
 import { useMyRequests } from "@/hooks/useStorageRequests";
+import { useMyBookings } from "@/hooks/useBookings";
+import {
+  ACCEPTED_CTA_COPY,
+  bookingActionState,
+  bookingsByRequest,
+  type Booking,
+} from "@/lib/bookings";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import {
   REQUEST_LIST_DISCLAIMER,
@@ -35,6 +42,8 @@ export const Route = createFileRoute("/_authenticated/renter/requests/")({
 
 function RequestsPage() {
   const { data, isLoading, error, refetch } = useMyRequests();
+  const { data: bookingsData } = useMyBookings();
+  const bookings = bookingsByRequest(bookingsData ?? []);
   const requests = data ?? [];
   const live = requests.filter((request) => effectiveStatus(request) === "pending");
   const past = requests.filter((request) => effectiveStatus(request) !== "pending");
@@ -63,8 +72,8 @@ function RequestsPage() {
 
       {requests.length > 0 ? (
         <div className="space-y-8">
-          <RequestGroup title="Awaiting a host response" requests={live} />
-          <RequestGroup title="Past requests" requests={past} />
+          <RequestGroup title="Awaiting a host response" requests={live} bookings={bookings} />
+          <RequestGroup title="Past requests" requests={past} bookings={bookings} />
           <p className="type-body-sm text-muted-foreground">{REQUEST_LIST_DISCLAIMER}</p>
         </div>
       ) : null}
@@ -75,8 +84,10 @@ function RequestsPage() {
 function RequestGroup({
   title,
   requests,
+  bookings,
 }: {
   title: string;
+  bookings: Record<string, Booking>;
   requests: ReturnType<typeof useMyRequests>["data"] extends (infer T)[] | undefined ? T[] : never;
 }) {
   if (requests.length === 0) return null;
@@ -87,6 +98,7 @@ function RequestGroup({
         {requests.map((request) => {
           const view = requestSnapshotView(request);
           const expiry = expiryLabel(request);
+          const action = bookingActionState(request, bookings[request.id] ?? null);
           return (
             <li key={request.id}>
               <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
@@ -110,11 +122,37 @@ function RequestGroup({
                   <p className="mt-1 type-body-sm text-muted-foreground">{expiry}</p>
                 ) : null}
 
-                <Button asChild variant="secondary" size="sm" className="mt-4">
-                  <Link to="/renter/requests/$requestId" params={{ requestId: request.id }}>
-                    View request
-                  </Link>
-                </Button>
+                {action.kind === "continue" ? (
+                  <p className="mt-3 type-body-sm text-muted-foreground">{ACCEPTED_CTA_COPY}</p>
+                ) : null}
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {action.kind === "continue" ? (
+                    <Button asChild size="sm">
+                      <Link
+                        to="/renter/requests/$requestId/booking"
+                        params={{ requestId: request.id }}
+                      >
+                        Continue to booking
+                      </Link>
+                    </Button>
+                  ) : null}
+                  {action.kind === "started" ? (
+                    <Button asChild size="sm">
+                      <Link
+                        to="/renter/bookings/$bookingId"
+                        params={{ bookingId: action.bookingId }}
+                      >
+                        View booking
+                      </Link>
+                    </Button>
+                  ) : null}
+                  <Button asChild variant="secondary" size="sm">
+                    <Link to="/renter/requests/$requestId" params={{ requestId: request.id }}>
+                      View request
+                    </Link>
+                  </Button>
+                </div>
               </article>
             </li>
           );

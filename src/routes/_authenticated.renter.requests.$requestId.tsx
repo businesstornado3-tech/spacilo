@@ -14,6 +14,14 @@ import { Modal } from "@/components/overlay/Modal";
 import { toast } from "@/components/overlay/toast";
 import { RequestSummary } from "@/components/requests/RequestSummary";
 import { useRequest, useWithdrawRequest } from "@/hooks/useStorageRequests";
+import { useBookingForRequest } from "@/hooks/useBookings";
+import {
+  ACCEPTED_CTA_COPY,
+  ACCEPTED_EXPIRED_COPY,
+  BOOKING_STARTED_COPY,
+  bookingActionState,
+  bookingWindowLabel,
+} from "@/lib/bookings";
 import { isWithdrawable, statusMeta, effectiveStatus } from "@/lib/storage-requests";
 import { track } from "@/lib/analytics";
 
@@ -34,6 +42,7 @@ export const Route = createFileRoute("/_authenticated/renter/requests/$requestId
 function RequestDetailPage() {
   const { requestId } = Route.useParams();
   const { data: request, isLoading, error, refetch } = useRequest(requestId);
+  const { data: booking } = useBookingForRequest(requestId);
   const withdraw = useWithdrawRequest();
   const [confirmOpen, setConfirmOpen] = React.useState(false);
 
@@ -85,6 +94,53 @@ function RequestDetailPage() {
           <p className="type-body-sm text-muted-foreground">
             {statusMeta(effectiveStatus(request)).detail}
           </p>
+
+          {(() => {
+            const action = bookingActionState(request, booking ?? null);
+            if (action.kind === "continue") {
+              return (
+                <section className="rounded-2xl border border-border bg-accent-soft p-5">
+                  <h2 className="type-h3">Ready to continue?</h2>
+                  <p className="mt-1 type-body-sm text-muted-foreground">{ACCEPTED_CTA_COPY}</p>
+                  {bookingWindowLabel(request) ? (
+                    <p className="mt-1 type-body-sm text-muted-foreground">
+                      {bookingWindowLabel(request)}
+                    </p>
+                  ) : null}
+                  <Button asChild className="mt-4">
+                    <Link
+                      to="/renter/requests/$requestId/booking"
+                      params={{ requestId: request.id }}
+                    >
+                      Continue to booking
+                    </Link>
+                  </Button>
+                </section>
+              );
+            }
+            if (action.kind === "started") {
+              return (
+                <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
+                  <h2 className="type-h3">Booking started</h2>
+                  <p className="mt-1 type-body-sm text-muted-foreground">{BOOKING_STARTED_COPY}</p>
+                  <Button asChild className="mt-4">
+                    <Link to="/renter/bookings/$bookingId" params={{ bookingId: action.bookingId }}>
+                      View booking
+                    </Link>
+                  </Button>
+                </section>
+              );
+            }
+            if (action.kind === "expired") {
+              return (
+                <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
+                  <h2 className="type-h3">This acceptance has expired</h2>
+                  <p className="mt-1 type-body-sm text-muted-foreground">{ACCEPTED_EXPIRED_COPY}</p>
+                </section>
+              );
+            }
+            return null;
+          })()}
 
           <RequestSummary request={request} />
 

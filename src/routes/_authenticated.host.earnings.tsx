@@ -215,12 +215,32 @@ function EarningRow({
         </div>
       </dl>
 
+      {/* A cancellation or refund only ever reduces the storage entitlement —
+          the host is never asked to send money back. */}
+      {earning.host_entitlement_pence < earning.gross_storage_amount_pence ? (
+        <p className="mt-3 type-body-sm text-muted-foreground">
+          Reduced by{" "}
+          {formatPrice(earning.gross_storage_amount_pence - earning.host_entitlement_pence)} because
+          this booking was cancelled or refunded.
+        </p>
+      ) : null}
+
+      {hold ? (
+        <div className="mt-3">
+          <Alert tone="warning" title="On hold">
+            {hold}
+          </Alert>
+        </div>
+      ) : null}
+
       <p className="mt-3 type-body-sm text-muted-foreground">
         {released && earning.transfer_created_at
           ? `Sent to your Stripe account on ${formatDate(earning.transfer_created_at)}.`
-          : earning.status === "blocked"
-            ? (earning.blocked_reason ?? "On hold — contact support.")
-            : `Available after ${formatDate(earning.eligible_at)}.`}
+          : hold
+            ? "We'll release anything still due once this is resolved."
+            : earning.status === "blocked"
+              ? (earning.blocked_reason ?? "On hold — contact support.")
+              : `Available after ${formatDate(earning.eligible_at)}.`}
       </p>
 
       {!payoutReady && !released ? (

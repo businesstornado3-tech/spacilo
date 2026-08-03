@@ -11,11 +11,23 @@ import type { Tables } from "@/integrations/supabase/types";
 export type HostPayoutAccountRow = Tables<"host_payout_accounts">;
 export type HostEarningRow = Tables<"host_earnings">;
 
+export interface EarningRefundRow {
+  id: string;
+  status: Tables<"booking_refunds">["status"];
+  total_refund_pence: number;
+  storage_refund_pence: number;
+  completed_at: string | null;
+  created_at: string;
+}
+
 export interface HostEarningWithBooking extends HostEarningRow {
   bookings: {
     space_title_snapshot: string | null;
     start_date: string;
     end_date: string;
+    status: string;
+    /** Server-owned refund ledger for the booking — the authority on refunds. */
+    booking_refunds: EarningRefundRow[];
   } | null;
 }
 

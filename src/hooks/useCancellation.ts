@@ -10,6 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   getBookingCancellation,
   listBookingRefunds,
+  listMyBookingCancellations,
   listHostBalanceAdjustments,
 } from "@/lib/cancellations-api";
 import { cancelBooking } from "@/lib/cancellations.functions";
@@ -20,6 +21,16 @@ export function useBookingCancellation(bookingId: string | undefined) {
     queryKey: ["booking-cancellation", bookingId],
     queryFn: () => getBookingCancellation(bookingId!),
     enabled: Boolean(bookingId),
+  });
+}
+
+/** Cancellations across the viewer's bookings, keyed by booking id. */
+export function useMyBookingCancellations() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["booking-cancellations", user?.id],
+    queryFn: listMyBookingCancellations,
+    enabled: Boolean(user),
   });
 }
 

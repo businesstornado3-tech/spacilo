@@ -46,6 +46,7 @@ import { Route as AuthenticatedRenterRequestsIndexRouteImport } from './routes/_
 import { Route as AuthenticatedRenterRequestsRequestIdRouteImport } from './routes/_authenticated.renter.requests.$requestId'
 import { Route as AuthenticatedRenterRequestsNewRouteImport } from './routes/_authenticated.renter.requests.new'
 import { Route as AuthenticatedHostSpacesSpaceIdEditRouteImport } from './routes/_authenticated.host.spaces.$spaceId.edit'
+import { Route as AuthenticatedRenterRequestsRequestIdBookingRouteImport } from './routes/_authenticated.renter.requests.$requestId.booking'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -250,6 +251,12 @@ const AuthenticatedHostSpacesSpaceIdEditRoute =
     path: '/spaces/$spaceId/edit',
     getParentRoute: () => AuthenticatedHostRoute,
   } as any)
+const AuthenticatedRenterRequestsRequestIdBookingRoute =
+  AuthenticatedRenterRequestsRequestIdBookingRouteImport.update({
+    id: '/booking',
+    path: '/booking',
+    getParentRoute: () => AuthenticatedRenterRequestsRequestIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -282,12 +289,13 @@ export interface FileRoutesByFullPath {
   '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
-  '/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRoute
+  '/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   '/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
   '/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/renter/inventory/': typeof AuthenticatedRenterInventoryIndexRoute
   '/renter/requests/': typeof AuthenticatedRenterRequestsIndexRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
+  '/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -318,12 +326,13 @@ export interface FileRoutesByTo {
   '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
-  '/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRoute
+  '/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   '/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
   '/host/spaces': typeof AuthenticatedHostSpacesIndexRoute
   '/renter/inventory': typeof AuthenticatedRenterInventoryIndexRoute
   '/renter/requests': typeof AuthenticatedRenterRequestsIndexRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
+  '/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -358,12 +367,13 @@ export interface FileRoutesById {
   '/_authenticated/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/_authenticated/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/_authenticated/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
-  '/_authenticated/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRoute
+  '/_authenticated/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   '/_authenticated/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
   '/_authenticated/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/_authenticated/renter/inventory/': typeof AuthenticatedRenterInventoryIndexRoute
   '/_authenticated/renter/requests/': typeof AuthenticatedRenterRequestsIndexRoute
   '/_authenticated/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
+  '/_authenticated/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -404,6 +414,7 @@ export interface FileRouteTypes {
     | '/renter/inventory/'
     | '/renter/requests/'
     | '/host/spaces/$spaceId/edit'
+    | '/renter/requests/$requestId/booking'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -440,6 +451,7 @@ export interface FileRouteTypes {
     | '/renter/inventory'
     | '/renter/requests'
     | '/host/spaces/$spaceId/edit'
+    | '/renter/requests/$requestId/booking'
   id:
     | '__root__'
     | '/'
@@ -479,6 +491,7 @@ export interface FileRouteTypes {
     | '/_authenticated/renter/inventory/'
     | '/_authenticated/renter/requests/'
     | '/_authenticated/host/spaces/$spaceId/edit'
+    | '/_authenticated/renter/requests/$requestId/booking'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -759,6 +772,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHostSpacesSpaceIdEditRouteImport
       parentRoute: typeof AuthenticatedHostRoute
     }
+    '/_authenticated/renter/requests/$requestId/booking': {
+      id: '/_authenticated/renter/requests/$requestId/booking'
+      path: '/booking'
+      fullPath: '/renter/requests/$requestId/booking'
+      preLoaderRoute: typeof AuthenticatedRenterRequestsRequestIdBookingRouteImport
+      parentRoute: typeof AuthenticatedRenterRequestsRequestIdRoute
+    }
   }
 }
 
@@ -789,6 +809,21 @@ const AuthenticatedHostRouteChildren: AuthenticatedHostRouteChildren = {
 const AuthenticatedHostRouteWithChildren =
   AuthenticatedHostRoute._addFileChildren(AuthenticatedHostRouteChildren)
 
+interface AuthenticatedRenterRequestsRequestIdRouteChildren {
+  AuthenticatedRenterRequestsRequestIdBookingRoute: typeof AuthenticatedRenterRequestsRequestIdBookingRoute
+}
+
+const AuthenticatedRenterRequestsRequestIdRouteChildren: AuthenticatedRenterRequestsRequestIdRouteChildren =
+  {
+    AuthenticatedRenterRequestsRequestIdBookingRoute:
+      AuthenticatedRenterRequestsRequestIdBookingRoute,
+  }
+
+const AuthenticatedRenterRequestsRequestIdRouteWithChildren =
+  AuthenticatedRenterRequestsRequestIdRoute._addFileChildren(
+    AuthenticatedRenterRequestsRequestIdRouteChildren,
+  )
+
 interface AuthenticatedRenterRouteChildren {
   AuthenticatedRenterBookingsRoute: typeof AuthenticatedRenterBookingsRoute
   AuthenticatedRenterMatchesRoute: typeof AuthenticatedRenterMatchesRoute
@@ -798,7 +833,7 @@ interface AuthenticatedRenterRouteChildren {
   AuthenticatedRenterInventoryAddRoute: typeof AuthenticatedRenterInventoryAddRoute
   AuthenticatedRenterInventoryPhotosRoute: typeof AuthenticatedRenterInventoryPhotosRoute
   AuthenticatedRenterInventoryReviewRoute: typeof AuthenticatedRenterInventoryReviewRoute
-  AuthenticatedRenterRequestsRequestIdRoute: typeof AuthenticatedRenterRequestsRequestIdRoute
+  AuthenticatedRenterRequestsRequestIdRoute: typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   AuthenticatedRenterRequestsNewRoute: typeof AuthenticatedRenterRequestsNewRoute
   AuthenticatedRenterInventoryIndexRoute: typeof AuthenticatedRenterInventoryIndexRoute
   AuthenticatedRenterRequestsIndexRoute: typeof AuthenticatedRenterRequestsIndexRoute
@@ -816,7 +851,7 @@ const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
   AuthenticatedRenterInventoryReviewRoute:
     AuthenticatedRenterInventoryReviewRoute,
   AuthenticatedRenterRequestsRequestIdRoute:
-    AuthenticatedRenterRequestsRequestIdRoute,
+    AuthenticatedRenterRequestsRequestIdRouteWithChildren,
   AuthenticatedRenterRequestsNewRoute: AuthenticatedRenterRequestsNewRoute,
   AuthenticatedRenterInventoryIndexRoute:
     AuthenticatedRenterInventoryIndexRoute,

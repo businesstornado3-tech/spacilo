@@ -132,7 +132,7 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
     }
     try {
       await publishSpace(space.id);
-      setPublished(true);
+      setJustPublished(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       toast.error("Couldn't publish", err instanceof Error ? err.message : "Please try again.");

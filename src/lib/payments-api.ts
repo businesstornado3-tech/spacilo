@@ -36,3 +36,13 @@ export async function getBookingExactAddress(bookingId: string): Promise<ExactAd
   const rows = (data ?? []) as ExactAddress[];
   return rows[0] ?? null;
 }
+
+/** Every payment belonging to the signed-in renter (RLS scopes this). */
+export async function listMyPayments(): Promise<Payment[]> {
+  const { data, error } = await supabase
+    .from("payments")
+    .select("*")
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}

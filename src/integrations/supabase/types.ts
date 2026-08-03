@@ -513,8 +513,10 @@ export type Database = {
           last_error: string | null
           livemode: boolean | null
           payment_id: string
+          period_end: string | null
           period_index: number
           period_label: string
+          period_start: string | null
           platform_fee_pence: number
           refunded_storage_pence: number
           reversed_amount_pence: number
@@ -546,8 +548,10 @@ export type Database = {
           last_error?: string | null
           livemode?: boolean | null
           payment_id: string
+          period_end?: string | null
           period_index?: number
           period_label?: string
+          period_start?: string | null
           platform_fee_pence: number
           refunded_storage_pence?: number
           reversed_amount_pence?: number
@@ -579,8 +583,10 @@ export type Database = {
           last_error?: string | null
           livemode?: boolean | null
           payment_id?: string
+          period_end?: string | null
           period_index?: number
           period_label?: string
+          period_start?: string | null
           platform_fee_pence?: number
           refunded_storage_pence?: number
           reversed_amount_pence?: number
@@ -1071,8 +1077,10 @@ export type Database = {
           id: string
           last_webhook_at: string | null
           livemode: boolean | null
+          period_end: string | null
           period_index: number
           period_label: string
+          period_start: string | null
           provider: string
           refund_state: Database["public"]["Enums"]["payment_refund_state"]
           refunded_service_fee_pence: number
@@ -1110,8 +1118,10 @@ export type Database = {
           id?: string
           last_webhook_at?: string | null
           livemode?: boolean | null
+          period_end?: string | null
           period_index?: number
           period_label?: string
+          period_start?: string | null
           provider?: string
           refund_state?: Database["public"]["Enums"]["payment_refund_state"]
           refunded_service_fee_pence?: number
@@ -1149,8 +1159,10 @@ export type Database = {
           id?: string
           last_webhook_at?: string | null
           livemode?: boolean | null
+          period_end?: string | null
           period_index?: number
           period_label?: string
+          period_start?: string | null
           provider?: string
           refund_state?: Database["public"]["Enums"]["payment_refund_state"]
           refunded_service_fee_pence?: number
@@ -1864,8 +1876,10 @@ export type Database = {
           id: string
           last_webhook_at: string | null
           livemode: boolean | null
+          period_end: string | null
           period_index: number
           period_label: string
+          period_start: string | null
           provider: string
           refund_state: Database["public"]["Enums"]["payment_refund_state"]
           refunded_service_fee_pence: number
@@ -1912,8 +1926,10 @@ export type Database = {
           id: string
           last_webhook_at: string | null
           livemode: boolean | null
+          period_end: string | null
           period_index: number
           period_label: string
+          period_start: string | null
           provider: string
           refund_state: Database["public"]["Enums"]["payment_refund_state"]
           refunded_service_fee_pence: number
@@ -1963,8 +1979,10 @@ export type Database = {
           last_error: string | null
           livemode: boolean | null
           payment_id: string
+          period_end: string | null
           period_index: number
           period_label: string
+          period_start: string | null
           platform_fee_pence: number
           refunded_storage_pence: number
           reversed_amount_pence: number

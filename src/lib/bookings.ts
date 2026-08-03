@@ -176,13 +176,22 @@ export interface BookingView {
  * What the renter agreed to pay for the WHOLE stay. Bookings created before
  * flexible durations existed only ever carried a monthly price, so they still
  * read as a monthly rate.
+ *
+ * `paidStoragePence` — cumulative storage actually paid for this booking,
+ * derived from successful payments. Once anything has been paid we show that
+ * total instead, because the booking's agreed amount belongs to the ORIGINAL
+ * period and must never be presented as the price of an extended duration.
  */
 export function bookingPriceLabel(
   booking: Pick<
     Booking,
     "storage_amount_pence" | "monthly_price_snapshot" | "duration_days_snapshot" | "start_date" | "end_date"
   >,
+  paidStoragePence?: number | null,
 ): string {
+  if (typeof paidStoragePence === "number" && paidStoragePence > 0) {
+    return `Total storage paid: ${formatPrice(paidStoragePence)}`;
+  }
   const days = booking.duration_days_snapshot ?? durationDays(booking.start_date, booking.end_date);
   if (booking.storage_amount_pence !== null && days > 0) {
     return `${formatPrice(booking.storage_amount_pence)} for ${formatDuration(days)}`;
@@ -191,7 +200,11 @@ export function bookingPriceLabel(
   return `${formatPrice(booking.monthly_price_snapshot)}/month`;
 }
 
-export function bookingView(booking: Booking): BookingView {
+/** Host-facing equivalent — cumulative storage earnings, never the fee. */
+export const hostEarningsLabel = (pence: number): string =>
+  `Total storage earnings: ${formatPrice(pence)}`;
+
+export function bookingView(booking: Booking, paidStoragePence?: number | null): BookingView {
   return {
     status: booking.status,
     statusLabel: bookingStatusMeta(booking.status).label,
@@ -199,11 +212,12 @@ export function bookingView(booking: Booking): BookingView {
     spaceType: booking.space_type_snapshot,
     area: booking.space_area_snapshot ?? booking.space_postcode_district_snapshot,
     period: formatRequestPeriod(booking.start_date, booking.end_date),
-    priceLabel: bookingPriceLabel(booking),
+    priceLabel: bookingPriceLabel(booking, paidStoragePence),
     itemCount: booking.inventory_item_count_snapshot,
     requirementM3: Number(booking.estimated_storage_requirement_m3_snapshot),
     spaceFitScore: booking.spacefit_score_snapshot,
     spaceFitLabel: booking.spacefit_label_snapshot,
+
   };
 }
 

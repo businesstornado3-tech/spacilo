@@ -11,12 +11,23 @@ import { useAuth } from "@/hooks/useAuth";
 import { bookingKeys } from "@/hooks/useBookings";
 import { createBookingCheckout } from "@/lib/payments.functions";
 import { createExtensionCheckout } from "@/lib/extensions.functions";
-import { getBookingExactAddress, listPaymentsForBooking } from "@/lib/payments-api";
+import { getBookingExactAddress, listMyPayments, listPaymentsForBooking } from "@/lib/payments-api";
 
 export const paymentKeys = {
   forBooking: (bookingId: string) => ["payments", "booking", bookingId] as const,
   address: (bookingId: string) => ["payments", "address", bookingId] as const,
+  mine: ["payments", "mine"] as const,
 };
+
+/** Every payment this renter has made, for list views that need paid totals. */
+export function useMyPayments() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: paymentKeys.mine,
+    queryFn: listMyPayments,
+    enabled: Boolean(user),
+  });
+}
 
 export function useBookingPayments(bookingId: string | undefined, poll = false) {
   const { user } = useAuth();

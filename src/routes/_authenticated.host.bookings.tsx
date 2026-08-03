@@ -14,6 +14,8 @@ import { RequestStatusBadge } from "@/components/requests/RequestSummary";
 import { useHostRequests } from "@/hooks/useStorageRequests";
 import { useMyBookings } from "@/hooks/useBookings";
 import { useMyBookingCancellations } from "@/hooks/useCancellation";
+import { useHostEarnings } from "@/hooks/useHostPayouts";
+import { cumulativeHostStoragePence, earningsByBooking } from "@/lib/payments/history";
 import { useAuth } from "@/hooks/useAuth";
 import { BookingLifecyclePanel } from "@/components/bookings/BookingLifecyclePanel";
 import {
@@ -28,11 +30,11 @@ import type { BookingCancellationRow } from "@/lib/cancellations-api";
 import {
   bookingView,
   bookingsByRequest,
+  formatBookingDuration,
   hostBookingDetail,
-  hostStorageEntitlementPence,
+  hostEarningsLabel,
   type Booking,
 } from "@/lib/bookings";
-import { formatPrice } from "@/lib/format";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import {
   REQUEST_LIST_DISCLAIMER,
@@ -60,6 +62,10 @@ function HostBookingsPage() {
   const { data, isLoading, error, refetch } = useHostRequests();
   const { data: bookingsData } = useMyBookings();
   const { data: cancellationRows } = useMyBookingCancellations();
+  const { data: earningRows } = useHostEarnings();
+  // Cumulative storage earnings come from the earnings ledger — one row per
+  // successful payment, original and each paid extension alike.
+  const earnings = earningsByBooking(earningRows);
   const { user } = useAuth();
   const cancellations = new Map((cancellationRows ?? []).map((c) => [c.booking_id, c]));
   const bookings = bookingsData ?? [];
@@ -102,6 +108,7 @@ function HostBookingsPage() {
                         booking={booking}
                         viewerId={user?.id ?? null}
                         cancellation={cancellations.get(booking.id) ?? null}
+                        earningsPence={cumulativeHostStoragePence(earnings[booking.id])}
                       />
                     </li>
                   ))}
@@ -144,17 +151,18 @@ function HostBookingCard({
   booking,
   viewerId,
   cancellation = null,
+  earningsPence = 0,
 }: {
   booking: Booking;
   viewerId: string | null;
   cancellation?: BookingCancellationRow | null;
+  earningsPence?: number;
 }) {
   const view = bookingView(booking);
   const state = lifecycleState(booking);
   const meta = lifecycleMeta(state);
   const cancelled = state === "cancelled";
   const confirmed = booking.status === "confirmed" || booking.status === "active";
-  const entitlement = hostStorageEntitlementPence(booking);
   const renter = booking.renter_first_name_snapshot?.trim();
   return (
     <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
@@ -171,7 +179,8 @@ function HostBookingCard({
 
       <p className="mt-3 type-body-sm">{view.period}</p>
       <p className="type-body-sm text-muted-foreground">
-        {view.priceLabel} · {view.itemCount} items · {view.requirementM3.toFixed(2)} m³
+        {formatBookingDuration(booking)} · {view.itemCount} items ·{" "}
+        {view.requirementM3.toFixed(2)} m³
       </p>
       <p className="type-body-sm text-muted-foreground">
         {renter ? `Requested by ${renter}` : "Requested by a renter"}
@@ -197,10 +206,10 @@ function HostBookingCard({
         </div>
       ) : null}
 
-      {confirmed && entitlement !== null ? (
+      {confirmed && earningsPence > 0 ? (
         <p className="mt-1 type-body-sm text-muted-foreground">
-          Your storage earnings: {formatPrice(entitlement)} (the renter also paid a separate
-          {" "}{brand.name} service fee, which isn't part of your earnings).
+          {hostEarningsLabel(earningsPence)} (the renter also paid a separate {brand.name} service
+          fee on top, which isn't part of your earnings).
         </p>
       ) : null}
 

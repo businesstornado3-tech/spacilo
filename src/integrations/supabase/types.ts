@@ -1056,6 +1056,7 @@ export type Database = {
         Row: {
           amount_received_pence: number | null
           booking_id: string
+          change_request_id: string | null
           checkout_created_at: string | null
           created_at: string
           currency: string
@@ -1094,6 +1095,7 @@ export type Database = {
         Insert: {
           amount_received_pence?: number | null
           booking_id: string
+          change_request_id?: string | null
           checkout_created_at?: string | null
           created_at?: string
           currency?: string
@@ -1132,6 +1134,7 @@ export type Database = {
         Update: {
           amount_received_pence?: number | null
           booking_id?: string
+          change_request_id?: string | null
           checkout_created_at?: string | null
           created_at?: string
           currency?: string
@@ -1173,6 +1176,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_change_request_id_fkey"
+            columns: ["change_request_id"]
+            isOneToOne: false
+            referencedRelation: "booking_change_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -1839,6 +1849,55 @@ export type Database = {
         Returns: {
           amount_received_pence: number | null
           booking_id: string
+          change_request_id: string | null
+          checkout_created_at: string | null
+          created_at: string
+          currency: string
+          currency_received: string | null
+          disputed: boolean
+          failed_at: string | null
+          failure_reason: string | null
+          hold_expires_at: string | null
+          hold_released_at: string | null
+          hold_volume_m3: number
+          host_id: string
+          id: string
+          last_webhook_at: string | null
+          livemode: boolean | null
+          period_index: number
+          period_label: string
+          provider: string
+          refund_state: Database["public"]["Enums"]["payment_refund_state"]
+          refunded_service_fee_pence: number
+          refunded_storage_pence: number
+          refunded_total_pence: number
+          renter_id: string
+          renter_total_amount_pence: number
+          service_fee_amount_pence: number
+          service_fee_minimum_pence: number
+          service_fee_rate_bps: number
+          space_id: string
+          status: Database["public"]["Enums"]["payment_status"]
+          storage_amount_pence: number
+          stripe_charge_id: string | null
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          succeeded_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      begin_extension_checkout: {
+        Args: { p_change_id: string }
+        Returns: {
+          amount_received_pence: number | null
+          booking_id: string
+          change_request_id: string | null
           checkout_created_at: string | null
           created_at: string
           currency: string

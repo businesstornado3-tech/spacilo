@@ -14,14 +14,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { bookingKeys, useBooking } from "@/hooks/useBookings";
+import { bookingKeys, changeRequestKeys, useBooking } from "@/hooks/useBookings";
 import { useBookingPayments } from "@/hooks/usePayments";
+import { formatDate, formatPrice } from "@/lib/format";
 
 const description = "We're confirming your payment with our payment provider.";
 
 export const Route = createFileRoute("/_authenticated/renter/payments/return")({
   validateSearch: (search: Record<string, unknown>) => ({
     bookingId: typeof search["bookingId"] === "string" ? search["bookingId"] : "",
+    extensionId: typeof search["extensionId"] === "string" ? search["extensionId"] : undefined,
   }),
   head: () => ({
     meta: [
@@ -37,25 +39,43 @@ export const Route = createFileRoute("/_authenticated/renter/payments/return")({
 });
 
 function PaymentReturnPage() {
-  const { bookingId } = Route.useSearch();
+  const { bookingId, extensionId } = Route.useSearch();
   const queryClient = useQueryClient();
   const { data: booking } = useBooking(bookingId || undefined);
   const { data: payments } = useBookingPayments(bookingId || undefined, true);
 
-  const confirmed = booking?.status === "confirmed";
-  const failed = (payments ?? []).some((p) => p.status === "failed" || p.status === "expired");
+  // An extension is confirmed by its own payment row, verified by the webhook.
+  const extensionPayment = extensionId
+    ? (payments ?? []).find((p) => p.change_request_id === extensionId)
+    : undefined;
+  const extensionPaid = extensionPayment?.status === "succeeded";
+  const confirmed = extensionId ? extensionPaid : booking?.status === "confirmed";
+  const failed = extensionId
+    ? extensionPayment?.status === "failed" || extensionPayment?.status === "expired"
+    : (payments ?? []).some((p) => p.status === "failed" || p.status === "expired");
 
   // Keep the booking query in step with the polled payment rows.
   useEffect(() => {
     if (!bookingId) return;
     const timer = window.setInterval(() => {
-      if (!confirmed) void queryClient.invalidateQueries({ queryKey: bookingKeys.detail(bookingId) });
+      if (confirmed) return;
+      void queryClient.invalidateQueries({ queryKey: bookingKeys.detail(bookingId) });
+      void queryClient.invalidateQueries({ queryKey: changeRequestKeys.forBooking(bookingId) });
     }, 3000);
     return () => window.clearInterval(timer);
   }, [bookingId, confirmed, queryClient]);
 
   return (
-    <AppLayout mode="renter" title={confirmed ? "Booking confirmed" : "Confirming your payment…"}>
+    <AppLayout
+      mode="renter"
+      title={
+        confirmed
+          ? extensionId
+            ? "Extension confirmed"
+            : "Booking confirmed"
+          : "Confirming your payment…"
+      }
+    >
       <div className="max-w-xl space-y-5 rounded-2xl border border-border bg-card p-6 shadow-card">
         {!bookingId ? (
           <>
@@ -68,11 +88,25 @@ function PaymentReturnPage() {
           <>
             <h2 className="flex items-center gap-2 type-h3">
               <CheckCircle2 className="size-5 text-success" aria-hidden="true" />
-              Booking confirmed
+              {extensionId ? "Extension confirmed" : "Booking confirmed"}
             </h2>
-            <p className="type-body-sm text-muted-foreground">
-              Your storage period has been paid for and the host has been notified.
-            </p>
+            {extensionId && booking ? (
+              <div className="space-y-2 type-body-sm text-muted-foreground">
+                <p>
+                  Your storage booking has been extended to {formatDate(booking.end_date)}.
+                </p>
+                <p>
+                  Extension payment: storage{" "}
+                  {formatPrice(extensionPayment?.storage_amount_pence ?? 0)}, {brand.name} service
+                  fee {formatPrice(extensionPayment?.service_fee_amount_pence ?? 0)}, total paid{" "}
+                  {formatPrice(extensionPayment?.renter_total_amount_pence ?? 0)}.
+                </p>
+              </div>
+            ) : (
+              <p className="type-body-sm text-muted-foreground">
+                Your storage period has been paid for and the host has been notified.
+              </p>
+            )}
             <Button asChild>
               <Link to="/renter/bookings/$bookingId" params={{ bookingId }}>
                 View booking
@@ -83,7 +117,9 @@ function PaymentReturnPage() {
           <>
             <h2 className="type-h3">That payment didn&apos;t go through</h2>
             <p className="type-body-sm text-muted-foreground">
-              Nothing was charged. Your booking is still awaiting payment and you can try again.
+              {extensionId
+                ? "Nothing was charged and your booking dates are unchanged. Your extension is still awaiting payment and you can try again."
+                : "Nothing was charged. Your booking is still awaiting payment and you can try again."}
             </p>
             <Button asChild>
               <Link to="/renter/bookings/$bookingId" params={{ bookingId }}>

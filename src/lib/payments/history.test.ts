@@ -10,6 +10,8 @@ import {
   paymentHistory,
   paymentKind,
   paymentPeriodLabel,
+  storageRefundSummary,
+  extensionRefund,
   type PaymentRow,
 } from "@/lib/payments/history";
 
@@ -119,5 +121,95 @@ describe("payment history", () => {
         },
       ]),
     ).toBe(15_000);
+  });
+});
+
+/* --------------------------------------------- refund presentation state */
+
+const refunded = (row: PaymentRow, storage: number, fee: number): PaymentRow =>
+  ({
+    ...row,
+    refunded_storage_pence: storage,
+    refunded_service_fee_pence: fee,
+    refunded_total_pence: storage + fee,
+  }) as PaymentRow;
+
+describe("storage refund presentation", () => {
+  it("reports a fully refunded original-only booking as net zero", () => {
+    const summary = storageRefundSummary([refunded(original, 10_000, 1_200)]);
+    expect(summary).toMatchObject({
+      paidStoragePence: 10_000,
+      refundedStoragePence: 10_000,
+      netStoragePence: 0,
+      fullyRefunded: true,
+      partiallyRefunded: false,
+    });
+  });
+
+  it("adds up a fully refunded original plus extension", () => {
+    const summary = storageRefundSummary([
+      refunded(original, 10_000, 1_200),
+      refunded(extension, 5_000, 500),
+    ]);
+    expect(summary.paidStoragePence).toBe(15_000);
+    expect(summary.refundedStoragePence).toBe(15_000);
+    expect(summary.netStoragePence).toBe(0);
+    expect(summary.fullyRefunded).toBe(true);
+  });
+
+  it("handles multiple refunded extensions", () => {
+    const second = payment({
+      id: "p3",
+      change_request_id: "c2",
+      period_index: 2,
+      period_label: "extension",
+      storage_amount_pence: 3_000,
+      service_fee_amount_pence: 500,
+      renter_total_amount_pence: 3_500,
+    });
+    const summary = storageRefundSummary([
+      refunded(original, 10_000, 1_200),
+      refunded(extension, 5_000, 500),
+      refunded(second, 3_000, 500),
+    ]);
+    expect(summary.paidStoragePence).toBe(18_000);
+    expect(summary.refundedStoragePence).toBe(18_000);
+    expect(summary.netStoragePence).toBe(0);
+  });
+
+  it("shows the net remainder for a partial refund", () => {
+    const summary = storageRefundSummary([refunded(original, 4_000, 0)]);
+    expect(summary).toMatchObject({
+      refundedStoragePence: 4_000,
+      netStoragePence: 6_000,
+      fullyRefunded: false,
+      partiallyRefunded: true,
+    });
+  });
+
+  it("ignores failed and expired attempts", () => {
+    const failed = payment({ id: "p9", status: "failed", storage_amount_pence: 9_900 });
+    const expired = payment({ id: "p10", status: "expired", storage_amount_pence: 9_900 });
+    const summary = storageRefundSummary([refunded(original, 10_000, 1_200), failed, expired]);
+    expect(summary.paidStoragePence).toBe(10_000);
+    expect(summary.refundedStoragePence).toBe(10_000);
+  });
+
+  it("marks refunded entries in the payment history", () => {
+    const { entries } = paymentHistory([
+      refunded(original, 10_000, 1_200),
+      refunded(extension, 2_000, 200),
+    ]);
+    expect(entries[0]).toMatchObject({ refundedTotalPence: 11_200, fullyRefunded: true });
+    expect(entries[1]).toMatchObject({ refundedTotalPence: 2_200, partiallyRefunded: true });
+  });
+
+  it("finds the refund belonging to an applied extension", () => {
+    expect(extensionRefund([refunded(extension, 5_000, 500)], "c1")).toMatchObject({
+      refundedTotalPence: 5_500,
+      fullyRefunded: true,
+    });
+    expect(extensionRefund([extension], "c1")).toBeNull();
+    expect(extensionRefund([refunded(extension, 5_000, 500)], "other")).toBeNull();
   });
 });

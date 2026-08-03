@@ -48,6 +48,13 @@ export function PaymentHistory({
                 <dd className="type-body tabular-nums">{formatPrice(entry.totalPence)}</dd>
               </div>
             </dl>
+            {entry.refundedTotalPence > 0 ? (
+              <p className="mt-2 type-body-sm tabular-nums text-muted-foreground">
+                Paid {formatPrice(entry.totalPence)} · Refunded{" "}
+                {formatPrice(entry.refundedTotalPence)}
+                {entry.fullyRefunded ? " · Fully refunded" : " · Partially refunded"}
+              </p>
+            ) : null}
             {entry.paidAt ? (
               <p className="mt-1 type-body-sm text-muted-foreground">
                 Paid on {formatDate(entry.paidAt)}

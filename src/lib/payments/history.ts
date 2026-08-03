@@ -56,6 +56,14 @@ export interface PaymentHistoryEntry {
   paidAt: string | null;
   reference: string | null;
   storageLabel: string;
+  /** Money returned to the renter for THIS payment, from the refund ledger. */
+  refundedStoragePence: number;
+  refundedServiceFeePence: number;
+  refundedTotalPence: number;
+  /** True when every penny of this payment has been returned. */
+  fullyRefunded: boolean;
+  /** True when some, but not all, of this payment has been returned. */
+  partiallyRefunded: boolean;
 }
 
 export interface PaymentTotals {
@@ -68,6 +76,67 @@ const ZERO: PaymentTotals = { storagePence: 0, serviceFeePence: 0, totalPence: 0
 
 export const succeededPayments = (payments: PaymentRow[] | null | undefined): PaymentRow[] =>
   (payments ?? []).filter((payment) => payment.status === "succeeded");
+
+/* Refunded amounts live on the payment row, written by the refund ledger. */
+const refundedStorage = (p: PaymentRow): number => Math.max(0, p.refunded_storage_pence ?? 0);
+const refundedServiceFee = (p: PaymentRow): number =>
+  Math.max(0, p.refunded_service_fee_pence ?? 0);
+const refundedTotal = (p: PaymentRow): number =>
+  Math.max(0, p.refunded_total_pence ?? refundedStorage(p) + refundedServiceFee(p));
+
+export interface StorageRefundSummary {
+  /** Cumulative storage paid across every succeeded payment. */
+  paidStoragePence: number;
+  /** Cumulative storage returned by completed refunds. */
+  refundedStoragePence: number;
+  /** paid − refunded, never below zero. */
+  netStoragePence: number;
+  hasPayments: boolean;
+  hasRefund: boolean;
+  fullyRefunded: boolean;
+  partiallyRefunded: boolean;
+}
+
+/**
+ * Storage money for one booking: what was paid, what came back and what the
+ * renter is actually out of pocket. Derived only from succeeded payments and
+ * the refund amounts recorded against them.
+ */
+export function storageRefundSummary(
+  payments: PaymentRow[] | null | undefined,
+): StorageRefundSummary {
+  const rows = succeededPayments(payments);
+  const paid = rows.reduce((total, p) => total + p.storage_amount_pence, 0);
+  const refunded = Math.min(
+    paid,
+    rows.reduce((total, p) => total + refundedStorage(p), 0),
+  );
+  return {
+    paidStoragePence: paid,
+    refundedStoragePence: refunded,
+    netStoragePence: Math.max(0, paid - refunded),
+    hasPayments: rows.length > 0,
+    hasRefund: refunded > 0,
+    fullyRefunded: paid > 0 && refunded >= paid,
+    partiallyRefunded: refunded > 0 && refunded < paid,
+  };
+}
+
+/** The refund recorded against the payment that bought a given extension. */
+export function extensionRefund(
+  payments: PaymentRow[] | null | undefined,
+  changeRequestId: string,
+): { refundedTotalPence: number; fullyRefunded: boolean; partiallyRefunded: boolean } | null {
+  const row = succeededPayments(payments).find((p) => p.change_request_id === changeRequestId);
+  if (!row) return null;
+  const refunded = refundedTotal(row);
+  if (refunded <= 0) return null;
+  return {
+    refundedTotalPence: refunded,
+    fullyRefunded: refunded >= row.renter_total_amount_pence,
+    partiallyRefunded: refunded < row.renter_total_amount_pence,
+  };
+}
 
 function entryPeriod(
   payment: PaymentRow,
@@ -121,6 +190,14 @@ export function paymentHistory(
       paidAt: payment.succeeded_at,
       reference: payment.stripe_payment_intent_id,
       storageLabel: kind === "extension" ? "Extra storage" : "Storage",
+      refundedStoragePence: refundedStorage(payment),
+      refundedServiceFeePence: refundedServiceFee(payment),
+      refundedTotalPence: refundedTotal(payment),
+      fullyRefunded:
+        payment.renter_total_amount_pence > 0 &&
+        refundedTotal(payment) >= payment.renter_total_amount_pence,
+      partiallyRefunded:
+        refundedTotal(payment) > 0 && refundedTotal(payment) < payment.renter_total_amount_pence,
     };
   });
 

@@ -22,7 +22,9 @@ export type AnalyticsEvent =
   | "list_space_selected"
   | "storage_request_started"
   | "storage_request_submitted"
-  | "storage_request_withdrawn";
+  | "storage_request_withdrawn"
+  | "booking_review_opened"
+  | "booking_created";
 
 export type AnalyticsProps = Record<string, string | number | boolean | null | undefined>;
 

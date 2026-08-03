@@ -23,7 +23,13 @@ export function RequestStatusBadge({ request }: { request: StorageRequest }) {
   return <Badge variant={meta.tone}>{meta.label}</Badge>;
 }
 
-export function RequestSummary({ request }: { request: StorageRequest }) {
+export function RequestSummary({
+  request,
+  audience = "renter",
+}: {
+  request: StorageRequest;
+  audience?: "renter" | "host";
+}) {
   const view = requestSnapshotView(request);
   const items = snapshotItems(request);
   const largest = largestItemSnapshot(request);

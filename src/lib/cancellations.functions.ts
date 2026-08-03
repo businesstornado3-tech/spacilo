@@ -45,25 +45,35 @@ export const cancelBooking = createServerFn({ method: "POST" })
     const result = (raw ?? {}) as Record<string, unknown>;
     const num = (key: string) => Number(result[key] ?? 0);
 
-    const refundId = typeof result["refund_id"] === "string" ? result["refund_id"] : null;
-    let refundSubmitted = false;
+    // A booking can have SEVERAL succeeded payments (the original booking plus
+    // each paid extension). Every one of them gets its own refund row and its
+    // own Stripe refund, keyed by that row's id.
+    const claims = Array.isArray(result["refunds"])
+      ? (result["refunds"] as Record<string, unknown>[])
+      : [];
 
-    if (refundId && num("total_refund_pence") > 0) {
+    let refundSubmitted = claims.length > 0;
+
+    if (claims.length > 0) {
       const { submitRefundToStripe } = await import("@/lib/payments/refund-processor.server");
-      const submission = await submitRefundToStripe({
-        refundId,
-        paymentId: String(result["payment_id"] ?? ""),
-        bookingId: data.bookingId,
-        paymentIntentId:
-          typeof result["stripe_payment_intent_id"] === "string"
-            ? result["stripe_payment_intent_id"]
-            : null,
-        totalRefundPence: num("total_refund_pence"),
-        storageRefundPence: num("storage_refund_pence"),
-        serviceFeeRefundPence: num("service_fee_refund_pence"),
-        currency: String(result["currency"] ?? "GBP"),
-      });
-      refundSubmitted = submission.submitted;
+      for (const claim of claims) {
+        const total = Number(claim["total_refund_pence"] ?? 0);
+        if (total <= 0) continue;
+        const submission = await submitRefundToStripe({
+          refundId: String(claim["refund_id"] ?? ""),
+          paymentId: String(claim["payment_id"] ?? ""),
+          bookingId: data.bookingId,
+          paymentIntentId:
+            typeof claim["stripe_payment_intent_id"] === "string"
+              ? claim["stripe_payment_intent_id"]
+              : null,
+          totalRefundPence: total,
+          storageRefundPence: Number(claim["storage_refund_pence"] ?? 0),
+          serviceFeeRefundPence: Number(claim["service_fee_refund_pence"] ?? 0),
+          currency: String(claim["currency"] ?? "GBP"),
+        });
+        if (!submission.submitted) refundSubmitted = false;
+      }
     }
 
     return {
@@ -76,3 +86,4 @@ export const cancelBooking = createServerFn({ method: "POST" })
       refundSubmitted,
     };
   });
+

@@ -163,17 +163,36 @@ describe("transfer decision", () => {
 
 describe("earnings summary", () => {
   it("keeps released and unreleased money in separate buckets", () => {
-    const summary = summariseEarnings([
-      earning({ status: "pending", host_entitlement_pence: 1_000 }),
-      earning({ status: "eligible", host_entitlement_pence: 2_000 }),
-      earning({ status: "transferred", host_entitlement_pence: 3_000 }),
-      earning({ status: "blocked", host_entitlement_pence: 4_000 }),
-    ]);
+    const now = new Date("2026-02-01T00:00:00.000Z");
+    const summary = summariseEarnings(
+      [
+        // Not yet matured — must not be advertised as ready to release.
+        earning({
+          status: "pending",
+          eligible_at: "2026-03-01T00:00:00.000Z",
+          host_entitlement_pence: 1_000,
+        }),
+        earning({ status: "eligible", host_entitlement_pence: 2_000 }),
+        earning({ status: "transferred", host_entitlement_pence: 3_000 }),
+        earning({ status: "blocked", host_entitlement_pence: 4_000 }),
+      ],
+      now,
+    );
     expect(summary.pendingPence).toBe(1_000);
     expect(summary.eligiblePence).toBe(2_000);
     expect(summary.transferredPence).toBe(3_000);
     expect(summary.blockedPence).toBe(4_000);
   });
+
+  it("counts a matured pending earning as ready to release", () => {
+    const summary = summariseEarnings(
+      [earning({ status: "pending", eligible_at: "2026-01-01T00:00:00.000Z" })],
+      new Date("2026-02-01T00:00:00.000Z"),
+    );
+    expect(summary.eligiblePence).toBe(12_000);
+    expect(summary.pendingPence).toBe(0);
+  });
+
 });
 
 describe("refund allocation", () => {

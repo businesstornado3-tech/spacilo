@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ListingPreview, type ListingView } from "@/components/host/listing/ListingPreview";
 import { publicLocation } from "@/lib/spaces";
 import { getPublishedSpace, signedPhotoUrls } from "@/lib/spaces-api";
+import { RequestSpaceCta } from "@/components/requests/RequestSpaceCta";
 import { ListingSpaceFitPanel } from "@/components/spacefit/ListingSpaceFitPanel";
 import { toMatchSpace } from "@/lib/spacefit/adapters";
 
@@ -105,11 +106,7 @@ function PublicSpacePage() {
             <div className="mx-auto max-w-3xl">
               <ListingPreview view={state.view} />
               {state.matchSpace ? <ListingSpaceFitPanel space={state.matchSpace} /> : null}
-              <div className="mt-6 rounded-2xl border border-border bg-card p-5 text-center shadow-card">
-                <p className="type-body-sm text-muted-foreground">
-                  Enquiries and booking open in a later release.
-                </p>
-              </div>
+              <RequestSpaceCta spaceId={spaceId} />
             </div>
           </>
         ) : null}

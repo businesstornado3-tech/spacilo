@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.storage_requests_guard() FROM PUBLIC, anon, authenticated;

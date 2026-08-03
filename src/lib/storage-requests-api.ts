@@ -1,0 +1,96 @@
+/**
+ * Data access for storage requests.
+ *
+ * Creation goes through the `create_storage_request` routine, which builds the
+ * price / inventory / SpaceFit snapshot server-side and enforces the rules the
+ * UI can only hint at (published space, own inventory, no self-request,
+ * confirmed items, valid dates). Reads and withdrawal are plain RLS-scoped
+ * table calls, so a renter only ever touches their own requests.
+ */
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
+import type { StorageRequest } from "@/lib/storage-requests";
+import type { SpaceFitResult } from "@/lib/spacefit/types";
+
+/** Snapshot payload for the SpaceFit result shown at the moment of request. */
+export function spaceFitPayload(result: SpaceFitResult | null): Json | undefined {
+  if (!result) return undefined;
+  return {
+    score: result.score,
+    label: result.label,
+    compatible: result.compatible,
+    components: result.components ?? null,
+    positives: result.positives,
+    warnings: result.warnings,
+  } as unknown as Json;
+}
+
+export interface CreateRequestInput {
+  spaceId: string;
+  inventoryId: string;
+  startDate: string;
+  endDate: string;
+  note?: string;
+  spaceFit?: SpaceFitResult | null;
+}
+
+export async function createStorageRequest(input: CreateRequestInput): Promise<StorageRequest> {
+  const spacefit = spaceFitPayload(input.spaceFit ?? null);
+  const { data, error } = await supabase.rpc("create_storage_request", {
+    p_space_id: input.spaceId,
+    p_inventory_id: input.inventoryId,
+    p_start_date: input.startDate,
+    p_end_date: input.endDate,
+    ...(input.note ? { p_renter_note: input.note } : {}),
+    ...(spacefit ? { p_spacefit: spacefit } : {}),
+  });
+  if (error) throw error;
+  return data as unknown as StorageRequest;
+}
+
+export async function listMyRequests(): Promise<StorageRequest[]> {
+  const { data, error } = await supabase
+    .from("storage_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getMyRequest(id: string): Promise<StorageRequest | null> {
+  const { data, error } = await supabase
+    .from("storage_requests")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+/** Withdrawal only ever applies to a pending request the renter owns. */
+export async function withdrawRequest(id: string): Promise<StorageRequest> {
+  const { data, error } = await supabase
+    .from("storage_requests")
+    .update({ status: "withdrawn", withdrawn_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("status", "pending")
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/** Existing live request for a space, used to stop duplicate requests. */
+export async function pendingRequestForSpace(spaceId: string): Promise<StorageRequest | null> {
+  const { data, error } = await supabase
+    .from("storage_requests")
+    .select("*")
+    .eq("space_id", spaceId)
+    .eq("status", "pending")
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}

@@ -19,7 +19,10 @@ export type AnalyticsEvent =
   | "search_result_selected"
   | "spacefit_explanation_opened"
   | "get_spacefit_selected"
-  | "list_space_selected";
+  | "list_space_selected"
+  | "storage_request_started"
+  | "storage_request_submitted"
+  | "storage_request_withdrawn";
 
 export type AnalyticsProps = Record<string, string | number | boolean | null | undefined>;
 

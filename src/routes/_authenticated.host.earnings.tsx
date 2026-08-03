@@ -25,6 +25,7 @@ import {
   EARNING_STATUS_LABEL,
   PAYOUT_STATUS_LABEL,
   PAYOUT_STATUS_NOTE,
+  earningHoldNote,
   summariseEarnings,
 } from "@/lib/payments/payout-policy";
 

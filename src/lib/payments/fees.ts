@@ -60,6 +60,9 @@ export function feeBreakdown(
   rule: FeeRule = CURRENT_FEE_RULE,
   currency: string = PAYMENT_CURRENCY,
 ): FeeBreakdown {
+  if (storagePence < 0) {
+    throw new Error("Storage amount cannot be negative");
+  }
   const serviceFeeAmountPence = serviceFeePence(storagePence, rule);
   return {
     storageAmountPence: storagePence,

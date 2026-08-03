@@ -57,6 +57,9 @@ function useCoverUrls(paths: string[]) {
     queryKey: ["spaces", "cover-urls", key],
     queryFn: () => signedPhotoUrls(paths),
     enabled: paths.length > 0,
+    // Signed URLs last an hour; re-sign well before they expire and never persist them.
+    staleTime: 45 * 60 * 1000,
+    gcTime: 50 * 60 * 1000,
   });
 }
 

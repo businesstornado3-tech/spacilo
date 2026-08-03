@@ -125,8 +125,9 @@ function HostBookingsPage() {
             </section>
           ) : null}
 
-
+          <RequestGroup
             title="Incoming requests"
+
             emptyNote="Nothing needs your response right now."
             requests={incoming}
             showEmpty

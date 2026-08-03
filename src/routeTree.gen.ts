@@ -47,6 +47,7 @@ import { Route as AuthenticatedRenterPaymentsReturnRouteImport } from './routes/
 import { Route as AuthenticatedRenterRequestsIndexRouteImport } from './routes/_authenticated.renter.requests.index'
 import { Route as AuthenticatedRenterRequestsRequestIdRouteImport } from './routes/_authenticated.renter.requests.$requestId'
 import { Route as AuthenticatedRenterRequestsNewRouteImport } from './routes/_authenticated.renter.requests.new'
+import { Route as ApiPublicPayoutsReleaseRouteImport } from './routes/api/public/payouts/release'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 import { Route as AuthenticatedHostSpacesSpaceIdEditRouteImport } from './routes/_authenticated.host.spaces.$spaceId.edit'
 import { Route as AuthenticatedRenterRequestsRequestIdIndexRouteImport } from './routes/_authenticated.renter.requests.$requestId.index'
@@ -261,6 +262,11 @@ const AuthenticatedRenterRequestsNewRoute =
     path: '/requests/new',
     getParentRoute: () => AuthenticatedRenterRoute,
   } as any)
+const ApiPublicPayoutsReleaseRoute = ApiPublicPayoutsReleaseRouteImport.update({
+  id: '/api/public/payouts/release',
+  path: '/api/public/payouts/release',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   id: '/api/public/stripe/webhook',
   path: '/api/public/stripe/webhook',
@@ -319,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   '/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
+  '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/renter/bookings/': typeof AuthenticatedRenterBookingsIndexRoute
@@ -359,6 +366,7 @@ export interface FileRoutesByTo {
   '/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
   '/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
+  '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/host/spaces': typeof AuthenticatedHostSpacesIndexRoute
   '/renter/bookings': typeof AuthenticatedRenterBookingsIndexRoute
@@ -404,6 +412,7 @@ export interface FileRoutesById {
   '/_authenticated/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/_authenticated/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   '/_authenticated/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
+  '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/_authenticated/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/_authenticated/renter/bookings/': typeof AuthenticatedRenterBookingsIndexRoute
@@ -449,6 +458,7 @@ export interface FileRouteTypes {
     | '/renter/payments/return'
     | '/renter/requests/$requestId'
     | '/renter/requests/new'
+    | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
     | '/host/spaces/'
     | '/renter/bookings/'
@@ -489,6 +499,7 @@ export interface FileRouteTypes {
     | '/renter/inventory/review'
     | '/renter/payments/return'
     | '/renter/requests/new'
+    | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
     | '/host/spaces'
     | '/renter/bookings'
@@ -533,6 +544,7 @@ export interface FileRouteTypes {
     | '/_authenticated/renter/payments/return'
     | '/_authenticated/renter/requests/$requestId'
     | '/_authenticated/renter/requests/new'
+    | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
     | '/_authenticated/host/spaces/'
     | '/_authenticated/renter/bookings/'
@@ -558,6 +570,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   TrustRoute: typeof TrustRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
+  ApiPublicPayoutsReleaseRoute: typeof ApiPublicPayoutsReleaseRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
@@ -829,6 +842,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRenterRequestsNewRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
     }
+    '/api/public/payouts/release': {
+      id: '/api/public/payouts/release'
+      path: '/api/public/payouts/release'
+      fullPath: '/api/public/payouts/release'
+      preLoaderRoute: typeof ApiPublicPayoutsReleaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/stripe/webhook': {
       id: '/api/public/stripe/webhook'
       path: '/api/public/stripe/webhook'
@@ -979,18 +999,9 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   TrustRoute: TrustRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,
+  ApiPublicPayoutsReleaseRoute: ApiPublicPayoutsReleaseRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

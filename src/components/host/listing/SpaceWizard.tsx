@@ -46,7 +46,10 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [publishing, setPublishing] = React.useState(false);
-  const [published, setPublished] = React.useState(space.listing_status === "published");
+  /** True only for an already-live listing being edited — never shows the success screen. */
+  const isLive = space.listing_status === "published";
+  /** True only right after the host publishes in this session. */
+  const [justPublished, setJustPublished] = React.useState(false);
   const [previewUrls, setPreviewUrls] = React.useState<string[]>([]);
 
   const pending = React.useRef<SpacePatch>({});
@@ -129,7 +132,7 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
     }
     try {
       await publishSpace(space.id);
-      setPublished(true);
+      setJustPublished(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       toast.error("Couldn't publish", err instanceof Error ? err.message : "Please try again.");
@@ -138,9 +141,14 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
     }
   }
 
+  async function handleSaveChanges() {
+    const saved = await flush();
+    if (saved) toast.success("Changes saved", "Your live listing has been updated.");
+  }
+
   const view = toListingView(form, previewUrls, profile?.display_name || profile?.first_name || "You", profile?.phone_verified ?? false);
 
-  if (published) {
+  if (justPublished) {
     return (
       <div className="mx-auto max-w-xl text-center">
         <span className="mx-auto grid size-14 place-items-center rounded-full bg-success text-success-foreground">
@@ -191,9 +199,22 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
         <div>
           <h2 className="type-h2">Here's how renters will see it</h2>
           <p className="mt-2 mb-6 type-body text-muted-foreground">
-            Check everything reads well before you publish.
+            {isLive ? "This is your live listing." : "Check everything reads well before you publish."}
           </p>
           <ListingPreview view={view} />
+          {isLive ? (
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Button
+                variant="secondary"
+                onClick={() => navigate({ to: "/spaces/$spaceId", params: { spaceId: space.id } })}
+              >
+                View my space
+              </Button>
+              <Button variant="ghost" onClick={() => navigate({ to: "/host/spaces" })}>
+                Back to My spaces
+              </Button>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -209,10 +230,21 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
             Back
           </Button>
           <span className="type-body-sm text-muted-foreground" aria-live="polite">
-            {saving ? "Saving…" : "Draft saved"}
+            {saving ? "Saving…" : isLive ? "Changes saved" : "Draft saved"}
           </span>
-          <div className="ml-auto">
-            {step === 7 ? (
+          <div className="ml-auto flex items-center gap-2">
+            {isLive ? (
+              <>
+                <Button type="button" variant="secondary" onClick={() => void handleSaveChanges()} disabled={saving}>
+                  Save changes
+                </Button>
+                {step < 7 ? (
+                  <Button type="button" size="lg" onClick={() => void handleContinue()}>
+                    Continue
+                  </Button>
+                ) : null}
+              </>
+            ) : step === 7 ? (
               <Button type="button" size="lg" onClick={() => void handlePublish()} disabled={publishing}>
                 {publishing ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
                 Publish my space
@@ -225,6 +257,7 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
           </div>
         </div>
       </div>
+
     </div>
   );
 }

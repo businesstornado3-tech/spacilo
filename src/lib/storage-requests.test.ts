@@ -13,6 +13,7 @@ import {
 } from "@/lib/storage-requests";
 
 const base: StorageRequest = {
+  booking_action_expires_at: null,
   created_at: "2026-03-01T10:00:00Z",
   decline_reason: null,
   responded_at: null,

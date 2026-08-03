@@ -532,6 +532,8 @@ export type Database = {
           access_type: Database["public"]["Enums"]["space_access_type"] | null
           address_line1: string | null
           address_line2: string | null
+          approx_latitude: number | null
+          approx_longitude: number | null
           approximate_area: string | null
           created_at: string
           currency: string
@@ -542,6 +544,10 @@ export type Database = {
           estimated_available_volume_m3: number | null
           features: string[]
           floor_area_m2: number | null
+          geocode_error: string | null
+          geocode_source: string | null
+          geocode_status: string
+          geocoded_at: string | null
           ground_floor_access: boolean | null
           height_m: number | null
           host_available_percentage: number | null
@@ -584,6 +590,8 @@ export type Database = {
           access_type?: Database["public"]["Enums"]["space_access_type"] | null
           address_line1?: string | null
           address_line2?: string | null
+          approx_latitude?: number | null
+          approx_longitude?: number | null
           approximate_area?: string | null
           created_at?: string
           currency?: string
@@ -594,6 +602,10 @@ export type Database = {
           estimated_available_volume_m3?: number | null
           features?: string[]
           floor_area_m2?: number | null
+          geocode_error?: string | null
+          geocode_source?: string | null
+          geocode_status?: string
+          geocoded_at?: string | null
           ground_floor_access?: boolean | null
           height_m?: number | null
           host_available_percentage?: number | null
@@ -636,6 +648,8 @@ export type Database = {
           access_type?: Database["public"]["Enums"]["space_access_type"] | null
           address_line1?: string | null
           address_line2?: string | null
+          approx_latitude?: number | null
+          approx_longitude?: number | null
           approximate_area?: string | null
           created_at?: string
           currency?: string
@@ -646,6 +660,10 @@ export type Database = {
           estimated_available_volume_m3?: number | null
           features?: string[]
           floor_area_m2?: number | null
+          geocode_error?: string | null
+          geocode_source?: string | null
+          geocode_status?: string
+          geocoded_at?: string | null
           ground_floor_access?: boolean | null
           height_m?: number | null
           host_available_percentage?: number | null
@@ -733,6 +751,8 @@ export type Database = {
           accepted_categories: string[]
           access_frequency: Database["public"]["Enums"]["space_access_frequency"]
           access_type: Database["public"]["Enums"]["space_access_type"]
+          approx_latitude: number
+          approx_longitude: number
           approximate_area: string
           cover_path: string
           currency: string
@@ -748,9 +768,7 @@ export type Database = {
           host_phone_verified: boolean
           host_restrictions: string[]
           id: string
-          latitude: number
           lift_available: Database["public"]["Enums"]["tri_state"]
-          longitude: number
           minimum_storage_period_months: number
           moisture_condition: Database["public"]["Enums"]["moisture_condition"]
           monthly_price_pence: number
@@ -767,7 +785,57 @@ export type Database = {
           vehicle_access_close: boolean
         }[]
       }
+      haversine_miles: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
+      }
       inventory_recalculate: { Args: { target: string }; Returns: undefined }
+      search_published_spaces: {
+        Args: {
+          limit_count?: number
+          radius_miles?: number
+          search_lat?: number
+          search_lng?: number
+        }
+        Returns: {
+          accepted_categories: string[]
+          access_frequency: Database["public"]["Enums"]["space_access_frequency"]
+          access_type: Database["public"]["Enums"]["space_access_type"]
+          approx_latitude: number
+          approx_longitude: number
+          approximate_area: string
+          cover_path: string
+          currency: string
+          description: string
+          distance_miles: number
+          door_height_cm: number
+          door_width_cm: number
+          estimated_available_volume_m3: number
+          features: string[]
+          floor_area_m2: number
+          ground_floor_access: boolean
+          host_available_percentage: number
+          host_display_name: string
+          host_phone_verified: boolean
+          host_restrictions: string[]
+          id: string
+          lift_available: Database["public"]["Enums"]["tri_state"]
+          minimum_storage_period_months: number
+          moisture_condition: Database["public"]["Enums"]["moisture_condition"]
+          monthly_price_pence: number
+          photo_count: number
+          postcode_district: string
+          published_at: string
+          restriction_notes: string
+          space_type: Database["public"]["Enums"]["space_type"]
+          stairs_required: boolean
+          storage_mode: Database["public"]["Enums"]["storage_mode"]
+          temperature_condition: Database["public"]["Enums"]["temperature_condition"]
+          title: string
+          total_volume_m3: number
+          vehicle_access_close: boolean
+        }[]
+      }
     }
     Enums: {
       analysis_run_status:

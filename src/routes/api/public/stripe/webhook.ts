@@ -44,7 +44,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
           payment_intent?: string | { id: string } | null;
         };
 
-        const paymentId = session.metadata?.payment_id ?? session.client_reference_id ?? null;
+        const paymentId = session.metadata?.["payment_id"] ?? session.client_reference_id ?? null;
         if (!paymentId) {
           console.error("Stripe webhook without an internal payment reference", event.id);
           return new Response("no payment reference", { status: 200 });
@@ -85,7 +85,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
           p_event_type: event.type,
           p_payment_id: paymentId,
           p_session_id: session.id,
-          p_payment_intent_id: paymentIntentId,
+          p_payment_intent_id: paymentIntentId ?? "",
           p_amount_pence: session.amount_total ?? -1,
           p_currency: (session.currency ?? "").toUpperCase(),
           p_livemode: event.livemode,

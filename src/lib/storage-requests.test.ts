@@ -6,6 +6,7 @@ import {
   effectiveStatus,
   isWithdrawable,
   requestSnapshotView,
+  requestStatusNote,
   toDateInput,
   validateRequestDates,
   type StorageRequest,
@@ -114,5 +115,44 @@ describe("snapshot integrity", () => {
     expect(after.priceLabel).toBe("£55/month");
     expect(after.requirementM3).toBe(4.45);
     expect(after.itemCount).toBe(12);
+  });
+});
+
+describe("status-aware copy", () => {
+  const now = new Date("2026-03-02T10:00:00Z");
+  const expiredNow = new Date("2026-03-04T10:00:00Z");
+  const pendingPhrase = /still needs to respond/;
+
+  it("tells a pending renter the host still needs to respond", () => {
+    const note = requestStatusNote(base, "renter", now);
+    expect(note).toMatch(pendingPhrase);
+  });
+
+  it("never says the host still needs to respond once resolved", () => {
+    expect(requestStatusNote({ ...base, status: "accepted" }, "renter", now)).toBe(
+      "Estimates only. The host accepted this request. It isn't a booking or a payment yet.",
+    );
+    expect(requestStatusNote({ ...base, status: "declined" }, "renter", now)).toBe(
+      "Estimates only. The host declined this request. No booking or payment was created.",
+    );
+    expect(requestStatusNote({ ...base, status: "withdrawn" }, "renter", now)).toBe(
+      "Estimates only. This request was withdrawn. No booking or payment was created.",
+    );
+    expect(requestStatusNote(base, "renter", expiredNow)).toBe(
+      "Estimates only. This request expired before it was accepted. No booking or payment was created.",
+    );
+    for (const status of ["accepted", "declined", "withdrawn"] as const) {
+      expect(requestStatusNote({ ...base, status }, "renter", now)).not.toMatch(pendingPhrase);
+      expect(requestStatusNote({ ...base, status }, "host", now)).not.toMatch(pendingPhrase);
+    }
+    expect(requestStatusNote(base, "host", expiredNow)).not.toMatch(pendingPhrase);
+  });
+
+  it("uses host wording for an accepted request without implying a booking", () => {
+    const note = requestStatusNote({ ...base, status: "accepted" }, "host", now);
+    expect(note).toBe(
+      "Estimates only. You accepted this request. A booking and payment have not been created yet.",
+    );
+    expect(note).not.toMatch(/booked|reserved/i);
   });
 });

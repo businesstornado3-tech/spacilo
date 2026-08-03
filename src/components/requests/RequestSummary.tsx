@@ -7,7 +7,7 @@ import { Boxes, CalendarRange, MapPin, Ruler } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import {
-  REQUEST_DISCLAIMER,
+  requestStatusNote,
   expiryLabel,
   formatApproximateDuration,
   largestItemSnapshot,
@@ -23,7 +23,13 @@ export function RequestStatusBadge({ request }: { request: StorageRequest }) {
   return <Badge variant={meta.tone}>{meta.label}</Badge>;
 }
 
-export function RequestSummary({ request }: { request: StorageRequest }) {
+export function RequestSummary({
+  request,
+  audience = "renter",
+}: {
+  request: StorageRequest;
+  audience?: "renter" | "host";
+}) {
   const view = requestSnapshotView(request);
   const items = snapshotItems(request);
   const largest = largestItemSnapshot(request);
@@ -135,7 +141,7 @@ export function RequestSummary({ request }: { request: StorageRequest }) {
         </section>
       ) : null}
 
-      <p className="type-body-sm text-muted-foreground">{REQUEST_DISCLAIMER}</p>
+      <p className="type-body-sm text-muted-foreground">{requestStatusNote(request, audience)}</p>
     </div>
   );
 }

@@ -18,8 +18,40 @@ export const REQUEST_EXPIRY_HOURS = 48;
 
 export const REQUEST_NOTE_MAX = 500;
 
+/** Pre-send copy: shown before a request exists, so it is always "pending". */
 export const REQUEST_DISCLAIMER =
-  "Estimates only. Sending a request doesn't book the space or take payment — the host still has to respond.";
+  "Estimates only. Sending a request doesn't book the space or take payment. The host still needs to respond.";
+
+/** Mixed-status lists: no single status applies, so stay status-neutral. */
+export const REQUEST_LIST_DISCLAIMER =
+  "Estimates only. A request isn't a booking or a payment.";
+
+/** Status-aware explanatory copy for a single request. */
+const RENTER_STATUS_NOTE: Record<string, string> = {
+  pending: "Sending a request doesn't book the space or take payment. The host still needs to respond.",
+  accepted: "The host accepted this request. It isn't a booking or a payment yet.",
+  declined: "The host declined this request. No booking or payment was created.",
+  withdrawn: "This request was withdrawn. No booking or payment was created.",
+  expired: "This request expired before it was accepted. No booking or payment was created.",
+};
+
+const HOST_STATUS_NOTE: Record<string, string> = {
+  pending: "Responding to a request doesn't create a booking or take payment yet.",
+  accepted: "You accepted this request. A booking and payment have not been created yet.",
+  declined: "You declined this request. No booking or payment was created.",
+  withdrawn: "This request was withdrawn. No booking or payment was created.",
+  expired: "This request expired before it was accepted. No booking or payment was created.",
+};
+
+export function requestStatusNote(
+  request: Pick<StorageRequest, "status" | "expires_at">,
+  audience: "renter" | "host" = "renter",
+  now: Date = new Date(),
+): string {
+  const status = effectiveStatus(request, now);
+  const table = audience === "host" ? HOST_STATUS_NOTE : RENTER_STATUS_NOTE;
+  return `Estimates only. ${table[status] ?? REQUEST_LIST_DISCLAIMER}`;
+}
 
 type Tone = "neutral" | "warning" | "success" | "destructive" | "info";
 

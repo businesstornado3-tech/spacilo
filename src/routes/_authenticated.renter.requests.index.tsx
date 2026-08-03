@@ -13,7 +13,7 @@ import { RequestStatusBadge } from "@/components/requests/RequestSummary";
 import { useMyRequests } from "@/hooks/useStorageRequests";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import {
-  REQUEST_DISCLAIMER,
+  REQUEST_LIST_DISCLAIMER,
   effectiveStatus,
   expiryLabel,
   requestSnapshotView,
@@ -65,7 +65,7 @@ function RequestsPage() {
         <div className="space-y-8">
           <RequestGroup title="Awaiting a host response" requests={live} />
           <RequestGroup title="Past requests" requests={past} />
-          <p className="type-body-sm text-muted-foreground">{REQUEST_DISCLAIMER}</p>
+          <p className="type-body-sm text-muted-foreground">{REQUEST_LIST_DISCLAIMER}</p>
         </div>
       ) : null}
     </AppLayout>

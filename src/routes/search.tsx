@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { brand } from "@/config/brand";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { MarketingLayout } from "@/components/layout/MarketingLayout";
 import { StorageSearch } from "@/components/search/StorageSearch";
 import {
   filtersFromUrl,
@@ -11,20 +11,26 @@ import {
 } from "@/lib/search-params";
 import type { StorageSearchParams } from "@/hooks/useStorageSearch";
 
-export const Route = createFileRoute("/_authenticated/renter/search")({
+const title = "Search storage near you — " + brand.name;
+const description =
+  "Search verified garages, lofts, sheds and spare rooms near your postcode. See distance, price and SpaceFit suitability on a map or in a list.";
+
+export const Route = createFileRoute("/search")({
   validateSearch: validateSearchParams,
   head: () => ({
     meta: [
-      { title: "Search — Renting — " + brand.name },
-      { name: "description", content: "Find storage near you and compare SpaceFit matches." },
-      { property: "og:title", content: "Search — Renting — " + brand.name },
-      { property: "og:description", content: "Find storage near you and compare SpaceFit matches." },
+      { title },
+      { name: "description", content: description },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: RenterSearchPage,
+  component: SearchPage,
 });
 
-function RenterSearchPage() {
+function SearchPage() {
   const state = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
@@ -49,12 +55,16 @@ function RenterSearchPage() {
   }
 
   return (
-    <AppLayout
-      mode="renter"
-      title="Search"
-      description="Find storage near you and compare SpaceFit matches."
-    >
-      <StorageSearch params={params} onParamsChange={handleChange} />
-    </AppLayout>
+    <MarketingLayout>
+      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+        <h1 className="type-h1">Storage near you</h1>
+        <p className="mt-2 max-w-prose type-body text-muted-foreground">
+          Enter a UK postcode or area to see published spaces nearby, with approximate distance and price.
+        </p>
+        <div className="mt-6">
+          <StorageSearch params={params} onParamsChange={handleChange} />
+        </div>
+      </section>
+    </MarketingLayout>
   );
 }

@@ -6,8 +6,9 @@ import { Boxes, CalendarRange, MapPin, Ruler } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
+import type { Booking } from "@/lib/bookings";
+import { requestNote } from "@/lib/request-booking-copy";
 import {
-  requestStatusNote,
   expiryLabel,
   formatApproximateDuration,
   largestItemSnapshot,
@@ -26,9 +27,12 @@ export function RequestStatusBadge({ request }: { request: StorageRequest }) {
 export function RequestSummary({
   request,
   audience = "renter",
+  booking,
 }: {
   request: StorageRequest;
   audience?: "renter" | "host";
+  /** Booking created from this request, if any — keeps the copy truthful. */
+  booking?: Pick<Booking, "status"> | null;
 }) {
   const view = requestSnapshotView(request);
   const items = snapshotItems(request);
@@ -141,7 +145,7 @@ export function RequestSummary({
         </section>
       ) : null}
 
-      <p className="type-body-sm text-muted-foreground">{requestStatusNote(request, audience)}</p>
+      <p className="type-body-sm text-muted-foreground">{requestNote(request, booking ?? null, audience)}</p>
     </div>
   );
 }

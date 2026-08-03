@@ -11,6 +11,7 @@ import {
   getBooking,
   getBookingForRequest,
   listMyBookings,
+  myBookingsForSpace,
 } from "@/lib/bookings-api";
 
 export const bookingKeys = {
@@ -57,5 +58,15 @@ export function useCreateBooking() {
       void qc.invalidateQueries({ queryKey: requestKeys.all });
       void qc.invalidateQueries({ queryKey: hostRequestKeys.all });
     },
+  });
+}
+
+/** All of this renter's bookings for one listing, for the listing CTA. */
+export function useMyBookingsForSpace(spaceId: string | undefined) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["bookings", "space", spaceId ?? "none"] as const,
+    queryFn: () => myBookingsForSpace(spaceId as string, user!.id),
+    enabled: Boolean(user && spaceId),
   });
 }

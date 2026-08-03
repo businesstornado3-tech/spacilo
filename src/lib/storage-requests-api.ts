@@ -138,3 +138,18 @@ export async function respondToRequest(input: {
   if (error) throw error;
   return data as unknown as StorageRequest;
 }
+
+/** This renter's own requests for one space (RLS + explicit renter filter). */
+export async function myRequestsForSpace(
+  spaceId: string,
+  renterId: string,
+): Promise<StorageRequest[]> {
+  const { data, error } = await supabase
+    .from("storage_requests")
+    .select("*")
+    .eq("space_id", spaceId)
+    .eq("renter_id", renterId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}

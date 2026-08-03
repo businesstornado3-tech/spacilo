@@ -257,3 +257,82 @@ export const REFUND_TIMING_COPY = "Refund timing depends on your bank.";
 /** Neutral host-facing wording. Never exposes Stripe identifiers. */
 export const EARNING_HOLD_COPY =
   "This earning is temporarily on hold while a payment issue is resolved.";
+
+/* ------------------------------------------ cumulative refundable amount */
+
+/** The payment fields the refundable calculation needs. */
+export interface RefundablePayment {
+  status: string;
+  storage_amount_pence: number;
+  service_fee_amount_pence: number;
+  refunded_storage_pence?: number | null;
+  refunded_service_fee_pence?: number | null;
+}
+
+export interface RefundableSummary {
+  /** Aggregate snapshot across the booking, for `cancellationDecision`. */
+  paid: NonNullable<CancellationSubject["paid"]> | null;
+  /** How many payments still have something left to refund. */
+  refundablePaymentCount: number;
+  /** How many of those still carry an unrefunded service fee. */
+  refundableFeeCount: number;
+}
+
+/**
+ * A booking can be paid by SEVERAL succeeded payments — the original booking
+ * plus each paid extension, each its own Stripe payment intent. The refundable
+ * amount is the sum of what remains unrefunded on all of them. Failed, expired,
+ * cancelled and still-open attempts never count, and a payment that is already
+ * fully refunded contributes nothing.
+ */
+export function refundableFromPayments(
+  payments: RefundablePayment[] | null | undefined,
+): RefundableSummary {
+  const succeeded = (payments ?? []).filter((p) => p.status === "succeeded");
+  if (succeeded.length === 0) {
+    return { paid: null, refundablePaymentCount: 0, refundableFeeCount: 0 };
+  }
+
+  let storageAmountPence = 0;
+  let serviceFeeAmountPence = 0;
+  let refundedStoragePence = 0;
+  let refundedServiceFeePence = 0;
+  let refundablePaymentCount = 0;
+  let refundableFeeCount = 0;
+
+  for (const payment of succeeded) {
+    const refundedStorage = Math.min(
+      Math.max(payment.refunded_storage_pence ?? 0, 0),
+      payment.storage_amount_pence,
+    );
+    const refundedFee = Math.min(
+      Math.max(payment.refunded_service_fee_pence ?? 0, 0),
+      payment.service_fee_amount_pence,
+    );
+
+    storageAmountPence += payment.storage_amount_pence;
+    serviceFeeAmountPence += payment.service_fee_amount_pence;
+    refundedStoragePence += refundedStorage;
+    refundedServiceFeePence += refundedFee;
+
+    const remainingStorage = payment.storage_amount_pence - refundedStorage;
+    const remainingFee = payment.service_fee_amount_pence - refundedFee;
+    if (remainingStorage + remainingFee > 0) refundablePaymentCount += 1;
+    if (remainingFee > 0) refundableFeeCount += 1;
+  }
+
+  return {
+    paid: {
+      storageAmountPence,
+      serviceFeeAmountPence,
+      refundedStoragePence,
+      refundedServiceFeePence,
+    },
+    refundablePaymentCount,
+    refundableFeeCount,
+  };
+}
+
+/** "service fee" / "service fees" — matches how many fees are being returned. */
+export const serviceFeeNoun = (count: number): string =>
+  count === 1 ? "service fee" : "service fees";

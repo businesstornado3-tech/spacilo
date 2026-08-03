@@ -184,6 +184,7 @@ function EarningRow({
 }) {
   const booking = earning.bookings;
   const released = earning.status === "transferred";
+  const hold = earningHoldNote(earning);
 
   return (
     <li className="rounded-2xl border border-border bg-card p-5 shadow-card">

@@ -12,6 +12,7 @@ import {
   respondToRequest,
   getMyRequest,
   listMyRequests,
+  myRequestsForSpace,
   pendingRequestForSpace,
   withdrawRequest,
   type CreateRequestInput,
@@ -107,5 +108,15 @@ export function useRespondToRequest() {
       void qc.invalidateQueries({ queryKey: hostRequestKeys.all });
       void qc.invalidateQueries({ queryKey: requestKeys.all });
     },
+  });
+}
+
+/** All of this renter's requests for one listing, for the listing CTA. */
+export function useMyRequestsForSpace(spaceId: string | undefined) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: [...requestKeys.forSpace(spaceId ?? "none"), "mine"] as const,
+    queryFn: () => myRequestsForSpace(spaceId as string, user!.id),
+    enabled: Boolean(user && spaceId),
   });
 }

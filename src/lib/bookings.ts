@@ -30,7 +30,7 @@ export const BOOKING_STATUS_META: Record<string, { label: string; tone: Tone; de
     label: "Awaiting payment",
     tone: "warning",
     detail:
-      "The host accepted your request. Payment is still required before this booking is confirmed.",
+      "The host accepted your request. Pay the first month to confirm this booking.",
   },
   confirmed: { label: "Confirmed", tone: "success", detail: "This booking is confirmed." },
   cancelled: { label: "Cancelled", tone: "neutral", detail: "This booking was cancelled." },
@@ -43,17 +43,57 @@ export const bookingStatusMeta = (status: string) =>
 /** Host-facing wording for the same statuses. */
 export const HOST_BOOKING_DETAIL: Record<string, string> = {
   pending_payment:
-    "The renter has started a booking. Payment isn't available yet, so nothing is confirmed and no action is needed from you.",
-  confirmed: "This booking is confirmed.",
+    "The renter has started a booking and still needs to pay the first month. Nothing is confirmed yet and no action is needed from you.",
+  confirmed: "This booking is confirmed and the first month has been paid.",
   cancelled: "This booking was cancelled.",
   completed: "This booking has finished.",
 };
 
 export const hostBookingDetail = (status: string) => HOST_BOOKING_DETAIL[status] ?? "";
 
-/** Payment has not been built yet — say so plainly rather than faking a total. */
+/** Continuing creates the booking; payment is taken on the booking itself. */
 export const BOOKING_PAYMENT_NOTE =
-  "Payment isn't available yet. Continuing creates a booking that stays awaiting payment until payments are switched on.";
+  "Creating the booking doesn't charge you. You'll see the first month's total, including the Project Stow service fee, before you pay.";
+
+/* -------------------------------------------------------- booking finances */
+
+export interface BookingFinancials {
+  storageAmountPence: number;
+  serviceFeeAmountPence: number;
+  renterTotalAmountPence: number;
+}
+
+/**
+ * The booking's immutable financial snapshot. Returns null when the booking
+ * predates the snapshot or has no agreed price — never recalculated from a
+ * live listing.
+ */
+export function bookingFinancials(
+  booking: Pick<
+    Booking,
+    "storage_amount_pence" | "service_fee_amount_pence" | "renter_total_amount_pence"
+  >,
+): BookingFinancials | null {
+  const { storage_amount_pence, service_fee_amount_pence, renter_total_amount_pence } = booking;
+  if (
+    storage_amount_pence === null ||
+    service_fee_amount_pence === null ||
+    renter_total_amount_pence === null
+  ) {
+    return null;
+  }
+  return {
+    storageAmountPence: storage_amount_pence,
+    serviceFeeAmountPence: service_fee_amount_pence,
+    renterTotalAmountPence: renter_total_amount_pence,
+  };
+}
+
+/** What the host is entitled to for the first month — never the renter total. */
+export const hostStorageEntitlementPence = (
+  booking: Pick<Booking, "storage_amount_pence" | "monthly_price_snapshot">,
+): number | null => booking.storage_amount_pence ?? booking.monthly_price_snapshot;
+
 
 /* ------------------------------------------------ accepted-request window */
 

@@ -43,9 +43,11 @@ import { Route as AuthenticatedRenterInventoryIndexRouteImport } from './routes/
 import { Route as AuthenticatedRenterInventoryAddRouteImport } from './routes/_authenticated.renter.inventory.add'
 import { Route as AuthenticatedRenterInventoryPhotosRouteImport } from './routes/_authenticated.renter.inventory.photos'
 import { Route as AuthenticatedRenterInventoryReviewRouteImport } from './routes/_authenticated.renter.inventory.review'
+import { Route as AuthenticatedRenterPaymentsReturnRouteImport } from './routes/_authenticated.renter.payments.return'
 import { Route as AuthenticatedRenterRequestsIndexRouteImport } from './routes/_authenticated.renter.requests.index'
 import { Route as AuthenticatedRenterRequestsRequestIdRouteImport } from './routes/_authenticated.renter.requests.$requestId'
 import { Route as AuthenticatedRenterRequestsNewRouteImport } from './routes/_authenticated.renter.requests.new'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 import { Route as AuthenticatedHostSpacesSpaceIdEditRouteImport } from './routes/_authenticated.host.spaces.$spaceId.edit'
 import { Route as AuthenticatedRenterRequestsRequestIdIndexRouteImport } from './routes/_authenticated.renter.requests.$requestId.index'
 import { Route as AuthenticatedRenterRequestsRequestIdBookingRouteImport } from './routes/_authenticated.renter.requests.$requestId.booking'
@@ -235,6 +237,12 @@ const AuthenticatedRenterInventoryReviewRoute =
     path: '/inventory/review',
     getParentRoute: () => AuthenticatedRenterRoute,
   } as any)
+const AuthenticatedRenterPaymentsReturnRoute =
+  AuthenticatedRenterPaymentsReturnRouteImport.update({
+    id: '/payments/return',
+    path: '/payments/return',
+    getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
 const AuthenticatedRenterRequestsIndexRoute =
   AuthenticatedRenterRequestsIndexRouteImport.update({
     id: '/requests/',
@@ -253,6 +261,11 @@ const AuthenticatedRenterRequestsNewRoute =
     path: '/requests/new',
     getParentRoute: () => AuthenticatedRenterRoute,
   } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe/webhook',
+  path: '/api/public/stripe/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedHostSpacesSpaceIdEditRoute =
   AuthenticatedHostSpacesSpaceIdEditRouteImport.update({
     id: '/spaces/$spaceId/edit',
@@ -303,8 +316,10 @@ export interface FileRoutesByFullPath {
   '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
+  '/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   '/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
+  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/renter/bookings/': typeof AuthenticatedRenterBookingsIndexRoute
   '/renter/inventory/': typeof AuthenticatedRenterInventoryIndexRoute
@@ -342,7 +357,9 @@ export interface FileRoutesByTo {
   '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
+  '/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
+  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/host/spaces': typeof AuthenticatedHostSpacesIndexRoute
   '/renter/bookings': typeof AuthenticatedRenterBookingsIndexRoute
   '/renter/inventory': typeof AuthenticatedRenterInventoryIndexRoute
@@ -384,8 +401,10 @@ export interface FileRoutesById {
   '/_authenticated/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/_authenticated/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/_authenticated/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
+  '/_authenticated/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/_authenticated/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   '/_authenticated/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
+  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/_authenticated/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/_authenticated/renter/bookings/': typeof AuthenticatedRenterBookingsIndexRoute
   '/_authenticated/renter/inventory/': typeof AuthenticatedRenterInventoryIndexRoute
@@ -427,8 +446,10 @@ export interface FileRouteTypes {
     | '/renter/inventory/add'
     | '/renter/inventory/photos'
     | '/renter/inventory/review'
+    | '/renter/payments/return'
     | '/renter/requests/$requestId'
     | '/renter/requests/new'
+    | '/api/public/stripe/webhook'
     | '/host/spaces/'
     | '/renter/bookings/'
     | '/renter/inventory/'
@@ -466,7 +487,9 @@ export interface FileRouteTypes {
     | '/renter/inventory/add'
     | '/renter/inventory/photos'
     | '/renter/inventory/review'
+    | '/renter/payments/return'
     | '/renter/requests/new'
+    | '/api/public/stripe/webhook'
     | '/host/spaces'
     | '/renter/bookings'
     | '/renter/inventory'
@@ -507,8 +530,10 @@ export interface FileRouteTypes {
     | '/_authenticated/renter/inventory/add'
     | '/_authenticated/renter/inventory/photos'
     | '/_authenticated/renter/inventory/review'
+    | '/_authenticated/renter/payments/return'
     | '/_authenticated/renter/requests/$requestId'
     | '/_authenticated/renter/requests/new'
+    | '/api/public/stripe/webhook'
     | '/_authenticated/host/spaces/'
     | '/_authenticated/renter/bookings/'
     | '/_authenticated/renter/inventory/'
@@ -533,6 +558,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   TrustRoute: typeof TrustRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -775,6 +801,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRenterInventoryReviewRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
     }
+    '/_authenticated/renter/payments/return': {
+      id: '/_authenticated/renter/payments/return'
+      path: '/payments/return'
+      fullPath: '/renter/payments/return'
+      preLoaderRoute: typeof AuthenticatedRenterPaymentsReturnRouteImport
+      parentRoute: typeof AuthenticatedRenterRoute
+    }
     '/_authenticated/renter/requests/': {
       id: '/_authenticated/renter/requests/'
       path: '/requests'
@@ -795,6 +828,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/renter/requests/new'
       preLoaderRoute: typeof AuthenticatedRenterRequestsNewRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
+    }
+    '/api/public/stripe/webhook': {
+      id: '/api/public/stripe/webhook'
+      path: '/api/public/stripe/webhook'
+      fullPath: '/api/public/stripe/webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/host/spaces/$spaceId/edit': {
       id: '/_authenticated/host/spaces/$spaceId/edit'
@@ -874,6 +914,7 @@ interface AuthenticatedRenterRouteChildren {
   AuthenticatedRenterInventoryAddRoute: typeof AuthenticatedRenterInventoryAddRoute
   AuthenticatedRenterInventoryPhotosRoute: typeof AuthenticatedRenterInventoryPhotosRoute
   AuthenticatedRenterInventoryReviewRoute: typeof AuthenticatedRenterInventoryReviewRoute
+  AuthenticatedRenterPaymentsReturnRoute: typeof AuthenticatedRenterPaymentsReturnRoute
   AuthenticatedRenterRequestsRequestIdRoute: typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   AuthenticatedRenterRequestsNewRoute: typeof AuthenticatedRenterRequestsNewRoute
   AuthenticatedRenterBookingsIndexRoute: typeof AuthenticatedRenterBookingsIndexRoute
@@ -893,6 +934,8 @@ const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
     AuthenticatedRenterInventoryPhotosRoute,
   AuthenticatedRenterInventoryReviewRoute:
     AuthenticatedRenterInventoryReviewRoute,
+  AuthenticatedRenterPaymentsReturnRoute:
+    AuthenticatedRenterPaymentsReturnRoute,
   AuthenticatedRenterRequestsRequestIdRoute:
     AuthenticatedRenterRequestsRequestIdRouteWithChildren,
   AuthenticatedRenterRequestsNewRoute: AuthenticatedRenterRequestsNewRoute,
@@ -936,17 +979,8 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   TrustRoute: TrustRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

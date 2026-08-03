@@ -64,8 +64,16 @@ const request: StorageRequest = {
 };
 
 const booking: Booking = {
+  confirmed_at: null,
   created_at: "2026-08-03T11:00:00Z",
+  currency: "GBP",
   currency_snapshot: "GBP",
+  paid_at: null,
+  storage_amount_pence: 5500,
+  service_fee_amount_pence: 660,
+  renter_total_amount_pence: 6160,
+  service_fee_rate_bps: 1200,
+  service_fee_minimum_pence: 500,
   end_date: "2026-12-15",
   estimated_storage_requirement_m3_snapshot: 3.58,
   host_accepted_at: hours(-4),

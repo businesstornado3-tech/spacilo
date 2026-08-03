@@ -39,15 +39,6 @@ export const REQUEST_STATUS_META: Record<string, { label: string; tone: Tone; de
     tone: "neutral",
     detail: "The host didn't respond in time, so this request expired.",
   },
-  // Reserved for Prompt 10 — not produced by any Prompt 9 flow.
-  accepted: { label: "Accepted", tone: "success", detail: "The host accepted this request." },
-  declined: { label: "Declined", tone: "destructive", detail: "The host declined this request." },
-  reserved: { label: "Reserved", tone: "info", detail: "This space is being held." },
-  confirmed: { label: "Confirmed", tone: "success", detail: "This request is confirmed." },
-  active: { label: "Active", tone: "success", detail: "Storage is in progress." },
-  completed: { label: "Completed", tone: "neutral", detail: "This storage period finished." },
-  cancelled: { label: "Cancelled", tone: "neutral", detail: "This request was cancelled." },
-  disputed: { label: "Disputed", tone: "destructive", detail: "This request is under review." },
 };
 
 export const statusMeta = (status: string) =>

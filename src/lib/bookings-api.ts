@@ -42,3 +42,15 @@ export async function getBookingForRequest(requestId: string): Promise<Booking |
   if (error) throw error;
   return data;
 }
+
+/** This renter's own bookings for one space (RLS + explicit renter filter). */
+export async function myBookingsForSpace(spaceId: string, renterId: string): Promise<Booking[]> {
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("*")
+    .eq("space_id", spaceId)
+    .eq("renter_id", renterId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}

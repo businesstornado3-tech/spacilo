@@ -13,6 +13,13 @@ import {
 } from "@/lib/storage-requests";
 
 const base: StorageRequest = {
+  daily_rate_snapshot: null,
+  weekly_rate_snapshot: null,
+  minimum_stay_days_snapshot: null,
+  duration_days_snapshot: null,
+  pricing_version_snapshot: null,
+  pricing_breakdown_snapshot: null,
+  storage_amount_pence: null,
   booking_action_expires_at: null,
   created_at: "2026-03-01T10:00:00Z",
   decline_reason: null,

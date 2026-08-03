@@ -7,11 +7,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { requestKeys, hostRequestKeys } from "@/hooks/useStorageRequests";
 import {
+  activateBooking,
+  completeBooking,
   createBookingFromRequest,
   getBooking,
   getBookingForRequest,
+  listBookingChangeRequests,
   listMyBookings,
+  listMyChangeRequests,
   myBookingsForSpace,
+  requestBookingExtension,
+  respondToBookingExtension,
 } from "@/lib/bookings-api";
 
 export const bookingKeys = {
@@ -68,5 +74,74 @@ export function useMyBookingsForSpace(spaceId: string | undefined) {
     queryKey: ["bookings", "space", spaceId ?? "none"] as const,
     queryFn: () => myBookingsForSpace(spaceId as string, user!.id),
     enabled: Boolean(user && spaceId),
+  });
+}
+
+/* ------------------------------------------------- lifecycle (Prompt 14) */
+
+
+export const changeRequestKeys = {
+  all: ["booking-changes"] as const,
+  forBooking: (id: string) => ["booking-changes", id] as const,
+};
+
+/** Invalidates everything a lifecycle transition can affect. */
+function useLifecycleInvalidation() {
+  const qc = useQueryClient();
+  return (booking: { id: string; request_id: string }) => {
+    qc.setQueryData(bookingKeys.detail(booking.id), booking);
+    void qc.invalidateQueries({ queryKey: bookingKeys.all });
+    void qc.invalidateQueries({ queryKey: requestKeys.all });
+    void qc.invalidateQueries({ queryKey: hostRequestKeys.all });
+  };
+}
+
+export function useActivateBooking() {
+  const invalidate = useLifecycleInvalidation();
+  return useMutation({ mutationFn: activateBooking, onSuccess: invalidate });
+}
+
+export function useCompleteBooking() {
+  const invalidate = useLifecycleInvalidation();
+  return useMutation({ mutationFn: completeBooking, onSuccess: invalidate });
+}
+
+export function useBookingChangeRequests(bookingId: string | undefined) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: changeRequestKeys.forBooking(bookingId ?? "none"),
+    queryFn: () => listBookingChangeRequests(bookingId as string),
+    enabled: Boolean(user && bookingId),
+  });
+}
+
+export function useMyChangeRequests() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: changeRequestKeys.all,
+    queryFn: listMyChangeRequests,
+    enabled: Boolean(user),
+  });
+}
+
+export function useRequestExtension() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: requestBookingExtension,
+    onSuccess: (row) => {
+      void qc.invalidateQueries({ queryKey: changeRequestKeys.forBooking(row.booking_id) });
+      void qc.invalidateQueries({ queryKey: changeRequestKeys.all });
+    },
+  });
+}
+
+export function useRespondToExtension() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: respondToBookingExtension,
+    onSuccess: (row) => {
+      void qc.invalidateQueries({ queryKey: changeRequestKeys.forBooking(row.booking_id) });
+      void qc.invalidateQueries({ queryKey: changeRequestKeys.all });
+    },
   });
 }

@@ -14,6 +14,7 @@ import { BookingStatusBadge } from "@/components/bookings/BookingSummary";
 import { useMyBookings } from "@/hooks/useBookings";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import { bookingView, type Booking } from "@/lib/bookings";
+import { GROUP_LABEL, GROUP_ORDER, groupBookings } from "@/lib/bookings-lifecycle";
 
 const description = "Bookings you've started from accepted storage requests.";
 
@@ -34,11 +35,7 @@ export const Route = createFileRoute("/_authenticated/renter/bookings/")({
 function RenterBookingsPage() {
   const { data, isLoading, error, refetch } = useMyBookings();
   const bookings = data ?? [];
-  const awaiting = bookings.filter((b) => b.status === "pending_payment");
-  const cancelled = bookings.filter((b) => b.status === "cancelled");
-  const other = bookings.filter(
-    (b) => b.status !== "pending_payment" && b.status !== "cancelled",
-  );
+  const groups = groupBookings(bookings);
 
   return (
     <AppLayout mode="renter" title="Bookings" description={description}>
@@ -60,9 +57,9 @@ function RenterBookingsPage() {
 
       {bookings.length > 0 ? (
         <div className="space-y-8">
-          <BookingGroup title="Awaiting payment" bookings={awaiting} />
-          <BookingGroup title="Other bookings" bookings={other} />
-          <BookingGroup title="Cancelled bookings" bookings={cancelled} />
+          {GROUP_ORDER.map((group) => (
+            <BookingGroup key={group} title={GROUP_LABEL[group]} bookings={groups[group]} />
+          ))}
         </div>
       ) : null}
     </AppLayout>

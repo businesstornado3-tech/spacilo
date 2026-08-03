@@ -14,6 +14,16 @@ import { RequestStatusBadge } from "@/components/requests/RequestSummary";
 import { useHostRequests } from "@/hooks/useStorageRequests";
 import { useMyBookings } from "@/hooks/useBookings";
 import { useMyBookingCancellations } from "@/hooks/useCancellation";
+import { useAuth } from "@/hooks/useAuth";
+import { BookingLifecyclePanel } from "@/components/bookings/BookingLifecyclePanel";
+import {
+  GROUP_LABEL,
+  GROUP_ORDER,
+  groupBookings,
+  lifecycleMeta,
+  lifecycleState,
+  type LifecycleGroup,
+} from "@/lib/bookings-lifecycle";
 import type { BookingCancellationRow } from "@/lib/cancellations-api";
 import {
   bookingView,
@@ -50,11 +60,10 @@ function HostBookingsPage() {
   const { data, isLoading, error, refetch } = useHostRequests();
   const { data: bookingsData } = useMyBookings();
   const { data: cancellationRows } = useMyBookingCancellations();
+  const { user } = useAuth();
   const cancellations = new Map((cancellationRows ?? []).map((c) => [c.booking_id, c]));
   const bookings = bookingsData ?? [];
-  const awaitingPayment = bookings.filter((b) => b.status === "pending_payment");
-  const confirmedBookings = bookings.filter((b) => b.status === "confirmed");
-  const cancelledBookings = bookings.filter((b) => b.status === "cancelled");
+  const groups = groupBookings(bookings);
   const byRequest = bookingsByRequest(bookings);
 
   const requests = data ?? [];
@@ -81,57 +90,25 @@ function HostBookingsPage() {
 
       {requests.length > 0 || bookings.length > 0 ? (
         <div className="space-y-8">
-          {awaitingPayment.length > 0 ? (
-            <section>
-              <h2 className="type-h3">Awaiting payment</h2>
-              <p className="mt-1 type-body-sm text-muted-foreground">
-                {hostBookingDetail("pending_payment")}
-              </p>
-              <ul className="mt-3 space-y-3">
-                {awaitingPayment.map((booking) => (
-                  <li key={booking.id}>
-                    <HostBookingCard booking={booking} />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-
-          {confirmedBookings.length > 0 ? (
-            <section>
-              <h2 className="type-h3">Confirmed bookings</h2>
-              <p className="mt-1 type-body-sm text-muted-foreground">
-                {hostBookingDetail("confirmed")}
-              </p>
-              <ul className="mt-3 space-y-3">
-                {confirmedBookings.map((booking) => (
-                  <li key={booking.id}>
-                    <HostBookingCard booking={booking} confirmed />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-
-          {cancelledBookings.length > 0 ? (
-            <section>
-              <h2 className="type-h3">Cancelled bookings</h2>
-              <p className="mt-1 type-body-sm text-muted-foreground">
-                {hostBookingDetail("cancelled")} The dates are available to book again.
-              </p>
-              <ul className="mt-3 space-y-3">
-                {cancelledBookings.map((booking) => (
-                  <li key={booking.id}>
-                    <HostBookingCard
-                      booking={booking}
-                      cancelled
-                      cancellation={cancellations.get(booking.id) ?? null}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
+          {GROUP_ORDER.map((group) =>
+            groups[group].length === 0 ? null : (
+              <section key={group}>
+                <h2 className="type-h3">{GROUP_LABEL[group]}</h2>
+                <p className="mt-1 type-body-sm text-muted-foreground">{GROUP_NOTE[group]}</p>
+                <ul className="mt-3 space-y-3">
+                  {groups[group].map((booking) => (
+                    <li key={booking.id}>
+                      <HostBookingCard
+                        booking={booking}
+                        viewerId={user?.id ?? null}
+                        cancellation={cancellations.get(booking.id) ?? null}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ),
+          )}
 
           <RequestGroup
             title="Incoming requests"
@@ -155,18 +132,28 @@ function cancellationActorLabel(role: string): string {
   return `${brand.name}`;
 }
 
+const GROUP_NOTE: Record<LifecycleGroup, string> = {
+  action: hostBookingDetail("pending_payment"),
+  active: "Storage is under way or ready to start. Confirm each step as it happens.",
+  upcoming: "Paid and confirmed. Get the space ready for the start date.",
+  completed: "Finished bookings. The space is free again.",
+  cancelled: hostBookingDetail("cancelled") + " The dates are available to book again.",
+};
+
 function HostBookingCard({
   booking,
-  confirmed = false,
-  cancelled = false,
+  viewerId,
   cancellation = null,
 }: {
   booking: Booking;
-  confirmed?: boolean;
-  cancelled?: boolean;
+  viewerId: string | null;
   cancellation?: BookingCancellationRow | null;
 }) {
   const view = bookingView(booking);
+  const state = lifecycleState(booking);
+  const meta = lifecycleMeta(state);
+  const cancelled = state === "cancelled";
+  const confirmed = booking.status === "confirmed" || booking.status === "active";
   const entitlement = hostStorageEntitlementPence(booking);
   const renter = booking.renter_first_name_snapshot?.trim();
   return (
@@ -179,9 +166,7 @@ function HostBookingCard({
             {view.area ? ` · ${view.area}` : ""}
           </p>
         </div>
-        <Badge variant={cancelled ? "neutral" : confirmed ? "success" : "warning"}>
-          {cancelled ? "Cancelled" : confirmed ? "Confirmed" : "Awaiting payment"}
-        </Badge>
+        <Badge variant={meta.tone}>{meta.label}</Badge>
       </div>
 
       <p className="mt-3 type-body-sm">{view.period}</p>
@@ -214,9 +199,20 @@ function HostBookingCard({
 
       {confirmed && entitlement !== null ? (
         <p className="mt-1 type-body-sm text-muted-foreground">
-          First month storage: {formatPrice(entitlement)} (the renter also paid a separate
+          Your storage earnings: {formatPrice(entitlement)} (the renter also paid a separate
           {" "}{brand.name} service fee, which isn't part of your earnings).
         </p>
+      ) : null}
+
+      {booking.status === "confirmed" || booking.status === "active" ? (
+        <div className="mt-4">
+          <BookingLifecyclePanel
+            booking={booking}
+            viewerId={viewerId}
+            paid
+            audience="host"
+          />
+        </div>
       ) : null}
     </article>
   );

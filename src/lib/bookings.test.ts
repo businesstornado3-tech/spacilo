@@ -23,6 +23,13 @@ const NOW = new Date("2026-08-03T12:00:00Z");
 const hours = (n: number) => new Date(NOW.getTime() + n * 3_600_000).toISOString();
 
 const request: StorageRequest = {
+  daily_rate_snapshot: null,
+  weekly_rate_snapshot: null,
+  minimum_stay_days_snapshot: null,
+  duration_days_snapshot: null,
+  pricing_version_snapshot: null,
+  pricing_breakdown_snapshot: null,
+  storage_amount_pence: null,
   booking_action_expires_at: hours(20),
   created_at: "2026-08-01T10:00:00Z",
   currency_snapshot: "GBP",
@@ -64,6 +71,14 @@ const request: StorageRequest = {
 };
 
 const booking: Booking = {
+  activated_at: null,
+  completed_at: null,
+  daily_rate_snapshot: null,
+  weekly_rate_snapshot: null,
+  minimum_stay_days_snapshot: null,
+  duration_days_snapshot: null,
+  pricing_version_snapshot: null,
+  pricing_breakdown_snapshot: null,
   cancellation_policy_version: null,
   cancelled_at: null,
   cancelled_by: null,
@@ -175,7 +190,7 @@ describe("booking snapshot", () => {
     // A later listing edit only changes live space rows, never the booking row.
     const after = bookingView({ ...booking });
     expect(after).toEqual(before);
-    expect(before.priceLabel).toBe("£55/month");
+    expect(before.priceLabel).toBe("£55 for 3 months and 1 day");
     expect(bookingItems(booking)).toHaveLength(1);
   });
 

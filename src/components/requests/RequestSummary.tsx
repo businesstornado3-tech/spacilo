@@ -7,7 +7,7 @@ import { Boxes, CalendarRange, MapPin, Ruler } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import {
-  REQUEST_DISCLAIMER,
+  requestStatusNote,
   expiryLabel,
   formatApproximateDuration,
   largestItemSnapshot,
@@ -141,7 +141,7 @@ export function RequestSummary({
         </section>
       ) : null}
 
-      <p className="type-body-sm text-muted-foreground">{REQUEST_DISCLAIMER}</p>
+      <p className="type-body-sm text-muted-foreground">{requestStatusNote(request, audience)}</p>
     </div>
   );
 }

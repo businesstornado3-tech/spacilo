@@ -18,7 +18,7 @@ import { toast } from "@/components/overlay/toast";
 import { useHostRequest, useRespondToRequest } from "@/hooks/useStorageRequests";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import {
-  REQUEST_DISCLAIMER,
+  requestStatusNote,
   effectiveStatus,
   formatApproximateDuration,
   hostStatusDetail,
@@ -261,7 +261,7 @@ function HostRequestDetailPage() {
             </div>
           ) : null}
 
-          <p className="type-body-sm text-muted-foreground">{REQUEST_DISCLAIMER}</p>
+          <p className="type-body-sm text-muted-foreground">{requestStatusNote(request, "host")}</p>
 
           <Modal
             open={acceptOpen}

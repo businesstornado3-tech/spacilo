@@ -3,20 +3,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { brand } from "@/config/brand";
 import { MarketingLayout } from "@/components/layout/MarketingLayout";
 import { Hero } from "@/components/home/Hero";
-import { TrustStrip } from "@/components/home/TrustStrip";
-import { StorageNearYou } from "@/components/home/StorageNearYou";
-import { SpaceFitSection } from "@/components/home/SpaceFitSection";
-import { RenterJourney } from "@/components/home/RenterJourney";
-import { HostSection } from "@/components/home/HostSection";
-import { HostControl } from "@/components/home/HostControl";
-import { TrustSection } from "@/components/home/TrustSection";
-import { TwoSidedCta } from "@/components/home/TwoSidedCta";
+import { TwoSidedValue } from "@/components/home/TwoSidedValue";
+import { WhyStow } from "@/components/home/WhyStow";
+import { HowItWorks } from "@/components/home/HowItWorks";
+import { HostCallout } from "@/components/home/HostCallout";
 import { LaunchArea } from "@/components/home/LaunchArea";
-import { FinalCta } from "@/components/home/FinalCta";
 
-const title = `${brand.name} | Storage Space Near You`;
+const title = `${brand.name} | Neighbourhood Storage Space Near You`;
 const description =
-  "Find convenient storage space near you or earn money from unused space in your home. Starting in Portsmouth.";
+  "Find storage in unused garages, lofts and spare rooms around your neighbourhood — or list space you're not using and set your own monthly price. Starting in Portsmouth.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -36,16 +31,11 @@ function HomePage() {
   return (
     <MarketingLayout>
       <Hero />
-      <TrustStrip />
-      <StorageNearYou />
-      <SpaceFitSection />
-      <RenterJourney />
-      <HostSection />
-      <HostControl />
-      <TrustSection />
-      <TwoSidedCta />
+      <TwoSidedValue />
+      <WhyStow />
+      <HowItWorks />
+      <HostCallout />
       <LaunchArea />
-      <FinalCta />
     </MarketingLayout>
   );
 }

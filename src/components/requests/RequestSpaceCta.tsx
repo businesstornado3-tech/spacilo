@@ -2,8 +2,9 @@
  * "Request this space" CTA on a public listing.
  *
  * Signed-out visitors are invited to sign in, renters without confirmed items
- * are pointed at My Stuff, hosts can't request their own space, and a live
- * pending request links to itself rather than creating a duplicate.
+ * are pointed at My Stuff, and a live pending request links to itself rather
+ * than creating a duplicate. Self-requesting is blocked server-side, because
+ * the public listing projection deliberately never exposes the host's id.
  */
 import { Link } from "@tanstack/react-router";
 
@@ -14,26 +15,17 @@ import { usePendingRequestForSpace } from "@/hooks/useStorageRequests";
 import { REQUEST_DISCLAIMER } from "@/lib/storage-requests";
 import { track } from "@/lib/analytics";
 
-export function RequestSpaceCta({ spaceId, hostId }: { spaceId: string; hostId: string | null }) {
+export function RequestSpaceCta({ spaceId }: { spaceId: string }) {
   const { user } = useAuth();
   const { data: inventory } = useActiveInventory();
   const { data: items } = useInventoryItems(inventory?.id);
   const { data: pending } = usePendingRequestForSpace(spaceId);
 
-  const isOwnSpace = Boolean(user && hostId && user.id === hostId);
   const hasItems = (items?.length ?? 0) > 0;
 
   const shell = (children: React.ReactNode) => (
     <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-card">{children}</section>
   );
-
-  if (isOwnSpace) {
-    return shell(
-      <p className="type-body-sm text-muted-foreground">
-        This is your own listing, so you can&apos;t send it a storage request.
-      </p>,
-    );
-  }
 
   if (pending) {
     return shell(

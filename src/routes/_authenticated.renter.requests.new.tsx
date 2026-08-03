@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Field, TextArea, TextInput } from "@/components/form/Field";
 import { PriceDisplay } from "@/components/marketplace/PriceDisplay";
 import { toast } from "@/components/overlay/toast";
-import { useAuth } from "@/hooks/useAuth";
 import { useActiveInventory, useInventoryItems, useInventorySummary } from "@/hooks/useInventory";
 import { useSpaceFitForSpace } from "@/hooks/useSpaceFitMatches";
 import { useCreateRequest } from "@/hooks/useStorageRequests";
@@ -52,7 +51,6 @@ type SpaceRow = Awaited<ReturnType<typeof getPublishedSpace>>;
 
 function NewRequestPage() {
   const { spaceId } = Route.useSearch();
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [space, setSpace] = React.useState<SpaceRow | null>(null);
@@ -91,7 +89,6 @@ function NewRequestPage() {
   const dateErrors = validateRequestDates(startDate, endDate, today);
   const showErrors = submitted;
   const hasItems = (items?.length ?? 0) > 0;
-  const isOwnSpace = Boolean(user && space?.host_id && user.id === space.host_id);
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -252,16 +249,10 @@ function NewRequestPage() {
 
             <p className="type-body-sm text-muted-foreground">{REQUEST_DISCLAIMER}</p>
 
-            {isOwnSpace ? (
-              <p className="type-body-sm text-destructive">
-                This is your own listing, so you can&apos;t request it.
-              </p>
-            ) : null}
-
             <div className="flex flex-wrap gap-3">
               <Button
                 type="submit"
-                disabled={!hasItems || isOwnSpace || create.isPending}
+                disabled={!hasItems || create.isPending}
                 className="w-full sm:w-auto"
               >
                 {create.isPending ? "Sending…" : "Send request"}

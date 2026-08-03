@@ -10,7 +10,7 @@ import { ListingPreview, type ListingView } from "@/components/host/listing/List
 import { publicLocation } from "@/lib/spaces";
 import { getPublishedSpace, signedPhotoUrls } from "@/lib/spaces-api";
 import { ListingSpaceFitPanel } from "@/components/spacefit/ListingSpaceFitPanel";
-import { toMatchSpace, type PublishedSpaceRow } from "@/hooks/useSpaceFitMatches";
+import { toMatchSpace } from "@/lib/spacefit/adapters";
 
 export const Route = createFileRoute("/spaces/$spaceId")({
   head: () => ({
@@ -41,7 +41,7 @@ function PublicSpacePage() {
       const signed = await signedPhotoUrls(paths);
       setState({
         kind: "ready",
-        matchSpace: toMatchSpace(row as unknown as PublishedSpaceRow),
+        matchSpace: toMatchSpace(row),
         view: {
           title: row.title ?? "",
           spaceType: row.space_type,

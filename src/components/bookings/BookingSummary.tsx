@@ -6,6 +6,8 @@ import { Boxes, CalendarRange, MapPin } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
+import { formatPrice } from "@/lib/format";
+import type { StorageRefundSummary } from "@/lib/payments/history";
 import {
   bookingItems,
   bookingStatusMeta,
@@ -22,14 +24,18 @@ export function BookingStatusBadge({ booking }: { booking: Booking }) {
 export function BookingSummary({
   booking,
   paidStoragePence,
+  storageRefund,
 }: {
   booking: Booking;
   /** Cumulative storage paid, derived from successful payments. */
   paidStoragePence?: number | null;
+  /** Paid / refunded / net storage, derived from payments and their refunds. */
+  storageRefund?: StorageRefundSummary | null;
 }) {
   const view = bookingView(booking, paidStoragePence);
   const paid = typeof paidStoragePence === "number" && paidStoragePence > 0;
   const items = bookingItems(booking);
+  const refunded = Boolean(storageRefund?.hasRefund);
 
   return (
     <div className="space-y-6">
@@ -59,9 +65,24 @@ export function BookingSummary({
         <dl className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
             <dt className="type-label text-muted-foreground">
-              {paid ? "Storage paid" : "Agreed storage price"}
+              {refunded ? "Storage payments" : paid ? "Storage paid" : "Agreed storage price"}
             </dt>
             <dd className="mt-1 type-price">{view.priceLabel}</dd>
+            {refunded && storageRefund ? (
+              <>
+                <dd className="mt-1 type-body-sm tabular-nums text-muted-foreground">
+                  Storage refunded: {formatPrice(storageRefund.refundedStoragePence)}
+                </dd>
+                <dd className="type-body-sm tabular-nums text-muted-foreground">
+                  Net storage paid: {formatPrice(storageRefund.netStoragePence)}
+                </dd>
+                <dd className="mt-1">
+                  <Badge variant="neutral">
+                    {storageRefund.fullyRefunded ? "Fully refunded" : "Partially refunded"}
+                  </Badge>
+                </dd>
+              </>
+            ) : null}
           </div>
           <div>
             <dt className="type-label text-muted-foreground">Dates</dt>

@@ -17,7 +17,7 @@ export function Hero() {
 
   function choose(next: Intent) {
     setIntent(next);
-    track("home_intent_selected", { intent: next });
+    track(next === "renter" ? "homepage_need_storage_selected" : "homepage_have_space_selected");
   }
 
   return (
@@ -73,7 +73,7 @@ export function Hero() {
                 <SearchControls
                   submitLabel="Find storage"
                   onSubmit={({ location, radius }) => {
-                    track("home_search_submitted", { radius });
+                    track("location_search_submitted", { radius, from: "homepage" });
                     void navigate({ to: "/search", search: { location, radius } });
                   }}
                 />
@@ -88,7 +88,7 @@ export function Hero() {
                   asChild
                   block
                   className="mt-4"
-                  onClick={() => track("home_host_cta_selected")}
+                  onClick={() => track("list_space_selected", { from: "homepage_hero" })}
                 >
                   <Link to="/list-space">
                     See what your space could earn

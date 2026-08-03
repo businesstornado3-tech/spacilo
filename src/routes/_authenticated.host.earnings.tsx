@@ -221,8 +221,10 @@ function EarningRow({
 
       <dl className="mt-4 space-y-2">
         <Line label="Storage amount" pence={earning.gross_storage_amount_pence} />
+        {/* The fee is paid by the renter ON TOP of the storage amount. It is
+            never deducted from the host's earnings. */}
         <Line
-          label={`${brand.name} service fee paid by the renter`}
+          label={`${brand.name} service fee, paid separately by the renter`}
           pence={earning.platform_fee_pence}
           muted
         />
@@ -278,7 +280,7 @@ function Line({ label, pence, muted }: { label: string; pence: number; muted?: b
     <div className="flex items-baseline justify-between gap-3">
       <dt className="type-body-sm text-muted-foreground">{label}</dt>
       <dd className={muted ? "type-body-sm text-muted-foreground tabular-nums" : "type-body tabular-nums"}>
-        {muted ? `−${formatPrice(pence)} retained by ${brand.name}` : formatPrice(pence)}
+        {muted ? `${formatPrice(pence)} — not taken from your earnings` : formatPrice(pence)}
       </dd>
     </div>
   );

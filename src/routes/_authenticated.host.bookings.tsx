@@ -159,7 +159,7 @@ function HostBookingCard({
   cancellation?: BookingCancellationRow | null;
   earningsPence?: number;
 }) {
-  const view = bookingView(booking, earningsPence);
+  const view = bookingView(booking);
   const state = lifecycleState(booking);
   const meta = lifecycleMeta(state);
   const cancelled = state === "cancelled";

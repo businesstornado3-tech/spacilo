@@ -9,8 +9,16 @@ import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { EmptyState, ErrorState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { RequestStatusBadge } from "@/components/requests/RequestSummary";
 import { useHostRequests } from "@/hooks/useStorageRequests";
+import { useMyBookings } from "@/hooks/useBookings";
+import {
+  bookingView,
+  bookingsByRequest,
+  hostBookingDetail,
+  type Booking,
+} from "@/lib/bookings";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import {
   REQUEST_LIST_DISCLAIMER,
@@ -36,6 +44,10 @@ export const Route = createFileRoute("/_authenticated/host/bookings")({
 
 function HostBookingsPage() {
   const { data, isLoading, error, refetch } = useHostRequests();
+  const { data: bookingsData } = useMyBookings();
+  const bookings = bookingsData ?? [];
+  const awaitingPayment = bookings.filter((b) => b.status === "pending_payment");
+  const byRequest = bookingsByRequest(bookings);
   const requests = data ?? [];
   const incoming = requests.filter((r) => effectiveStatus(r) === "pending");
   const past = requests.filter((r) => effectiveStatus(r) !== "pending");
@@ -50,7 +62,7 @@ function HostBookingsPage() {
 
       {error ? <ErrorState onRetry={() => void refetch()} /> : null}
 
-      {!isLoading && !error && requests.length === 0 ? (
+      {!isLoading && !error && requests.length === 0 && bookings.length === 0 ? (
         <EmptyState
           icon={Inbox}
           title="No requests yet"
@@ -58,19 +70,61 @@ function HostBookingsPage() {
         />
       ) : null}
 
-      {requests.length > 0 ? (
+      {requests.length > 0 || bookings.length > 0 ? (
         <div className="space-y-8">
+          {awaitingPayment.length > 0 ? (
+            <section>
+              <h2 className="type-h3">Awaiting payment</h2>
+              <p className="mt-1 type-body-sm text-muted-foreground">
+                {hostBookingDetail("pending_payment")}
+              </p>
+              <ul className="mt-3 space-y-3">
+                {awaitingPayment.map((booking) => (
+                  <li key={booking.id}>
+                    <HostBookingCard booking={booking} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
           <RequestGroup
             title="Incoming requests"
             emptyNote="Nothing needs your response right now."
             requests={incoming}
             showEmpty
           />
-          <RequestGroup title="Past requests" requests={past} />
+          <RequestGroup title="Past requests" requests={past} bookings={byRequest} />
           <p className="type-body-sm text-muted-foreground">{REQUEST_LIST_DISCLAIMER}</p>
         </div>
       ) : null}
     </AppLayout>
+  );
+}
+
+function HostBookingCard({ booking }: { booking: Booking }) {
+  const view = bookingView(booking);
+  const renter = booking.renter_first_name_snapshot?.trim();
+  return (
+    <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="type-h3 truncate">{view.spaceTitle}</h3>
+          <p className="type-body-sm text-muted-foreground">
+            {spaceTypeLabel(view.spaceType as SpaceTypeValue)}
+            {view.area ? ` · ${view.area}` : ""}
+          </p>
+        </div>
+        <Badge variant="warning">Awaiting payment</Badge>
+      </div>
+      <p className="mt-3 type-body-sm">{view.period}</p>
+      <p className="type-body-sm text-muted-foreground">
+        {view.priceLabel} · {view.itemCount} items · {view.requirementM3.toFixed(2)} m³
+      </p>
+      <p className="type-body-sm text-muted-foreground">
+        {renter ? `Requested by ${renter}` : "Requested by a renter"}
+      </p>
+    </article>
   );
 }
 
@@ -79,9 +133,11 @@ function RequestGroup({
   requests,
   emptyNote,
   showEmpty = false,
+  bookings,
 }: {
   title: string;
   requests: StorageRequest[];
+  bookings?: Record<string, Booking>;
   emptyNote?: string;
   showEmpty?: boolean;
 }) {
@@ -95,7 +151,7 @@ function RequestGroup({
         <ul className="mt-3 space-y-3">
           {requests.map((request) => (
             <li key={request.id}>
-              <HostRequestCard request={request} />
+              <HostRequestCard request={request} booking={bookings?.[request.id] ?? null} />
             </li>
           ))}
         </ul>
@@ -104,7 +160,13 @@ function RequestGroup({
   );
 }
 
-function HostRequestCard({ request }: { request: StorageRequest }) {
+function HostRequestCard({
+  request,
+  booking,
+}: {
+  request: StorageRequest;
+  booking?: Booking | null;
+}) {
   const view = requestSnapshotView(request);
   const expiry = expiryLabel(request);
   const renter = request.renter_first_name_snapshot?.trim();
@@ -137,6 +199,12 @@ function HostRequestCard({ request }: { request: StorageRequest }) {
             month: "long",
             year: "numeric",
           })}
+        </p>
+      ) : null}
+
+      {booking ? (
+        <p className="mt-1 type-body-sm text-muted-foreground">
+          Booking started · {bookingView(booking).statusLabel}
         </p>
       ) : null}
 

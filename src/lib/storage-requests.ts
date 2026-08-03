@@ -39,10 +39,46 @@ export const REQUEST_STATUS_META: Record<string, { label: string; tone: Tone; de
     tone: "neutral",
     detail: "The host didn't respond in time, so this request expired.",
   },
+  accepted: {
+    label: "Accepted",
+    tone: "success",
+    detail: "The host accepted this request. It isn't a booking or a payment yet.",
+  },
+  declined: {
+    label: "Declined",
+    tone: "destructive",
+    detail: "The host declined this request.",
+  },
 };
+
+/** Host-facing wording for the same canonical statuses. */
+export const HOST_STATUS_DETAIL: Record<string, string> = {
+  pending: "This renter is waiting for your response.",
+  accepted: "You accepted this request. No booking or payment has been created yet.",
+  declined: "You declined this request.",
+  withdrawn: "The renter withdrew this request before you responded.",
+  expired: "This request expired before it was answered.",
+};
+
+export const hostStatusDetail = (status: string) => HOST_STATUS_DETAIL[status] ?? "";
 
 export const statusMeta = (status: string) =>
   REQUEST_STATUS_META[status] ?? { label: status, tone: "neutral" as Tone, detail: "" };
+
+/** Can the host still accept or decline? Mirrors the server-side guard. */
+export const isRespondable = (
+  request: Pick<StorageRequest, "status" | "expires_at">,
+  now: Date = new Date(),
+) => effectiveStatus(request, now) === "pending";
+
+/** Requests genuinely awaiting a host response — the canonical pending count. */
+export function pendingForHost<T extends Pick<StorageRequest, "status" | "expires_at">>(
+  requests: T[],
+  now: Date = new Date(),
+): T[] {
+  return requests.filter((request) => effectiveStatus(request, now) === "pending");
+}
+
 
 /**
  * Status as the renter should see it. The database expires stale rows in

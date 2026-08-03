@@ -13,8 +13,8 @@ import { track } from "@/lib/analytics";
 interface HostEntryButtonProps {
   label?: string;
   from: string;
-  size?: "sm" | "md" | "lg";
-  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "default" | "sm" | "lg";
+  variant?: "default" | "secondary" | "outline" | "ghost" | "subtle";
   block?: boolean;
   className?: string;
   withArrow?: boolean;

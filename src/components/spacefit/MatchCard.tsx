@@ -2,6 +2,7 @@
  * Mobile-first match card: photo, place, price, SpaceFit and the strongest
  * deterministic reasons. Detail lives behind "Why this matches".
  */
+import * as React from "react";
 import { Link } from "@tanstack/react-router";
 import { ImageOff } from "lucide-react";
 
@@ -15,16 +16,20 @@ import type { MatchEntry } from "@/hooks/useSpaceFitMatches";
 export function MatchCard({ entry }: { entry: MatchEntry }) {
   const { row, result, coverUrl } = entry;
   const location = publicLocation(row.approximate_area, row.postcode_district);
+  // A signed URL can expire or be revoked; never leave a broken image on screen.
+  const [imageFailed, setImageFailed] = React.useState(false);
+  React.useEffect(() => setImageFailed(false), [coverUrl]);
 
   return (
     <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
       <div className="relative aspect-[16/10] w-full bg-muted">
-        {coverUrl ? (
+        {coverUrl && !imageFailed ? (
           <img
             src={coverUrl}
             alt={`${spaceTypeLabel(row.space_type as SpaceTypeValue)} in the ${location}`}
             className="size-full object-cover"
             loading="lazy"
+            onError={() => setImageFailed(true)}
           />
         ) : (
           <div className="grid size-full place-items-center text-muted-foreground">

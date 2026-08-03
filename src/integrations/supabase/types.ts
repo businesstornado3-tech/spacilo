@@ -14,6 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          created_at: string
+          currency_snapshot: string
+          end_date: string
+          estimated_storage_requirement_m3_snapshot: number
+          host_accepted_at: string | null
+          host_id: string
+          id: string
+          inventory_item_count_snapshot: number
+          inventory_items_snapshot: Json
+          monthly_price_snapshot: number | null
+          renter_first_name_snapshot: string | null
+          renter_id: string
+          request_id: string
+          space_area_snapshot: string | null
+          space_id: string
+          space_postcode_district_snapshot: string | null
+          space_title_snapshot: string | null
+          space_type_snapshot: string | null
+          spacefit_label_snapshot: string | null
+          spacefit_score_snapshot: number | null
+          start_date: string
+          status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency_snapshot?: string
+          end_date: string
+          estimated_storage_requirement_m3_snapshot?: number
+          host_accepted_at?: string | null
+          host_id: string
+          id?: string
+          inventory_item_count_snapshot?: number
+          inventory_items_snapshot?: Json
+          monthly_price_snapshot?: number | null
+          renter_first_name_snapshot?: string | null
+          renter_id: string
+          request_id: string
+          space_area_snapshot?: string | null
+          space_id: string
+          space_postcode_district_snapshot?: string | null
+          space_title_snapshot?: string | null
+          space_type_snapshot?: string | null
+          spacefit_label_snapshot?: string | null
+          spacefit_score_snapshot?: number | null
+          start_date: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency_snapshot?: string
+          end_date?: string
+          estimated_storage_requirement_m3_snapshot?: number
+          host_accepted_at?: string | null
+          host_id?: string
+          id?: string
+          inventory_item_count_snapshot?: number
+          inventory_items_snapshot?: Json
+          monthly_price_snapshot?: number | null
+          renter_first_name_snapshot?: string | null
+          renter_id?: string
+          request_id?: string
+          space_area_snapshot?: string | null
+          space_id?: string
+          space_postcode_district_snapshot?: string | null
+          space_title_snapshot?: string | null
+          space_type_snapshot?: string | null
+          spacefit_label_snapshot?: string | null
+          spacefit_score_snapshot?: number | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: true
+            referencedRelation: "storage_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_analysis_runs: {
         Row: {
           analysed_photo_count: number
@@ -701,6 +794,7 @@ export type Database = {
       }
       storage_requests: {
         Row: {
+          booking_action_expires_at: string | null
           created_at: string
           currency_snapshot: string
           decline_reason: string | null
@@ -738,6 +832,7 @@ export type Database = {
           withdrawn_at: string | null
         }
         Insert: {
+          booking_action_expires_at?: string | null
           created_at?: string
           currency_snapshot?: string
           decline_reason?: string | null
@@ -775,6 +870,7 @@ export type Database = {
           withdrawn_at?: string | null
         }
         Update: {
+          booking_action_expires_at?: string | null
           created_at?: string
           currency_snapshot?: string
           decline_reason?: string | null
@@ -833,6 +929,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_booking_from_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          created_at: string
+          currency_snapshot: string
+          end_date: string
+          estimated_storage_requirement_m3_snapshot: number
+          host_accepted_at: string | null
+          host_id: string
+          id: string
+          inventory_item_count_snapshot: number
+          inventory_items_snapshot: Json
+          monthly_price_snapshot: number | null
+          renter_first_name_snapshot: string | null
+          renter_id: string
+          request_id: string
+          space_area_snapshot: string | null
+          space_id: string
+          space_postcode_district_snapshot: string | null
+          space_title_snapshot: string | null
+          space_type_snapshot: string | null
+          spacefit_label_snapshot: string | null
+          spacefit_score_snapshot: number | null
+          start_date: string
+          status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_storage_request: {
         Args: {
           p_end_date: string
@@ -843,6 +973,7 @@ export type Database = {
           p_start_date: string
         }
         Returns: {
+          booking_action_expires_at: string | null
           created_at: string
           currency_snapshot: string
           decline_reason: string | null
@@ -980,6 +1111,7 @@ export type Database = {
           p_request_id: string
         }
         Returns: {
+          booking_action_expires_at: string | null
           created_at: string
           currency_snapshot: string
           decline_reason: string | null
@@ -1077,6 +1209,11 @@ export type Database = {
         | "completed"
         | "partial"
         | "failed"
+      booking_status:
+        | "pending_payment"
+        | "confirmed"
+        | "cancelled"
+        | "completed"
       detection_review_status: "pending" | "confirmed" | "edited" | "rejected"
       inventory_item_category:
         | "boxes"
@@ -1273,6 +1410,12 @@ export const Constants = {
         "completed",
         "partial",
         "failed",
+      ],
+      booking_status: [
+        "pending_payment",
+        "confirmed",
+        "cancelled",
+        "completed",
       ],
       detection_review_status: ["pending", "confirmed", "edited", "rejected"],
       inventory_item_category: [

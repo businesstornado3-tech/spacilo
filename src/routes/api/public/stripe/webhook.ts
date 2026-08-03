@@ -11,7 +11,29 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 
-import { isHandledEvent } from "@/lib/payments/webhook-validation";
+import {
+  isConnectAccountEvent,
+  isHandledEvent,
+  isRefundEvent,
+} from "@/lib/payments/webhook-validation";
+import { allocateRefund } from "@/lib/payments/refunds";
+
+/**
+ * Records the event id once. Returns false when Stripe has already delivered
+ * it, so financial side effects happen exactly once. Reuses the existing
+ * `stripe_webhook_events` table rather than a second idempotency framework.
+ */
+async function claimEvent(
+  supabaseAdmin: typeof import("@/integrations/supabase/client.server")["supabaseAdmin"],
+  event: { id: string; type: string; livemode: boolean },
+): Promise<boolean> {
+  const { error } = await supabaseAdmin
+    .from("stripe_webhook_events")
+    .insert({ id: event.id, type: event.type, livemode: event.livemode });
+  if (!error) return true;
+  if (error.code === "23505") return false;
+  throw new Error(error.message);
+}
 
 export const Route = createFileRoute("/api/public/stripe/webhook")({
   server: {
@@ -28,6 +50,88 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
         } catch (error) {
           console.error("Stripe webhook signature rejected", (error as Error).message);
           return new Response("Invalid signature", { status: 400 });
+        }
+
+        // ---------------------------------------- Connect account lifecycle
+        if (isConnectAccountEvent(event.type)) {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          try {
+            if (!(await claimEvent(supabaseAdmin, event))) {
+              return new Response("duplicate", { status: 200 });
+            }
+            const account = event.data.object as import("stripe").Stripe.Account;
+            const hostUserId = account.metadata?.["host_user_id"] ?? null;
+
+            const { data: existing } = await supabaseAdmin
+              .from("host_payout_accounts")
+              .select("host_user_id")
+              .eq("stripe_account_id", account.id)
+              .maybeSingle();
+
+            const resolvedHost = existing?.host_user_id ?? hostUserId;
+            if (!resolvedHost) {
+              console.error("account.updated for an unknown connected account", account.id);
+              return new Response("unknown account", { status: 200 });
+            }
+
+            const { readAccountFacts, persistAccountFacts } = await import(
+              "@/lib/payments/connect.server"
+            );
+            await persistAccountFacts(resolvedHost, readAccountFacts(account));
+
+            await supabaseAdmin
+              .from("stripe_webhook_events")
+              .update({ processed_at: new Date().toISOString(), outcome: "account_synced" })
+              .eq("id", event.id);
+            return new Response("ok", { status: 200 });
+          } catch (error) {
+            console.error("Connect account webhook error", (error as Error).message);
+            return new Response("retry", { status: 500 });
+          }
+        }
+
+        // ------------------------------------------------------- refunds
+        if (isRefundEvent(event.type)) {
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          try {
+            if (!(await claimEvent(supabaseAdmin, event))) {
+              return new Response("duplicate", { status: 200 });
+            }
+            const charge = event.data.object as import("stripe").Stripe.Charge;
+            const paymentId = charge.metadata?.["payment_id"] ?? null;
+            if (!paymentId) {
+              return new Response("no payment reference", { status: 200 });
+            }
+
+            const { data: payment } = await supabaseAdmin
+              .from("payments")
+              .select("storage_amount_pence, service_fee_amount_pence")
+              .eq("id", paymentId)
+              .maybeSingle();
+            if (!payment) return new Response("payment not found", { status: 200 });
+
+            const allocation = allocateRefund(
+              charge.amount_refunded ?? 0,
+              payment.storage_amount_pence,
+              payment.service_fee_amount_pence,
+            );
+
+            const { error } = await supabaseAdmin.rpc("apply_storage_refund_to_earning", {
+              p_payment_id: paymentId,
+              p_refunded_storage_pence: allocation.refundedStoragePence,
+              p_reason: "stripe charge.refunded",
+            });
+            if (error) throw new Error(error.message);
+
+            await supabaseAdmin
+              .from("stripe_webhook_events")
+              .update({ processed_at: new Date().toISOString(), outcome: "refund_applied" })
+              .eq("id", event.id);
+            return new Response("ok", { status: 200 });
+          } catch (error) {
+            console.error("Refund webhook error", (error as Error).message);
+            return new Response("retry", { status: 500 });
+          }
         }
 
         if (!isHandledEvent(event.type)) {

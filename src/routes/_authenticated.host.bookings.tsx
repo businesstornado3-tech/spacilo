@@ -50,7 +50,9 @@ function HostBookingsPage() {
   const bookings = bookingsData ?? [];
   const awaitingPayment = bookings.filter((b) => b.status === "pending_payment");
   const confirmedBookings = bookings.filter((b) => b.status === "confirmed");
+  const cancelledBookings = bookings.filter((b) => b.status === "cancelled");
   const byRequest = bookingsByRequest(bookings);
+
   const requests = data ?? [];
   const incoming = requests.filter((r) => effectiveStatus(r) === "pending");
   const past = requests.filter((r) => effectiveStatus(r) !== "pending");

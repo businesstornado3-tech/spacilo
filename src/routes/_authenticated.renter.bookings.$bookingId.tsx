@@ -17,13 +17,14 @@ import { toast } from "@/components/overlay/toast";
 import { BookingSummary } from "@/components/bookings/BookingSummary";
 import { BookingLifecyclePanel } from "@/components/bookings/BookingLifecyclePanel";
 import { PaymentBreakdown } from "@/components/payments/PaymentBreakdown";
+import { PaymentHistory } from "@/components/payments/PaymentHistory";
 import { CancellationPanel } from "@/components/payments/CancellationPanel";
 import { useBooking } from "@/hooks/useBookings";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookingCancellation, useBookingRefunds } from "@/hooks/useCancellation";
 import { useBookingExactAddress, useBookingPayments, useStartCheckout } from "@/hooks/usePayments";
 import { bookingFinancials, bookingStatusMeta } from "@/lib/bookings";
-import { formatDate } from "@/lib/format";
+import { paidStoragePence, paymentHistory } from "@/lib/payments/history";
 import { track } from "@/lib/analytics";
 
 const description = "Your booking details, taken from the request the host accepted.";
@@ -58,6 +59,10 @@ function BookingDetailPage() {
   const startCheckout = useStartCheckout();
 
   const succeeded = (payments ?? []).find((p) => p.status === "succeeded") ?? null;
+  // Immutable financial history: one entry per successful payment, each with
+  // the dates it bought. The booking's current period may have moved on.
+  const history = paymentHistory(payments, booking ?? null);
+  const paidStorage = paidStoragePence(payments);
   const confirmed = booking?.status === "confirmed";
   const inStorage = booking?.status === "active";
   const { data: address } = useBookingExactAddress(
@@ -146,22 +151,14 @@ function BookingDetailPage() {
             </section>
           ) : null}
 
-          {(confirmed || inStorage) && finances ? (
-            <section className="space-y-4">
-              <PaymentBreakdown amounts={finances} totalLabel="Total paid" showNotes={false} />
-              {succeeded?.succeeded_at ? (
-                <p className="type-body-sm text-muted-foreground">
-                  Paid on {formatDate(succeeded.succeeded_at)}
-                  {succeeded.stripe_payment_intent_id
-                    ? ` · Reference ${succeeded.stripe_payment_intent_id}`
-                    : ""}
-                </p>
-              ) : null}
+          {(confirmed || inStorage) && history.entries.length > 0 ? (
+            <>
+              <PaymentHistory entries={history.entries} totals={history.totals} />
               <p className="type-body-sm text-muted-foreground">
-                This covers the storage period you booked. If you extend it later, we&apos;ll show
-                you the extra cost before anything else is collected.
+                Each payment covers the storage period shown against it. If you extend the booking
+                later, we&apos;ll show you the extra cost before anything else is collected.
               </p>
-            </section>
+            </>
           ) : null}
 
           {address ? (
@@ -199,7 +196,7 @@ function BookingDetailPage() {
             audience="renter"
           />
 
-          <BookingSummary booking={booking} />
+          <BookingSummary booking={booking} paidStoragePence={paidStorage} />
 
           <CancellationPanel
             booking={booking}

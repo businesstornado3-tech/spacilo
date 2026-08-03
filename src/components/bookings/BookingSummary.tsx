@@ -19,8 +19,16 @@ export function BookingStatusBadge({ booking }: { booking: Booking }) {
   return <Badge variant={meta.tone}>{meta.label}</Badge>;
 }
 
-export function BookingSummary({ booking }: { booking: Booking }) {
-  const view = bookingView(booking);
+export function BookingSummary({
+  booking,
+  paidStoragePence,
+}: {
+  booking: Booking;
+  /** Cumulative storage paid, derived from successful payments. */
+  paidStoragePence?: number | null;
+}) {
+  const view = bookingView(booking, paidStoragePence);
+  const paid = typeof paidStoragePence === "number" && paidStoragePence > 0;
   const items = bookingItems(booking);
 
   return (
@@ -50,7 +58,9 @@ export function BookingSummary({ booking }: { booking: Booking }) {
 
         <dl className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
-            <dt className="type-label text-muted-foreground">Agreed monthly price</dt>
+            <dt className="type-label text-muted-foreground">
+              {paid ? "Storage paid" : "Agreed storage price"}
+            </dt>
             <dd className="mt-1 type-price">{view.priceLabel}</dd>
           </div>
           <div>

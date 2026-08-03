@@ -25,7 +25,9 @@ import { track } from "@/lib/analytics";
 const description = "Your booking details, taken from the request the host accepted.";
 
 export const Route = createFileRoute("/_authenticated/renter/bookings/$bookingId")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  // Optional parameter: `?checkout=cancelled` is set only by the Stripe cancel
+  // URL, so every other link to this route may omit search entirely.
+  validateSearch: (search: Record<string, unknown> = {}) => ({
     checkout: search["checkout"] === "cancelled" ? ("cancelled" as const) : undefined,
   }),
   head: () => ({

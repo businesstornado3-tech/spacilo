@@ -35,7 +35,10 @@ function RenterBookingsPage() {
   const { data, isLoading, error, refetch } = useMyBookings();
   const bookings = data ?? [];
   const awaiting = bookings.filter((b) => b.status === "pending_payment");
-  const other = bookings.filter((b) => b.status !== "pending_payment");
+  const cancelled = bookings.filter((b) => b.status === "cancelled");
+  const other = bookings.filter(
+    (b) => b.status !== "pending_payment" && b.status !== "cancelled",
+  );
 
   return (
     <AppLayout mode="renter" title="Bookings" description={description}>

@@ -190,7 +190,7 @@ describe("booking snapshot", () => {
     // A later listing edit only changes live space rows, never the booking row.
     const after = bookingView({ ...booking });
     expect(after).toEqual(before);
-    expect(before.priceLabel).toBe("£55/month");
+    expect(before.priceLabel).toBe("£55 for 3 months and 1 day");
     expect(bookingItems(booking)).toHaveLength(1);
   });
 

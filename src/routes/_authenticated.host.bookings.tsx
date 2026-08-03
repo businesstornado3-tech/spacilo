@@ -140,7 +140,15 @@ function HostBookingsPage() {
   );
 }
 
-function HostBookingCard({ booking, confirmed = false }: { booking: Booking; confirmed?: boolean }) {
+function HostBookingCard({
+  booking,
+  confirmed = false,
+  cancelled = false,
+}: {
+  booking: Booking;
+  confirmed?: boolean;
+  cancelled?: boolean;
+}) {
   const view = bookingView(booking);
   const entitlement = hostStorageEntitlementPence(booking);
   const renter = booking.renter_first_name_snapshot?.trim();
@@ -154,10 +162,11 @@ function HostBookingCard({ booking, confirmed = false }: { booking: Booking; con
             {view.area ? ` · ${view.area}` : ""}
           </p>
         </div>
-        <Badge variant={confirmed ? "success" : "warning"}>
-          {confirmed ? "Confirmed" : "Awaiting payment"}
+        <Badge variant={cancelled ? "neutral" : confirmed ? "success" : "warning"}>
+          {cancelled ? "Cancelled" : confirmed ? "Confirmed" : "Awaiting payment"}
         </Badge>
       </div>
+
       <p className="mt-3 type-body-sm">{view.period}</p>
       <p className="type-body-sm text-muted-foreground">
         {view.priceLabel} · {view.itemCount} items · {view.requirementM3.toFixed(2)} m³

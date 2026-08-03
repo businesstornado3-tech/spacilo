@@ -101,9 +101,14 @@ export function paymentHistory(
         new Date(b.succeeded_at ?? b.created_at).getTime(),
   );
 
+  // If anything extended this booking, its current end date is no longer the
+  // original payment's end date, so the legacy fallback must not be used.
+  const extended = rows.some((row) => paymentKind(row) === "extension");
+  const safeFallback = extended ? null : fallback;
+
   const entries = rows.map((payment): PaymentHistoryEntry => {
     const kind = paymentKind(payment);
-    const period = entryPeriod(payment, fallback);
+    const period = entryPeriod(payment, safeFallback);
     return {
       id: payment.id,
       kind,

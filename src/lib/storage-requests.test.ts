@@ -13,6 +13,9 @@ import {
 
 const base: StorageRequest = {
   created_at: "2026-03-01T10:00:00Z",
+  decline_reason: null,
+  responded_at: null,
+  renter_first_name_snapshot: "Alex",
   currency_snapshot: "GBP",
   estimated_item_volume_m3_snapshot: 3.2,
   estimated_storage_requirement_m3_snapshot: 4.45,

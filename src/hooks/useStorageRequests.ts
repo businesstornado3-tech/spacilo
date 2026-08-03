@@ -7,6 +7,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import {
   createStorageRequest,
+  getHostRequest,
+  listHostRequests,
+  respondToRequest,
   getMyRequest,
   listMyRequests,
   pendingRequestForSpace,
@@ -66,6 +69,43 @@ export function useWithdrawRequest() {
       qc.setQueryData(requestKeys.detail(request.id), request);
       void qc.invalidateQueries({ queryKey: requestKeys.all });
       void qc.invalidateQueries({ queryKey: requestKeys.forSpace(request.space_id) });
+    },
+  });
+}
+
+/* ------------------------------------------------------------------- host */
+
+export const hostRequestKeys = {
+  all: ["host-storage-requests"] as const,
+  detail: (id: string) => ["host-storage-requests", id] as const,
+};
+
+export function useHostRequests() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: hostRequestKeys.all,
+    queryFn: listHostRequests,
+    enabled: Boolean(user),
+  });
+}
+
+export function useHostRequest(id: string | undefined) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: hostRequestKeys.detail(id ?? "none"),
+    queryFn: () => getHostRequest(id as string),
+    enabled: Boolean(user && id),
+  });
+}
+
+export function useRespondToRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: respondToRequest,
+    onSuccess: (request) => {
+      qc.setQueryData(hostRequestKeys.detail(request.id), request);
+      void qc.invalidateQueries({ queryKey: hostRequestKeys.all });
+      void qc.invalidateQueries({ queryKey: requestKeys.all });
     },
   });
 }

@@ -703,6 +703,7 @@ export type Database = {
         Row: {
           created_at: string
           currency_snapshot: string
+          decline_reason: string | null
           estimated_item_volume_m3_snapshot: number
           estimated_storage_requirement_m3_snapshot: number
           expires_at: string
@@ -714,10 +715,12 @@ export type Database = {
           inventory_line_count_snapshot: number
           largest_item_snapshot: Json | null
           monthly_price_snapshot: number | null
+          renter_first_name_snapshot: string | null
           renter_id: string
           renter_note: string | null
           requested_end_date: string
           requested_start_date: string
+          responded_at: string | null
           space_accepted_categories_snapshot: string[] | null
           space_access_summary_snapshot: string | null
           space_area_snapshot: string | null
@@ -737,6 +740,7 @@ export type Database = {
         Insert: {
           created_at?: string
           currency_snapshot?: string
+          decline_reason?: string | null
           estimated_item_volume_m3_snapshot: number
           estimated_storage_requirement_m3_snapshot: number
           expires_at?: string
@@ -748,10 +752,12 @@ export type Database = {
           inventory_line_count_snapshot: number
           largest_item_snapshot?: Json | null
           monthly_price_snapshot?: number | null
+          renter_first_name_snapshot?: string | null
           renter_id: string
           renter_note?: string | null
           requested_end_date: string
           requested_start_date: string
+          responded_at?: string | null
           space_accepted_categories_snapshot?: string[] | null
           space_access_summary_snapshot?: string | null
           space_area_snapshot?: string | null
@@ -771,6 +777,7 @@ export type Database = {
         Update: {
           created_at?: string
           currency_snapshot?: string
+          decline_reason?: string | null
           estimated_item_volume_m3_snapshot?: number
           estimated_storage_requirement_m3_snapshot?: number
           expires_at?: string
@@ -782,10 +789,12 @@ export type Database = {
           inventory_line_count_snapshot?: number
           largest_item_snapshot?: Json | null
           monthly_price_snapshot?: number | null
+          renter_first_name_snapshot?: string | null
           renter_id?: string
           renter_note?: string | null
           requested_end_date?: string
           requested_start_date?: string
+          responded_at?: string | null
           space_accepted_categories_snapshot?: string[] | null
           space_access_summary_snapshot?: string | null
           space_area_snapshot?: string | null
@@ -836,6 +845,7 @@ export type Database = {
         Returns: {
           created_at: string
           currency_snapshot: string
+          decline_reason: string | null
           estimated_item_volume_m3_snapshot: number
           estimated_storage_requirement_m3_snapshot: number
           expires_at: string
@@ -847,10 +857,12 @@ export type Database = {
           inventory_line_count_snapshot: number
           largest_item_snapshot: Json | null
           monthly_price_snapshot: number | null
+          renter_first_name_snapshot: string | null
           renter_id: string
           renter_note: string | null
           requested_end_date: string
           requested_start_date: string
+          responded_at: string | null
           space_accepted_categories_snapshot: string[] | null
           space_access_summary_snapshot: string | null
           space_area_snapshot: string | null
@@ -961,6 +973,56 @@ export type Database = {
         Returns: number
       }
       inventory_recalculate: { Args: { target: string }; Returns: undefined }
+      respond_to_storage_request: {
+        Args: {
+          p_decision: string
+          p_decline_reason?: string
+          p_request_id: string
+        }
+        Returns: {
+          created_at: string
+          currency_snapshot: string
+          decline_reason: string | null
+          estimated_item_volume_m3_snapshot: number
+          estimated_storage_requirement_m3_snapshot: number
+          expires_at: string
+          host_id: string
+          id: string
+          inventory_id: string
+          inventory_item_count_snapshot: number
+          inventory_items_snapshot: Json
+          inventory_line_count_snapshot: number
+          largest_item_snapshot: Json | null
+          monthly_price_snapshot: number | null
+          renter_first_name_snapshot: string | null
+          renter_id: string
+          renter_note: string | null
+          requested_end_date: string
+          requested_start_date: string
+          responded_at: string | null
+          space_accepted_categories_snapshot: string[] | null
+          space_access_summary_snapshot: string | null
+          space_area_snapshot: string | null
+          space_available_capacity_m3_snapshot: number | null
+          space_id: string
+          space_postcode_district_snapshot: string | null
+          space_title_snapshot: string | null
+          space_type_snapshot: string | null
+          spacefit_algorithm_snapshot: string | null
+          spacefit_breakdown_snapshot: Json | null
+          spacefit_label_snapshot: string | null
+          spacefit_score_snapshot: number | null
+          status: Database["public"]["Enums"]["storage_request_status"]
+          updated_at: string
+          withdrawn_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "storage_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       search_published_spaces: {
         Args: {
           limit_count?: number

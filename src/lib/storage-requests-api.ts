@@ -94,3 +94,47 @@ export async function pendingRequestForSpace(spaceId: string): Promise<StorageRe
   if (error) throw error;
   return data;
 }
+
+/* ------------------------------------------------------------------- host */
+
+/**
+ * Every request sent to spaces this host owns. RLS ("Hosts read requests for
+ * their spaces") scopes the rows, so one host can never read another's.
+ */
+export async function listHostRequests(): Promise<StorageRequest[]> {
+  const { data, error } = await supabase
+    .from("storage_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getHostRequest(id: string): Promise<StorageRequest | null> {
+  const { data, error } = await supabase
+    .from("storage_requests")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Accept or decline. The decision is made by `respond_to_storage_request`,
+ * which re-checks ownership, pending status and expiry inside a single
+ * conditional UPDATE — so a stale page or a double click can't win a race.
+ */
+export async function respondToRequest(input: {
+  id: string;
+  decision: "accepted" | "declined";
+  declineReason?: string;
+}): Promise<StorageRequest> {
+  const { data, error } = await supabase.rpc("respond_to_storage_request", {
+    p_request_id: input.id,
+    p_decision: input.decision,
+    ...(input.declineReason ? { p_decline_reason: input.declineReason } : {}),
+  });
+  if (error) throw error;
+  return data as unknown as StorageRequest;
+}

@@ -33,6 +33,7 @@ import {
   type CompletionRejection,
 } from "@/lib/bookings-lifecycle";
 import { formatDate, formatPrice } from "@/lib/format";
+import { extensionRefund, type PaymentRow } from "@/lib/payments/history";
 import { formatDuration } from "@/lib/pricing/duration";
 
 const errorMessage = (cause: unknown, fallback: string) =>
@@ -44,12 +45,15 @@ export function BookingLifecyclePanel({
   paid,
   financiallyBlocked = false,
   audience,
+  payments,
 }: {
   booking: Booking;
   viewerId: string | null | undefined;
   paid: boolean;
   financiallyBlocked?: boolean;
   audience: "renter" | "host";
+  /** Succeeded/attempted payments for this booking — used for refund wording. */
+  payments?: PaymentRow[] | null;
 }) {
   const state = lifecycleState(booking);
   const meta = lifecycleMeta(state);
@@ -143,7 +147,7 @@ export function BookingLifecyclePanel({
         </div>
       ) : null}
 
-      <ExtensionSection booking={booking} audience={audience} />
+      <ExtensionSection booking={booking} audience={audience} payments={payments ?? []} />
     </section>
   );
 }
@@ -161,9 +165,11 @@ const CHANGE_STATUS_LABEL: Record<string, string> = {
 function ExtensionSection({
   booking,
   audience,
+  payments,
 }: {
   booking: Booking;
   audience: "renter" | "host";
+  payments: PaymentRow[];
 }) {
   const { data: changes } = useBookingChangeRequests(booking.id);
   const request = useRequestExtension();
@@ -242,7 +248,7 @@ function ExtensionSection({
                   {formatPrice(row.additional_service_fee_pence ?? 0)} service fee ={" "}
                   {formatPrice(row.additional_total_pence)}.{" "}
                   {row.status === "applied"
-                    ? "Paid."
+                    ? appliedWording(payments, row.id)
                     : row.status === "accepted_awaiting_payment"
                       ? audience === "host"
                         ? "Renter payment pending."
@@ -265,7 +271,7 @@ function ExtensionSection({
         </ul>
       ) : null}
 
-      {audience === "host" && pending ? (
+      {audience === "host" && open && pending ? (
         <div className="flex flex-wrap gap-3">
           <Button size="sm" onClick={() => void onRespond(true)} disabled={respond.isPending}>
             Accept extension
@@ -281,14 +287,14 @@ function ExtensionSection({
         </div>
       ) : null}
 
-      {audience === "host" && awaitingPayment ? (
+      {audience === "host" && open && awaitingPayment ? (
         <p className="type-body-sm text-muted-foreground">
           You&apos;ve accepted this extension. The storage period stays{" "}
           {formatDate(booking.start_date)} – {formatDate(booking.end_date)} until the renter pays.
         </p>
       ) : null}
 
-      {audience === "renter" && awaitingPayment ? (
+      {audience === "renter" && open && awaitingPayment ? (
         <div className="space-y-3 rounded-xl border border-border bg-card p-4">
           <div>
             <h4 className="type-h3">Extension accepted</h4>
@@ -365,4 +371,16 @@ function ExtensionSection({
 
     </div>
   );
+}
+
+/**
+ * An applied extension stays applied even if the booking is cancelled later —
+ * but the money may since have come back, so say so.
+ */
+function appliedWording(payments: PaymentRow[], changeRequestId: string): string {
+  const refund = extensionRefund(payments, changeRequestId);
+  if (!refund) return "Paid.";
+  return refund.fullyRefunded
+    ? "Paid · subsequently refunded."
+    : `Paid · ${formatPrice(refund.refundedTotalPence)} subsequently refunded.`;
 }

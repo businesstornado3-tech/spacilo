@@ -24,7 +24,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useBookingCancellation, useBookingRefunds } from "@/hooks/useCancellation";
 import { useBookingExactAddress, useBookingPayments, useStartCheckout } from "@/hooks/usePayments";
 import { bookingFinancials, bookingStatusMeta } from "@/lib/bookings";
-import { paidStoragePence, paymentHistory } from "@/lib/payments/history";
+import { paidStoragePence, paymentHistory, storageRefundSummary } from "@/lib/payments/history";
 import { track } from "@/lib/analytics";
 
 const description = "Your booking details, taken from the request the host accepted.";
@@ -63,6 +63,7 @@ function BookingDetailPage() {
   // the dates it bought. The booking's current period may have moved on.
   const history = paymentHistory(payments, booking ?? null);
   const paidStorage = paidStoragePence(payments);
+  const storageRefund = storageRefundSummary(payments);
   const confirmed = booking?.status === "confirmed";
   const inStorage = booking?.status === "active";
   const { data: address } = useBookingExactAddress(
@@ -194,9 +195,14 @@ function BookingDetailPage() {
             paid={Boolean(succeeded)}
             financiallyBlocked={Boolean(cancellation)}
             audience="renter"
+            payments={payments ?? []}
           />
 
-          <BookingSummary booking={booking} paidStoragePence={paidStorage} />
+          <BookingSummary
+            booking={booking}
+            paidStoragePence={paidStorage}
+            storageRefund={storageRefund}
+          />
 
           <CancellationPanel
             booking={booking}
@@ -205,6 +211,7 @@ function BookingDetailPage() {
             refunds={refunds ?? []}
             viewerId={user?.id ?? null}
             audience="renter"
+            payments={payments ?? []}
           />
 
 

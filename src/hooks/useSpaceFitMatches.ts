@@ -21,7 +21,8 @@ export type MatchRow = Omit<PublishedSpaceRow, keyof MatchSpace> & MatchSpace;
 
 // Row → MatchSpace normalisation is canonical and shared with the listing
 // detail page; it must never be re-implemented per surface.
-export { toMatchSpace } from "@/lib/spacefit/adapters";
+export { toMatchSpace };
+
 
 
 function usePublishedSpaces() {

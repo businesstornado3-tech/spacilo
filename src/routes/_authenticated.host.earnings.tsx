@@ -144,16 +144,17 @@ function HostEarningsPage() {
       {earningsLoading ? (
         <p className="mt-3 type-body-sm text-muted-foreground">Loading your earnings…</p>
       ) : rows.length === 0 ? (
-        <EmptyState
-          className="mt-4"
-          title="No earnings yet"
-          description="When a renter pays for a booking, your storage earnings appear here."
-          action={
+        <div className="mt-4">
+          <EmptyState
+            title="No earnings yet"
+            description="When a renter pays for a booking, your storage earnings appear here."
+          />
+          <div className="mt-4 flex justify-center">
             <Button asChild variant="secondary">
               <Link to="/host/spaces">Manage my spaces</Link>
             </Button>
-          }
-        />
+          </div>
+        </div>
       ) : (
         <ul className="mt-4 space-y-4">
           {rows.map((earning) => (

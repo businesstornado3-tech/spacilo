@@ -18,8 +18,7 @@ export interface SearchQuery {
 
 export async function searchPublishedSpaces({ centre, radiusMiles, limit = 60 }: SearchQuery) {
   const { data, error } = await supabase.rpc("search_published_spaces", {
-    search_lat: centre ? centre.lat : undefined,
-    search_lng: centre ? centre.lng : undefined,
+    ...(centre ? { search_lat: centre.lat, search_lng: centre.lng } : {}),
     radius_miles: radiusMiles,
     limit_count: limit,
   });

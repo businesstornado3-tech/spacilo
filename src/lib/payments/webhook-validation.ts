@@ -68,3 +68,23 @@ export type HandledEventType = (typeof HANDLED_EVENT_TYPES)[number];
 
 export const isHandledEvent = (type: string): type is HandledEventType =>
   (HANDLED_EVENT_TYPES as readonly string[]).includes(type);
+
+/**
+ * Stripe Connect account lifecycle events (Prompt 12). Delivered to this same
+ * endpoint when "listen to events on connected accounts" is enabled, so the
+ * existing signature verification and event-id idempotency both still apply.
+ */
+export const CONNECT_EVENT_TYPES = ["account.updated"] as const;
+
+export type ConnectEventType = (typeof CONNECT_EVENT_TYPES)[number];
+
+export const isConnectAccountEvent = (type: string): type is ConnectEventType =>
+  (CONNECT_EVENT_TYPES as readonly string[]).includes(type);
+
+/** Refund events that must adjust a not-yet-transferred host earning. */
+export const REFUND_EVENT_TYPES = ["charge.refunded"] as const;
+
+export type RefundEventType = (typeof REFUND_EVENT_TYPES)[number];
+
+export const isRefundEvent = (type: string): type is RefundEventType =>
+  (REFUND_EVENT_TYPES as readonly string[]).includes(type);

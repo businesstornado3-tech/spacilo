@@ -16,7 +16,9 @@ export type Database = {
     Tables: {
       bookings: {
         Row: {
+          confirmed_at: string | null
           created_at: string
+          currency: string
           currency_snapshot: string
           end_date: string
           estimated_storage_requirement_m3_snapshot: number
@@ -26,9 +28,14 @@ export type Database = {
           inventory_item_count_snapshot: number
           inventory_items_snapshot: Json
           monthly_price_snapshot: number | null
+          paid_at: string | null
           renter_first_name_snapshot: string | null
           renter_id: string
+          renter_total_amount_pence: number | null
           request_id: string
+          service_fee_amount_pence: number | null
+          service_fee_minimum_pence: number | null
+          service_fee_rate_bps: number | null
           space_area_snapshot: string | null
           space_id: string
           space_postcode_district_snapshot: string | null
@@ -38,10 +45,13 @@ export type Database = {
           spacefit_score_snapshot: number | null
           start_date: string
           status: Database["public"]["Enums"]["booking_status"]
+          storage_amount_pence: number | null
           updated_at: string
         }
         Insert: {
+          confirmed_at?: string | null
           created_at?: string
+          currency?: string
           currency_snapshot?: string
           end_date: string
           estimated_storage_requirement_m3_snapshot?: number
@@ -51,9 +61,14 @@ export type Database = {
           inventory_item_count_snapshot?: number
           inventory_items_snapshot?: Json
           monthly_price_snapshot?: number | null
+          paid_at?: string | null
           renter_first_name_snapshot?: string | null
           renter_id: string
+          renter_total_amount_pence?: number | null
           request_id: string
+          service_fee_amount_pence?: number | null
+          service_fee_minimum_pence?: number | null
+          service_fee_rate_bps?: number | null
           space_area_snapshot?: string | null
           space_id: string
           space_postcode_district_snapshot?: string | null
@@ -63,10 +78,13 @@ export type Database = {
           spacefit_score_snapshot?: number | null
           start_date: string
           status?: Database["public"]["Enums"]["booking_status"]
+          storage_amount_pence?: number | null
           updated_at?: string
         }
         Update: {
+          confirmed_at?: string | null
           created_at?: string
+          currency?: string
           currency_snapshot?: string
           end_date?: string
           estimated_storage_requirement_m3_snapshot?: number
@@ -76,9 +94,14 @@ export type Database = {
           inventory_item_count_snapshot?: number
           inventory_items_snapshot?: Json
           monthly_price_snapshot?: number | null
+          paid_at?: string | null
           renter_first_name_snapshot?: string | null
           renter_id?: string
+          renter_total_amount_pence?: number | null
           request_id?: string
+          service_fee_amount_pence?: number | null
+          service_fee_minimum_pence?: number | null
+          service_fee_rate_bps?: number | null
           space_area_snapshot?: string | null
           space_id?: string
           space_postcode_district_snapshot?: string | null
@@ -88,6 +111,7 @@ export type Database = {
           spacefit_score_snapshot?: number | null
           start_date?: string
           status?: Database["public"]["Enums"]["booking_status"]
+          storage_amount_pence?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -480,6 +504,113 @@ export type Database = {
             columns: ["last_run_id"]
             isOneToOne: false
             referencedRelation: "inventory_analysis_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount_received_pence: number | null
+          booking_id: string
+          checkout_created_at: string | null
+          created_at: string
+          currency: string
+          currency_received: string | null
+          failed_at: string | null
+          failure_reason: string | null
+          hold_expires_at: string | null
+          hold_released_at: string | null
+          hold_volume_m3: number
+          host_id: string
+          id: string
+          last_webhook_at: string | null
+          livemode: boolean | null
+          period_index: number
+          period_label: string
+          provider: string
+          renter_id: string
+          renter_total_amount_pence: number
+          service_fee_amount_pence: number
+          service_fee_minimum_pence: number
+          service_fee_rate_bps: number
+          space_id: string
+          status: Database["public"]["Enums"]["payment_status"]
+          storage_amount_pence: number
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          succeeded_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_received_pence?: number | null
+          booking_id: string
+          checkout_created_at?: string | null
+          created_at?: string
+          currency?: string
+          currency_received?: string | null
+          failed_at?: string | null
+          failure_reason?: string | null
+          hold_expires_at?: string | null
+          hold_released_at?: string | null
+          hold_volume_m3?: number
+          host_id: string
+          id?: string
+          last_webhook_at?: string | null
+          livemode?: boolean | null
+          period_index?: number
+          period_label?: string
+          provider?: string
+          renter_id: string
+          renter_total_amount_pence: number
+          service_fee_amount_pence: number
+          service_fee_minimum_pence: number
+          service_fee_rate_bps: number
+          space_id: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          storage_amount_pence: number
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          succeeded_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_received_pence?: number | null
+          booking_id?: string
+          checkout_created_at?: string | null
+          created_at?: string
+          currency?: string
+          currency_received?: string | null
+          failed_at?: string | null
+          failure_reason?: string | null
+          hold_expires_at?: string | null
+          hold_released_at?: string | null
+          hold_volume_m3?: number
+          host_id?: string
+          id?: string
+          last_webhook_at?: string | null
+          livemode?: boolean | null
+          period_index?: number
+          period_label?: string
+          provider?: string
+          renter_id?: string
+          renter_total_amount_pence?: number
+          service_fee_amount_pence?: number
+          service_fee_minimum_pence?: number
+          service_fee_rate_bps?: number
+          space_id?: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          storage_amount_pence?: number
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          succeeded_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
         ]
@@ -924,15 +1055,119 @@ export type Database = {
           },
         ]
       }
+      stripe_webhook_events: {
+        Row: {
+          booking_id: string | null
+          id: string
+          livemode: boolean
+          outcome: string | null
+          payment_id: string | null
+          processed_at: string | null
+          received_at: string
+          type: string
+        }
+        Insert: {
+          booking_id?: string | null
+          id: string
+          livemode: boolean
+          outcome?: string | null
+          payment_id?: string | null
+          processed_at?: string | null
+          received_at?: string
+          type: string
+        }
+        Update: {
+          booking_id?: string | null
+          id?: string
+          livemode?: boolean
+          outcome?: string | null
+          payment_id?: string | null
+          processed_at?: string | null
+          received_at?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_webhook_events_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stripe_webhook_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      begin_booking_checkout: {
+        Args: { p_booking_id: string }
+        Returns: {
+          amount_received_pence: number | null
+          booking_id: string
+          checkout_created_at: string | null
+          created_at: string
+          currency: string
+          currency_received: string | null
+          failed_at: string | null
+          failure_reason: string | null
+          hold_expires_at: string | null
+          hold_released_at: string | null
+          hold_volume_m3: number
+          host_id: string
+          id: string
+          last_webhook_at: string | null
+          livemode: boolean | null
+          period_index: number
+          period_label: string
+          provider: string
+          renter_id: string
+          renter_total_amount_pence: number
+          service_fee_amount_pence: number
+          service_fee_minimum_pence: number
+          service_fee_rate_bps: number
+          space_id: string
+          status: Database["public"]["Enums"]["payment_status"]
+          storage_amount_pence: number
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          succeeded_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      confirm_booking_payment: {
+        Args: {
+          p_amount_pence: number
+          p_currency: string
+          p_event_id: string
+          p_event_type: string
+          p_livemode: boolean
+          p_payment_id: string
+          p_payment_intent_id: string
+          p_session_id: string
+        }
+        Returns: Json
+      }
       create_booking_from_request: {
         Args: { p_request_id: string }
         Returns: {
+          confirmed_at: string | null
           created_at: string
+          currency: string
           currency_snapshot: string
           end_date: string
           estimated_storage_requirement_m3_snapshot: number
@@ -942,9 +1177,14 @@ export type Database = {
           inventory_item_count_snapshot: number
           inventory_items_snapshot: Json
           monthly_price_snapshot: number | null
+          paid_at: string | null
           renter_first_name_snapshot: string | null
           renter_id: string
+          renter_total_amount_pence: number | null
           request_id: string
+          service_fee_amount_pence: number | null
+          service_fee_minimum_pence: number | null
+          service_fee_rate_bps: number | null
           space_area_snapshot: string | null
           space_id: string
           space_postcode_district_snapshot: string | null
@@ -954,6 +1194,7 @@ export type Database = {
           spacefit_score_snapshot: number | null
           start_date: string
           status: Database["public"]["Enums"]["booking_status"]
+          storage_amount_pence: number | null
           updated_at: string
         }
         SetofOptions: {
@@ -1018,6 +1259,16 @@ export type Database = {
         }
       }
       expire_stale_storage_requests: { Args: never; Returns: number }
+      get_booking_exact_address: {
+        Args: { p_booking_id: string }
+        Returns: {
+          access_notes: string
+          address_line1: string
+          address_line2: string
+          postcode: string
+          town: string
+        }[]
+      }
       get_published_space: {
         Args: { space_id: string }
         Returns: {
@@ -1104,6 +1355,17 @@ export type Database = {
         Returns: number
       }
       inventory_recalculate: { Args: { target: string }; Returns: undefined }
+      record_payment_failure: {
+        Args: {
+          p_event_id: string
+          p_event_type: string
+          p_livemode: boolean
+          p_payment_id: string
+          p_reason: string
+          p_status: Database["public"]["Enums"]["payment_status"]
+        }
+        Returns: Json
+      }
       respond_to_storage_request: {
         Args: {
           p_decision: string
@@ -1201,6 +1463,23 @@ export type Database = {
           vehicle_access_close: boolean
         }[]
       }
+      space_available_volume_m3: {
+        Args: {
+          p_end: string
+          p_exclude_booking?: string
+          p_space_id: string
+          p_start: string
+        }
+        Returns: number
+      }
+      stow_service_fee_pence: {
+        Args: {
+          p_minimum_pence?: number
+          p_rate_bps?: number
+          p_storage_pence: number
+        }
+        Returns: number
+      }
     }
     Enums: {
       analysis_run_status:
@@ -1239,6 +1518,13 @@ export type Database = {
       item_tri_state: "yes" | "no" | "unknown"
       listing_status: "draft" | "published" | "paused" | "archived"
       moisture_condition: "dry" | "some_humidity" | "unknown"
+      payment_status:
+        | "requires_payment"
+        | "processing"
+        | "succeeded"
+        | "failed"
+        | "cancelled"
+        | "expired"
       space_access_frequency:
         | "occasional"
         | "monthly"
@@ -1444,6 +1730,14 @@ export const Constants = {
       item_tri_state: ["yes", "no", "unknown"],
       listing_status: ["draft", "published", "paused", "archived"],
       moisture_condition: ["dry", "some_humidity", "unknown"],
+      payment_status: [
+        "requires_payment",
+        "processing",
+        "succeeded",
+        "failed",
+        "cancelled",
+        "expired",
+      ],
       space_access_frequency: [
         "occasional",
         "monthly",

@@ -100,7 +100,9 @@ export function CancellationPanel({
         </h2>
         <p className="mt-1 type-body-sm text-muted-foreground">
           Cancelled on {formatDate(cancellation.created_at)} by{" "}
-          {cancellation.cancelled_by_role === audience ? "you" : `the ${cancellation.cancelled_by_role}`}
+          {cancellation.requested_by_role === audience
+            ? "you"
+            : `the ${cancellation.requested_by_role}`}
           .
         </p>
 

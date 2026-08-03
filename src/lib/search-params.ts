@@ -63,7 +63,7 @@ export function filtersFromUrl(state: SearchUrlState): SearchFilters {
   };
 }
 
-export function filtersToUrl(filters: SearchFilters): Partial<SearchUrlState> {
+export function filtersToUrl(filters: SearchFilters): Record<string, unknown> {
   return {
     ...(filters.maxPricePence !== undefined ? { maxPrice: filters.maxPricePence / 100 } : { maxPrice: undefined }),
     types: filters.spaceTypes,

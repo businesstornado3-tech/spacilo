@@ -37,7 +37,12 @@ function num(value: unknown): number | undefined {
   return Number.isFinite(n) && n > 0 ? n : undefined;
 }
 
-export function validateSearchParams(search: Record<string, unknown>): SearchUrlState {
+/**
+ * Every field has a defined fallback, so an empty URL is valid. The parameter
+ * is optional (and defaults to `{}`) so the typed router knows `search` may be
+ * omitted when linking here — omitting it yields exactly these defaults.
+ */
+export function validateSearchParams(search: Record<string, unknown> = {}): SearchUrlState {
   const sortRaw = str(search["sort"]) as SortKey | undefined;
   return {
     location: str(search["location"])?.slice(0, 120) ?? "",

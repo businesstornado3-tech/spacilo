@@ -768,7 +768,6 @@ export type Database = {
         }[]
       }
       inventory_recalculate: { Args: { target: string }; Returns: undefined }
-      is_space_published: { Args: { _space_id: string }; Returns: boolean }
     }
     Enums: {
       analysis_run_status:

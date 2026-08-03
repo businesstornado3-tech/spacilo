@@ -10,6 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/useAuth";
 import { bookingKeys } from "@/hooks/useBookings";
 import { createBookingCheckout } from "@/lib/payments.functions";
+import { createExtensionCheckout } from "@/lib/extensions.functions";
 import { getBookingExactAddress, listPaymentsForBooking } from "@/lib/payments-api";
 
 export const paymentKeys = {
@@ -42,6 +43,22 @@ export function useStartCheckout() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (bookingId: string) => start({ data: { bookingId } }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: bookingKeys.all });
+    },
+  });
+}
+
+/**
+ * Starts checkout for a host-accepted extension. This is a separate payment
+ * from the original booking payment; the booking only changes once the Stripe
+ * webhook confirms it.
+ */
+export function useStartExtensionCheckout() {
+  const start = useServerFn(createExtensionCheckout);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (changeRequestId: string) => start({ data: { changeRequestId } }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: bookingKeys.all });
     },

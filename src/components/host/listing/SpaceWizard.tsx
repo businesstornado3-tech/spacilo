@@ -46,7 +46,10 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [publishing, setPublishing] = React.useState(false);
-  const [published, setPublished] = React.useState(space.listing_status === "published");
+  /** True only for an already-live listing being edited — never shows the success screen. */
+  const isLive = space.listing_status === "published";
+  /** True only right after the host publishes in this session. */
+  const [justPublished, setJustPublished] = React.useState(false);
   const [previewUrls, setPreviewUrls] = React.useState<string[]>([]);
 
   const pending = React.useRef<SpacePatch>({});

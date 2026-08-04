@@ -6,7 +6,7 @@
  * Stripe Checkout Session. A confirmed booking shows what was paid and, only
  * then, releases the host's exact address.
  */
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, type SearchSchemaInput } from "@tanstack/react-router";
 import { Loader2, Lock, MapPin, ShieldCheck } from "lucide-react";
 
 import { brand } from "@/config/brand";

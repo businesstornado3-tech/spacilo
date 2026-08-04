@@ -40,9 +40,12 @@ describe("homepage copy", () => {
   });
 
   it("explains both sides of the marketplace", () => {
-    expect(copy).toContain("Need more space?");
-    expect(copy).toContain("Have space you're not using?");
-    expect(copy).toContain("Turn unused space into monthly income.");
+    expect(copy).toContain("Storage that fits.");
+    expect(copy).toContain("Space that earns.");
+    expect(copy).toContain("I need space");
+    expect(copy).toContain("I have space");
+    expect(copy).toContain("Your unused space could be earning.");
+    expect(copy).toContain("Only pay for the space you need");
   });
 
   it("stops the renter journey at a request, never a booking or payment", () => {

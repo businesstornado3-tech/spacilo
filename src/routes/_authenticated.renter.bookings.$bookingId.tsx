@@ -6,7 +6,7 @@
  * Stripe Checkout Session. A confirmed booking shows what was paid and, only
  * then, releases the host's exact address.
  */
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, type SearchSchemaInput } from "@tanstack/react-router";
 import { Loader2, Lock, MapPin, ShieldCheck } from "lucide-react";
 
 import { brand } from "@/config/brand";
@@ -32,8 +32,13 @@ const description = "Your booking details, taken from the request the host accep
 
 export const Route = createFileRoute("/_authenticated/renter/bookings/$bookingId")({
   // Optional parameter: `?checkout=cancelled` is set only by the Stripe cancel
-  // URL, so every other link to this route may omit search entirely.
-  validateSearch: (search: Record<string, unknown> = {}) => ({
+  // URL, so every other link to this route may omit search entirely. The
+  // `SearchSchemaInput` brand is what tells the typed router the input is
+  // optional even though the parsed output always has the key.
+  validateSearch: (
+    search: Record<string, unknown> & SearchSchemaInput = {} as Record<string, unknown> &
+      SearchSchemaInput,
+  ) => ({
     checkout: search["checkout"] === "cancelled" ? ("cancelled" as const) : undefined,
   }),
   head: () => ({

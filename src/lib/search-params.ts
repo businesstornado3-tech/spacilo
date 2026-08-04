@@ -5,6 +5,8 @@
  * filters, so results survive refresh and Back from a listing.
  * /search?location=PO4%208LB&radius=5&sort=recommended&types=garage
  */
+import type { SearchSchemaInput } from "@tanstack/react-router";
+
 import { DEFAULT_RADIUS_MILES, normaliseRadius } from "@/lib/location/schema";
 import type { SearchFilters, SortKey } from "@/hooks/useStorageSearch";
 
@@ -38,11 +40,17 @@ function num(value: unknown): number | undefined {
 }
 
 /**
- * Every field has a defined fallback, so an empty URL is valid. The parameter
- * is optional (and defaults to `{}`) so the typed router knows `search` may be
- * omitted when linking here — omitting it yields exactly these defaults.
+ * Every field has a defined fallback, so an empty URL is valid.
+ *
+ * The parameter is branded with TanStack's `SearchSchemaInput` so the typed
+ * router treats the *input* as "any/empty object" while the *output* keeps its
+ * required, defaulted fields. Without the brand the router infers the input
+ * from the return type and demands `search` on every link to this route.
  */
-export function validateSearchParams(search: Record<string, unknown> = {}): SearchUrlState {
+export function validateSearchParams(
+  search: Record<string, unknown> & SearchSchemaInput = {} as Record<string, unknown> &
+    SearchSchemaInput,
+): SearchUrlState {
   const sortRaw = str(search["sort"]) as SortKey | undefined;
   return {
     location: str(search["location"])?.slice(0, 120) ?? "",

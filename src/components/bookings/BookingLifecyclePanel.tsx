@@ -40,6 +40,13 @@ import {
 import { HandoverEvidence } from "@/components/bookings/HandoverEvidence";
 import { CONFIRMATION_STATEMENT, partyFor, visibleStages } from "@/lib/handover";
 import { formatDate, formatPrice } from "@/lib/format";
+import {
+  bookingAcceptsExtensions,
+  extensionHostEarningsPence,
+  extensionStatusLabel,
+  isExtensionConfirmed,
+  openExtension,
+} from "@/lib/extensions";
 import { extensionRefund, type PaymentRow } from "@/lib/payments/history";
 import { formatDuration } from "@/lib/pricing/duration";
 
@@ -335,14 +342,6 @@ function ConfirmationTicks({
 
 /* -------------------------------------------------------------- extensions */
 
-const CHANGE_STATUS_LABEL: Record<string, string> = {
-  pending: "Awaiting the host",
-  accepted_awaiting_payment: "Accepted — payment to follow",
-  applied: "Applied",
-  declined: "Declined",
-  withdrawn: "Withdrawn",
-};
-
 function ExtensionSection({
   booking,
   audience,
@@ -359,12 +358,12 @@ function ExtensionSection({
   const [newEndDate, setNewEndDate] = React.useState("");
   const [note, setNote] = React.useState("");
 
-  const open = booking.status === "confirmed" || booking.status === "active";
+  const open = bookingAcceptsExtensions(booking.status);
   const rows = changes ?? [];
   const pending = rows.find((row) => row.status === "pending") ?? null;
   const awaitingPayment = rows.find((row) => row.status === "accepted_awaiting_payment") ?? null;
   // One extension at a time: no new request while one is open or unpaid.
-  const blocked = Boolean(pending || awaitingPayment);
+  const blocked = Boolean(openExtension(rows));
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -414,16 +413,25 @@ function ExtensionSection({
             <li key={row.id} className="rounded-xl bg-muted/60 p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="type-body-sm">
-                  New end date {formatDate(row.proposed_end_date)}
+                  {formatDate(row.original_end_date)} → {formatDate(row.proposed_end_date)}
                   {row.additional_days ? ` · ${formatDuration(row.additional_days)} more` : ""}
                 </p>
-                <Badge variant={row.status === "applied" || row.status === "accepted_awaiting_payment"
-                    ? "success"
-                    : "neutral"}>
-                  {CHANGE_STATUS_LABEL[row.status] ?? row.status}
+                <Badge variant={isExtensionConfirmed(row) ? "success" : "neutral"}>
+                  {extensionStatusLabel(row.status, audience)}
                 </Badge>
               </div>
-              {row.additional_total_pence !== null ? (
+              {audience === "host" ? (
+                <p className="mt-1 type-body-sm text-muted-foreground">
+                  Additional storage earnings{" "}
+                  {formatPrice(extensionHostEarningsPence(row))}. The {brand.name} service fee is
+                  paid by the renter on top and isn&apos;t taken from your earnings.{" "}
+                  {row.status === "applied"
+                    ? appliedWording(payments, row.id)
+                    : row.status === "accepted_awaiting_payment"
+                      ? "Waiting for the renter to pay."
+                      : "Nothing is charged yet."}
+                </p>
+              ) : row.additional_total_pence !== null ? (
                 <p className="mt-1 type-body-sm text-muted-foreground">
                   Extra storage {formatPrice(row.additional_storage_amount_pence ?? 0)} plus a{" "}
                   {formatPrice(row.additional_service_fee_pence ?? 0)} service fee ={" "}
@@ -431,12 +439,15 @@ function ExtensionSection({
                   {row.status === "applied"
                     ? appliedWording(payments, row.id)
                     : row.status === "accepted_awaiting_payment"
-                      ? audience === "host"
-                        ? "Renter payment pending."
-                        : "Not charged yet."
+                      ? "Not charged yet."
                       : "Nothing is charged yet."}
                 </p>
               ) : null}
+              <p className="mt-1 type-body-sm text-muted-foreground">
+                Requested {formatDate(row.created_at)}
+                {row.responded_at ? ` · answered ${formatDate(row.responded_at)}` : ""}
+                {row.status === "applied" ? ` · confirmed ${formatDate(row.updated_at)}` : ""}
+              </p>
               {row.renter_note ? (
                 <p className="mt-1 type-body-sm text-muted-foreground">
                   Renter&apos;s note: {row.renter_note}
@@ -453,18 +464,24 @@ function ExtensionSection({
       ) : null}
 
       {audience === "host" && open && pending ? (
-        <div className="flex flex-wrap gap-3">
-          <Button size="sm" onClick={() => void onRespond(true)} disabled={respond.isPending}>
-            Accept extension
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => void onRespond(false)}
-            disabled={respond.isPending}
-          >
-            Decline
-          </Button>
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-3">
+            <Button size="sm" onClick={() => void onRespond(true)} disabled={respond.isPending}>
+              Accept extension
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void onRespond(false)}
+              disabled={respond.isPending}
+            >
+              Decline
+            </Button>
+          </div>
+          <p className="type-body-sm text-muted-foreground">
+            Accepting reserves these dates while the renter completes payment. Declining leaves the
+            booking exactly as it is.
+          </p>
         </div>
       ) : null}
 

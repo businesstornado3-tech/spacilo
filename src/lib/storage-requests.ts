@@ -189,11 +189,16 @@ export function approximateMonths(start: string, end: string): number {
   return Math.round((days / 30.4375) * 10) / 10;
 }
 
+/**
+ * Human-readable length of the period. Never produces "1 months": whole units
+ * are singularised, so a 30-day stay reads "about 1 month".
+ */
 export function formatApproximateDuration(start: string, end: string) {
   const months = approximateMonths(start, end);
   if (months <= 0) return "";
   if (months < 1) return "less than a month";
-  return `about ${months % 1 === 0 ? months : months.toFixed(1)} months`;
+  if (months % 1 === 0) return `about ${months} month${months === 1 ? "" : "s"}`;
+  return `about ${months.toFixed(1)} months`;
 }
 
 /** "Host response requested by 17 September 2026" */

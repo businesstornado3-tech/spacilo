@@ -335,14 +335,6 @@ function ConfirmationTicks({
 
 /* -------------------------------------------------------------- extensions */
 
-const CHANGE_STATUS_LABEL: Record<string, string> = {
-  pending: "Awaiting the host",
-  accepted_awaiting_payment: "Accepted — payment to follow",
-  applied: "Applied",
-  declined: "Declined",
-  withdrawn: "Withdrawn",
-};
-
 function ExtensionSection({
   booking,
   audience,
@@ -359,12 +351,12 @@ function ExtensionSection({
   const [newEndDate, setNewEndDate] = React.useState("");
   const [note, setNote] = React.useState("");
 
-  const open = booking.status === "confirmed" || booking.status === "active";
+  const open = bookingAcceptsExtensions(booking.status);
   const rows = changes ?? [];
   const pending = rows.find((row) => row.status === "pending") ?? null;
   const awaitingPayment = rows.find((row) => row.status === "accepted_awaiting_payment") ?? null;
   // One extension at a time: no new request while one is open or unpaid.
-  const blocked = Boolean(pending || awaitingPayment);
+  const blocked = Boolean(openExtension(rows));
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

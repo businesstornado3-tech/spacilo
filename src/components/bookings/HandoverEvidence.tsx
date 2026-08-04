@@ -140,6 +140,15 @@ export function HandoverEvidence({
     );
   }
 
+  // Closed stage with nothing recorded: one line, no empty boxes.
+  if (!canAdd && photos.length === 0 && notes.length === 0 && issues.length === 0) {
+    return (
+      <p className="type-body-sm text-muted-foreground">
+        No additional handover evidence was recorded.
+      </p>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <p className="type-body-sm text-muted-foreground">{EVIDENCE_DISCLAIMER}</p>

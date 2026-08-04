@@ -553,33 +553,9 @@ export function StepRules({ form, patch }: StepProps) {
         </ul>
       </Alert>
 
-      <Fieldset legend="What is the minimum booking you'll accept?">
-        <div className="flex flex-wrap gap-2">
-          {MINIMUM_PERIODS.map((months) => (
-            <ChipToggle
-              key={months}
-              label={`${months} ${months === 1 ? "month" : "months"}`}
-              selected={form.minimum_storage_period_months === months}
-              onToggle={() => patch({ minimum_storage_period_months: months })}
-            />
-          ))}
-        </div>
-        <div className="mt-4 max-w-40">
-          <Field label="Custom (months)" htmlFor="min_custom">
-            <TextInput
-              id="min_custom"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={60}
-              value={form.minimum_storage_period_months ?? 1}
-              onChange={(e) =>
-                patch({ minimum_storage_period_months: Math.min(60, Math.max(1, Number(e.target.value) || 1)) })
-              }
-            />
-          </Field>
-        </div>
-      </Fieldset>
+      <MinimumStayFieldset form={form} patch={patch} />
+
+      <AvailabilityFieldset form={form} patch={patch} />
     </div>
   );
 }

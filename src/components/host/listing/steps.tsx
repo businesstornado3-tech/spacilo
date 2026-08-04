@@ -777,24 +777,9 @@ export function StepPrice({ form, patch }: StepProps) {
               />
             </div>
           </Field>
-          <Field
-            label="Minimum stay (days)"
-            htmlFor="min-stay"
-            hint="The shortest booking you'll accept."
-          >
-            <TextInput
-              id="min-stay"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={365}
-              className="max-w-32"
-              value={form.minimum_stay_days ?? 1}
-              onChange={(e) =>
-                patch({ minimum_stay_days: Math.min(365, Math.max(1, Number(e.target.value) || 1)) })
-              }
-            />
-          </Field>
+          <div className="type-body-sm text-muted-foreground sm:col-span-2">
+            Minimum booking: {formatStay(form.minimum_stay_days)} — change this in the rules step.
+          </div>
         </div>
 
         {form.monthly_price_pence ? (

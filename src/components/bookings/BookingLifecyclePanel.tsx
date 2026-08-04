@@ -40,6 +40,13 @@ import {
 import { HandoverEvidence } from "@/components/bookings/HandoverEvidence";
 import { CONFIRMATION_STATEMENT, partyFor, visibleStages } from "@/lib/handover";
 import { formatDate, formatPrice } from "@/lib/format";
+import {
+  bookingAcceptsExtensions,
+  extensionHostEarningsPence,
+  extensionStatusLabel,
+  isExtensionConfirmed,
+  openExtension,
+} from "@/lib/extensions";
 import { extensionRefund, type PaymentRow } from "@/lib/payments/history";
 import { formatDuration } from "@/lib/pricing/duration";
 

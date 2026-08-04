@@ -64,6 +64,7 @@ export function HandoverEvidence({
   const [category, setCategory] = React.useState<HandoverIssueCategory>("items_differ");
   const [issueText, setIssueText] = React.useState("");
   const [urls, setUrls] = React.useState<Record<string, string>>({});
+  const uid = React.useId();
 
   const photos = (photosQuery.data ?? []).filter((row) => row.stage === stage);
   const notes = (notesQuery.data ?? []).filter((row) => row.stage === stage);
@@ -224,8 +225,13 @@ export function HandoverEvidence({
         )}
         {canAdd ? (
           <div className="space-y-2">
-            <Field label="Add a condition note" hint="Optional. Once submitted it can't be edited.">
+            <Field
+              label="Add a condition note"
+              hint="Optional. Once submitted it can't be edited."
+              htmlFor={`${uid}-note`}
+            >
               <TextArea
+                id={`${uid}-note`}
                 rows={3}
                 value={note}
                 maxLength={1000}
@@ -276,8 +282,9 @@ export function HandoverEvidence({
             className="space-y-3 rounded-xl border border-border bg-card p-4"
           >
             <h4 className="type-body font-semibold">Report a handover issue</h4>
-            <Field label="What doesn't match?">
+            <Field label="What doesn't match?" htmlFor={`${uid}-category`}>
               <NativeSelect
+                id={`${uid}-category`}
                 value={category}
                 onChange={(event) => setCategory(event.target.value as HandoverIssueCategory)}
               >
@@ -288,8 +295,9 @@ export function HandoverEvidence({
                 ))}
               </NativeSelect>
             </Field>
-            <Field label="Describe the issue">
+            <Field label="Describe the issue" htmlFor={`${uid}-issue`}>
               <TextArea
+                id={`${uid}-issue`}
                 rows={3}
                 maxLength={1000}
                 value={issueText}

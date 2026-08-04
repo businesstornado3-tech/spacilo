@@ -64,11 +64,15 @@ export function TwoSidedValue() {
         </Reveal>
 
         <Reveal delay={80}>
-          <article className="flex h-full flex-col rounded-3xl border border-border bg-accent-soft p-6 text-accent-foreground shadow-card">
+          <article className="flex h-full flex-col rounded-3xl border border-border bg-accent-soft p-6 text-accent-foreground shadow-card transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-raised">
             <span className="grid size-10 place-items-center rounded-xl bg-card/70 text-accent-foreground">
               <Home className="size-5" aria-hidden="true" />
             </span>
-            <h3 className="mt-4 type-h3">Have space you're not using?</h3>
+            <h3 className="mt-4 type-h3">I have space</h3>
+            <p className="mt-2 type-body-sm text-accent-foreground/80">
+              Got an empty garage, loft, spare room or shed? Put your unused space to work and turn
+              it into extra monthly income.
+            </p>
             <ul className="mt-4 space-y-2.5">
               {hostPoints.map((point) => (
                 <li key={point} className="flex gap-2.5 type-body-sm text-accent-foreground/80">
@@ -81,7 +85,7 @@ export function TwoSidedValue() {
               ))}
             </ul>
             <div className="mt-6 self-start">
-              <HostEntryButton from="homepage_two_sided" />
+              <HostEntryButton label="Start earning" from="homepage_two_sided" />
             </div>
           </article>
         </Reveal>

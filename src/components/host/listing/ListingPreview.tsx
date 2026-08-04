@@ -107,9 +107,9 @@ export function ListingPreview({ view, footer }: { view: ListingView; footer?: R
           </p>
           <p className="mt-1 type-body-sm text-muted-foreground">
             {availabilityLabel({
-              availability_mode: view.availabilityMode,
-              available_from: view.availableFrom,
-              available_until: view.availableUntil,
+              availability_mode: view.availabilityMode ?? null,
+              available_from: view.availableFrom ?? null,
+              available_until: view.availableUntil ?? null,
             })}
           </p>
         </header>

@@ -26,30 +26,100 @@ export type LifecycleState =
   | "awaiting_payment"
   | "upcoming"
   | "ready_to_start"
+  | "awaiting_handover_confirmation"
   | "active"
   | "completion_due"
+  | "awaiting_collection_confirmation"
   | "completed"
+  | "cancellation_under_review"
   | "cancelled";
 
 /** Calendar date (UTC) — never a browser-local instant. */
 export const toCalendarDate = (value: Date | string): string =>
   typeof value === "string" ? value.slice(0, 10) : value.toISOString().slice(0, 10);
 
-export type LifecycleBooking = Pick<Booking, "status" | "start_date" | "end_date">;
+/**
+ * The handover fields are optional so older fixtures and partial selects still
+ * type-check; a missing timestamp simply means "not confirmed".
+ */
+export type LifecycleBooking = Pick<Booking, "status" | "start_date" | "end_date"> &
+  Partial<
+    Pick<
+      Booking,
+      | "activated_at"
+      | "renter_handover_confirmed_at"
+      | "host_handover_confirmed_at"
+      | "renter_collection_confirmed_at"
+      | "host_collection_confirmed_at"
+    >
+  >;
+
+/** Two-party confirmation: neither side alone moves the booking on. */
+export type HandoverStep = "handover" | "collection";
+
+export interface HandoverProgress {
+  renterConfirmed: boolean;
+  hostConfirmed: boolean;
+  /** Exactly one side has confirmed, so the other side is holding it up. */
+  awaitingOther: boolean;
+  bothConfirmed: boolean;
+}
+
+export function handoverProgress(
+  booking: LifecycleBooking,
+  step: HandoverStep,
+): HandoverProgress {
+  const renterConfirmed = Boolean(
+    step === "handover"
+      ? booking.renter_handover_confirmed_at
+      : booking.renter_collection_confirmed_at,
+  );
+  const hostConfirmed = Boolean(
+    step === "handover"
+      ? booking.host_handover_confirmed_at
+      : booking.host_collection_confirmed_at,
+  );
+  return {
+    renterConfirmed,
+    hostConfirmed,
+    awaitingOther: renterConfirmed !== hostConfirmed,
+    bothConfirmed: renterConfirmed && hostConfirmed,
+  };
+}
+
+/** Has this viewer already confirmed their half of the step? */
+export function viewerConfirmed(
+  booking: LifecycleBooking,
+  step: HandoverStep,
+  audience: "renter" | "host",
+): boolean {
+  const progress = handoverProgress(booking, step);
+  return audience === "renter" ? progress.renterConfirmed : progress.hostConfirmed;
+}
 
 export function lifecycleState(booking: LifecycleBooking, now: Date = new Date()): LifecycleState {
   const today = toCalendarDate(now);
   switch (booking.status) {
     case "cancelled":
-      return "cancelled";
+      // Cancelled after the belongings went in: money and collection still
+      // need sorting out, so we never present it as simply "cancelled".
+      return booking.activated_at ? "cancellation_under_review" : "cancelled";
     case "completed":
       return "completed";
     case "pending_payment":
       return "awaiting_payment";
-    case "active":
+    case "active": {
+      if (handoverProgress(booking, "collection").awaitingOther) {
+        return "awaiting_collection_confirmation";
+      }
       return today >= toCalendarDate(booking.end_date) ? "completion_due" : "active";
-    case "confirmed":
+    }
+    case "confirmed": {
+      if (handoverProgress(booking, "handover").awaitingOther) {
+        return "awaiting_handover_confirmation";
+      }
       return today >= toCalendarDate(booking.start_date) ? "ready_to_start" : "upcoming";
+    }
     default:
       return "awaiting_payment";
   }

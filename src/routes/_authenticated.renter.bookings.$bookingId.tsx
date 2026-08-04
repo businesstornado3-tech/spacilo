@@ -19,7 +19,8 @@ import { BookingLifecyclePanel } from "@/components/bookings/BookingLifecyclePan
 import { PaymentBreakdown } from "@/components/payments/PaymentBreakdown";
 import { PaymentHistory } from "@/components/payments/PaymentHistory";
 import { CancellationPanel } from "@/components/payments/CancellationPanel";
-import { useBooking } from "@/hooks/useBookings";
+import { EarlyTerminationPanel } from "@/components/bookings/EarlyTerminationPanel";
+import { useBooking, useBookingChangeRequests } from "@/hooks/useBookings";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookingCancellation, useBookingRefunds } from "@/hooks/useCancellation";
 import { useBookingExactAddress, useBookingPayments, useStartCheckout } from "@/hooks/usePayments";
@@ -61,6 +62,7 @@ function BookingDetailPage() {
   const { data: booking, isLoading, error, refetch } = useBooking(bookingId);
   const { data: payments } = useBookingPayments(bookingId);
   const { data: cancellation } = useBookingCancellation(bookingId);
+  const { data: changeRequests } = useBookingChangeRequests(bookingId);
   const { data: refunds } = useBookingRefunds(bookingId);
   const startCheckout = useStartCheckout();
 
@@ -210,9 +212,16 @@ function BookingDetailPage() {
             storageRefund={storageRefund}
           />
 
+          <EarlyTerminationPanel
+            booking={booking}
+            changeRequests={changeRequests ?? []}
+            viewerId={user?.id ?? null}
+            audience="renter"
+            cancelled={Boolean(cancellation)}
+          />
+
           <CancellationPanel
             booking={booking}
-            payments={payments ?? []}
             cancellation={cancellation ?? null}
             refunds={refunds ?? []}
             viewerId={user?.id ?? null}

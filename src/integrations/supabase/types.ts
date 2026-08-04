@@ -2212,7 +2212,11 @@ export type Database = {
         Returns: boolean
       }
       cancel_booking: {
-        Args: { p_booking_id: string; p_reason?: string }
+        Args: {
+          p_booking_id: string
+          p_reason?: string
+          p_reason_category?: string
+        }
         Returns: Json
       }
       claim_host_earnings_for_transfer: {
@@ -2582,6 +2586,10 @@ export type Database = {
         Args: { p_reason: string; p_refund_id: string }
         Returns: Json
       }
+      get_booking_cancellation_quote: {
+        Args: { p_booking_id: string }
+        Returns: Json
+      }
       get_booking_exact_address: {
         Args: { p_booking_id: string }
         Returns: {
@@ -2797,7 +2805,86 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      request_early_termination: {
+        Args: {
+          p_booking_id: string
+          p_proposed_end_date: string
+          p_reason?: string
+          p_reason_category?: string
+        }
+        Returns: {
+          additional_days: number
+          additional_service_fee_pence: number
+          additional_storage_amount_pence: number
+          additional_total_pence: number
+          booking_id: string
+          created_at: string
+          currency: string
+          host_id: string
+          host_response_note: string | null
+          id: string
+          kind: string
+          original_end_date: string
+          original_start_date: string
+          pricing_breakdown: Json | null
+          pricing_version: string
+          proposed_end_date: string
+          proposed_start_date: string
+          renter_id: string
+          renter_note: string | null
+          requested_by: string
+          requested_by_role: string
+          responded_at: string | null
+          responded_by: string | null
+          space_id: string
+          status: Database["public"]["Enums"]["booking_change_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_change_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       respond_to_booking_extension: {
+        Args: { p_accept: boolean; p_change_id: string; p_note?: string }
+        Returns: {
+          additional_days: number
+          additional_service_fee_pence: number
+          additional_storage_amount_pence: number
+          additional_total_pence: number
+          booking_id: string
+          created_at: string
+          currency: string
+          host_id: string
+          host_response_note: string | null
+          id: string
+          kind: string
+          original_end_date: string
+          original_start_date: string
+          pricing_breakdown: Json | null
+          pricing_version: string
+          proposed_end_date: string
+          proposed_start_date: string
+          renter_id: string
+          renter_note: string | null
+          requested_by: string
+          requested_by_role: string
+          responded_at: string | null
+          responded_by: string | null
+          space_id: string
+          status: Database["public"]["Enums"]["booking_change_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_change_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      respond_to_early_termination: {
         Args: { p_accept: boolean; p_change_id: string; p_note?: string }
         Returns: {
           additional_days: number

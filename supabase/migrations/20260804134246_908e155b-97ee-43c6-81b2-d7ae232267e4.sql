@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.cancel_booking(uuid, text);

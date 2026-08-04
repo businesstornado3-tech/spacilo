@@ -231,11 +231,14 @@ export function lifecycleGroup(state: LifecycleState): LifecycleGroup {
     case "upcoming":
       return "upcoming";
     case "ready_to_start":
+    case "awaiting_handover_confirmation":
     case "active":
     case "completion_due":
+    case "awaiting_collection_confirmation":
       return "active";
     case "completed":
       return "completed";
+    case "cancellation_under_review":
     case "cancelled":
       return "cancelled";
   }

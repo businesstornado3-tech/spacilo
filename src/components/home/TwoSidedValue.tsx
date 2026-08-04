@@ -37,11 +37,16 @@ export function TwoSidedValue() {
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         <Reveal>
-          <article className="flex h-full flex-col rounded-3xl border border-border bg-card p-6 shadow-card">
+          <article className="flex h-full flex-col rounded-3xl border border-border bg-card p-6 shadow-card transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-raised">
             <span className="grid size-10 place-items-center rounded-xl bg-primary-soft text-primary-soft-foreground">
               <Boxes className="size-5" aria-hidden="true" />
             </span>
-            <h3 className="mt-4 type-h3">Need more space?</h3>
+            <h3 className="mt-4 type-h3">I need space</h3>
+            <p className="mt-2 type-body-sm text-muted-foreground">
+              Tell us what you're storing. SpaceFit helps you find nearby storage that fits your
+              belongings — so you don't pay for space you don't need.
+            </p>
+            <p className="sr-only">Need more space?</p>
             <ul className="mt-4 space-y-2.5">
               {renterPoints.map((point) => (
                 <li key={point} className="flex gap-2.5 type-body-sm text-muted-foreground">
@@ -52,7 +57,7 @@ export function TwoSidedValue() {
             </ul>
             <Button asChild size="lg" className="mt-6 self-start">
               <Link to="/search" search={{ location: "", radius: 5, sort: "recommended" }}>
-                Find storage
+                Find my space
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </Button>

@@ -8,6 +8,7 @@ import { SearchControls } from "@/components/search/SearchControls";
 import { SpaceFitSpark } from "@/components/trust/SpaceFitAI";
 import { track } from "@/lib/analytics";
 import { HostEntryButton } from "@/components/home/HostEntryButton";
+import { usePrefersReducedMotion } from "@/hooks/use-motion";
 
 
 type Intent = "renter" | "host";

@@ -7,6 +7,7 @@ import { Boxes, CalendarRange, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import { formatPrice } from "@/lib/format";
+import { lifecycleMeta, lifecycleState } from "@/lib/bookings-lifecycle";
 import type { StorageRefundSummary } from "@/lib/payments/history";
 import {
   bookingItems,
@@ -16,8 +17,9 @@ import {
   type Booking,
 } from "@/lib/bookings";
 
+/** Single source of status wording across the app: the lifecycle read model. */
 export function BookingStatusBadge({ booking }: { booking: Booking }) {
-  const meta = bookingStatusMeta(booking.status);
+  const meta = lifecycleMeta(lifecycleState(booking));
   return <Badge variant={meta.tone}>{meta.label}</Badge>;
 }
 

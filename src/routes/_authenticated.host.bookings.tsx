@@ -303,7 +303,7 @@ function HostRequestCard({
 
       {booking ? (
         <p className="mt-1 type-body-sm text-muted-foreground">
-          Booking started · {bookingView(booking).statusLabel}
+          Booking started · {lifecycleMeta(lifecycleState(booking)).label}
         </p>
       ) : null}
 

@@ -23,7 +23,8 @@ import { useBooking } from "@/hooks/useBookings";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookingCancellation, useBookingRefunds } from "@/hooks/useCancellation";
 import { useBookingExactAddress, useBookingPayments, useStartCheckout } from "@/hooks/usePayments";
-import { bookingFinancials, bookingStatusMeta } from "@/lib/bookings";
+import { bookingFinancials } from "@/lib/bookings";
+import { lifecycleMeta, lifecycleState } from "@/lib/bookings-lifecycle";
 import { paidStoragePence, paymentHistory, storageRefundSummary } from "@/lib/payments/history";
 import { track } from "@/lib/analytics";
 
@@ -121,7 +122,7 @@ function BookingDetailPage() {
       {booking ? (
         <div className="max-w-2xl space-y-6">
           <p className="type-body-sm text-muted-foreground">
-            {bookingStatusMeta(booking.status).detail}
+            {lifecycleMeta(lifecycleState(booking)).renterNote}
           </p>
 
           {checkout === "cancelled" && booking.status === "pending_payment" ? (

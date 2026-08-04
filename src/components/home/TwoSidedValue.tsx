@@ -12,9 +12,9 @@ import { Reveal } from "@/components/common/Reveal";
 import { HostEntryButton } from "@/components/home/HostEntryButton";
 
 const renterPoints = [
+  "Only pay for the space you need",
   "Find storage around your neighbourhood",
   "Compare spaces and monthly prices",
-  "Use SpaceFit to estimate whether your belongings suit the space",
   "Request the space before any booking or payment",
 ];
 

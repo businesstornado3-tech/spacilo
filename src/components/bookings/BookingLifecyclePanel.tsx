@@ -37,6 +37,8 @@ import {
   type ActivationRejection,
   type CollectionRejection,
 } from "@/lib/bookings-lifecycle";
+import { HandoverEvidence } from "@/components/bookings/HandoverEvidence";
+import { CONFIRMATION_STATEMENT, partyFor, visibleStages } from "@/lib/handover";
 import { formatDate, formatPrice } from "@/lib/format";
 import { extensionRefund, type PaymentRow } from "@/lib/payments/history";
 import { formatDuration } from "@/lib/pricing/duration";
@@ -75,6 +77,10 @@ export function BookingLifecyclePanel({
 
   const showHandover = booking.status === "confirmed";
   const showCollection = booking.status === "active";
+  // Evidence is only writable by a participant; RLS re-checks this server-side.
+  const party = partyFor(booking, viewerId);
+  const stages = visibleStages(booking);
+  const showRecord = booking.status === "completed";
   const otherParty = audience === "renter" ? "host" : "renter";
 
   const onConfirmHandover = async () => {
@@ -154,6 +160,23 @@ export function BookingLifecyclePanel({
             renterLabel="Renter confirmed the belongings are in the space"
             hostLabel="Host confirmed the belongings are in the space"
           />
+          {handoverSteps.awaitingOther ? (
+            <p className="type-body-sm text-muted-foreground">
+              Waiting for the {handoverSteps.renterConfirmed ? "host" : "renter"} to confirm the
+              handover.
+            </p>
+          ) : null}
+          {stages.includes("check_in") ? (
+            <HandoverEvidence
+              bookingId={booking.id}
+              bookingStatus={booking.status}
+              stage="check_in"
+              role={party}
+            />
+          ) : null}
+          {!iConfirmedHandover ? (
+            <p className="type-body-sm">{CONFIRMATION_STATEMENT.check_in[audience]}</p>
+          ) : null}
           {iConfirmedHandover ? (
             <p className="type-body-sm text-muted-foreground">
               You&apos;ve confirmed. Storage starts as soon as the {otherParty} confirms too.
@@ -189,6 +212,21 @@ export function BookingLifecyclePanel({
             renterLabel="Renter confirmed everything has been collected"
             hostLabel="Host confirmed the space is empty"
           />
+          {collectionSteps.awaitingOther ? (
+            <p className="type-body-sm text-muted-foreground">
+              Waiting for the {collectionSteps.renterConfirmed ? "host" : "renter"} to confirm
+              collection.
+            </p>
+          ) : null}
+          <HandoverEvidence
+            bookingId={booking.id}
+            bookingStatus={booking.status}
+            stage="check_out"
+            role={party}
+          />
+          {!iConfirmedCollection ? (
+            <p className="type-body-sm">{CONFIRMATION_STATEMENT.check_out[audience]}</p>
+          ) : null}
           {iConfirmedCollection ? (
             <p className="type-body-sm text-muted-foreground">
               You&apos;ve confirmed. This booking finishes as soon as the {otherParty} confirms too.
@@ -212,6 +250,48 @@ export function BookingLifecyclePanel({
               )}
             </>
           )}
+        </div>
+      ) : null}
+
+      {showRecord ? (
+        <div className="space-y-4 rounded-xl bg-muted/60 p-4">
+          <h3 className="type-body font-semibold">Handover record</h3>
+          <div className="space-y-2">
+            <p className="type-body-sm text-muted-foreground">
+              Storage started{" "}
+              {booking.activated_at ? formatDate(booking.activated_at) : "not recorded"}
+            </p>
+            <ConfirmationTicks
+              renterConfirmed={handoverSteps.renterConfirmed}
+              hostConfirmed={handoverSteps.hostConfirmed}
+              renterLabel="Renter confirmed the handover"
+              hostLabel="Host confirmed the handover"
+            />
+            <HandoverEvidence
+              bookingId={booking.id}
+              bookingStatus={booking.status}
+              stage="check_in"
+              role={party}
+            />
+          </div>
+          <div className="space-y-2 border-t border-border pt-4">
+            <p className="type-body-sm text-muted-foreground">
+              Collection completed{" "}
+              {booking.completed_at ? formatDate(booking.completed_at) : "not recorded"}
+            </p>
+            <ConfirmationTicks
+              renterConfirmed={collectionSteps.renterConfirmed}
+              hostConfirmed={collectionSteps.hostConfirmed}
+              renterLabel="Renter confirmed collection"
+              hostLabel="Host confirmed the space is clear"
+            />
+            <HandoverEvidence
+              bookingId={booking.id}
+              bookingStatus={booking.status}
+              stage="check_out"
+              role={party}
+            />
+          </div>
         </div>
       ) : null}
 

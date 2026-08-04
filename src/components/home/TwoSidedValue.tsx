@@ -46,7 +46,6 @@ export function TwoSidedValue() {
               Tell us what you're storing. SpaceFit helps you find nearby storage that fits your
               belongings — so you don't pay for space you don't need.
             </p>
-            <p className="sr-only">Need more space?</p>
             <ul className="mt-4 space-y-2.5">
               {renterPoints.map((point) => (
                 <li key={point} className="flex gap-2.5 type-body-sm text-muted-foreground">

@@ -6,6 +6,7 @@ import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { EmptyState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
+import { ActionsNeeded } from "@/components/bookings/ActionsNeeded";
 import { useAuth } from "@/hooks/useAuth";
 import { useHostRequests } from "@/hooks/useStorageRequests";
 import { pendingForHost } from "@/lib/storage-requests";
@@ -73,6 +74,7 @@ function HostDashboardPage() {
       title={firstName ? `Hi, ${firstName}` : "Hi there"}
       description="Let's put your unused space to work."
     >
+      <ActionsNeeded audience="host" />
       {pendingCount > 0 ? (
         <div className="mb-6 rounded-2xl border border-border bg-accent-soft p-5 shadow-card">
           <p className="type-body font-semibold">

@@ -127,7 +127,7 @@ export function Hero() {
                 </p>
                 <div className="mt-4">
                   <HostEntryButton
-                    label="List your space"
+                    label="Earn from my space"
                     from="homepage_hero"
                     size="default"
                     block

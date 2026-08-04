@@ -2,11 +2,14 @@
  * Booking lifecycle actions, shared by both sides of the marketplace.
  *
  * Every transition here is server-authoritative: the buttons call
- * `activate_booking` / `complete_booking`, which re-check ownership, payment,
- * dates and financial holds under a row lock. Nothing transitions on a page
- * load, a timer or a client-side date.
+ * `confirm_booking_handover` / `confirm_booking_collection`, which re-check
+ * ownership, payment, dates and financial holds under a row lock. Both the
+ * renter AND the host must confirm before a booking moves on — one side alone
+ * never changes the status. Nothing transitions on a page load or a timer.
  */
 import * as React from "react";
+import { Link } from "@tanstack/react-router";
+import { MessageSquare } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,22 +18,24 @@ import { toast } from "@/components/overlay/toast";
 import { brand } from "@/config/brand";
 import { useStartExtensionCheckout } from "@/hooks/usePayments";
 import {
-  useActivateBooking,
   useBookingChangeRequests,
-  useCompleteBooking,
+  useConfirmCollection,
+  useConfirmHandover,
   useRequestExtension,
   useRespondToExtension,
 } from "@/hooks/useBookings";
 import type { Booking } from "@/lib/bookings";
 import {
   ACTIVATION_MESSAGE,
-  COMPLETION_MESSAGE,
-  activationGate,
-  completionGate,
+  COLLECTION_MESSAGE,
+  collectionGate,
+  handoverGate,
+  handoverProgress,
   lifecycleMeta,
   lifecycleState,
+  viewerConfirmed,
   type ActivationRejection,
-  type CompletionRejection,
+  type CollectionRejection,
 } from "@/lib/bookings-lifecycle";
 import { formatDate, formatPrice } from "@/lib/format";
 import { extensionRefund, type PaymentRow } from "@/lib/payments/history";
@@ -57,31 +62,46 @@ export function BookingLifecyclePanel({
 }) {
   const state = lifecycleState(booking);
   const meta = lifecycleMeta(state);
-  const activate = useActivateBooking();
-  const complete = useCompleteBooking();
+  const confirmHandover = useConfirmHandover();
+  const confirmCollection = useConfirmCollection();
 
-  const activation = activationGate({ booking, viewerId, paid, financiallyBlocked });
-  const completion = completionGate({ booking, viewerId });
+  const handover = handoverGate({ booking, viewerId, paid, financiallyBlocked });
+  const collection = collectionGate({ booking, viewerId });
 
-  const showActivate =
-    (state === "ready_to_start" || state === "upcoming") && booking.status === "confirmed";
-  const showComplete = booking.status === "active";
+  const handoverSteps = handoverProgress(booking, "handover");
+  const collectionSteps = handoverProgress(booking, "collection");
+  const iConfirmedHandover = viewerConfirmed(booking, "handover", audience);
+  const iConfirmedCollection = viewerConfirmed(booking, "collection", audience);
 
-  const onActivate = async () => {
+  const showHandover = booking.status === "confirmed";
+  const showCollection = booking.status === "active";
+  const otherParty = audience === "renter" ? "host" : "renter";
+
+  const onConfirmHandover = async () => {
     try {
-      await activate.mutateAsync(booking.id);
-      toast.success("Storage started", "This booking is now in storage.");
+      const row = await confirmHandover.mutateAsync(booking.id);
+      toast.success(
+        row.status === "active" ? "Storage started" : "Handover confirmed",
+        row.status === "active"
+          ? "You've both confirmed, so this booking is now in storage."
+          : `We've told the ${otherParty}. Storage starts once they confirm too.`,
+      );
     } catch (cause) {
-      toast.error("We couldn't start this booking", errorMessage(cause, "Please try again."));
+      toast.error("We couldn't confirm that", errorMessage(cause, "Please try again."));
     }
   };
 
-  const onComplete = async () => {
+  const onConfirmCollection = async () => {
     try {
-      await complete.mutateAsync(booking.id);
-      toast.success("Booking finished", "This booking is now complete.");
+      const row = await confirmCollection.mutateAsync(booking.id);
+      toast.success(
+        row.status === "completed" ? "Booking finished" : "Collection confirmed",
+        row.status === "completed"
+          ? "You've both confirmed, so this booking is complete."
+          : `We've told the ${otherParty}. This booking finishes once they confirm too.`,
+      );
     } catch (cause) {
-      toast.error("We couldn't finish this booking", errorMessage(cause, "Please try again."));
+      toast.error("We couldn't confirm that", errorMessage(cause, "Please try again."));
     }
   };
 
@@ -104,6 +124,16 @@ export function BookingLifecyclePanel({
         {audience === "renter" ? meta.renterNote : meta.hostNote}
       </p>
 
+      <Button asChild variant="secondary" size="sm">
+        <Link
+          to={audience === "renter" ? "/renter/messages/$bookingId" : "/host/messages/$bookingId"}
+          params={{ bookingId: booking.id }}
+        >
+          <MessageSquare className="size-4" aria-hidden="true" />
+          Message the {otherParty}
+        </Link>
+      </Button>
+
       {booking.activated_at ? (
         <p className="type-body-sm text-muted-foreground">
           Storage confirmed as started on {formatDate(booking.activated_at)}.
@@ -115,40 +145,111 @@ export function BookingLifecyclePanel({
         </p>
       ) : null}
 
-      {showActivate ? (
-        <div className="space-y-2">
-          <Button
-            onClick={() => void onActivate()}
-            disabled={!activation.allowed || activate.isPending}
-          >
-            {activate.isPending ? "Confirming…" : "Confirm storage has started"}
-          </Button>
-          {!activation.allowed && activation.reason ? (
+      {showHandover ? (
+        <div className="space-y-2 rounded-xl bg-muted/60 p-4">
+          <h3 className="type-body font-semibold">Starting storage</h3>
+          <ConfirmationTicks
+            renterConfirmed={handoverSteps.renterConfirmed}
+            hostConfirmed={handoverSteps.hostConfirmed}
+            renterLabel="Renter confirmed the belongings are in the space"
+            hostLabel="Host confirmed the belongings are in the space"
+          />
+          {iConfirmedHandover ? (
             <p className="type-body-sm text-muted-foreground">
-              {ACTIVATION_MESSAGE[activation.reason as ActivationRejection]}
+              You&apos;ve confirmed. Storage starts as soon as the {otherParty} confirms too.
             </p>
-          ) : null}
+          ) : (
+            <>
+              <Button
+                onClick={() => void onConfirmHandover()}
+                disabled={!handover.allowed || confirmHandover.isPending}
+              >
+                {confirmHandover.isPending ? "Confirming…" : "Confirm storage has started"}
+              </Button>
+              {!handover.allowed && handover.reason ? (
+                <p className="type-body-sm text-muted-foreground">
+                  {ACTIVATION_MESSAGE[handover.reason as ActivationRejection]}
+                </p>
+              ) : (
+                <p className="type-body-sm text-muted-foreground">
+                  Both of you need to confirm before this booking shows as in storage.
+                </p>
+              )}
+            </>
+          )}
         </div>
       ) : null}
 
-      {showComplete ? (
-        <div className="space-y-2">
-          <Button
-            onClick={() => void onComplete()}
-            disabled={!completion.allowed || complete.isPending}
-          >
-            {complete.isPending ? "Finishing…" : "Confirm collection and finish"}
-          </Button>
-          {!completion.allowed && completion.reason ? (
+      {showCollection ? (
+        <div className="space-y-2 rounded-xl bg-muted/60 p-4">
+          <h3 className="type-body font-semibold">Ending storage</h3>
+          <ConfirmationTicks
+            renterConfirmed={collectionSteps.renterConfirmed}
+            hostConfirmed={collectionSteps.hostConfirmed}
+            renterLabel="Renter confirmed everything has been collected"
+            hostLabel="Host confirmed the space is empty"
+          />
+          {iConfirmedCollection ? (
             <p className="type-body-sm text-muted-foreground">
-              {COMPLETION_MESSAGE[completion.reason as CompletionRejection]}
+              You&apos;ve confirmed. This booking finishes as soon as the {otherParty} confirms too.
             </p>
-          ) : null}
+          ) : (
+            <>
+              <Button
+                onClick={() => void onConfirmCollection()}
+                disabled={!collection.allowed || confirmCollection.isPending}
+              >
+                {confirmCollection.isPending ? "Confirming…" : "Confirm collection"}
+              </Button>
+              {!collection.allowed && collection.reason ? (
+                <p className="type-body-sm text-muted-foreground">
+                  {COLLECTION_MESSAGE[collection.reason as CollectionRejection]}
+                </p>
+              ) : (
+                <p className="type-body-sm text-muted-foreground">
+                  Both of you need to confirm before this booking is marked complete.
+                </p>
+              )}
+            </>
+          )}
         </div>
       ) : null}
 
       <ExtensionSection booking={booking} audience={audience} payments={payments ?? []} />
     </section>
+  );
+}
+
+/** Plain, symmetrical view of who has confirmed what. */
+function ConfirmationTicks({
+  renterConfirmed,
+  hostConfirmed,
+  renterLabel,
+  hostLabel,
+}: {
+  renterConfirmed: boolean;
+  hostConfirmed: boolean;
+  renterLabel: string;
+  hostLabel: string;
+}) {
+  const rows = [
+    { done: renterConfirmed, label: renterLabel },
+    { done: hostConfirmed, label: hostLabel },
+  ];
+  return (
+    <ul className="space-y-1">
+      {rows.map((row) => (
+        <li key={row.label} className="flex items-start gap-2 type-body-sm">
+          <span aria-hidden="true" className={row.done ? "text-success" : "text-muted-foreground"}>
+            {row.done ? "✓" : "○"}
+          </span>
+          <span className={row.done ? "" : "text-muted-foreground"}>
+            {row.label}
+            {row.done ? "" : " — not yet"}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

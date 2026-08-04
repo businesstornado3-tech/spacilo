@@ -17,7 +17,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const input = z.object({
   bookingId: z.string().uuid(),
-  reason: z.string().trim().max(500).optional(),
+  reason: z.string().trim().max(1000).optional(),
+  reasonCategory: z.string().trim().max(60).optional(),
 });
 
 export interface CancelBookingResult {
@@ -39,6 +40,7 @@ export const cancelBooking = createServerFn({ method: "POST" })
     const { data: raw, error } = await supabase.rpc("cancel_booking", {
       p_booking_id: data.bookingId,
       ...(data.reason ? { p_reason: data.reason } : {}),
+      ...(data.reasonCategory ? { p_reason_category: data.reasonCategory } : {}),
     });
     if (error) throw new Error(error.message);
 

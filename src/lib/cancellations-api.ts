@@ -7,6 +7,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { parseCancellationQuote, type CancellationQuote } from "@/lib/payments/quote";
 
 export type BookingCancellationRow = Tables<"booking_cancellations">;
 export type BookingRefundRow = Tables<"booking_refunds">;
@@ -72,3 +73,19 @@ export function settledRefundTotals(refunds: BookingRefundRow[]) {
 
 export const hasPendingRefund = (refunds: BookingRefundRow[]): boolean =>
   refunds.some((r) => r.status === "pending");
+
+/* ------------------------------------------------- authoritative quote */
+
+/**
+ * The server's cancellation quote (Prompt 17). Whether cancellation is
+ * allowed, which category applies and exactly what would be refunded are all
+ * decided by `get_booking_cancellation_quote` — the browser only renders it,
+ * and `cancel_booking` recomputes everything when the user confirms.
+ */
+export async function getCancellationQuote(bookingId: string): Promise<CancellationQuote> {
+  const { data, error } = await supabase.rpc("get_booking_cancellation_quote", {
+    p_booking_id: bookingId,
+  });
+  if (error) throw error;
+  return parseCancellationQuote(data);
+}

@@ -12,9 +12,36 @@ import { HostEntryButton } from "@/components/home/HostEntryButton";
 
 type Intent = "renter" | "host";
 
+const ROTATING_PHRASES: Record<Intent, string[]> = {
+  renter: [
+    "Boxes taking over the spare room?",
+    "Only need a little extra space?",
+    "Moving and need somewhere for a few months?",
+  ],
+  host: ["Got an empty garage?", "Unused loft?", "Spare room sitting empty?"],
+};
+
+/** Cycles short supporting phrases; holds the first phrase when motion is reduced. */
+function useRotatingPhrase(phrases: string[]) {
+  const reduced = usePrefersReducedMotion();
+  const [index, setIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    setIndex(0);
+    if (reduced || phrases.length < 2) return;
+    const id = window.setInterval(() => {
+      setIndex((i) => (i + 1) % phrases.length);
+    }, 3600);
+    return () => window.clearInterval(id);
+  }, [phrases, reduced]);
+
+  return phrases[index] ?? phrases[0] ?? "";
+}
+
 export function Hero() {
   const navigate = useNavigate();
   const [intent, setIntent] = React.useState<Intent>("renter");
+  const phrase = useRotatingPhrase(ROTATING_PHRASES[intent]);
 
 
   function choose(next: Intent) {

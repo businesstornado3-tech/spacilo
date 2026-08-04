@@ -134,6 +134,71 @@ export const MOISTURE_OPTIONS: { value: Enums<"moisture_condition">; label: stri
 
 export const MINIMUM_PERIODS = [1, 2, 3, 6] as const;
 
+/* --------------------------------------------------- Minimum booking period */
+
+/**
+ * Hosts think in days, weeks or months — the database always stores days, so
+ * the UI converts on the way in and back out. A month is 30 days here, matching
+ * the pricing engine.
+ */
+export const STAY_UNIT_DAYS = { day: 1, week: 7, month: 30 } as const;
+export type StayUnit = keyof typeof STAY_UNIT_DAYS;
+
+export const STAY_UNITS: { value: StayUnit; label: string }[] = [
+  { value: "day", label: "Days" },
+  { value: "week", label: "Weeks" },
+  { value: "month", label: "Months" },
+];
+
+export const stayDays = (count: number, unit: StayUnit): number =>
+  Math.max(1, Math.round(count) * STAY_UNIT_DAYS[unit]);
+
+/** Largest whole unit that divides the stored day count exactly. */
+export function stayParts(days: number | null | undefined): { count: number; unit: StayUnit } {
+  const total = days && days > 0 ? days : 1;
+  if (total % STAY_UNIT_DAYS.month === 0) return { count: total / STAY_UNIT_DAYS.month, unit: "month" };
+  if (total % STAY_UNIT_DAYS.week === 0) return { count: total / STAY_UNIT_DAYS.week, unit: "week" };
+  return { count: total, unit: "day" };
+}
+
+/** "1 month", "2 weeks", "10 days" — never "1 months". */
+export function formatStay(days: number | null | undefined): string {
+  const { count, unit } = stayParts(days);
+  return `${count} ${unit}${count === 1 ? "" : "s"}`;
+}
+
+/* ------------------------------------------------------------ Availability */
+
+export interface AvailabilityWindow {
+  availability_mode?: string | null;
+  available_from?: string | null;
+  available_until?: string | null;
+}
+
+/** Plain-English availability, safe for both host preview and public listing. */
+export function availabilityLabel(space: AvailabilityWindow): string {
+  const mode = space.availability_mode ?? "continuous";
+  if (mode !== "dates") return "Available on an ongoing basis";
+  const from = space.available_from ? formatDate(space.available_from) : null;
+  const until = space.available_until ? formatDate(space.available_until) : null;
+  if (from && until) return `Available ${from} to ${until}`;
+  if (from) return `Available from ${from}`;
+  if (until) return `Available until ${until}`;
+  return "Available on an ongoing basis";
+}
+
+/** Host-side check before publishing a dates-limited listing. */
+export function availabilityProblem(space: AvailabilityWindow): string | null {
+  if ((space.availability_mode ?? "continuous") !== "dates") return null;
+  if (!space.available_from && !space.available_until) {
+    return "Add the dates your space is available, or switch to ongoing availability.";
+  }
+  if (space.available_from && space.available_until && space.available_until <= space.available_from) {
+    return "The last available date must be after the first available date.";
+  }
+  return null;
+}
+
 /* ------------------------------------------------------------- Capacity */
 
 export interface Dimensions {

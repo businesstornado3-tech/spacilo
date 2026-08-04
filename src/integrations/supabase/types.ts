@@ -2482,6 +2482,9 @@ export type Database = {
           access_notes: string
           access_type: Database["public"]["Enums"]["space_access_type"]
           approximate_area: string
+          availability_mode: string
+          available_from: string
+          available_until: string
           currency: string
           daily_price_pence: number
           description: string

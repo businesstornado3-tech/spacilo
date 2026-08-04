@@ -406,16 +406,25 @@ function ExtensionSection({
             <li key={row.id} className="rounded-xl bg-muted/60 p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="type-body-sm">
-                  New end date {formatDate(row.proposed_end_date)}
+                  {formatDate(row.original_end_date)} → {formatDate(row.proposed_end_date)}
                   {row.additional_days ? ` · ${formatDuration(row.additional_days)} more` : ""}
                 </p>
-                <Badge variant={row.status === "applied" || row.status === "accepted_awaiting_payment"
-                    ? "success"
-                    : "neutral"}>
-                  {CHANGE_STATUS_LABEL[row.status] ?? row.status}
+                <Badge variant={isExtensionConfirmed(row) ? "success" : "neutral"}>
+                  {extensionStatusLabel(row.status, audience)}
                 </Badge>
               </div>
-              {row.additional_total_pence !== null ? (
+              {audience === "host" ? (
+                <p className="mt-1 type-body-sm text-muted-foreground">
+                  Additional storage earnings{" "}
+                  {formatPrice(extensionHostEarningsPence(row))}. The {brand.name} service fee is
+                  paid by the renter on top and isn&apos;t taken from your earnings.{" "}
+                  {row.status === "applied"
+                    ? appliedWording(payments, row.id)
+                    : row.status === "accepted_awaiting_payment"
+                      ? "Waiting for the renter to pay."
+                      : "Nothing is charged yet."}
+                </p>
+              ) : row.additional_total_pence !== null ? (
                 <p className="mt-1 type-body-sm text-muted-foreground">
                   Extra storage {formatPrice(row.additional_storage_amount_pence ?? 0)} plus a{" "}
                   {formatPrice(row.additional_service_fee_pence ?? 0)} service fee ={" "}
@@ -423,12 +432,15 @@ function ExtensionSection({
                   {row.status === "applied"
                     ? appliedWording(payments, row.id)
                     : row.status === "accepted_awaiting_payment"
-                      ? audience === "host"
-                        ? "Renter payment pending."
-                        : "Not charged yet."
+                      ? "Not charged yet."
                       : "Nothing is charged yet."}
                 </p>
               ) : null}
+              <p className="mt-1 type-body-sm text-muted-foreground">
+                Requested {formatDate(row.created_at)}
+                {row.responded_at ? ` · answered ${formatDate(row.responded_at)}` : ""}
+                {row.status === "applied" ? ` · confirmed ${formatDate(row.updated_at)}` : ""}
+              </p>
               {row.renter_note ? (
                 <p className="mt-1 type-body-sm text-muted-foreground">
                   Renter&apos;s note: {row.renter_note}

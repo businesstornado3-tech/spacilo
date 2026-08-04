@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RequestStatusBadge } from "@/components/requests/RequestSummary";
 import { useHostRequests } from "@/hooks/useStorageRequests";
-import { useMyBookings } from "@/hooks/useBookings";
+import { useMyBookings, useBookingChangeRequests } from "@/hooks/useBookings";
+import { useBookingRefunds } from "@/hooks/useCancellation";
 import { useMyBookingCancellations } from "@/hooks/useCancellation";
 import { useHostEarnings } from "@/hooks/useHostPayouts";
 import { cumulativeHostStoragePence, earningsByBooking } from "@/lib/payments/history";
@@ -244,6 +245,7 @@ function HostBookingCard({
           audience="host"
           cancelled={Boolean(cancellation)}
         />
+        {cancelled ? null : (
         <CancellationPanel
           booking={booking}
           cancellation={null}
@@ -251,6 +253,7 @@ function HostBookingCard({
           viewerId={viewerId}
           audience="host"
         />
+        )}
       </div>
     </article>
   );

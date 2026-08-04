@@ -119,15 +119,18 @@ describe("evidence file paths", () => {
 
 describe("booking inventory snapshot", () => {
   it("reads only from the booking snapshot, so My Stuff edits cannot change it", () => {
-    const snapshot = [{ label: "Boxes", quantity: 12, estimated_volume_m3: 1.2 }];
-    const row = booking({ inventory_items_snapshot: snapshot });
-    const before = bookingItems(row);
-    // Simulate the renter editing their live inventory afterwards.
-    snapshot.length = 0;
-    snapshot.push({ label: "Sofa", quantity: 1, estimated_volume_m3: 2 });
-    const stored = booking({ inventory_items_snapshot: [{ label: "Boxes", quantity: 12 }] });
-    expect(before[0]?.label).toBe("Boxes");
-    expect(bookingItems(stored)[0]?.label).toBe("Boxes");
+    // The live "My Stuff" inventory the renter keeps editing.
+    const liveInventory = [{ label: "Boxes", quantity: 12, estimated_volume_m3: 1.2 }];
+    // The booking copies it at creation time (server-side jsonb snapshot).
+    const row = booking({ inventory_items_snapshot: JSON.parse(JSON.stringify(liveInventory)) });
+
+    liveInventory[0] = { label: "Sofa", quantity: 1, estimated_volume_m3: 2 };
+    liveInventory.push({ label: "Bike", quantity: 3, estimated_volume_m3: 0.9 });
+
+    const items = bookingItems(row);
+    expect(items).toHaveLength(1);
+    expect(items[0]?.label).toBe("Boxes");
+    expect(items[0]?.quantity).toBe(12);
   });
 });
 

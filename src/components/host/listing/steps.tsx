@@ -12,12 +12,18 @@ import {
   ACCESS_TYPES,
   HOST_RESTRICTIONS,
   ITEM_CATEGORIES,
-  MINIMUM_PERIODS,
   MOISTURE_OPTIONS,
   PLATFORM_PROHIBITED_ITEMS,
   SPACE_FEATURES,
   SPACE_TYPES,
+  STAY_UNITS,
   TEMPERATURE_OPTIONS,
+  type StayUnit,
+  availabilityLabel,
+  availabilityProblem,
+  formatStay,
+  stayDays,
+  stayParts,
   availableVolume,
   floorArea,
   formatM2,
@@ -639,7 +645,7 @@ function AvailabilityFieldset({ form, patch }: StepProps) {
     <Fieldset legend="When is your space available?">
       <div className="grid gap-3 sm:grid-cols-2">
         <OptionRow
-          label="Ongoing"
+          title="Ongoing"
           description="Available continuously, with no end date."
           selected={mode === "continuous"}
           onSelect={() =>
@@ -647,7 +653,7 @@ function AvailabilityFieldset({ form, patch }: StepProps) {
           }
         />
         <OptionRow
-          label="Set dates only"
+          title="Set dates only"
           description="Available between specific dates."
           selected={mode === "dates"}
           onSelect={() => patch({ availability_mode: "dates" })}

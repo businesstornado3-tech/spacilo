@@ -56,26 +56,32 @@ export function Hero() {
         <div className="animate-fade min-w-0">
           <p className="type-overline text-muted-foreground">Storage, closer to home.</p>
 
-          <h1 className="mt-3 max-w-[15ch] type-hero">
-            Your stuff.
+          <h1 className="mt-3 max-w-[16ch] type-hero">
+            Storage that fits.
             <br />
-            Space nearby.
+            Space that earns.
           </h1>
 
           <p className="mt-4 max-w-md type-body text-muted-foreground">
-            Find trusted storage in unused spaces around your neighbourhood — or earn from space
-            you're not using.
+            Find exactly the storage space you need, close to home — or turn your unused garage,
+            loft, spare room or shed into extra income.
           </p>
 
-          <div className="mt-7 rounded-2xl bg-card p-4 shadow-card sm:p-5">
+          <p aria-live="polite" className="mt-3 min-h-6 type-body-sm text-signal-soft-foreground">
+            <span key={phrase} className="inline-block animate-fade">
+              {phrase}
+            </span>
+          </p>
+
+          <div className="mt-6 rounded-2xl bg-card p-4 shadow-card sm:p-5">
             <div
               role="tablist"
               aria-label="What brings you here?"
               className="grid grid-cols-2 gap-1 rounded-xl bg-surface p-1"
             >
               {[
-                { value: "renter" as const, label: "I need storage", icon: Boxes },
-                { value: "host" as const, label: "I have space", icon: Home },
+                { value: "renter" as const, label: "Find storage", icon: Boxes },
+                { value: "host" as const, label: "Earn from my space", icon: Home },
               ].map((option) => (
                 <button
                   key={option.value}

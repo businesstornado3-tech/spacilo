@@ -16,6 +16,8 @@ import {
   type AccessTypeValue,
   type SpaceTypeValue,
   type StorageModeValue,
+  availabilityLabel,
+  formatStay,
 } from "@/lib/spaces";
 
 /**

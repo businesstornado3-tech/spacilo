@@ -8,7 +8,14 @@ import { StepProgress } from "@/components/common/Progress";
 import { Alert } from "@/components/common/Alert";
 import { toast } from "@/components/overlay/toast";
 import { useAuth } from "@/hooks/useAuth";
-import { WIZARD_STEPS, availableVolume, floorArea, publicLocation, totalVolume } from "@/lib/spaces";
+import {
+  WIZARD_STEPS,
+  availabilityProblem,
+  availableVolume,
+  floorArea,
+  publicLocation,
+  totalVolume,
+} from "@/lib/spaces";
 import {
   listSpacePhotos,
   publishSpace,

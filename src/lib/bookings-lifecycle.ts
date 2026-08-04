@@ -382,3 +382,82 @@ export function exactAddressVisible(
   if (!hasSucceededPayment) return false;
   return booking.status === "confirmed" || booking.status === "active";
 }
+
+/* ------------------------------------------------ two-party confirmations */
+
+/**
+ * Confirming your half of a handover or collection. Mirrors
+ * `confirm_booking_handover` / `confirm_booking_collection`, which remain the
+ * authority. Unlike the legacy single-step gates, collection is allowed from
+ * any point during storage: renters do sometimes collect early.
+ */
+export function handoverGate(facts: ActivationFacts): GateResult {
+  return activationGate(facts);
+}
+
+export type CollectionRejection = "not_a_participant" | "not_active" | "cancelled";
+
+export function collectionGate(facts: {
+  booking: Pick<Booking, "status" | "renter_id" | "host_id">;
+  viewerId: string | null | undefined;
+}): GateResult {
+  const { booking, viewerId } = facts;
+  if (!viewerId || (booking.renter_id !== viewerId && booking.host_id !== viewerId)) {
+    return { allowed: false, reason: "not_a_participant" };
+  }
+  if (booking.status === "completed") return { allowed: false, alreadyDone: true };
+  if (booking.status === "cancelled") return { allowed: false, reason: "cancelled" };
+  if (booking.status !== "active") return { allowed: false, reason: "not_active" };
+  return { allowed: true };
+}
+
+export const COLLECTION_MESSAGE: Record<CollectionRejection, string> = {
+  not_a_participant: "Only the renter or the host can confirm collection.",
+  not_active: "This booking isn't in storage, so there's nothing to collect.",
+  cancelled: "This booking was cancelled, so collection is handled separately.",
+};
+
+/* ------------------------------------------------------- action prompts */
+
+/**
+ * One line describing what this person needs to do next, or null when the
+ * booking is simply waiting on someone else. Drives dashboard notifications so
+ * both sides see the same set of outstanding actions.
+ */
+export function bookingActionPrompt(
+  booking: LifecycleBooking,
+  audience: "renter" | "host",
+  now: Date = new Date(),
+): string | null {
+  const state = lifecycleState(booking, now);
+  switch (state) {
+    case "awaiting_payment":
+      return audience === "renter" ? "Pay to confirm this booking." : null;
+    case "ready_to_start":
+      return "Confirm the handover once the belongings are in the space.";
+    case "awaiting_handover_confirmation":
+      return viewerConfirmed(booking, "handover", audience)
+        ? null
+        : "Confirm the handover so storage can start.";
+    case "completion_due":
+      return "Confirm collection to finish this booking.";
+    case "awaiting_collection_confirmation":
+      return viewerConfirmed(booking, "collection", audience)
+        ? null
+        : "Confirm collection so this booking can finish.";
+    default:
+      return null;
+  }
+}
+
+/** Bookings with something outstanding for this person, newest rules first. */
+export function bookingsNeedingAction<T extends LifecycleBooking>(
+  bookings: T[],
+  audience: "renter" | "host",
+  now: Date = new Date(),
+): { booking: T; prompt: string }[] {
+  return bookings.flatMap((booking) => {
+    const prompt = bookingActionPrompt(booking, audience, now);
+    return prompt ? [{ booking, prompt }] : [];
+  });
+}

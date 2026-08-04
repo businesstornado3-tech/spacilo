@@ -12,12 +12,18 @@ import {
   ACCESS_TYPES,
   HOST_RESTRICTIONS,
   ITEM_CATEGORIES,
-  MINIMUM_PERIODS,
   MOISTURE_OPTIONS,
   PLATFORM_PROHIBITED_ITEMS,
   SPACE_FEATURES,
   SPACE_TYPES,
+  STAY_UNITS,
   TEMPERATURE_OPTIONS,
+  type StayUnit,
+  availabilityLabel,
+  availabilityProblem,
+  formatStay,
+  stayDays,
+  stayParts,
   availableVolume,
   floorArea,
   formatM2,
@@ -553,34 +559,136 @@ export function StepRules({ form, patch }: StepProps) {
         </ul>
       </Alert>
 
-      <Fieldset legend="What is the minimum booking you'll accept?">
-        <div className="flex flex-wrap gap-2">
-          {MINIMUM_PERIODS.map((months) => (
-            <ChipToggle
-              key={months}
-              label={`${months} ${months === 1 ? "month" : "months"}`}
-              selected={form.minimum_storage_period_months === months}
-              onToggle={() => patch({ minimum_storage_period_months: months })}
-            />
-          ))}
-        </div>
-        <div className="mt-4 max-w-40">
-          <Field label="Custom (months)" htmlFor="min_custom">
+      <MinimumStayFieldset form={form} patch={patch} />
+
+      <AvailabilityFieldset form={form} patch={patch} />
+    </div>
+  );
+}
+
+/* ------------------------------------------- minimum stay and availability */
+
+/**
+ * Minimum stay is stored in DAYS. Hosts pick a number and a unit, so a monthly
+ * host and a weekend host describe the same field naturally.
+ */
+function MinimumStayFieldset({ form, patch }: StepProps) {
+  const { count, unit } = stayParts(form.minimum_stay_days);
+  const apply = (nextCount: number, nextUnit: StayUnit) => {
+    const days = stayDays(nextCount, nextUnit);
+    patch({
+      minimum_stay_days: days,
+      // Kept in step so older monthly-only surfaces stay truthful.
+      minimum_storage_period_months: Math.max(1, Math.round(days / 30)),
+    });
+  };
+
+  return (
+    <Fieldset legend="What is the minimum booking you'll accept?">
+      <div className="flex flex-wrap gap-2">
+        {MINIMUM_STAY_PRESETS.map((preset) => (
+          <ChipToggle
+            key={preset.days}
+            label={preset.label}
+            selected={(form.minimum_stay_days ?? 1) === preset.days}
+            onToggle={() => apply(preset.count, preset.unit)}
+          />
+        ))}
+      </div>
+      <div className="mt-4 flex max-w-sm items-end gap-3">
+        <Field label="Custom minimum" htmlFor="min_stay_count">
+          <TextInput
+            id="min_stay_count"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={365}
+            value={count}
+            onChange={(e) => apply(Math.min(365, Math.max(1, Number(e.target.value) || 1)), unit)}
+          />
+        </Field>
+        <Field label="Unit" htmlFor="min_stay_unit">
+          <NativeSelect
+            id="min_stay_unit"
+            value={unit}
+            onChange={(e) => apply(count, e.target.value as StayUnit)}
+          >
+            {STAY_UNITS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </NativeSelect>
+        </Field>
+      </div>
+      <p className="mt-2 type-body-sm text-muted-foreground">
+        Renters can't request a shorter stay than {formatStay(form.minimum_stay_days)}.
+      </p>
+    </Fieldset>
+  );
+}
+
+const MINIMUM_STAY_PRESETS: { label: string; days: number; count: number; unit: StayUnit }[] = [
+  { label: "1 day", days: 1, count: 1, unit: "day" },
+  { label: "1 week", days: 7, count: 1, unit: "week" },
+  { label: "1 month", days: 30, count: 1, unit: "month" },
+  { label: "3 months", days: 90, count: 3, unit: "month" },
+  { label: "6 months", days: 180, count: 6, unit: "month" },
+];
+
+/** Ongoing availability, or a fixed window the space is free between. */
+function AvailabilityFieldset({ form, patch }: StepProps) {
+  const mode = form.availability_mode ?? "continuous";
+  const problem = availabilityProblem(form);
+
+  return (
+    <Fieldset legend="When is your space available?">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <OptionRow
+          title="Ongoing"
+          description="Available continuously, with no end date."
+          selected={mode === "continuous"}
+          onSelect={() =>
+            patch({ availability_mode: "continuous", available_from: null, available_until: null })
+          }
+        />
+        <OptionRow
+          title="Set dates only"
+          description="Available between specific dates."
+          selected={mode === "dates"}
+          onSelect={() => patch({ availability_mode: "dates" })}
+        />
+      </div>
+
+      {mode === "dates" ? (
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Field label="Available from" htmlFor="available_from">
             <TextInput
-              id="min_custom"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={60}
-              value={form.minimum_storage_period_months ?? 1}
-              onChange={(e) =>
-                patch({ minimum_storage_period_months: Math.min(60, Math.max(1, Number(e.target.value) || 1)) })
-              }
+              id="available_from"
+              type="date"
+              value={form.available_from ?? ""}
+              onChange={(e) => patch({ available_from: e.target.value || null })}
+            />
+          </Field>
+          <Field label="Available until" htmlFor="available_until">
+            <TextInput
+              id="available_until"
+              type="date"
+              value={form.available_until ?? ""}
+              onChange={(e) => patch({ available_until: e.target.value || null })}
             />
           </Field>
         </div>
-      </Fieldset>
-    </div>
+      ) : null}
+
+      {problem ? (
+        <Alert tone="warning" title="Check your availability dates" className="mt-4">
+          <p>{problem}</p>
+        </Alert>
+      ) : (
+        <p className="mt-3 type-body-sm text-muted-foreground">{availabilityLabel(form)}</p>
+      )}
+    </Fieldset>
   );
 }
 
@@ -669,24 +777,9 @@ export function StepPrice({ form, patch }: StepProps) {
               />
             </div>
           </Field>
-          <Field
-            label="Minimum stay (days)"
-            htmlFor="min-stay"
-            hint="The shortest booking you'll accept."
-          >
-            <TextInput
-              id="min-stay"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={365}
-              className="max-w-32"
-              value={form.minimum_stay_days ?? 1}
-              onChange={(e) =>
-                patch({ minimum_stay_days: Math.min(365, Math.max(1, Number(e.target.value) || 1)) })
-              }
-            />
-          </Field>
+          <div className="type-body-sm text-muted-foreground sm:col-span-2">
+            Minimum booking: {formatStay(form.minimum_stay_days)} — change this in the rules step.
+          </div>
         </div>
 
         {form.monthly_price_pence ? (

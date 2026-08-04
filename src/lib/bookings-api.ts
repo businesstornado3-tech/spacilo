@@ -131,3 +131,27 @@ export async function listMyChangeRequests(): Promise<BookingChangeRequest[]> {
   if (error) throw error;
   return data ?? [];
 }
+
+/* ---------------------------------------- two-party handover (consolidated) */
+
+/**
+ * Confirm this side of the storage handover. Storage only becomes active once
+ * BOTH the renter and the host have confirmed; the RPC decides which half of
+ * the record the caller owns and is idempotent.
+ */
+export async function confirmBookingHandover(bookingId: string): Promise<Booking> {
+  const { data, error } = await supabase.rpc("confirm_booking_handover", {
+    p_booking_id: bookingId,
+  });
+  if (error) throw error;
+  return data as unknown as Booking;
+}
+
+/** Confirm this side of the collection. Both sides finish the booking. */
+export async function confirmBookingCollection(bookingId: string): Promise<Booking> {
+  const { data, error } = await supabase.rpc("confirm_booking_collection", {
+    p_booking_id: bookingId,
+  });
+  if (error) throw error;
+  return data as unknown as Booking;
+}

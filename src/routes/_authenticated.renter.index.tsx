@@ -6,6 +6,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { EmptyState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ActionsNeeded } from "@/components/bookings/ActionsNeeded";
 import { useAuth } from "@/hooks/useAuth";
 import { useActiveInventory, useInventoryItems, useInventorySummary } from "@/hooks/useInventory";
 import { formatVolume } from "@/lib/inventory-model";
@@ -55,6 +56,7 @@ function RenterHomePage() {
       title={firstName ? `Hi, ${firstName}` : "Hi there"}
       description="What do you need space for?"
     >
+      <ActionsNeeded audience="renter" />
       <ul className="grid gap-4 sm:grid-cols-2">
         {actions.map((action) => (
           <li key={action.title}>

@@ -26,30 +26,100 @@ export type LifecycleState =
   | "awaiting_payment"
   | "upcoming"
   | "ready_to_start"
+  | "awaiting_handover_confirmation"
   | "active"
   | "completion_due"
+  | "awaiting_collection_confirmation"
   | "completed"
+  | "cancellation_under_review"
   | "cancelled";
 
 /** Calendar date (UTC) — never a browser-local instant. */
 export const toCalendarDate = (value: Date | string): string =>
   typeof value === "string" ? value.slice(0, 10) : value.toISOString().slice(0, 10);
 
-export type LifecycleBooking = Pick<Booking, "status" | "start_date" | "end_date">;
+/**
+ * The handover fields are optional so older fixtures and partial selects still
+ * type-check; a missing timestamp simply means "not confirmed".
+ */
+export type LifecycleBooking = Pick<Booking, "status" | "start_date" | "end_date"> &
+  Partial<
+    Pick<
+      Booking,
+      | "activated_at"
+      | "renter_handover_confirmed_at"
+      | "host_handover_confirmed_at"
+      | "renter_collection_confirmed_at"
+      | "host_collection_confirmed_at"
+    >
+  >;
+
+/** Two-party confirmation: neither side alone moves the booking on. */
+export type HandoverStep = "handover" | "collection";
+
+export interface HandoverProgress {
+  renterConfirmed: boolean;
+  hostConfirmed: boolean;
+  /** Exactly one side has confirmed, so the other side is holding it up. */
+  awaitingOther: boolean;
+  bothConfirmed: boolean;
+}
+
+export function handoverProgress(
+  booking: LifecycleBooking,
+  step: HandoverStep,
+): HandoverProgress {
+  const renterConfirmed = Boolean(
+    step === "handover"
+      ? booking.renter_handover_confirmed_at
+      : booking.renter_collection_confirmed_at,
+  );
+  const hostConfirmed = Boolean(
+    step === "handover"
+      ? booking.host_handover_confirmed_at
+      : booking.host_collection_confirmed_at,
+  );
+  return {
+    renterConfirmed,
+    hostConfirmed,
+    awaitingOther: renterConfirmed !== hostConfirmed,
+    bothConfirmed: renterConfirmed && hostConfirmed,
+  };
+}
+
+/** Has this viewer already confirmed their half of the step? */
+export function viewerConfirmed(
+  booking: LifecycleBooking,
+  step: HandoverStep,
+  audience: "renter" | "host",
+): boolean {
+  const progress = handoverProgress(booking, step);
+  return audience === "renter" ? progress.renterConfirmed : progress.hostConfirmed;
+}
 
 export function lifecycleState(booking: LifecycleBooking, now: Date = new Date()): LifecycleState {
   const today = toCalendarDate(now);
   switch (booking.status) {
     case "cancelled":
-      return "cancelled";
+      // Cancelled after the belongings went in: money and collection still
+      // need sorting out, so we never present it as simply "cancelled".
+      return booking.activated_at ? "cancellation_under_review" : "cancelled";
     case "completed":
       return "completed";
     case "pending_payment":
       return "awaiting_payment";
-    case "active":
+    case "active": {
+      if (handoverProgress(booking, "collection").awaitingOther) {
+        return "awaiting_collection_confirmation";
+      }
       return today >= toCalendarDate(booking.end_date) ? "completion_due" : "active";
-    case "confirmed":
+    }
+    case "confirmed": {
+      if (handoverProgress(booking, "handover").awaitingOther) {
+        return "awaiting_handover_confirmation";
+      }
       return today >= toCalendarDate(booking.start_date) ? "ready_to_start" : "upcoming";
+    }
     default:
       return "awaiting_payment";
   }
@@ -93,11 +163,35 @@ export const LIFECYCLE_META: Record<
     renterNote: "The storage period has ended. Confirm collection to finish this booking.",
     hostNote: "The storage period has ended. Confirm once the renter has collected everything.",
   },
+  awaiting_handover_confirmation: {
+    label: "Awaiting confirmation",
+    tone: "warning",
+    renterNote:
+      "One of you has confirmed the handover. Storage starts once the other side confirms too.",
+    hostNote:
+      "One of you has confirmed the handover. Storage starts once the other side confirms too.",
+  },
+  awaiting_collection_confirmation: {
+    label: "Awaiting confirmation",
+    tone: "warning",
+    renterNote:
+      "One of you has confirmed collection. The booking finishes once the other side confirms too.",
+    hostNote:
+      "One of you has confirmed collection. The booking finishes once the other side confirms too.",
+  },
   completed: {
     label: "Completed",
     tone: "neutral",
     renterNote: "This booking has finished. Your records stay here for reference.",
     hostNote: "This booking has finished and the space is free again.",
+  },
+  cancellation_under_review: {
+    label: "Cancellation under review",
+    tone: "warning",
+    renterNote:
+      "Storage had already started when this booking was cancelled, so we're reviewing the refund and collection arrangements with you and the host.",
+    hostNote:
+      "Storage had already started when this booking was cancelled, so we're reviewing the refund and collection arrangements with you and the renter.",
   },
   cancelled: {
     label: "Cancelled",
@@ -137,11 +231,14 @@ export function lifecycleGroup(state: LifecycleState): LifecycleGroup {
     case "upcoming":
       return "upcoming";
     case "ready_to_start":
+    case "awaiting_handover_confirmation":
     case "active":
     case "completion_due":
+    case "awaiting_collection_confirmation":
       return "active";
     case "completed":
       return "completed";
+    case "cancellation_under_review":
     case "cancelled":
       return "cancelled";
   }
@@ -284,4 +381,83 @@ export function exactAddressVisible(
   if (!viewerId || booking.renter_id !== viewerId) return false;
   if (!hasSucceededPayment) return false;
   return booking.status === "confirmed" || booking.status === "active";
+}
+
+/* ------------------------------------------------ two-party confirmations */
+
+/**
+ * Confirming your half of a handover or collection. Mirrors
+ * `confirm_booking_handover` / `confirm_booking_collection`, which remain the
+ * authority. Unlike the legacy single-step gates, collection is allowed from
+ * any point during storage: renters do sometimes collect early.
+ */
+export function handoverGate(facts: ActivationFacts): GateResult {
+  return activationGate(facts);
+}
+
+export type CollectionRejection = "not_a_participant" | "not_active" | "cancelled";
+
+export function collectionGate(facts: {
+  booking: Pick<Booking, "status" | "renter_id" | "host_id">;
+  viewerId: string | null | undefined;
+}): GateResult {
+  const { booking, viewerId } = facts;
+  if (!viewerId || (booking.renter_id !== viewerId && booking.host_id !== viewerId)) {
+    return { allowed: false, reason: "not_a_participant" };
+  }
+  if (booking.status === "completed") return { allowed: false, alreadyDone: true };
+  if (booking.status === "cancelled") return { allowed: false, reason: "cancelled" };
+  if (booking.status !== "active") return { allowed: false, reason: "not_active" };
+  return { allowed: true };
+}
+
+export const COLLECTION_MESSAGE: Record<CollectionRejection, string> = {
+  not_a_participant: "Only the renter or the host can confirm collection.",
+  not_active: "This booking isn't in storage, so there's nothing to collect.",
+  cancelled: "This booking was cancelled, so collection is handled separately.",
+};
+
+/* ------------------------------------------------------- action prompts */
+
+/**
+ * One line describing what this person needs to do next, or null when the
+ * booking is simply waiting on someone else. Drives dashboard notifications so
+ * both sides see the same set of outstanding actions.
+ */
+export function bookingActionPrompt(
+  booking: LifecycleBooking,
+  audience: "renter" | "host",
+  now: Date = new Date(),
+): string | null {
+  const state = lifecycleState(booking, now);
+  switch (state) {
+    case "awaiting_payment":
+      return audience === "renter" ? "Pay to confirm this booking." : null;
+    case "ready_to_start":
+      return "Confirm the handover once the belongings are in the space.";
+    case "awaiting_handover_confirmation":
+      return viewerConfirmed(booking, "handover", audience)
+        ? null
+        : "Confirm the handover so storage can start.";
+    case "completion_due":
+      return "Confirm collection to finish this booking.";
+    case "awaiting_collection_confirmation":
+      return viewerConfirmed(booking, "collection", audience)
+        ? null
+        : "Confirm collection so this booking can finish.";
+    default:
+      return null;
+  }
+}
+
+/** Bookings with something outstanding for this person, newest rules first. */
+export function bookingsNeedingAction<T extends LifecycleBooking>(
+  bookings: T[],
+  audience: "renter" | "host",
+  now: Date = new Date(),
+): { booking: T; prompt: string }[] {
+  return bookings.flatMap((booking) => {
+    const prompt = bookingActionPrompt(booking, audience, now);
+    return prompt ? [{ booking, prompt }] : [];
+  });
 }

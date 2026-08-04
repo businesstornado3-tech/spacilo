@@ -29,11 +29,11 @@ import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
 import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated.host.index'
 import { Route as AuthenticatedHostBookingsRouteImport } from './routes/_authenticated.host.bookings'
 import { Route as AuthenticatedHostEarningsRouteImport } from './routes/_authenticated.host.earnings'
-import { Route as AuthenticatedHostMessagesRouteImport } from './routes/_authenticated.host.messages'
 import { Route as AuthenticatedRenterIndexRouteImport } from './routes/_authenticated.renter.index'
 import { Route as AuthenticatedRenterMatchesRouteImport } from './routes/_authenticated.renter.matches'
-import { Route as AuthenticatedRenterMessagesRouteImport } from './routes/_authenticated.renter.messages'
 import { Route as AuthenticatedRenterSearchRouteImport } from './routes/_authenticated.renter.search'
+import { Route as AuthenticatedHostMessagesIndexRouteImport } from './routes/_authenticated.host.messages.index'
+import { Route as AuthenticatedHostMessagesBookingIdRouteImport } from './routes/_authenticated.host.messages.$bookingId'
 import { Route as AuthenticatedHostPayoutsRefreshRouteImport } from './routes/_authenticated.host.payouts.refresh'
 import { Route as AuthenticatedHostPayoutsReturnRouteImport } from './routes/_authenticated.host.payouts.return'
 import { Route as AuthenticatedHostRequestsRequestIdRouteImport } from './routes/_authenticated.host.requests.$requestId'
@@ -45,6 +45,8 @@ import { Route as AuthenticatedRenterInventoryIndexRouteImport } from './routes/
 import { Route as AuthenticatedRenterInventoryAddRouteImport } from './routes/_authenticated.renter.inventory.add'
 import { Route as AuthenticatedRenterInventoryPhotosRouteImport } from './routes/_authenticated.renter.inventory.photos'
 import { Route as AuthenticatedRenterInventoryReviewRouteImport } from './routes/_authenticated.renter.inventory.review'
+import { Route as AuthenticatedRenterMessagesIndexRouteImport } from './routes/_authenticated.renter.messages.index'
+import { Route as AuthenticatedRenterMessagesBookingIdRouteImport } from './routes/_authenticated.renter.messages.$bookingId'
 import { Route as AuthenticatedRenterPaymentsReturnRouteImport } from './routes/_authenticated.renter.payments.return'
 import { Route as AuthenticatedRenterRequestsIndexRouteImport } from './routes/_authenticated.renter.requests.index'
 import { Route as AuthenticatedRenterRequestsRequestIdRouteImport } from './routes/_authenticated.renter.requests.$requestId'
@@ -156,12 +158,6 @@ const AuthenticatedHostEarningsRoute =
     path: '/earnings',
     getParentRoute: () => AuthenticatedHostRoute,
   } as any)
-const AuthenticatedHostMessagesRoute =
-  AuthenticatedHostMessagesRouteImport.update({
-    id: '/messages',
-    path: '/messages',
-    getParentRoute: () => AuthenticatedHostRoute,
-  } as any)
 const AuthenticatedRenterIndexRoute =
   AuthenticatedRenterIndexRouteImport.update({
     id: '/',
@@ -174,17 +170,23 @@ const AuthenticatedRenterMatchesRoute =
     path: '/matches',
     getParentRoute: () => AuthenticatedRenterRoute,
   } as any)
-const AuthenticatedRenterMessagesRoute =
-  AuthenticatedRenterMessagesRouteImport.update({
-    id: '/messages',
-    path: '/messages',
-    getParentRoute: () => AuthenticatedRenterRoute,
-  } as any)
 const AuthenticatedRenterSearchRoute =
   AuthenticatedRenterSearchRouteImport.update({
     id: '/search',
     path: '/search',
     getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
+const AuthenticatedHostMessagesIndexRoute =
+  AuthenticatedHostMessagesIndexRouteImport.update({
+    id: '/messages/',
+    path: '/messages/',
+    getParentRoute: () => AuthenticatedHostRoute,
+  } as any)
+const AuthenticatedHostMessagesBookingIdRoute =
+  AuthenticatedHostMessagesBookingIdRouteImport.update({
+    id: '/messages/$bookingId',
+    path: '/messages/$bookingId',
+    getParentRoute: () => AuthenticatedHostRoute,
   } as any)
 const AuthenticatedHostPayoutsRefreshRoute =
   AuthenticatedHostPayoutsRefreshRouteImport.update({
@@ -250,6 +252,18 @@ const AuthenticatedRenterInventoryReviewRoute =
   AuthenticatedRenterInventoryReviewRouteImport.update({
     id: '/inventory/review',
     path: '/inventory/review',
+    getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
+const AuthenticatedRenterMessagesIndexRoute =
+  AuthenticatedRenterMessagesIndexRouteImport.update({
+    id: '/messages/',
+    path: '/messages/',
+    getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
+const AuthenticatedRenterMessagesBookingIdRoute =
+  AuthenticatedRenterMessagesBookingIdRouteImport.update({
+    id: '/messages/$bookingId',
+    path: '/messages/$bookingId',
     getParentRoute: () => AuthenticatedRenterRoute,
   } as any)
 const AuthenticatedRenterPaymentsReturnRoute =
@@ -324,12 +338,11 @@ export interface FileRoutesByFullPath {
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
-  '/host/messages': typeof AuthenticatedHostMessagesRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
-  '/renter/messages': typeof AuthenticatedRenterMessagesRoute
   '/renter/search': typeof AuthenticatedRenterSearchRoute
   '/host/': typeof AuthenticatedHostIndexRoute
   '/renter/': typeof AuthenticatedRenterIndexRoute
+  '/host/messages/$bookingId': typeof AuthenticatedHostMessagesBookingIdRoute
   '/host/payouts/refresh': typeof AuthenticatedHostPayoutsRefreshRoute
   '/host/payouts/return': typeof AuthenticatedHostPayoutsReturnRoute
   '/host/requests/$requestId': typeof AuthenticatedHostRequestsRequestIdRoute
@@ -338,14 +351,17 @@ export interface FileRoutesByFullPath {
   '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
+  '/renter/messages/$bookingId': typeof AuthenticatedRenterMessagesBookingIdRoute
   '/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   '/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/host/messages/': typeof AuthenticatedHostMessagesIndexRoute
   '/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/renter/bookings/': typeof AuthenticatedRenterBookingsIndexRoute
   '/renter/inventory/': typeof AuthenticatedRenterInventoryIndexRoute
+  '/renter/messages/': typeof AuthenticatedRenterMessagesIndexRoute
   '/renter/requests/': typeof AuthenticatedRenterRequestsIndexRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
   '/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
@@ -368,12 +384,11 @@ export interface FileRoutesByTo {
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
-  '/host/messages': typeof AuthenticatedHostMessagesRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
-  '/renter/messages': typeof AuthenticatedRenterMessagesRoute
   '/renter/search': typeof AuthenticatedRenterSearchRoute
   '/host': typeof AuthenticatedHostIndexRoute
   '/renter': typeof AuthenticatedRenterIndexRoute
+  '/host/messages/$bookingId': typeof AuthenticatedHostMessagesBookingIdRoute
   '/host/payouts/refresh': typeof AuthenticatedHostPayoutsRefreshRoute
   '/host/payouts/return': typeof AuthenticatedHostPayoutsReturnRoute
   '/host/requests/$requestId': typeof AuthenticatedHostRequestsRequestIdRoute
@@ -382,13 +397,16 @@ export interface FileRoutesByTo {
   '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
+  '/renter/messages/$bookingId': typeof AuthenticatedRenterMessagesBookingIdRoute
   '/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/host/messages': typeof AuthenticatedHostMessagesIndexRoute
   '/host/spaces': typeof AuthenticatedHostSpacesIndexRoute
   '/renter/bookings': typeof AuthenticatedRenterBookingsIndexRoute
   '/renter/inventory': typeof AuthenticatedRenterInventoryIndexRoute
+  '/renter/messages': typeof AuthenticatedRenterMessagesIndexRoute
   '/renter/requests': typeof AuthenticatedRenterRequestsIndexRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
   '/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
@@ -415,12 +433,11 @@ export interface FileRoutesById {
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/_authenticated/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/_authenticated/host/earnings': typeof AuthenticatedHostEarningsRoute
-  '/_authenticated/host/messages': typeof AuthenticatedHostMessagesRoute
   '/_authenticated/renter/matches': typeof AuthenticatedRenterMatchesRoute
-  '/_authenticated/renter/messages': typeof AuthenticatedRenterMessagesRoute
   '/_authenticated/renter/search': typeof AuthenticatedRenterSearchRoute
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
   '/_authenticated/renter/': typeof AuthenticatedRenterIndexRoute
+  '/_authenticated/host/messages/$bookingId': typeof AuthenticatedHostMessagesBookingIdRoute
   '/_authenticated/host/payouts/refresh': typeof AuthenticatedHostPayoutsRefreshRoute
   '/_authenticated/host/payouts/return': typeof AuthenticatedHostPayoutsReturnRoute
   '/_authenticated/host/requests/$requestId': typeof AuthenticatedHostRequestsRequestIdRoute
@@ -429,14 +446,17 @@ export interface FileRoutesById {
   '/_authenticated/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/_authenticated/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/_authenticated/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
+  '/_authenticated/renter/messages/$bookingId': typeof AuthenticatedRenterMessagesBookingIdRoute
   '/_authenticated/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/_authenticated/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   '/_authenticated/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/_authenticated/host/messages/': typeof AuthenticatedHostMessagesIndexRoute
   '/_authenticated/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/_authenticated/renter/bookings/': typeof AuthenticatedRenterBookingsIndexRoute
   '/_authenticated/renter/inventory/': typeof AuthenticatedRenterInventoryIndexRoute
+  '/_authenticated/renter/messages/': typeof AuthenticatedRenterMessagesIndexRoute
   '/_authenticated/renter/requests/': typeof AuthenticatedRenterRequestsIndexRoute
   '/_authenticated/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
   '/_authenticated/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
@@ -463,12 +483,11 @@ export interface FileRouteTypes {
     | '/spaces/$spaceId'
     | '/host/bookings'
     | '/host/earnings'
-    | '/host/messages'
     | '/renter/matches'
-    | '/renter/messages'
     | '/renter/search'
     | '/host/'
     | '/renter/'
+    | '/host/messages/$bookingId'
     | '/host/payouts/refresh'
     | '/host/payouts/return'
     | '/host/requests/$requestId'
@@ -477,14 +496,17 @@ export interface FileRouteTypes {
     | '/renter/inventory/add'
     | '/renter/inventory/photos'
     | '/renter/inventory/review'
+    | '/renter/messages/$bookingId'
     | '/renter/payments/return'
     | '/renter/requests/$requestId'
     | '/renter/requests/new'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/host/messages/'
     | '/host/spaces/'
     | '/renter/bookings/'
     | '/renter/inventory/'
+    | '/renter/messages/'
     | '/renter/requests/'
     | '/host/spaces/$spaceId/edit'
     | '/renter/requests/$requestId/booking'
@@ -507,12 +529,11 @@ export interface FileRouteTypes {
     | '/spaces/$spaceId'
     | '/host/bookings'
     | '/host/earnings'
-    | '/host/messages'
     | '/renter/matches'
-    | '/renter/messages'
     | '/renter/search'
     | '/host'
     | '/renter'
+    | '/host/messages/$bookingId'
     | '/host/payouts/refresh'
     | '/host/payouts/return'
     | '/host/requests/$requestId'
@@ -521,13 +542,16 @@ export interface FileRouteTypes {
     | '/renter/inventory/add'
     | '/renter/inventory/photos'
     | '/renter/inventory/review'
+    | '/renter/messages/$bookingId'
     | '/renter/payments/return'
     | '/renter/requests/new'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/host/messages'
     | '/host/spaces'
     | '/renter/bookings'
     | '/renter/inventory'
+    | '/renter/messages'
     | '/renter/requests'
     | '/host/spaces/$spaceId/edit'
     | '/renter/requests/$requestId/booking'
@@ -553,12 +577,11 @@ export interface FileRouteTypes {
     | '/spaces/$spaceId'
     | '/_authenticated/host/bookings'
     | '/_authenticated/host/earnings'
-    | '/_authenticated/host/messages'
     | '/_authenticated/renter/matches'
-    | '/_authenticated/renter/messages'
     | '/_authenticated/renter/search'
     | '/_authenticated/host/'
     | '/_authenticated/renter/'
+    | '/_authenticated/host/messages/$bookingId'
     | '/_authenticated/host/payouts/refresh'
     | '/_authenticated/host/payouts/return'
     | '/_authenticated/host/requests/$requestId'
@@ -567,14 +590,17 @@ export interface FileRouteTypes {
     | '/_authenticated/renter/inventory/add'
     | '/_authenticated/renter/inventory/photos'
     | '/_authenticated/renter/inventory/review'
+    | '/_authenticated/renter/messages/$bookingId'
     | '/_authenticated/renter/payments/return'
     | '/_authenticated/renter/requests/$requestId'
     | '/_authenticated/renter/requests/new'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/_authenticated/host/messages/'
     | '/_authenticated/host/spaces/'
     | '/_authenticated/renter/bookings/'
     | '/_authenticated/renter/inventory/'
+    | '/_authenticated/renter/messages/'
     | '/_authenticated/renter/requests/'
     | '/_authenticated/host/spaces/$spaceId/edit'
     | '/_authenticated/renter/requests/$requestId/booking'
@@ -742,13 +768,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHostEarningsRouteImport
       parentRoute: typeof AuthenticatedHostRoute
     }
-    '/_authenticated/host/messages': {
-      id: '/_authenticated/host/messages'
-      path: '/messages'
-      fullPath: '/host/messages'
-      preLoaderRoute: typeof AuthenticatedHostMessagesRouteImport
-      parentRoute: typeof AuthenticatedHostRoute
-    }
     '/_authenticated/renter/': {
       id: '/_authenticated/renter/'
       path: '/'
@@ -763,19 +782,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRenterMatchesRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
     }
-    '/_authenticated/renter/messages': {
-      id: '/_authenticated/renter/messages'
-      path: '/messages'
-      fullPath: '/renter/messages'
-      preLoaderRoute: typeof AuthenticatedRenterMessagesRouteImport
-      parentRoute: typeof AuthenticatedRenterRoute
-    }
     '/_authenticated/renter/search': {
       id: '/_authenticated/renter/search'
       path: '/search'
       fullPath: '/renter/search'
       preLoaderRoute: typeof AuthenticatedRenterSearchRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
+    }
+    '/_authenticated/host/messages/': {
+      id: '/_authenticated/host/messages/'
+      path: '/messages'
+      fullPath: '/host/messages/'
+      preLoaderRoute: typeof AuthenticatedHostMessagesIndexRouteImport
+      parentRoute: typeof AuthenticatedHostRoute
+    }
+    '/_authenticated/host/messages/$bookingId': {
+      id: '/_authenticated/host/messages/$bookingId'
+      path: '/messages/$bookingId'
+      fullPath: '/host/messages/$bookingId'
+      preLoaderRoute: typeof AuthenticatedHostMessagesBookingIdRouteImport
+      parentRoute: typeof AuthenticatedHostRoute
     }
     '/_authenticated/host/payouts/refresh': {
       id: '/_authenticated/host/payouts/refresh'
@@ -854,6 +880,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRenterInventoryReviewRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
     }
+    '/_authenticated/renter/messages/': {
+      id: '/_authenticated/renter/messages/'
+      path: '/messages'
+      fullPath: '/renter/messages/'
+      preLoaderRoute: typeof AuthenticatedRenterMessagesIndexRouteImport
+      parentRoute: typeof AuthenticatedRenterRoute
+    }
+    '/_authenticated/renter/messages/$bookingId': {
+      id: '/_authenticated/renter/messages/$bookingId'
+      path: '/messages/$bookingId'
+      fullPath: '/renter/messages/$bookingId'
+      preLoaderRoute: typeof AuthenticatedRenterMessagesBookingIdRouteImport
+      parentRoute: typeof AuthenticatedRenterRoute
+    }
     '/_authenticated/renter/payments/return': {
       id: '/_authenticated/renter/payments/return'
       path: '/payments/return'
@@ -923,12 +963,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedHostRouteChildren {
   AuthenticatedHostBookingsRoute: typeof AuthenticatedHostBookingsRoute
   AuthenticatedHostEarningsRoute: typeof AuthenticatedHostEarningsRoute
-  AuthenticatedHostMessagesRoute: typeof AuthenticatedHostMessagesRoute
   AuthenticatedHostIndexRoute: typeof AuthenticatedHostIndexRoute
+  AuthenticatedHostMessagesBookingIdRoute: typeof AuthenticatedHostMessagesBookingIdRoute
   AuthenticatedHostPayoutsRefreshRoute: typeof AuthenticatedHostPayoutsRefreshRoute
   AuthenticatedHostPayoutsReturnRoute: typeof AuthenticatedHostPayoutsReturnRoute
   AuthenticatedHostRequestsRequestIdRoute: typeof AuthenticatedHostRequestsRequestIdRoute
   AuthenticatedHostSpacesNewRoute: typeof AuthenticatedHostSpacesNewRoute
+  AuthenticatedHostMessagesIndexRoute: typeof AuthenticatedHostMessagesIndexRoute
   AuthenticatedHostSpacesIndexRoute: typeof AuthenticatedHostSpacesIndexRoute
   AuthenticatedHostSpacesSpaceIdEditRoute: typeof AuthenticatedHostSpacesSpaceIdEditRoute
 }
@@ -936,13 +977,15 @@ interface AuthenticatedHostRouteChildren {
 const AuthenticatedHostRouteChildren: AuthenticatedHostRouteChildren = {
   AuthenticatedHostBookingsRoute: AuthenticatedHostBookingsRoute,
   AuthenticatedHostEarningsRoute: AuthenticatedHostEarningsRoute,
-  AuthenticatedHostMessagesRoute: AuthenticatedHostMessagesRoute,
   AuthenticatedHostIndexRoute: AuthenticatedHostIndexRoute,
+  AuthenticatedHostMessagesBookingIdRoute:
+    AuthenticatedHostMessagesBookingIdRoute,
   AuthenticatedHostPayoutsRefreshRoute: AuthenticatedHostPayoutsRefreshRoute,
   AuthenticatedHostPayoutsReturnRoute: AuthenticatedHostPayoutsReturnRoute,
   AuthenticatedHostRequestsRequestIdRoute:
     AuthenticatedHostRequestsRequestIdRoute,
   AuthenticatedHostSpacesNewRoute: AuthenticatedHostSpacesNewRoute,
+  AuthenticatedHostMessagesIndexRoute: AuthenticatedHostMessagesIndexRoute,
   AuthenticatedHostSpacesIndexRoute: AuthenticatedHostSpacesIndexRoute,
   AuthenticatedHostSpacesSpaceIdEditRoute:
     AuthenticatedHostSpacesSpaceIdEditRoute,
@@ -971,24 +1014,24 @@ const AuthenticatedRenterRequestsRequestIdRouteWithChildren =
 
 interface AuthenticatedRenterRouteChildren {
   AuthenticatedRenterMatchesRoute: typeof AuthenticatedRenterMatchesRoute
-  AuthenticatedRenterMessagesRoute: typeof AuthenticatedRenterMessagesRoute
   AuthenticatedRenterSearchRoute: typeof AuthenticatedRenterSearchRoute
   AuthenticatedRenterIndexRoute: typeof AuthenticatedRenterIndexRoute
   AuthenticatedRenterBookingsBookingIdRoute: typeof AuthenticatedRenterBookingsBookingIdRoute
   AuthenticatedRenterInventoryAddRoute: typeof AuthenticatedRenterInventoryAddRoute
   AuthenticatedRenterInventoryPhotosRoute: typeof AuthenticatedRenterInventoryPhotosRoute
   AuthenticatedRenterInventoryReviewRoute: typeof AuthenticatedRenterInventoryReviewRoute
+  AuthenticatedRenterMessagesBookingIdRoute: typeof AuthenticatedRenterMessagesBookingIdRoute
   AuthenticatedRenterPaymentsReturnRoute: typeof AuthenticatedRenterPaymentsReturnRoute
   AuthenticatedRenterRequestsRequestIdRoute: typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   AuthenticatedRenterRequestsNewRoute: typeof AuthenticatedRenterRequestsNewRoute
   AuthenticatedRenterBookingsIndexRoute: typeof AuthenticatedRenterBookingsIndexRoute
   AuthenticatedRenterInventoryIndexRoute: typeof AuthenticatedRenterInventoryIndexRoute
+  AuthenticatedRenterMessagesIndexRoute: typeof AuthenticatedRenterMessagesIndexRoute
   AuthenticatedRenterRequestsIndexRoute: typeof AuthenticatedRenterRequestsIndexRoute
 }
 
 const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
   AuthenticatedRenterMatchesRoute: AuthenticatedRenterMatchesRoute,
-  AuthenticatedRenterMessagesRoute: AuthenticatedRenterMessagesRoute,
   AuthenticatedRenterSearchRoute: AuthenticatedRenterSearchRoute,
   AuthenticatedRenterIndexRoute: AuthenticatedRenterIndexRoute,
   AuthenticatedRenterBookingsBookingIdRoute:
@@ -998,6 +1041,8 @@ const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
     AuthenticatedRenterInventoryPhotosRoute,
   AuthenticatedRenterInventoryReviewRoute:
     AuthenticatedRenterInventoryReviewRoute,
+  AuthenticatedRenterMessagesBookingIdRoute:
+    AuthenticatedRenterMessagesBookingIdRoute,
   AuthenticatedRenterPaymentsReturnRoute:
     AuthenticatedRenterPaymentsReturnRoute,
   AuthenticatedRenterRequestsRequestIdRoute:
@@ -1006,6 +1051,7 @@ const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
   AuthenticatedRenterBookingsIndexRoute: AuthenticatedRenterBookingsIndexRoute,
   AuthenticatedRenterInventoryIndexRoute:
     AuthenticatedRenterInventoryIndexRoute,
+  AuthenticatedRenterMessagesIndexRoute: AuthenticatedRenterMessagesIndexRoute,
   AuthenticatedRenterRequestsIndexRoute: AuthenticatedRenterRequestsIndexRoute,
 }
 
@@ -1049,3 +1095,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

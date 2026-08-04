@@ -9,6 +9,8 @@ import { requestKeys, hostRequestKeys } from "@/hooks/useStorageRequests";
 import {
   activateBooking,
   completeBooking,
+  confirmBookingCollection,
+  confirmBookingHandover,
   createBookingFromRequest,
   getBooking,
   getBookingForRequest,
@@ -104,6 +106,17 @@ export function useActivateBooking() {
 export function useCompleteBooking() {
   const invalidate = useLifecycleInvalidation();
   return useMutation({ mutationFn: completeBooking, onSuccess: invalidate });
+}
+
+/** Two-party handover: this side confirms, the server decides the outcome. */
+export function useConfirmHandover() {
+  const invalidate = useLifecycleInvalidation();
+  return useMutation({ mutationFn: confirmBookingHandover, onSuccess: invalidate });
+}
+
+export function useConfirmCollection() {
+  const invalidate = useLifecycleInvalidation();
+  return useMutation({ mutationFn: confirmBookingCollection, onSuccess: invalidate });
 }
 
 export function useBookingChangeRequests(bookingId: string | undefined) {

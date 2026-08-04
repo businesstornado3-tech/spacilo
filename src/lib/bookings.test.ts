@@ -73,6 +73,10 @@ const request: StorageRequest = {
 const booking: Booking = {
   activated_at: null,
   completed_at: null,
+  renter_handover_confirmed_at: null,
+  host_handover_confirmed_at: null,
+  renter_collection_confirmed_at: null,
+  host_collection_confirmed_at: null,
   daily_rate_snapshot: null,
   weekly_rate_snapshot: null,
   minimum_stay_days_snapshot: null,

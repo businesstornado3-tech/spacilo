@@ -8,7 +8,14 @@ import { StepProgress } from "@/components/common/Progress";
 import { Alert } from "@/components/common/Alert";
 import { toast } from "@/components/overlay/toast";
 import { useAuth } from "@/hooks/useAuth";
-import { WIZARD_STEPS, availableVolume, floorArea, publicLocation, totalVolume } from "@/lib/spaces";
+import {
+  WIZARD_STEPS,
+  availabilityProblem,
+  availableVolume,
+  floorArea,
+  publicLocation,
+  totalVolume,
+} from "@/lib/spaces";
 import {
   listSpacePhotos,
   publishSpace,
@@ -299,12 +306,16 @@ function validateStep(step: number, form: SpacePatch, photos: SpacePhoto[]): str
     if (!form.description?.trim()) return "Add a short description of your space.";
   }
   if (step === 4 && !form.access_type) return "Choose how renters can access their belongings.";
+  if (step === 5) {
+    const problem = availabilityProblem(form);
+    if (problem) return problem;
+  }
   if (step === 6 && !form.monthly_price_pence) return "Set a monthly price.";
   return null;
 }
 
 function publishBlocker(form: SpacePatch, photos: SpacePhoto[]): string | null {
-  for (const step of [0, 1, 2, 4, 6]) {
+  for (const step of [0, 1, 2, 4, 5, 6]) {
     const problem = validateStep(step, form, photos);
     if (problem) return problem;
   }
@@ -330,7 +341,10 @@ export function toListingView(
     description: form.description ?? "",
     location: publicLocation(form.approximate_area, form.postcode_district, form.postcode),
     pricePence: form.monthly_price_pence ?? null,
-    minimumMonths: form.minimum_storage_period_months ?? 1,
+    minimumStayDays: form.minimum_stay_days ?? null,
+    availabilityMode: form.availability_mode ?? null,
+    availableFrom: form.available_from ?? null,
+    availableUntil: form.available_until ?? null,
     storageMode: form.storage_mode ?? null,
     hostAvailablePercentage: form.host_available_percentage ?? null,
     floorAreaM2: form.dimensions_unknown ? null : floorArea(dims),

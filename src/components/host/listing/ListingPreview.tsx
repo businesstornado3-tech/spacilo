@@ -16,6 +16,8 @@ import {
   type AccessTypeValue,
   type SpaceTypeValue,
   type StorageModeValue,
+  availabilityLabel,
+  formatStay,
 } from "@/lib/spaces";
 
 /**
@@ -28,7 +30,10 @@ export interface ListingView {
   description: string;
   location: string;
   pricePence: number | null;
-  minimumMonths: number;
+  minimumStayDays: number | null;
+  availabilityMode?: string | null;
+  availableFrom?: string | null;
+  availableUntil?: string | null;
   storageMode: StorageModeValue | null;
   hostAvailablePercentage: number | null;
   floorAreaM2: number | null;
@@ -98,7 +103,14 @@ export function ListingPreview({ view, footer }: { view: ListingView; footer?: R
             <PriceDisplay amount={view.pricePence} size="lg" className="mt-4" />
           ) : null}
           <p className="mt-1 type-body-sm text-muted-foreground">
-            Minimum booking: {view.minimumMonths} {view.minimumMonths === 1 ? "month" : "months"}
+            Minimum booking: {formatStay(view.minimumStayDays)}
+          </p>
+          <p className="mt-1 type-body-sm text-muted-foreground">
+            {availabilityLabel({
+              availability_mode: view.availabilityMode ?? null,
+              available_from: view.availableFrom ?? null,
+              available_until: view.availableUntil ?? null,
+            })}
           </p>
         </header>
 

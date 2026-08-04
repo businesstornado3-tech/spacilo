@@ -12,9 +12,9 @@ import { Reveal } from "@/components/common/Reveal";
 import { HostEntryButton } from "@/components/home/HostEntryButton";
 
 const renterPoints = [
+  "Only pay for the space you need",
   "Find storage around your neighbourhood",
   "Compare spaces and monthly prices",
-  "Use SpaceFit to estimate whether your belongings suit the space",
   "Request the space before any booking or payment",
 ];
 
@@ -37,11 +37,15 @@ export function TwoSidedValue() {
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         <Reveal>
-          <article className="flex h-full flex-col rounded-3xl border border-border bg-card p-6 shadow-card">
+          <article className="flex h-full flex-col rounded-3xl border border-border bg-card p-6 shadow-card transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-raised">
             <span className="grid size-10 place-items-center rounded-xl bg-primary-soft text-primary-soft-foreground">
               <Boxes className="size-5" aria-hidden="true" />
             </span>
-            <h3 className="mt-4 type-h3">Need more space?</h3>
+            <h3 className="mt-4 type-h3">I need space</h3>
+            <p className="mt-2 type-body-sm text-muted-foreground">
+              Tell us what you're storing. SpaceFit helps you find nearby storage that fits your
+              belongings — so you don't pay for space you don't need.
+            </p>
             <ul className="mt-4 space-y-2.5">
               {renterPoints.map((point) => (
                 <li key={point} className="flex gap-2.5 type-body-sm text-muted-foreground">
@@ -52,7 +56,7 @@ export function TwoSidedValue() {
             </ul>
             <Button asChild size="lg" className="mt-6 self-start">
               <Link to="/search" search={{ location: "", radius: 5, sort: "recommended" }}>
-                Find storage
+                Find my space
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </Button>
@@ -60,11 +64,15 @@ export function TwoSidedValue() {
         </Reveal>
 
         <Reveal delay={80}>
-          <article className="flex h-full flex-col rounded-3xl border border-border bg-accent-soft p-6 text-accent-foreground shadow-card">
+          <article className="flex h-full flex-col rounded-3xl border border-border bg-accent-soft p-6 text-accent-foreground shadow-card transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-raised">
             <span className="grid size-10 place-items-center rounded-xl bg-card/70 text-accent-foreground">
               <Home className="size-5" aria-hidden="true" />
             </span>
-            <h3 className="mt-4 type-h3">Have space you're not using?</h3>
+            <h3 className="mt-4 type-h3">I have space</h3>
+            <p className="mt-2 type-body-sm text-accent-foreground/80">
+              Got an empty garage, loft, spare room or shed? Put your unused space to work and turn
+              it into extra monthly income.
+            </p>
             <ul className="mt-4 space-y-2.5">
               {hostPoints.map((point) => (
                 <li key={point} className="flex gap-2.5 type-body-sm text-accent-foreground/80">
@@ -77,7 +85,7 @@ export function TwoSidedValue() {
               ))}
             </ul>
             <div className="mt-6 self-start">
-              <HostEntryButton from="homepage_two_sided" />
+              <HostEntryButton label="Start earning" from="homepage_two_sided" />
             </div>
           </article>
         </Reveal>

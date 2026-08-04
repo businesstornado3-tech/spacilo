@@ -137,6 +137,8 @@ function HostEarningsPage() {
         <SummaryCard label="On hold" pence={summary.blockedPence + summary.adjustedPence} />
       </ul>
 
+      <RevenueBreakdown rows={rows} />
+
       <p className="mt-3 type-body-sm text-muted-foreground">
         “Sent to your Stripe account” means {brand.name} has transferred the money to your
         connected Stripe account. Stripe then pays it to your bank on its own schedule — check
@@ -167,6 +169,44 @@ function HostEarningsPage() {
         </ul>
       )}
     </AppLayout>
+  );
+}
+
+/**
+ * Separates what the host actually earns from what the renter pays the
+ * platform. The service fee is charged ON TOP of storage and is never taken
+ * out of host earnings, so the two figures are shown side by side.
+ */
+function RevenueBreakdown({ rows }: { rows: HostEarningWithBooking[] }) {
+  if (rows.length === 0) return null;
+  const storage = rows.reduce((total, row) => total + row.host_entitlement_pence, 0);
+  const fees = rows.reduce((total, row) => total + row.platform_fee_pence, 0);
+
+  return (
+    <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-card">
+      <h2 className="type-h3">Where the money goes</h2>
+      <dl className="mt-4 space-y-2">
+        <div className="flex items-baseline justify-between gap-3">
+          <dt className="type-body">Your storage revenue</dt>
+          <dd className="type-price tabular-nums">{formatPrice(storage)}</dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-3">
+          <dt className="type-body text-muted-foreground">
+            {brand.name} service fees, paid by renters on top
+          </dt>
+          <dd className="type-body tabular-nums text-muted-foreground">{formatPrice(fees)}</dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-3 border-t border-border pt-3">
+          <dt className="type-body-sm text-muted-foreground">Total renters paid</dt>
+          <dd className="type-body-sm tabular-nums text-muted-foreground">
+            {formatPrice(storage + fees)}
+          </dd>
+        </div>
+      </dl>
+      <p className="mt-3 type-body-sm text-muted-foreground">
+        Service fees are never deducted from your earnings.
+      </p>
+    </section>
   );
 }
 

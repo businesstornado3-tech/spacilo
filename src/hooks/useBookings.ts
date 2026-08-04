@@ -9,6 +9,8 @@ import { requestKeys, hostRequestKeys } from "@/hooks/useStorageRequests";
 import {
   activateBooking,
   completeBooking,
+  confirmBookingCollection,
+  confirmBookingHandover,
   createBookingFromRequest,
   getBooking,
   getBookingForRequest,

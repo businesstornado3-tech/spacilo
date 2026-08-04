@@ -464,18 +464,24 @@ function ExtensionSection({
       ) : null}
 
       {audience === "host" && open && pending ? (
-        <div className="flex flex-wrap gap-3">
-          <Button size="sm" onClick={() => void onRespond(true)} disabled={respond.isPending}>
-            Accept extension
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => void onRespond(false)}
-            disabled={respond.isPending}
-          >
-            Decline
-          </Button>
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-3">
+            <Button size="sm" onClick={() => void onRespond(true)} disabled={respond.isPending}>
+              Accept extension
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void onRespond(false)}
+              disabled={respond.isPending}
+            >
+              Decline
+            </Button>
+          </div>
+          <p className="type-body-sm text-muted-foreground">
+            Accepting reserves these dates while the renter completes payment. Declining leaves the
+            booking exactly as it is.
+          </p>
         </div>
       ) : null}
 

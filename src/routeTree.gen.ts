@@ -45,6 +45,7 @@ import { Route as AuthenticatedRenterInventoryAddRouteImport } from './routes/_a
 import { Route as AuthenticatedRenterInventoryPhotosRouteImport } from './routes/_authenticated.renter.inventory.photos'
 import { Route as AuthenticatedRenterInventoryReviewRouteImport } from './routes/_authenticated.renter.inventory.review'
 import { Route as AuthenticatedRenterMessagesIndexRouteImport } from './routes/_authenticated.renter.messages.index'
+import { Route as AuthenticatedRenterMessagesBookingIdRouteImport } from './routes/_authenticated.renter.messages.$bookingId'
 import { Route as AuthenticatedRenterPaymentsReturnRouteImport } from './routes/_authenticated.renter.payments.return'
 import { Route as AuthenticatedRenterRequestsIndexRouteImport } from './routes/_authenticated.renter.requests.index'
 import { Route as AuthenticatedRenterRequestsRequestIdRouteImport } from './routes/_authenticated.renter.requests.$requestId'
@@ -252,6 +253,12 @@ const AuthenticatedRenterMessagesIndexRoute =
     path: '/messages/',
     getParentRoute: () => AuthenticatedRenterRoute,
   } as any)
+const AuthenticatedRenterMessagesBookingIdRoute =
+  AuthenticatedRenterMessagesBookingIdRouteImport.update({
+    id: '/messages/$bookingId',
+    path: '/messages/$bookingId',
+    getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
 const AuthenticatedRenterPaymentsReturnRoute =
   AuthenticatedRenterPaymentsReturnRouteImport.update({
     id: '/payments/return',
@@ -336,6 +343,7 @@ export interface FileRoutesByFullPath {
   '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
+  '/renter/messages/$bookingId': typeof AuthenticatedRenterMessagesBookingIdRoute
   '/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   '/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
@@ -380,6 +388,7 @@ export interface FileRoutesByTo {
   '/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
+  '/renter/messages/$bookingId': typeof AuthenticatedRenterMessagesBookingIdRoute
   '/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
@@ -427,6 +436,7 @@ export interface FileRoutesById {
   '/_authenticated/renter/inventory/add': typeof AuthenticatedRenterInventoryAddRoute
   '/_authenticated/renter/inventory/photos': typeof AuthenticatedRenterInventoryPhotosRoute
   '/_authenticated/renter/inventory/review': typeof AuthenticatedRenterInventoryReviewRoute
+  '/_authenticated/renter/messages/$bookingId': typeof AuthenticatedRenterMessagesBookingIdRoute
   '/_authenticated/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/_authenticated/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   '/_authenticated/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
@@ -475,6 +485,7 @@ export interface FileRouteTypes {
     | '/renter/inventory/add'
     | '/renter/inventory/photos'
     | '/renter/inventory/review'
+    | '/renter/messages/$bookingId'
     | '/renter/payments/return'
     | '/renter/requests/$requestId'
     | '/renter/requests/new'
@@ -519,6 +530,7 @@ export interface FileRouteTypes {
     | '/renter/inventory/add'
     | '/renter/inventory/photos'
     | '/renter/inventory/review'
+    | '/renter/messages/$bookingId'
     | '/renter/payments/return'
     | '/renter/requests/new'
     | '/api/public/payouts/release'
@@ -565,6 +577,7 @@ export interface FileRouteTypes {
     | '/_authenticated/renter/inventory/add'
     | '/_authenticated/renter/inventory/photos'
     | '/_authenticated/renter/inventory/review'
+    | '/_authenticated/renter/messages/$bookingId'
     | '/_authenticated/renter/payments/return'
     | '/_authenticated/renter/requests/$requestId'
     | '/_authenticated/renter/requests/new'
@@ -854,6 +867,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRenterMessagesIndexRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
     }
+    '/_authenticated/renter/messages/$bookingId': {
+      id: '/_authenticated/renter/messages/$bookingId'
+      path: '/messages/$bookingId'
+      fullPath: '/renter/messages/$bookingId'
+      preLoaderRoute: typeof AuthenticatedRenterMessagesBookingIdRouteImport
+      parentRoute: typeof AuthenticatedRenterRoute
+    }
     '/_authenticated/renter/payments/return': {
       id: '/_authenticated/renter/payments/return'
       path: '/payments/return'
@@ -977,6 +997,7 @@ interface AuthenticatedRenterRouteChildren {
   AuthenticatedRenterInventoryAddRoute: typeof AuthenticatedRenterInventoryAddRoute
   AuthenticatedRenterInventoryPhotosRoute: typeof AuthenticatedRenterInventoryPhotosRoute
   AuthenticatedRenterInventoryReviewRoute: typeof AuthenticatedRenterInventoryReviewRoute
+  AuthenticatedRenterMessagesBookingIdRoute: typeof AuthenticatedRenterMessagesBookingIdRoute
   AuthenticatedRenterPaymentsReturnRoute: typeof AuthenticatedRenterPaymentsReturnRoute
   AuthenticatedRenterRequestsRequestIdRoute: typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   AuthenticatedRenterRequestsNewRoute: typeof AuthenticatedRenterRequestsNewRoute
@@ -997,6 +1018,8 @@ const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
     AuthenticatedRenterInventoryPhotosRoute,
   AuthenticatedRenterInventoryReviewRoute:
     AuthenticatedRenterInventoryReviewRoute,
+  AuthenticatedRenterMessagesBookingIdRoute:
+    AuthenticatedRenterMessagesBookingIdRoute,
   AuthenticatedRenterPaymentsReturnRoute:
     AuthenticatedRenterPaymentsReturnRoute,
   AuthenticatedRenterRequestsRequestIdRoute:

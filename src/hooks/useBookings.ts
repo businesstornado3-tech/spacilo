@@ -106,6 +106,17 @@ export function useCompleteBooking() {
   return useMutation({ mutationFn: completeBooking, onSuccess: invalidate });
 }
 
+/** Two-party handover: this side confirms, the server decides the outcome. */
+export function useConfirmHandover() {
+  const invalidate = useLifecycleInvalidation();
+  return useMutation({ mutationFn: confirmBookingHandover, onSuccess: invalidate });
+}
+
+export function useConfirmCollection() {
+  const invalidate = useLifecycleInvalidation();
+  return useMutation({ mutationFn: confirmBookingCollection, onSuccess: invalidate });
+}
+
 export function useBookingChangeRequests(bookingId: string | undefined) {
   const { user } = useAuth();
   return useQuery({

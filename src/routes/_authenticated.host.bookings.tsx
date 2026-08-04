@@ -213,6 +213,14 @@ function HostBookingCard({
         </p>
       ) : null}
 
+      {booking.status !== "confirmed" && booking.status !== "active" ? (
+        <Button asChild variant="secondary" size="sm" className="mt-4">
+          <Link to="/host/messages/$bookingId" params={{ bookingId: booking.id }}>
+            Message the renter
+          </Link>
+        </Button>
+      ) : null}
+
       {booking.status === "confirmed" || booking.status === "active" ? (
         <div className="mt-4">
           <BookingLifecyclePanel

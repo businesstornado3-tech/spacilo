@@ -18,6 +18,8 @@ import { useHostEarnings } from "@/hooks/useHostPayouts";
 import { cumulativeHostStoragePence, earningsByBooking } from "@/lib/payments/history";
 import { useAuth } from "@/hooks/useAuth";
 import { BookingLifecyclePanel } from "@/components/bookings/BookingLifecyclePanel";
+import { EarlyTerminationPanel } from "@/components/bookings/EarlyTerminationPanel";
+import { CancellationPanel } from "@/components/payments/CancellationPanel";
 import {
   GROUP_LABEL,
   GROUP_ORDER,
@@ -164,6 +166,8 @@ function HostBookingCard({
   const cancelled = state === "cancelled";
   const confirmed = booking.status === "confirmed" || booking.status === "active";
   const renter = booking.renter_first_name_snapshot?.trim();
+  const { data: changeRequests } = useBookingChangeRequests(cancelled ? undefined : booking.id);
+  const { data: refunds } = useBookingRefunds(booking.id);
   return (
     <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -231,6 +235,23 @@ function HostBookingCard({
           />
         </div>
       ) : null}
+
+      <div className="mt-4 space-y-4">
+        <EarlyTerminationPanel
+          booking={booking}
+          changeRequests={changeRequests ?? []}
+          viewerId={viewerId}
+          audience="host"
+          cancelled={Boolean(cancellation)}
+        />
+        <CancellationPanel
+          booking={booking}
+          cancellation={null}
+          refunds={refunds ?? []}
+          viewerId={viewerId}
+          audience="host"
+        />
+      </div>
     </article>
   );
 }

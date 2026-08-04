@@ -11,8 +11,8 @@ const benefits = [
   },
   {
     icon: Ruler,
-    title: "Know what fits",
-    body: "SpaceFit helps estimate how well your belongings suit each space. It's an estimate, not a guarantee.",
+    title: "Only pay for the space you need",
+    body: "Describe what you're storing and SpaceFit helps identify suitable nearby spaces, instead of a fixed-size unit. It's an estimate, not a guarantee.",
   },
   {
     icon: Tag,

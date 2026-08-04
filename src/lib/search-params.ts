@@ -5,6 +5,8 @@
  * filters, so results survive refresh and Back from a listing.
  * /search?location=PO4%208LB&radius=5&sort=recommended&types=garage
  */
+import type { SearchSchemaInput } from "@tanstack/react-router";
+
 import { DEFAULT_RADIUS_MILES, normaliseRadius } from "@/lib/location/schema";
 import type { SearchFilters, SortKey } from "@/hooks/useStorageSearch";
 

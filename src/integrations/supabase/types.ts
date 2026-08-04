@@ -178,6 +178,132 @@ export type Database = {
           },
         ]
       }
+      booking_condition_notes: {
+        Row: {
+          author_id: string
+          author_role: string
+          body: string
+          booking_id: string
+          created_at: string
+          id: string
+          stage: Database["public"]["Enums"]["handover_stage"]
+        }
+        Insert: {
+          author_id: string
+          author_role: string
+          body: string
+          booking_id: string
+          created_at?: string
+          id?: string
+          stage: Database["public"]["Enums"]["handover_stage"]
+        }
+        Update: {
+          author_id?: string
+          author_role?: string
+          body?: string
+          booking_id?: string
+          created_at?: string
+          id?: string
+          stage?: Database["public"]["Enums"]["handover_stage"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_condition_notes_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_evidence_photos: {
+        Row: {
+          booking_id: string
+          caption: string | null
+          created_at: string
+          id: string
+          stage: Database["public"]["Enums"]["handover_stage"]
+          storage_path: string
+          uploaded_by: string
+          uploader_role: string
+        }
+        Insert: {
+          booking_id: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          stage: Database["public"]["Enums"]["handover_stage"]
+          storage_path: string
+          uploaded_by: string
+          uploader_role: string
+        }
+        Update: {
+          booking_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          stage?: Database["public"]["Enums"]["handover_stage"]
+          storage_path?: string
+          uploaded_by?: string
+          uploader_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_evidence_photos_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_handover_issues: {
+        Row: {
+          booking_id: string
+          category: Database["public"]["Enums"]["handover_issue_category"]
+          created_at: string
+          description: string
+          id: string
+          reported_by: string
+          reporter_role: string
+          stage: Database["public"]["Enums"]["handover_stage"]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          category: Database["public"]["Enums"]["handover_issue_category"]
+          created_at?: string
+          description: string
+          id?: string
+          reported_by: string
+          reporter_role: string
+          stage: Database["public"]["Enums"]["handover_stage"]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          category?: Database["public"]["Enums"]["handover_issue_category"]
+          created_at?: string
+          description?: string
+          id?: string
+          reported_by?: string
+          reporter_role?: string
+          stage?: Database["public"]["Enums"]["handover_stage"]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_handover_issues_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_refunds: {
         Row: {
           booking_id: string
@@ -2074,6 +2200,17 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      booking_party_role: {
+        Args: { _booking_id: string; _user_id: string }
+        Returns: string
+      }
+      booking_stage_open: {
+        Args: {
+          _booking_id: string
+          _stage: Database["public"]["Enums"]["handover_stage"]
+        }
+        Returns: boolean
+      }
       cancel_booking: {
         Args: { p_booking_id: string; p_reason?: string }
         Returns: Json
@@ -2566,6 +2703,14 @@ export type Database = {
         Returns: number
       }
       inventory_recalculate: { Args: { target: string }; Returns: undefined }
+      is_booking_participant: {
+        Args: { _booking_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_booking_participant_text: {
+        Args: { _booking_id: string; _user_id: string }
+        Returns: boolean
+      }
       mark_host_earnings_eligible: { Args: never; Returns: number }
       mark_refund_submitted: {
         Args: {
@@ -2922,6 +3067,14 @@ export type Database = {
         | "review_required"
         | "resolved"
       detection_review_status: "pending" | "confirmed" | "edited" | "rejected"
+      handover_issue_category:
+        | "items_differ"
+        | "quantity_differs"
+        | "condition_concern"
+        | "access_problem"
+        | "restricted_item"
+        | "other"
+      handover_stage: "check_in" | "check_out"
       host_earning_status:
         | "pending"
         | "eligible"
@@ -3184,6 +3337,15 @@ export const Constants = {
         "resolved",
       ],
       detection_review_status: ["pending", "confirmed", "edited", "rejected"],
+      handover_issue_category: [
+        "items_differ",
+        "quantity_differs",
+        "condition_concern",
+        "access_problem",
+        "restricted_item",
+        "other",
+      ],
+      handover_stage: ["check_in", "check_out"],
       host_earning_status: [
         "pending",
         "eligible",

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import type { Enums } from "@/integrations/supabase/types";
+import { formatDate } from "@/lib/format";
 
 export type SpaceTypeValue = Enums<"space_type">;
 export type ListingStatusValue = Enums<"listing_status">;

@@ -163,11 +163,35 @@ export const LIFECYCLE_META: Record<
     renterNote: "The storage period has ended. Confirm collection to finish this booking.",
     hostNote: "The storage period has ended. Confirm once the renter has collected everything.",
   },
+  awaiting_handover_confirmation: {
+    label: "Awaiting confirmation",
+    tone: "warning",
+    renterNote:
+      "One of you has confirmed the handover. Storage starts once the other side confirms too.",
+    hostNote:
+      "One of you has confirmed the handover. Storage starts once the other side confirms too.",
+  },
+  awaiting_collection_confirmation: {
+    label: "Awaiting confirmation",
+    tone: "warning",
+    renterNote:
+      "One of you has confirmed collection. The booking finishes once the other side confirms too.",
+    hostNote:
+      "One of you has confirmed collection. The booking finishes once the other side confirms too.",
+  },
   completed: {
     label: "Completed",
     tone: "neutral",
     renterNote: "This booking has finished. Your records stay here for reference.",
     hostNote: "This booking has finished and the space is free again.",
+  },
+  cancellation_under_review: {
+    label: "Cancellation under review",
+    tone: "warning",
+    renterNote:
+      "Storage had already started when this booking was cancelled, so we're reviewing the refund and collection arrangements with you and the host.",
+    hostNote:
+      "Storage had already started when this booking was cancelled, so we're reviewing the refund and collection arrangements with you and the renter.",
   },
   cancelled: {
     label: "Cancelled",

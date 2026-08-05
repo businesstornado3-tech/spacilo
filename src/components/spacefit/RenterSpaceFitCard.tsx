@@ -84,7 +84,7 @@ export function RenterSpaceFitCard({
               </Button>
             ) : null}
             <Button asChild variant={variant === "hub" ? "default" : "secondary"}>
-              <Link to="/renter/search">
+              <Link to={variant === "hub" ? "/renter/matches" : "/renter/search"}>
                 {variant === "hub" ? "Find spaces that fit" : "Find storage"}
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>

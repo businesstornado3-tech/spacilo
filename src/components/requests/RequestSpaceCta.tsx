@@ -19,7 +19,7 @@ import { useMyBookingsForSpace } from "@/hooks/useBookings";
 import { spaceCtaState } from "@/lib/space-cta";
 import { ACCEPTED_EXPIRED_COPY, bookingStatusMeta, bookingWindowLabel } from "@/lib/bookings";
 import { REQUEST_DISCLAIMER } from "@/lib/storage-requests";
-import { track } from "@/lib/analytics";
+import { track } from "@/lib/analytics/tracker";
 
 export function RequestSpaceCta({ spaceId }: { spaceId: string }) {
   const { user } = useAuth();
@@ -149,7 +149,7 @@ export function RequestSpaceCta({ spaceId }: { spaceId: string }) {
       <Button
         asChild
         className="mt-4 w-full sm:w-auto"
-        onClick={() => track("storage_request_started", { space_id: spaceId })}
+        onClick={() => track("storage_request_started", { props: { space_id: spaceId } })}
       >
         <Link to="/renter/requests/new" search={{ spaceId }}>
           Request this space

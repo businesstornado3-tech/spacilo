@@ -18,7 +18,7 @@ import { SearchFiltersPanel } from "@/components/search/SearchFilters";
 import { SearchResultCard } from "@/components/search/SearchResultCard";
 import type { MapSpace } from "@/components/search/StorageMap";
 import { useStorageSearch, type SearchFilters, type SortKey, type StorageSearchParams } from "@/hooks/useStorageSearch";
-import { track } from "@/lib/analytics";
+import { track } from "@/lib/analytics/tracker";
 import { estimateRequiredSpace } from "@/lib/spacefit/requirement";
 import { formatVolume } from "@/lib/inventory-model";
 import { useAuth } from "@/hooks/useAuth";
@@ -73,7 +73,7 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
 
   function handleMarker(id: string) {
     setSelectedId(id);
-    track("map_marker_selected");
+    track("search_refined", { props: { control: "map_marker" } });
     if (view === "list") {
       document.getElementById(`result-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
@@ -119,7 +119,7 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
             value={params.sort}
             onChange={(e) => {
               const sort = e.target.value as SortKey;
-              track("sort_changed", { sort });
+              track("search_refined", { props: { control: "sort", sort } });
               onParamsChange({ sort });
             }}
           >
@@ -169,7 +169,7 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
             <Link
               to={spaceFitHref.to}
               search={spaceFitHref.search as never}
-              onClick={() => track("get_spacefit_selected", { from: "search_banner" })}
+              onClick={() => track("cta_clicked", { props: { cta: "scan_stuff", from: "search_banner" } })}
             >
               Get your fit score
             </Link>

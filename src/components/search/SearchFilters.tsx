@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CheckboxField } from "@/components/form/Controls";
 import { controlBase } from "@/components/form/Field";
 import { SPACE_TYPES, ACCESS_TYPES, SPACE_FEATURES, ITEM_CATEGORIES } from "@/lib/spaces";
-import { track } from "@/lib/analytics";
+import { track } from "@/lib/analytics/tracker";
 import type { SearchFilters } from "@/hooks/useStorageSearch";
 
 const FILTERABLE_FEATURES = ["indoor", "dry", "lockable"];
@@ -36,7 +36,7 @@ export function SearchFiltersPanel({ filters, onChange }: SearchFiltersPanelProp
     (filters.minVolumeM3 ? 1 : 0);
 
   function apply(next: SearchFilters, name: string) {
-    track("filter_applied", { filter: name });
+    track("search_refined", { props: { control: "filter", filter: name } });
     onChange(next);
   }
 

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { controlBase } from "@/components/form/Field";
 import { DEFAULT_RADIUS_MILES, RADIUS_OPTIONS_MILES, normaliseLocationInput } from "@/lib/location/schema";
-import { track } from "@/lib/analytics";
+import { track } from "@/lib/analytics/tracker";
 
 export interface SearchControlsProps {
   initialLocation?: string;
@@ -52,7 +52,7 @@ export function SearchControls({
     }
     setLocalError(null);
     setLocation(value);
-    track("location_search_submitted", { radius, hasLocation: true });
+    track("storage_search_started", { props: { radius, has_location: true } });
     onSubmit({ location: value, radius });
   }
 
@@ -67,7 +67,7 @@ export function SearchControls({
         setLocating(false);
         const value = `${position.coords.latitude.toFixed(5)},${position.coords.longitude.toFixed(5)}`;
         setLocalError(null);
-        track("location_search_submitted", { radius, usedBrowserLocation: true });
+        track("storage_search_started", { props: { radius, used_browser_location: true } });
         onSubmit({ location: value, radius });
       },
       () => {
@@ -123,7 +123,7 @@ export function SearchControls({
             onChange={(e) => {
               const next = Number(e.target.value);
               setRadius(next);
-              track("radius_changed", { radius: next });
+              track("search_refined", { props: { control: "radius", radius: next } });
             }}
             className={controlBase}
           >

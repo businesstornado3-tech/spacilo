@@ -19,6 +19,11 @@ import { friendlyReviewError, normaliseReviewText } from "@/lib/reviews";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Optional RPC arguments are omitted rather than sent as null. */
+function optional<K extends string, V>(key: K, value: V | null | undefined) {
+  return (value === null || value === undefined ? {} : { [key]: value }) as Record<K, V>;
+}
+
 const EMPTY_SUMMARY: ReviewSummary = {
   review_count: 0,
   average_rating: null,
@@ -33,7 +38,9 @@ function asSummary(value: unknown): ReviewSummary {
     review_count: Number(row["review_count"] ?? 0),
     average_rating: average === null || average === undefined ? null : Number(average),
     completed_bookings: Number(row["completed_bookings"] ?? 0),
-    ...(row["distribution"] ? { distribution: row["distribution"] as ReviewSummary["distribution"] } : {}),
+    ...(row["distribution"]
+      ? { distribution: row["distribution"] as NonNullable<ReviewSummary["distribution"]> }
+      : {}),
   };
 }
 
@@ -68,11 +75,11 @@ export async function submitBookingReview(input: SubmitReviewInput): Promise<Boo
   const { data, error } = await supabase.rpc("submit_booking_review", {
     p_booking_id: input.bookingId,
     p_rating: input.rating,
-    p_review_text: normaliseReviewText(input.text),
-    p_accuracy: sub.accuracy ?? null,
-    p_access: sub.access ?? null,
-    p_communication: sub.communication ?? null,
-    p_condition: sub.condition ?? null,
+    ...optional("p_review_text", normaliseReviewText(input.text)),
+    ...optional("p_accuracy", sub.accuracy),
+    ...optional("p_access", sub.access),
+    ...optional("p_communication", sub.communication),
+    ...optional("p_condition", sub.condition),
   });
   if (error) {
     throw new Error(friendlyReviewError(error.message, "We couldn't save your review."));
@@ -89,7 +96,7 @@ export async function reportBookingReview(input: {
   const { error } = await supabase.rpc("report_booking_review", {
     p_review_id: input.reviewId,
     p_reason: input.reason,
-    p_details: normaliseReviewText(input.details),
+    ...optional("p_details", normaliseReviewText(input.details)),
   });
   if (error) {
     throw new Error(friendlyReviewError(error.message, "We couldn't send that report."));
@@ -169,7 +176,7 @@ export async function moderateBookingReview(input: {
   const { error } = await supabase.rpc("moderate_booking_review", {
     p_review_id: input.reviewId,
     p_action: input.action,
-    p_reason: normaliseReviewText(input.reason),
+    ...optional("p_reason", normaliseReviewText(input.reason)),
   });
   if (error) {
     throw new Error(friendlyReviewError(error.message, "We couldn't apply that moderation."));

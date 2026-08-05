@@ -104,14 +104,20 @@ export class CameraController {
     return this.stream;
   }
 
-  async start(facing: CameraFacing = this.currentFacing): Promise<CameraStartResult> {
+  async start(
+    facing: CameraFacing = this.currentFacing,
+    options: { simple?: boolean; deviceId?: string } = {},
+  ): Promise<CameraStartResult> {
     if (!this.mediaDevices || typeof this.mediaDevices.getUserMedia !== "function") {
       return { ok: false, code: "camera_unavailable" };
     }
     // Never run two streams at once.
     this.stop();
+    const constraints = options.simple
+      ? simpleCameraConstraints(facing, options.deviceId)
+      : cameraConstraints(facing, this.preview);
     try {
-      const stream = await this.mediaDevices.getUserMedia(cameraConstraints(facing, this.preview));
+      const stream = await this.mediaDevices.getUserMedia(constraints);
       this.stream = stream;
       this.currentFacing = facing;
       return { ok: true, stream };
@@ -120,6 +126,7 @@ export class CameraController {
       return { ok: false, code: cameraErrorCode(error) };
     }
   }
+
 
   /** Flips between rear and front where the device offers both. */
   async switchCamera(): Promise<CameraStartResult> {

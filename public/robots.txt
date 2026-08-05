@@ -1,14 +1,22 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
+# Spacilo — production robots.txt
+# Robots directives are not a security control; private/authenticated
+# routes are also protected server-side by authorization.
 
 User-agent: *
 Allow: /
+Disallow: /renter
+Disallow: /host
+Disallow: /admin
+Disallow: /profile
+Disallow: /notifications
+Disallow: /support
+Disallow: /spacefit$
+Allow: /spacefit/stuff
+Allow: /spacefit/space
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /api/
+
+Sitemap: https://home-stash-link.lovable.app/sitemap.xml

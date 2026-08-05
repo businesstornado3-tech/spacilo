@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          device: string | null
+          environment: string
+          event_name: string
+          id: number
+          is_bot: boolean
+          occurred_at: string
+          path: string | null
+          props: Json
+          referrer_host: string | null
+          session_ref: string
+          user_id: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          visitor_ref: string
+        }
+        Insert: {
+          device?: string | null
+          environment?: string
+          event_name: string
+          id?: never
+          is_bot?: boolean
+          occurred_at?: string
+          path?: string | null
+          props?: Json
+          referrer_host?: string | null
+          session_ref: string
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          visitor_ref: string
+        }
+        Update: {
+          device?: string | null
+          environment?: string
+          event_name?: string
+          id?: never
+          is_bot?: boolean
+          occurred_at?: string
+          path?: string | null
+          props?: Json
+          referrer_host?: string | null
+          session_ref?: string
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          visitor_ref?: string
+        }
+        Relationships: []
+      }
       booking_cancellations: {
         Row: {
           booking_id: string
@@ -3331,6 +3385,19 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_dashboard_breakdowns: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
+      admin_dashboard_kpis: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
+      admin_dashboard_trends: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
+      analytics_prune: { Args: { p_keep_days?: number }; Returns: number }
       apply_storage_refund_to_earning: {
         Args: {
           p_payment_id: string
@@ -4132,6 +4199,7 @@ export type Database = {
         Args: { _booking_id: string; _user_id: string }
         Returns: boolean
       }
+      is_platform_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_support_staff: { Args: { _user_id?: string }; Returns: boolean }
       list_reported_reviews: { Args: { p_limit?: number }; Returns: Json }
       mark_all_notifications_read: { Args: never; Returns: number }

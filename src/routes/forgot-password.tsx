@@ -15,6 +15,7 @@ const description = "Request a password reset link for your " + brand.name + " a
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title },
       { name: "description", content: description },
       { property: "og:title", content: title },

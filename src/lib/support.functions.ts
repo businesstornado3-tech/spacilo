@@ -67,6 +67,13 @@ function friendly(message: string, fallback: string): string {
   return fallback;
 }
 
+export type SupportStatusInput = z.infer<typeof statusInput>;
+export type SupportResolutionInput = z.infer<typeof resolutionInput>;
+export type SupportRefundInput = z.infer<typeof refundInput>;
+export interface SupportAssignInput { caseId: string; assignee: string }
+export interface SupportNoteInput { caseId: string; note: string }
+export interface SupportUpdateInput { caseId: string; message: string }
+
 export const supportAssignCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ caseId, assignee: z.string().uuid() }).parse(data))

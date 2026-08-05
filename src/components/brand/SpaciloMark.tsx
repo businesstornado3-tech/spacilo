@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
  * The approved Spacilo symbol — production SVG of the brand-board master mark.
  *
  * Geometry traced from the approved reference:
- *  - a pointy-top hexagon drawn as a heavy open ring (the SPACE / room),
- *  - the ring breaks at mid-left and mid-right, each half turning inward so the
- *    two interlocking arms read as an S,
+ *  - one open, angular S is the dominant silhouette (SPACILO / SPACE / STORAGE),
+ *  - its upper and lower turns imply an isometric room without closing into a
+ *    hexagon, cube, house or shield,
  *  - a stylised dollar mark — the brand's universal symbol for VALUE and
  *    EARNING from unused space — sitting at the centre and knocked out of the
  *    arms exactly as the reference does.
@@ -18,9 +18,13 @@ import { cn } from "@/lib/utils";
  * token: emerald on light, reversed on dark, single-ink in monochrome.
  */
 
-/** The approved hexagon-ring arms, stepped and crossed into an S. */
-export const HEX_ARM_UPPER = "M6 33.4V17.3L32 3.2l26 14.1v16.1H25.4";
-export const HEX_ARM_LOWER = "M58 30.6v16.1L32 60.8 6 46.7V30.6h32.6";
+/**
+ * The master spatial S. Read from its open top-right terminal through the
+ * upper room, centre transition and lower room to the open bottom-left
+ * terminal. It remains an unmistakable S when the value mark is hidden.
+ */
+export const SPATIAL_S_PATH =
+  "M53.5 17.2 32 5.2 10.5 17.2v12.3L45.8 48v.8L32 56.6 10.5 44.6";
 
 /** The stylised $ — an S spine pierced by a vertical value stroke. */
 export const DOLLAR_SPINE =
@@ -33,7 +37,7 @@ export function SpaciloSymbol({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" fill="none" aria-hidden="true" className={cn("size-8", className)}>
       <defs>
-        {/* Knock the value symbol out of the hexagonal arms. */}
+        {/* Give the secondary value mark breathing room inside the spatial S. */}
         <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
           <rect x="0" y="0" width="64" height="64" fill="white" />
           <g stroke="black" fill="none" strokeLinecap="round" strokeLinejoin="round">
@@ -43,17 +47,16 @@ export function SpaciloSymbol({ className }: { className?: string }) {
         </mask>
       </defs>
 
-      {/* SPACE — the open hexagonal ring stepped and crossed into an S */}
+      {/* SPACILO / SPACE / STORAGE — one open geometric S */}
       <g
         mask={`url(#${maskId})`}
         stroke="currentColor"
-        strokeWidth="5.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        strokeWidth="8"
+        strokeLinecap="square"
+        strokeLinejoin="bevel"
         fill="none"
       >
-        <path d={HEX_ARM_UPPER} />
-        <path d={HEX_ARM_LOWER} />
+        <path d={SPATIAL_S_PATH} />
       </g>
 
       {/* VALUE — the stylised $: earning from unused space */}
@@ -66,9 +69,8 @@ export function SpaciloSymbol({ className }: { className?: string }) {
 }
 
 /**
- * Simplified variant for favicon / PWA icon / very small contexts: the same
- * silhouette and the same $, with the arm step removed so the ring survives
- * at 16px. The master mark above keeps the full construction.
+ * Small-size variant: exactly the same master S + $ geometry with heavier
+ * optical weights. No alternate hexagonal icon is introduced.
  */
 export function SpaciloSymbolCompact({ className }: { className?: string }) {
   const maskId = React.useId();
@@ -85,11 +87,12 @@ export function SpaciloSymbolCompact({ className }: { className?: string }) {
         </mask>
       </defs>
       <path
-        d="M32 3.6 57 17.6v28.8L32 60.4 7 46.4V17.6Z"
+        d={SPATIAL_S_PATH}
         mask={`url(#${maskId})`}
         stroke="currentColor"
-        strokeWidth="7"
-        strokeLinejoin="round"
+        strokeWidth="8.8"
+        strokeLinecap="square"
+        strokeLinejoin="bevel"
         fill="none"
       />
       <g stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" fill="none">

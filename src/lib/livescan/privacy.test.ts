@@ -12,6 +12,11 @@ import { describe, expect, it } from "vitest";
 
 const LIVESCAN_DIR = "src/lib/livescan";
 const read = (path: string) => readFileSync(path, "utf8");
+/** Comments explain the boundary; only executable code can breach it. */
+const readCode = (path: string) =>
+  read(path)
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
 const livescanFiles = readdirSync(LIVESCAN_DIR)
   .filter((file) => file.endsWith(".ts") && !file.endsWith(".test.ts"))
   .map((file) => join(LIVESCAN_DIR, file));
@@ -23,7 +28,7 @@ describe("live frames stay on the device", () => {
 
   it("never calls the vision provider from the live layer", () => {
     for (const file of livescanFiles) {
-      expect(read(file)).not.toMatch(/gemini|ai\.gateway\.lovable\.dev|LOVABLE_API_KEY/i);
+      expect(readCode(file)).not.toMatch(/gemini|ai\.gateway\.lovable\.dev|LOVABLE_API_KEY/i);
     }
   });
 
@@ -64,7 +69,7 @@ describe("live frames stay on the device", () => {
 describe("zero passive load", () => {
   it("loads the model through a dynamic import only", () => {
     const detector = read("src/lib/livescan/detector.ts");
-    expect(detector).toMatch(/await import\(/);
+    expect(detector).toMatch(/import\(\s*["']@tensorflow/);
     expect(detector).not.toMatch(/^import .*@tensorflow/m);
   });
 

@@ -64,9 +64,9 @@ describe("performance governor", () => {
 
   it("steps down after repeated slow passes", () => {
     const governor = new PerformanceGovernor();
-    expect(governor.record(500)).toBe(false);
-    expect(governor.record(500)).toBe(false);
-    expect(governor.record(500)).toBe(true);
+    // Two slow passes are now enough: the preview must not wait longer.
+    expect(governor.record(300)).toBe(false);
+    expect(governor.record(300)).toBe(true);
     expect(governor.mode).toBe("reduced");
   });
 
@@ -123,7 +123,7 @@ describe("inference throttling", () => {
     scheduler.begin(1000);
     scheduler.end(50);
     expect(scheduler.shouldRun(1100)).toBe(false);
-    expect(scheduler.shouldRun(1400)).toBe(true);
+    expect(scheduler.shouldRun(1700)).toBe(true);
   });
 
   it("backs off when the device is slow", () => {

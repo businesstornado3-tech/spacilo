@@ -21,8 +21,22 @@ import { PERFORMANCE_MODE_COPY } from "@/lib/livescan/performance";
 import {
   CAPTURE_READINESS_LABEL,
   LIVE_SCAN_ERROR_COPY,
+  type CameraLifecycleState,
   type LiveScanMode,
 } from "@/lib/livescan/types";
+
+/**
+ * Camera-state copy. These are CAMERA statements, never capture-readiness
+ * statements: a viewport with no frame yet must never be labelled "Not ready".
+ */
+const CAMERA_STATE_COPY: Record<CameraLifecycleState, string> = {
+  idle: "Start the camera when you're ready",
+  requesting_permission: "Asking for camera access…",
+  opening_camera: "Opening the back camera…",
+  waiting_for_first_frame: "Preparing camera…",
+  ready: "Camera on",
+  failed: "We couldn't start the back camera.",
+};
 
 export interface LiveScannerProps extends Omit<UseLiveScanOptions, "onCapture"> {
   mode: LiveScanMode;
@@ -41,7 +55,11 @@ const HEADLINE: Record<LiveScanMode, string> = {
 export function LiveScanner({ fallback, className, ...options }: LiveScannerProps) {
   const scan = useLiveScan(options);
   const { mode } = options;
-  const active = scan.status === "live" || scan.status === "preparing";
+  // The <video> element stays mounted for the whole camera lifecycle: it must
+  // exist BEFORE a stream is attached, and it must never be remounted mid-start.
+  const active = scan.status !== "idle";
+  const cameraReady = scan.cameraReady;
+  const cameraFailed = scan.cameraState === "failed";
   const obstructions = mode === "host" ? hostPossibleObstructions(scan.detections) : [];
 
   if (!scan.capability.camera) {
@@ -133,11 +151,38 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
                 ))}
             </div>
 
+            {!cameraReady ? (
+              <div className="absolute inset-0 grid place-items-center bg-foreground/95 p-6 text-center">
+                {cameraFailed ? (
+                  <div className="max-w-sm">
+                    <CameraOff className="mx-auto size-8 text-background" aria-hidden="true" />
+                    <p className="mt-3 type-body font-medium text-background">
+                      {CAMERA_STATE_COPY.failed}
+                    </p>
+                    <p className="mt-1 type-body-sm text-background/70">
+                      {scan.error ? LIVE_SCAN_ERROR_COPY[scan.error] : null}
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <Loader2
+                      className="mx-auto size-7 animate-spin text-background"
+                      aria-hidden="true"
+                    />
+                    <p className="mt-3 type-body-sm text-background/80">
+                      {CAMERA_STATE_COPY[scan.cameraState]}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : null}
 
-            <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 type-body-sm">
-              <span className="size-2 rounded-full bg-destructive" aria-hidden="true" />
-              Camera on
-            </div>
+            {cameraReady ? (
+              <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 type-body-sm">
+                <span className="size-2 rounded-full bg-destructive" aria-hidden="true" />
+                Camera on
+              </div>
+            ) : null}
 
             <button
               type="button"
@@ -151,11 +196,16 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
 
           <div className="bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="type-body font-medium">{scan.guidance.message}</p>
+              <p className="type-body font-medium">
+                {cameraReady ? scan.guidance.message : CAMERA_STATE_COPY[scan.cameraState]}
+              </p>
+              {/* Capture readiness may only be shown once the camera is ready. */}
               <Badge variant="neutral" className="ml-auto">
-                {scan.status === "preparing"
-                  ? "Preparing SpaceFit Live Scan…"
-                  : CAPTURE_READINESS_LABEL[scan.guidance.readiness]}
+                {!cameraReady
+                  ? CAMERA_STATE_COPY[scan.cameraState]
+                  : scan.status === "preparing"
+                    ? "Preparing SpaceFit Live Scan…"
+                    : CAPTURE_READINESS_LABEL[scan.guidance.readiness]}
               </Badge>
             </div>
 
@@ -165,9 +215,11 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
               </p>
             ) : null}
 
-
             {/* Text, not just boxes — guidance never depends on colour alone. */}
-            <ul className="mt-2 grid gap-1 type-body-sm text-muted-foreground sm:grid-cols-2">
+            <ul
+              className="mt-2 grid gap-1 type-body-sm text-muted-foreground sm:grid-cols-2"
+              hidden={!cameraReady}
+            >
               {scan.guidance.checks.map((check) => (
                 <li key={check.label}>
                   {check.met ? "✓" : "•"} {check.label}
@@ -202,13 +254,49 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
               </Alert>
             ) : null}
 
-            <div className="mt-4 flex flex-wrap items-center gap-2">
+            {cameraFailed ? (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  size="lg"
+                  className="min-h-14"
+                  onClick={() => void scan.retry()}
+                >
+                  <RefreshCw className="size-5" aria-hidden="true" />
+                  Try again
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="lg"
+                  className="min-h-14"
+                  onClick={() => void scan.switchCamera()}
+                >
+                  <Camera className="size-5" aria-hidden="true" />
+                  Switch camera
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="lg"
+                  className="min-h-14"
+                  onClick={scan.stop}
+                >
+                  <CameraOff className="size-5" aria-hidden="true" />
+                  Upload photo instead
+                </Button>
+              </div>
+            ) : null}
+
+            {cameraFailed ? fallback : null}
+
+            <div className="mt-4 flex flex-wrap items-center gap-2" hidden={cameraFailed}>
               <Button
                 type="button"
                 size="lg"
                 className="min-h-14 flex-1"
                 onClick={() => void scan.capture()}
-                disabled={scan.capturing}
+                disabled={scan.capturing || !cameraReady}
               >
                 {scan.capturing ? (
                   <Loader2 className="size-5 animate-spin" aria-hidden="true" />

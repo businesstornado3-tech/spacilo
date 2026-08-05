@@ -75,6 +75,16 @@ function PolicyAdminPage() {
           </div>
 
           {version ? (
+            <PolicyLifecyclePanel
+              version={version}
+              versions={versions}
+              activeRuleCount={rules?.length ?? 0}
+            />
+          ) : null}
+
+
+
+          {version ? (
             <section className="rounded-2xl border border-border bg-card p-5">
               <h2 className="flex items-center gap-2 type-h3">
                 <ScrollText className="size-5 text-primary" aria-hidden="true" />

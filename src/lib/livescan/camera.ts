@@ -57,6 +57,22 @@ export function cameraConstraints(
   };
 }
 
+/**
+ * Retry constraints: nothing but the facing preference. Some phones negotiate
+ * a rear stream that never paints when size/frameRate hints are present, so
+ * the recovery attempt asks for as little as possible.
+ */
+export function simpleCameraConstraints(
+  facing: CameraFacing,
+  deviceId?: string,
+): MediaStreamConstraints {
+  return {
+    audio: false,
+    video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: facing } },
+  };
+}
+
+
 /** Maps a raw media error onto our small, non-sensitive error vocabulary. */
 export function cameraErrorCode(error: unknown): LiveScanErrorCode {
   const name = typeof error === "object" && error !== null ? String((error as Error).name) : "";

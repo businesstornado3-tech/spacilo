@@ -133,6 +133,8 @@ export function useGuestSpaceFit(kind: GuestKind): GuestScanState {
         });
 
         if (!response.ok) {
+          // A finished-but-failed attempt must never lock the next try.
+          requestIdRef.current = null;
           setError(response.message);
           return;
         }
@@ -140,10 +142,12 @@ export function useGuestSpaceFit(kind: GuestKind): GuestScanState {
         if (response.result.kind === "renter") setItems(response.result.items);
         else setProposal(response.result.proposal);
       } catch {
+        requestIdRef.current = null;
         setError("We couldn't reach SpaceFit AI. Please try again, or add things manually.");
       } finally {
         setAnalysing(false);
       }
+
     },
     [analyseFn, analysing, images, kind, start],
   );

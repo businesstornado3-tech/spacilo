@@ -26,6 +26,7 @@ import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated.h
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedRenterRouteImport } from './routes/_authenticated.renter'
+import { Route as AuthenticatedSpacefitRouteImport } from './routes/_authenticated.spacefit'
 import { Route as SpacefitSpaceRouteImport } from './routes/spacefit.space'
 import { Route as SpacefitStuffRouteImport } from './routes/spacefit.stuff'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
@@ -147,6 +148,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
 const AuthenticatedRenterRoute = AuthenticatedRenterRouteImport.update({
   id: '/renter',
   path: '/renter',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSpacefitRoute = AuthenticatedSpacefitRouteImport.update({
+  id: '/spacefit',
+  path: '/spacefit',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const SpacefitSpaceRoute = SpacefitSpaceRouteImport.update({
@@ -383,6 +389,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/renter': typeof AuthenticatedRenterRouteWithChildren
+  '/spacefit': typeof AuthenticatedSpacefitRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -436,6 +443,7 @@ export interface FileRoutesByTo {
   '/trust': typeof TrustRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/spacefit': typeof AuthenticatedSpacefitRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -492,6 +500,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/renter': typeof AuthenticatedRenterRouteWithChildren
+  '/_authenticated/spacefit': typeof AuthenticatedSpacefitRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -549,6 +558,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/renter'
+    | '/spacefit'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
@@ -602,6 +612,7 @@ export interface FileRouteTypes {
     | '/trust'
     | '/notifications'
     | '/profile'
+    | '/spacefit'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
@@ -657,6 +668,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/renter'
+    | '/_authenticated/spacefit'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
@@ -836,6 +848,13 @@ declare module '@tanstack/react-router' {
       path: '/renter'
       fullPath: '/renter'
       preLoaderRoute: typeof AuthenticatedRenterRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/spacefit': {
+      id: '/_authenticated/spacefit'
+      path: '/spacefit'
+      fullPath: '/spacefit'
+      preLoaderRoute: typeof AuthenticatedSpacefitRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/spacefit/space': {
@@ -1203,6 +1222,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRenterRoute: typeof AuthenticatedRenterRouteWithChildren
+  AuthenticatedSpacefitRoute: typeof AuthenticatedSpacefitRoute
   AuthenticatedAdminSupportCaseIdRoute: typeof AuthenticatedAdminSupportCaseIdRoute
   AuthenticatedSupportCasesCaseIdRoute: typeof AuthenticatedSupportCasesCaseIdRoute
   AuthenticatedAdminReviewsIndexRoute: typeof AuthenticatedAdminReviewsIndexRoute
@@ -1214,6 +1234,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRenterRoute: AuthenticatedRenterRouteWithChildren,
+  AuthenticatedSpacefitRoute: AuthenticatedSpacefitRoute,
   AuthenticatedAdminSupportCaseIdRoute: AuthenticatedAdminSupportCaseIdRoute,
   AuthenticatedSupportCasesCaseIdRoute: AuthenticatedSupportCasesCaseIdRoute,
   AuthenticatedAdminReviewsIndexRoute: AuthenticatedAdminReviewsIndexRoute,

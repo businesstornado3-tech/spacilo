@@ -24,9 +24,12 @@ import {
 import { useGuestSpaceFit } from "@/hooks/useGuestSpaceFit";
 import {
   GUEST_HOST_VERIFICATION_NOTE,
+  GUEST_SPACE_OUTCOME_COPY,
   guestSpacePreview,
+  spaceMeasurementOutcome,
   type GuestSpaceProposal,
 } from "@/lib/spacefit-guest/preview";
+
 import { formatPrice } from "@/lib/format";
 
 const title = "Scan your space — " + brand.name;
@@ -87,6 +90,8 @@ function GuestSpacePage() {
     () => (proposal ? guestSpacePreview({ ...proposal, spaceType }) : null),
     [proposal, spaceType],
   );
+  const outcome = spaceMeasurementOutcome(proposal);
+
 
   return (
     <MarketingLayout>
@@ -155,12 +160,23 @@ function GuestSpacePage() {
         {proposal ? (
           <section className="mt-4 rounded-2xl border border-border bg-card p-5">
             <h2 className="type-h3">2. Check the measurements</h2>
-            <p className="mt-1 type-body-sm text-muted-foreground">
-              {proposal.referenceUsed
-                ? `SpaceFit AI used ${proposal.referenceUsed} for scale. `
-                : ""}
-              These are estimates — correct anything that looks wrong.
-            </p>
+            {outcome === "measured" ? (
+              <p className="mt-1 type-body-sm text-muted-foreground">
+                {proposal.referenceUsed
+                  ? `SpaceFit AI used ${proposal.referenceUsed} for scale. `
+                  : ""}
+                {GUEST_SPACE_OUTCOME_COPY.measured.body}
+              </p>
+            ) : (
+              <Alert
+                tone={outcome === "partial" ? "warning" : "info"}
+                className="mt-3"
+                title={GUEST_SPACE_OUTCOME_COPY[outcome].title}
+              >
+                {GUEST_SPACE_OUTCOME_COPY[outcome].body}
+              </Alert>
+            )}
+
 
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
               <Field label="Width (m)" htmlFor="guest-width">

@@ -225,7 +225,7 @@ function GuestSpacePage() {
                 <dt className="type-overline text-muted-foreground">Over 12 months</dt>
                 <dd className="mt-1 type-h2 tabular-nums">
                   {preview.earnings.length > 0
-                    ? formatPrice(preview.earnings[preview.earnings.length - 1]!.grossPence)
+                    ? formatPrice(preview.earnings[preview.earnings.length - 1]!.hostEarningsPence)
                     : "—"}
                 </dd>
               </div>

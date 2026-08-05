@@ -7,7 +7,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { isPrivatePath } from "@/lib/seo/routes";
+import { isPrivateRoute } from "@/lib/seo/routes";
 
 const HOMEPAGE_FILES = [
   "src/routes/index.tsx",
@@ -54,7 +54,7 @@ describe("homepage route contract", () => {
 
   it("never sends a signed-out visitor straight into a private route", () => {
     for (const target of homepageTargets) {
-      expect(isPrivatePath(target), `private route linked publicly: ${target}`).toBe(false);
+      expect(isPrivateRoute(target), `private route linked publicly: ${target}`).toBe(false);
     }
   });
 

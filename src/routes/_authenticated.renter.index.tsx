@@ -78,9 +78,6 @@ function RenterHomePage() {
               </span>
               <span className="mt-4 type-h3">{action.title}</span>
               <span className="mt-1.5 type-body-sm text-muted-foreground">{action.body}</span>
-              {action.note ? (
-                <span className="mt-2 type-body-sm text-muted-foreground/80">{action.note}</span>
-              ) : null}
               <span className="mt-4 flex items-center gap-1.5 type-body-sm font-semibold text-primary">
                 {action.cta}
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />

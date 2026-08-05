@@ -10,7 +10,18 @@
 
 export const REPORTING_TIMEZONE = "Europe/London";
 
-export type DateRangeKey = "today" | "7d" | "30d" | "this_month" | "custom";
+export type DateRangeKey =
+  | "today"
+  | "7d"
+  | "30d"
+  | "90d"
+  | "this_month"
+  | "last_month"
+  | "all_time"
+  | "custom";
+
+/** Earliest date the platform could hold data for; anchors the "All time" range. */
+export const ALL_TIME_START = { year: 2025, month: 1, day: 1 };
 
 export interface DateRange {
   from: Date;

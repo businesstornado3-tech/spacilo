@@ -90,7 +90,7 @@ export function NotificationList() {
           className="mt-6"
           icon={Bell}
           title={FEED_COPY[state].title || "You're all caught up."}
-          description={FEED_COPY[state].body || undefined}
+          description={FEED_COPY[state].body || "Updates about your bookings, messages and support cases will appear here."}
         />
       ) : null}
 

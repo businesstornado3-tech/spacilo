@@ -3973,6 +3973,23 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_public_policy_rules: {
+        Args: { p_version_id: string }
+        Returns: {
+          category: string
+          decision: Database["public"]["Enums"]["policy_decision"]
+          id: string
+          is_active: boolean
+          policy_version_id: string
+          renter_message: string
+          required_space_attributes: Json
+          requires_user_confirmation: boolean
+          rule_key: string
+          severity: number
+          sort_order: number
+          subcategory: string
+        }[]
+      }
       get_published_space: {
         Args: { space_id: string }
         Returns: {
@@ -4078,6 +4095,10 @@ export type Database = {
           review_text: string
           submitted_at: string
         }[]
+      }
+      get_space_suitability_public: {
+        Args: { p_space_id: string }
+        Returns: Json
       }
       has_role: {
         Args: {

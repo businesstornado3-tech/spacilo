@@ -72,7 +72,7 @@ function HostSpaceFitSummary({
     <>
       <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="type-h3">{name}</h2>
-        {featured.published ? <Badge variant="secondary">Published</Badge> : null}
+        {featured.published ? <Badge variant="neutral">Published</Badge> : null}
         <Badge
           variant={featured.verified ? "success" : "warning"}
           className="ml-auto"

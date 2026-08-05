@@ -202,6 +202,26 @@ export function SpaceScanner({
         </ul>
       ) : null}
 
+      {/* Live Scan helps frame the shot; the captured photo enters the
+          existing secure host analysis pipeline unchanged. */}
+      {photos.length < MAX_SPACE_SCAN_PHOTOS ? (
+        <LiveScanner
+          mode="host"
+          className="mt-4"
+          onCapture={async (file: File) => {
+            setBusy(true);
+            try {
+              await uploadScanPhoto(spaceId, file);
+              await refresh();
+            } catch {
+              toast.error("Couldn't add that photo");
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
+      ) : null}
+
       <div className="mt-4 flex flex-wrap gap-2">
         <Button
           type="button"

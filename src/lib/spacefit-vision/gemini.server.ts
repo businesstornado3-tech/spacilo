@@ -12,8 +12,16 @@ import {
   VisionProviderError,
   type AnalyseRequest,
   type AnalyseResponse,
+  type AnalyseSpaceRequest,
+  type AnalyseSpaceResponse,
   type SpaceFitVisionProvider,
 } from "@/lib/spacefit-vision/provider.server";
+import {
+  SPACE_SCAN_JSON_SCHEMA,
+  SPACE_SCAN_PROMPT_VERSION,
+  SPACE_SCAN_SCHEMA_VERSION,
+  spaceScanResultSchema,
+} from "@/lib/spacefit-vision/space-schema";
 import {
   SPACEFIT_VISION_PROMPT_VERSION,
   SPACEFIT_VISION_SCHEMA_VERSION,
@@ -52,6 +60,28 @@ function systemPrompt(catalogueKeys: string[], categories: readonly string[]) {
     "Set possible_restricted_item true only for clearly visible fuel containers, gas cylinders, chemical containers, weapon-like items or perishable food, with a matching restricted_reason.",
     "If you cannot confidently identify anything storage-relevant, return an empty detections array. Never invent objects.",
   ].join("\n");
+}
+
+
+function spaceSystemPrompt(spaceType: string | null | undefined) {
+  return [
+    "You are estimating the storage capacity of a domestic or small commercial space in the UK, from photographs taken by the person who owns it.",
+    spaceType ? `The owner describes it as a ${spaceType.replace(/_/g, " ")}.` : "",
+    "",
+    "SCALE: use everyday UK reference objects visible in the photographs to judge size — a standard internal doorway is about 1.98m tall and 0.76m wide, a single garage door about 2.13m wide, a brick course about 75mm, a plug socket about 86mm, a step about 0.2m, a standard washing machine about 0.6m wide. State which reference you relied on in reference_used.",
+    "",
+    "MEASURE the clear internal width, depth and USABLE height. Usable height is the height goods could realistically be stacked to, so exclude sloping roof sections, low beams and ceiling-mounted obstructions. If you genuinely cannot judge a dimension, return null for it rather than guessing.",
+    "",
+    "OBSTACLES: list permanent things that reduce usable storage volume — boilers, fuse boxes, meters, fixed shelving, workbenches, staircases, structural columns, sloping roof sections, appliances and the swing area of a door. Estimate the volume each one takes in cubic metres. Do NOT list the owner's loose belongings as obstacles; they can be moved.",
+    "",
+    "CONFIDENCE: use high only when a clear reference object and a full view of the space are both present. Use low when the space is cluttered, partly visible, badly lit, shown from a single angle or appears wide-angle. Always populate limitations honestly — the owner will be shown them.",
+    "",
+    "DO NOT identify people, faces, house numbers, street names, addresses, vehicle registrations, document contents or personal possessions in any identifying detail. Ignore them entirely.",
+    "",
+    "You are producing a PROPOSAL that a human will check and correct. Being honestly uncertain is far better than being confidently wrong.",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export function createGeminiVisionProvider(): SpaceFitVisionProvider {
@@ -145,7 +175,98 @@ export function createGeminiVisionProvider(): SpaceFitVisionProvider {
         schemaVersion: SPACEFIT_VISION_SCHEMA_VERSION,
       };
     },
+
+    async analyseSpacePhotos(request: AnalyseSpaceRequest): Promise<AnalyseSpaceResponse> {
+      const content = [
+        {
+          type: "text",
+          text: `Estimate the storage capacity of the space in these ${request.images.length} photograph(s). Return structured estimates only, using null where you cannot judge a dimension.`,
+        },
+        ...request.images.map((image) => ({
+          type: "image_url",
+          image_url: { url: `data:${image.mimeType};base64,${image.base64}` },
+        })),
+      ];
+
+      const payload = await callGateway(model, spaceSystemPrompt(request.spaceType), content, {
+        name: "spacefit_space_measurement",
+        strict: true,
+        schema: SPACE_SCAN_JSON_SCHEMA,
+      });
+
+      const parsed = spaceScanResultSchema.safeParse(payload);
+      if (!parsed.success) {
+        throw new VisionProviderError("malformed_response", "Space scan response failed validation.");
+      }
+
+      return {
+        result: parsed.data,
+        model,
+        provider: "gemini",
+        promptVersion: SPACE_SCAN_PROMPT_VERSION,
+        schemaVersion: SPACE_SCAN_SCHEMA_VERSION,
+      };
+    },
   };
+}
+
+/**
+ * Shared gateway call: request, timeout, HTTP error mapping and JSON parsing.
+ * Returns the already-parsed JSON payload for the caller to validate.
+ */
+async function callGateway(
+  model: string,
+  system: string,
+  content: unknown,
+  jsonSchema: { name: string; strict: boolean; schema: unknown },
+): Promise<unknown> {
+  const apiKey = process.env["LOVABLE_API_KEY"];
+  if (!apiKey) throw new VisionProviderError("not_configured", "Vision credentials missing.");
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(GATEWAY_URL, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content },
+        ],
+        response_format: { type: "json_schema", json_schema: jsonSchema },
+      }),
+    });
+  } catch (error) {
+    throw new VisionProviderError(
+      error instanceof Error && error.name === "AbortError"
+        ? "provider_timeout"
+        : "provider_unavailable",
+      "Vision request failed.",
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!response.ok) {
+    if (response.status === 429) throw new VisionProviderError("rate_limited", "Rate limited.");
+    if (response.status === 402) throw new VisionProviderError("payment_required", "Quota exhausted.");
+    throw new VisionProviderError(
+      "provider_unavailable",
+      `Vision provider returned ${response.status}.`,
+    );
+  }
+
+  try {
+    const body = (await response.json()) as { choices?: { message?: { content?: string } }[] };
+    return JSON.parse(stripFences(body.choices?.[0]?.message?.content ?? ""));
+  } catch {
+    throw new VisionProviderError("malformed_response", "Vision response was not valid JSON.");
+  }
 }
 
 function stripFences(text: string) {

@@ -902,8 +902,12 @@ export type Database = {
           space_postcode_district_snapshot: string | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
+          spacefit_algorithm_snapshot: string | null
+          spacefit_breakdown_snapshot: Json | null
           spacefit_label_snapshot: string | null
+          spacefit_plan_snapshot: Json | null
           spacefit_score_snapshot: number | null
+          spacefit_space_dimensions_snapshot: Json | null
           start_date: string
           status: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence: number | null
@@ -951,8 +955,12 @@ export type Database = {
           space_postcode_district_snapshot?: string | null
           space_title_snapshot?: string | null
           space_type_snapshot?: string | null
+          spacefit_algorithm_snapshot?: string | null
+          spacefit_breakdown_snapshot?: Json | null
           spacefit_label_snapshot?: string | null
+          spacefit_plan_snapshot?: Json | null
           spacefit_score_snapshot?: number | null
+          spacefit_space_dimensions_snapshot?: Json | null
           start_date: string
           status?: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence?: number | null
@@ -1000,8 +1008,12 @@ export type Database = {
           space_postcode_district_snapshot?: string | null
           space_title_snapshot?: string | null
           space_type_snapshot?: string | null
+          spacefit_algorithm_snapshot?: string | null
+          spacefit_breakdown_snapshot?: Json | null
           spacefit_label_snapshot?: string | null
+          spacefit_plan_snapshot?: Json | null
           spacefit_score_snapshot?: number | null
+          spacefit_space_dimensions_snapshot?: Json | null
           start_date?: string
           status?: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence?: number | null
@@ -1985,6 +1997,81 @@ export type Database = {
         }
         Relationships: []
       }
+      space_measurement_proposals: {
+        Row: {
+          applied_at: string | null
+          confidence: string
+          created_at: string
+          depth_m: number | null
+          floor_area_m2: number | null
+          gross_volume_m3: number | null
+          host_id: string
+          id: string
+          limitations: Json
+          notes: string | null
+          proposed_obstacles: Json
+          session_id: string
+          space_id: string
+          usable_height_m: number | null
+          usable_volume_m3: number | null
+          verification_state: string
+          width_m: number | null
+        }
+        Insert: {
+          applied_at?: string | null
+          confidence?: string
+          created_at?: string
+          depth_m?: number | null
+          floor_area_m2?: number | null
+          gross_volume_m3?: number | null
+          host_id: string
+          id?: string
+          limitations?: Json
+          notes?: string | null
+          proposed_obstacles?: Json
+          session_id: string
+          space_id: string
+          usable_height_m?: number | null
+          usable_volume_m3?: number | null
+          verification_state?: string
+          width_m?: number | null
+        }
+        Update: {
+          applied_at?: string | null
+          confidence?: string
+          created_at?: string
+          depth_m?: number | null
+          floor_area_m2?: number | null
+          gross_volume_m3?: number | null
+          host_id?: string
+          id?: string
+          limitations?: Json
+          notes?: string | null
+          proposed_obstacles?: Json
+          session_id?: string
+          space_id?: string
+          usable_height_m?: number | null
+          usable_volume_m3?: number | null
+          verification_state?: string
+          width_m?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "space_measurement_proposals_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "space_scan_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "space_measurement_proposals_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       space_photos: {
         Row: {
           alt: string | null
@@ -2019,6 +2106,110 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "space_photos_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      space_scan_photos: {
+        Row: {
+          analysis_status: Database["public"]["Enums"]["inventory_photo_status"]
+          created_at: string
+          host_id: string
+          id: string
+          session_id: string | null
+          space_id: string
+          storage_path: string
+        }
+        Insert: {
+          analysis_status?: Database["public"]["Enums"]["inventory_photo_status"]
+          created_at?: string
+          host_id: string
+          id?: string
+          session_id?: string | null
+          space_id: string
+          storage_path: string
+        }
+        Update: {
+          analysis_status?: Database["public"]["Enums"]["inventory_photo_status"]
+          created_at?: string
+          host_id?: string
+          id?: string
+          session_id?: string | null
+          space_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "space_scan_photos_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "space_scan_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "space_scan_photos_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      space_scan_sessions: {
+        Row: {
+          client_request_id: string | null
+          completed_at: string | null
+          created_at: string
+          duration_ms: number | null
+          error_category: string | null
+          host_id: string
+          id: string
+          model: string | null
+          photo_count: number
+          prompt_version: string | null
+          provider: string | null
+          schema_version: string | null
+          space_id: string
+          status: Database["public"]["Enums"]["analysis_run_status"]
+        }
+        Insert: {
+          client_request_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_category?: string | null
+          host_id: string
+          id?: string
+          model?: string | null
+          photo_count?: number
+          prompt_version?: string | null
+          provider?: string | null
+          schema_version?: string | null
+          space_id: string
+          status?: Database["public"]["Enums"]["analysis_run_status"]
+        }
+        Update: {
+          client_request_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_category?: string | null
+          host_id?: string
+          id?: string
+          model?: string | null
+          photo_count?: number
+          prompt_version?: string | null
+          provider?: string | null
+          schema_version?: string | null
+          space_id?: string
+          status?: Database["public"]["Enums"]["analysis_run_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "space_scan_sessions_space_id_fkey"
             columns: ["space_id"]
             isOneToOne: false
             referencedRelation: "spaces"
@@ -2067,10 +2258,14 @@ export type Database = {
           lift_available: Database["public"]["Enums"]["tri_state"] | null
           listing_status: Database["public"]["Enums"]["listing_status"]
           longitude: number | null
+          measurement_source: string
+          measurements_verified_at: string | null
           minimum_stay_days: number | null
           minimum_storage_period_months: number
           moisture_condition: Database["public"]["Enums"]["moisture_condition"]
           monthly_price_pence: number | null
+          obstacle_volume_m3: number
+          obstacles: Json
           occupied_volume_m3: number
           onboarding_step: number
           postcode: string | null
@@ -2131,10 +2326,14 @@ export type Database = {
           lift_available?: Database["public"]["Enums"]["tri_state"] | null
           listing_status?: Database["public"]["Enums"]["listing_status"]
           longitude?: number | null
+          measurement_source?: string
+          measurements_verified_at?: string | null
           minimum_stay_days?: number | null
           minimum_storage_period_months?: number
           moisture_condition?: Database["public"]["Enums"]["moisture_condition"]
           monthly_price_pence?: number | null
+          obstacle_volume_m3?: number
+          obstacles?: Json
           occupied_volume_m3?: number
           onboarding_step?: number
           postcode?: string | null
@@ -2195,10 +2394,14 @@ export type Database = {
           lift_available?: Database["public"]["Enums"]["tri_state"] | null
           listing_status?: Database["public"]["Enums"]["listing_status"]
           longitude?: number | null
+          measurement_source?: string
+          measurements_verified_at?: string | null
           minimum_stay_days?: number | null
           minimum_storage_period_months?: number
           moisture_condition?: Database["public"]["Enums"]["moisture_condition"]
           monthly_price_pence?: number | null
+          obstacle_volume_m3?: number
+          obstacles?: Json
           occupied_volume_m3?: number
           onboarding_step?: number
           postcode?: string | null
@@ -2260,7 +2463,9 @@ export type Database = {
           spacefit_algorithm_snapshot: string | null
           spacefit_breakdown_snapshot: Json | null
           spacefit_label_snapshot: string | null
+          spacefit_plan_snapshot: Json | null
           spacefit_score_snapshot: number | null
+          spacefit_space_dimensions_snapshot: Json | null
           status: Database["public"]["Enums"]["storage_request_status"]
           storage_amount_pence: number | null
           updated_at: string
@@ -2305,7 +2510,9 @@ export type Database = {
           spacefit_algorithm_snapshot?: string | null
           spacefit_breakdown_snapshot?: Json | null
           spacefit_label_snapshot?: string | null
+          spacefit_plan_snapshot?: Json | null
           spacefit_score_snapshot?: number | null
+          spacefit_space_dimensions_snapshot?: Json | null
           status?: Database["public"]["Enums"]["storage_request_status"]
           storage_amount_pence?: number | null
           updated_at?: string
@@ -2350,7 +2557,9 @@ export type Database = {
           spacefit_algorithm_snapshot?: string | null
           spacefit_breakdown_snapshot?: Json | null
           spacefit_label_snapshot?: string | null
+          spacefit_plan_snapshot?: Json | null
           spacefit_score_snapshot?: number | null
+          spacefit_space_dimensions_snapshot?: Json | null
           status?: Database["public"]["Enums"]["storage_request_status"]
           storage_amount_pence?: number | null
           updated_at?: string
@@ -2625,8 +2834,12 @@ export type Database = {
           space_postcode_district_snapshot: string | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
+          spacefit_algorithm_snapshot: string | null
+          spacefit_breakdown_snapshot: Json | null
           spacefit_label_snapshot: string | null
+          spacefit_plan_snapshot: Json | null
           spacefit_score_snapshot: number | null
+          spacefit_space_dimensions_snapshot: Json | null
           start_date: string
           status: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence: number | null
@@ -2877,8 +3090,12 @@ export type Database = {
           space_postcode_district_snapshot: string | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
+          spacefit_algorithm_snapshot: string | null
+          spacefit_breakdown_snapshot: Json | null
           spacefit_label_snapshot: string | null
+          spacefit_plan_snapshot: Json | null
           spacefit_score_snapshot: number | null
+          spacefit_space_dimensions_snapshot: Json | null
           start_date: string
           status: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence: number | null
@@ -2943,8 +3160,12 @@ export type Database = {
           space_postcode_district_snapshot: string | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
+          spacefit_algorithm_snapshot: string | null
+          spacefit_breakdown_snapshot: Json | null
           spacefit_label_snapshot: string | null
+          spacefit_plan_snapshot: Json | null
           spacefit_score_snapshot: number | null
+          spacefit_space_dimensions_snapshot: Json | null
           start_date: string
           status: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence: number | null
@@ -3001,8 +3222,12 @@ export type Database = {
           space_postcode_district_snapshot: string | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
+          spacefit_algorithm_snapshot: string | null
+          spacefit_breakdown_snapshot: Json | null
           spacefit_label_snapshot: string | null
+          spacefit_plan_snapshot: Json | null
           spacefit_score_snapshot: number | null
+          spacefit_space_dimensions_snapshot: Json | null
           start_date: string
           status: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence: number | null
@@ -3072,8 +3297,12 @@ export type Database = {
           space_postcode_district_snapshot: string | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
+          spacefit_algorithm_snapshot: string | null
+          spacefit_breakdown_snapshot: Json | null
           spacefit_label_snapshot: string | null
+          spacefit_plan_snapshot: Json | null
           spacefit_score_snapshot: number | null
+          spacefit_space_dimensions_snapshot: Json | null
           start_date: string
           status: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence: number | null
@@ -3134,7 +3363,9 @@ export type Database = {
           spacefit_algorithm_snapshot: string | null
           spacefit_breakdown_snapshot: Json | null
           spacefit_label_snapshot: string | null
+          spacefit_plan_snapshot: Json | null
           spacefit_score_snapshot: number | null
+          spacefit_space_dimensions_snapshot: Json | null
           status: Database["public"]["Enums"]["storage_request_status"]
           storage_amount_pence: number | null
           updated_at: string
@@ -3692,7 +3923,9 @@ export type Database = {
           spacefit_algorithm_snapshot: string | null
           spacefit_breakdown_snapshot: Json | null
           spacefit_label_snapshot: string | null
+          spacefit_plan_snapshot: Json | null
           spacefit_score_snapshot: number | null
+          spacefit_space_dimensions_snapshot: Json | null
           status: Database["public"]["Enums"]["storage_request_status"]
           storage_amount_pence: number | null
           updated_at: string

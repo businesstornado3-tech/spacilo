@@ -14,6 +14,7 @@ import { Alert } from "@/components/common/Alert";
 import { Field, TextInput } from "@/components/form/Field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LiveScanner } from "@/components/spacefit/live/LiveScanner";
 import { toast } from "@/components/overlay/toast";
 import {
   applySpaceMeasurementProposal,

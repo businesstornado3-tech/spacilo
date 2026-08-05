@@ -21,6 +21,8 @@ import {
   bookingWindowLabel,
 } from "@/lib/bookings";
 import { track } from "@/lib/analytics";
+import { BookingJourney } from "@/components/trust/BookingJourney";
+import { stageFromStatus } from "@/lib/trust/journey";
 
 const description =
   "Check the space, dates, price and belongings captured when the host accepted your request.";

@@ -6,6 +6,7 @@ import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ErrorState } from "@/components/common/States";
 import { SpaceWizard } from "@/components/host/listing/SpaceWizard";
+import { ListingQualityCard } from "@/components/host/listing/ListingQualityCard";
 import { getMySpace, listSpacePhotos, type Space, type SpacePhoto } from "@/lib/spaces-api";
 
 export const Route = createFileRoute("/_authenticated/host/spaces/$spaceId/edit")({

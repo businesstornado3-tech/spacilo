@@ -64,6 +64,7 @@ import { Route as AuthenticatedSupportCasesCaseIdRouteImport } from './routes/_a
 import { Route as ApiPublicPayoutsReleaseRouteImport } from './routes/api/public/payouts/release'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 import { Route as AuthenticatedHostSpacesSpaceIdEditRouteImport } from './routes/_authenticated.host.spaces.$spaceId.edit'
+import { Route as AuthenticatedRenterMessagesEnquiryConversationIdRouteImport } from './routes/_authenticated.renter.messages.enquiry.$conversationId'
 import { Route as AuthenticatedRenterRequestsRequestIdIndexRouteImport } from './routes/_authenticated.renter.requests.$requestId.index'
 import { Route as AuthenticatedRenterRequestsRequestIdBookingRouteImport } from './routes/_authenticated.renter.requests.$requestId.booking'
 
@@ -372,6 +373,12 @@ const AuthenticatedHostSpacesSpaceIdEditRoute =
     path: '/spaces/$spaceId/edit',
     getParentRoute: () => AuthenticatedHostRoute,
   } as any)
+const AuthenticatedRenterMessagesEnquiryConversationIdRoute =
+  AuthenticatedRenterMessagesEnquiryConversationIdRouteImport.update({
+    id: '/messages/enquiry/$conversationId',
+    path: '/messages/enquiry/$conversationId',
+    getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
 const AuthenticatedRenterRequestsRequestIdIndexRoute =
   AuthenticatedRenterRequestsRequestIdIndexRouteImport.update({
     id: '/',
@@ -440,6 +447,7 @@ export interface FileRoutesByFullPath {
   '/renter/messages/': typeof AuthenticatedRenterMessagesIndexRoute
   '/renter/requests/': typeof AuthenticatedRenterRequestsIndexRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
+  '/renter/messages/enquiry/$conversationId': typeof AuthenticatedRenterMessagesEnquiryConversationIdRoute
   '/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
   '/renter/requests/$requestId/': typeof AuthenticatedRenterRequestsRequestIdIndexRoute
 }
@@ -495,6 +503,7 @@ export interface FileRoutesByTo {
   '/renter/messages': typeof AuthenticatedRenterMessagesIndexRoute
   '/renter/requests': typeof AuthenticatedRenterRequestsIndexRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
+  '/renter/messages/enquiry/$conversationId': typeof AuthenticatedRenterMessagesEnquiryConversationIdRoute
   '/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
   '/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdIndexRoute
 }
@@ -555,6 +564,7 @@ export interface FileRoutesById {
   '/_authenticated/renter/messages/': typeof AuthenticatedRenterMessagesIndexRoute
   '/_authenticated/renter/requests/': typeof AuthenticatedRenterRequestsIndexRoute
   '/_authenticated/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
+  '/_authenticated/renter/messages/enquiry/$conversationId': typeof AuthenticatedRenterMessagesEnquiryConversationIdRoute
   '/_authenticated/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
   '/_authenticated/renter/requests/$requestId/': typeof AuthenticatedRenterRequestsRequestIdIndexRoute
 }
@@ -615,6 +625,7 @@ export interface FileRouteTypes {
     | '/renter/messages/'
     | '/renter/requests/'
     | '/host/spaces/$spaceId/edit'
+    | '/renter/messages/enquiry/$conversationId'
     | '/renter/requests/$requestId/booking'
     | '/renter/requests/$requestId/'
   fileRoutesByTo: FileRoutesByTo
@@ -670,6 +681,7 @@ export interface FileRouteTypes {
     | '/renter/messages'
     | '/renter/requests'
     | '/host/spaces/$spaceId/edit'
+    | '/renter/messages/enquiry/$conversationId'
     | '/renter/requests/$requestId/booking'
     | '/renter/requests/$requestId'
   id:
@@ -729,6 +741,7 @@ export interface FileRouteTypes {
     | '/_authenticated/renter/messages/'
     | '/_authenticated/renter/requests/'
     | '/_authenticated/host/spaces/$spaceId/edit'
+    | '/_authenticated/renter/messages/enquiry/$conversationId'
     | '/_authenticated/renter/requests/$requestId/booking'
     | '/_authenticated/renter/requests/$requestId/'
   fileRoutesById: FileRoutesById
@@ -1142,6 +1155,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHostSpacesSpaceIdEditRouteImport
       parentRoute: typeof AuthenticatedHostRoute
     }
+    '/_authenticated/renter/messages/enquiry/$conversationId': {
+      id: '/_authenticated/renter/messages/enquiry/$conversationId'
+      path: '/messages/enquiry/$conversationId'
+      fullPath: '/renter/messages/enquiry/$conversationId'
+      preLoaderRoute: typeof AuthenticatedRenterMessagesEnquiryConversationIdRouteImport
+      parentRoute: typeof AuthenticatedRenterRoute
+    }
     '/_authenticated/renter/requests/$requestId/': {
       id: '/_authenticated/renter/requests/$requestId/'
       path: '/'
@@ -1227,6 +1247,7 @@ interface AuthenticatedRenterRouteChildren {
   AuthenticatedRenterInventoryIndexRoute: typeof AuthenticatedRenterInventoryIndexRoute
   AuthenticatedRenterMessagesIndexRoute: typeof AuthenticatedRenterMessagesIndexRoute
   AuthenticatedRenterRequestsIndexRoute: typeof AuthenticatedRenterRequestsIndexRoute
+  AuthenticatedRenterMessagesEnquiryConversationIdRoute: typeof AuthenticatedRenterMessagesEnquiryConversationIdRoute
 }
 
 const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
@@ -1252,6 +1273,8 @@ const AuthenticatedRenterRouteChildren: AuthenticatedRenterRouteChildren = {
     AuthenticatedRenterInventoryIndexRoute,
   AuthenticatedRenterMessagesIndexRoute: AuthenticatedRenterMessagesIndexRoute,
   AuthenticatedRenterRequestsIndexRoute: AuthenticatedRenterRequestsIndexRoute,
+  AuthenticatedRenterMessagesEnquiryConversationIdRoute:
+    AuthenticatedRenterMessagesEnquiryConversationIdRoute,
 }
 
 const AuthenticatedRenterRouteWithChildren =

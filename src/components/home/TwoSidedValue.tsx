@@ -88,8 +88,9 @@ export function TwoSidedValue() {
                 </li>
               ))}
             </ul>
-            <div className="mt-6 self-start">
+            <div className="mt-6 flex flex-wrap items-center gap-3">
               <HostEntryButton label="Start earning" from="homepage_two_sided" />
+              <ScanSpaceButton from="homepage_two_sided" block={false} />
             </div>
           </article>
         </Reveal>

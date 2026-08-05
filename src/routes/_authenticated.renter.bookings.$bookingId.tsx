@@ -20,6 +20,7 @@ import { PaymentBreakdown } from "@/components/payments/PaymentBreakdown";
 import { PaymentHistory } from "@/components/payments/PaymentHistory";
 import { CancellationPanel } from "@/components/payments/CancellationPanel";
 import { EarlyTerminationPanel } from "@/components/bookings/EarlyTerminationPanel";
+import { SupportSection } from "@/components/bookings/SupportSection";
 import { useBooking, useBookingChangeRequests } from "@/hooks/useBookings";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookingCancellation, useBookingRefunds } from "@/hooks/useCancellation";
@@ -229,6 +230,8 @@ function BookingDetailPage() {
 
           />
 
+
+          <SupportSection bookingId={booking.id} role="renter" viewerId={user?.id ?? null} />
 
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="secondary">

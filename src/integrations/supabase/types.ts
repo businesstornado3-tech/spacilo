@@ -3397,6 +3397,7 @@ export type Database = {
         Args: { p_from: string; p_to: string }
         Returns: Json
       }
+      analytics_is_public_path: { Args: { p_path: string }; Returns: boolean }
       analytics_prune: { Args: { p_keep_days?: number }; Returns: number }
       apply_storage_refund_to_earning: {
         Args: {

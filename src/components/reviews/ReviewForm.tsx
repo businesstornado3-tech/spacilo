@@ -118,7 +118,7 @@ export function ReviewForm({
         />
       </Field>
 
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {error ? <Alert tone="error" title={error} /> : null}
 
       <p className="type-body-sm text-muted-foreground">
         Reviews can&apos;t be edited after submission. Your review stays private until the other

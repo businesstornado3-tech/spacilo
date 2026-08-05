@@ -40,18 +40,18 @@ const isInternalLine = (line: string) => {
   );
 };
 
-/** The approved spatial S, shared by the component and the favicon. */
-const SPATIAL_S = "M52 13H25L12 23v8l10 7h20l10 7v6L42 59H12";
+/** The approved open hexagonal frame arms, shared by the component and the favicon. */
+const ARM_UPPER = "M58 26V18L32 4 6 18v14h14";
+const ARM_LOWER = "M6 38v8l26 14 26-14V32H44";
 /** The stylised $ spine, shared by the master mark and the small-size variant. */
-const DOLLAR_SPINE = "M39.4 25.2c-1.9-2.1-4.4-3.1-7.4-3.1";
+const DOLLAR_SPINE = "M38 26c0-2.6-2.7-4.4-6-4.4s-6 1.8-6 4.4";
 
 describe("Spacilo symbol", () => {
   const mark = read("src/components/brand/SpaciloMark.tsx");
 
-  it("uses one open geometric S rather than a closed hexagon", () => {
-    expect(mark).toContain(SPATIAL_S);
-    expect(mark).not.toContain("HEX_ARM");
-    expect(mark).not.toContain("M32 3.6 57 17.6v28.8");
+  it("reproduces the approved open hexagonal frame", () => {
+    expect(mark).toContain(ARM_UPPER);
+    expect(mark).toContain(ARM_LOWER);
   });
 
   it("carries both halves of the concept: space and value", () => {
@@ -59,17 +59,21 @@ describe("Spacilo symbol", () => {
     expect(mark).toMatch(/VALUE/);
     // the value symbol is the stylised $: an S spine pierced by a stem
     expect(mark).toContain(DOLLAR_SPINE);
-    expect(mark).toContain('DOLLAR_STEM = "M32 17.4V47.6"');
+    expect(mark).toContain('DOLLAR_STEM = "M32 19.4V47.2"');
   });
 
-  it("ships a simplified small-size variant that keeps the $", () => {
+  it("ships an icon-only variant derived from the same geometry", () => {
     expect(mark).toContain("SpaciloSymbolCompact");
-    expect(mark.split("DOLLAR_SPINE").length).toBeGreaterThan(4);
+    expect(mark.split("MarkPaths").length).toBeGreaterThan(3);
   });
 
   it("inherits semantic tokens rather than hard-coded colour", () => {
     expect(mark).toContain("currentColor");
     expect(mark).not.toMatch(/#[0-9a-f]{3,8}/i);
+  });
+
+  it("hides decorative geometry from screen readers", () => {
+    expect(mark.split('aria-hidden="true"').length).toBeGreaterThan(2);
   });
 
   it("is used by the header lock-up with the config-driven wordmark", () => {
@@ -84,9 +88,14 @@ describe("favicon", () => {
   const favicon = read("public/favicon.svg");
 
   it("is the simplified variant of the same mark, $ intact", () => {
-    expect(favicon).toContain(SPATIAL_S);
+    expect(favicon).toContain(ARM_UPPER);
+    expect(favicon).toContain(ARM_LOWER);
     expect(favicon).toContain(DOLLAR_SPINE);
-    expect(favicon).toContain('d="M32 17.4V47.6"');
+    expect(favicon).toContain('d="M32 19.4V47.2"');
+  });
+
+  it("does not revert to a retired mark", () => {
+    expect(favicon).not.toContain("M52 13H25L12 23v8l10 7h20l10 7v6L42 59H12");
   });
 
   it("is referenced from the root route", () => {

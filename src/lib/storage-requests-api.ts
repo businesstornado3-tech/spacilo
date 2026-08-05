@@ -13,6 +13,10 @@ import type { StorageRequest } from "@/lib/storage-requests";
 import type { SpaceFitResult } from "@/lib/spacefit/types";
 import type { SpaceFitPlanSnapshot } from "@/lib/spacefit/plan";
 import type { RenterDeclaration } from "@/lib/policy/types";
+import {
+  parseRequestPriceState,
+  type RequestPriceState,
+} from "@/lib/pricing/commitment";
 
 /**
  * Snapshot payload for the SpaceFit result shown at the moment of request.
@@ -175,4 +179,31 @@ export async function myRequestsForSpace(
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
+}
+
+/* ------------------------------------------- authoritative price boundary */
+
+/**
+ * The server's view of what this request costs right now, and whether that
+ * still matches the price the renter reviewed. The browser supplies only the
+ * request id — never an amount, fee, total or currency.
+ */
+export async function getRequestPriceState(requestId: string): Promise<RequestPriceState> {
+  const { data, error } = await supabase.rpc("stow_request_price_state", {
+    p_request_id: requestId,
+  });
+  if (error) throw error;
+  return parseRequestPriceState(data);
+}
+
+/**
+ * Explicit renter re-review. The server records the amount it priced itself,
+ * which then unlocks commitment in `create_booking_from_request`.
+ */
+export async function acknowledgeRequestPrice(requestId: string): Promise<RequestPriceState> {
+  const { data, error } = await supabase.rpc("acknowledge_request_price", {
+    p_request_id: requestId,
+  });
+  if (error) throw error;
+  return parseRequestPriceState(data);
 }

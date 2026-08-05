@@ -15,6 +15,8 @@ import {
   myRequestsForSpace,
   pendingRequestForSpace,
   withdrawRequest,
+  getRequestPriceState,
+  acknowledgeRequestPrice,
   type CreateRequestInput,
 } from "@/lib/storage-requests-api";
 
@@ -58,6 +60,27 @@ export function useCreateRequest() {
     onSuccess: (request) => {
       void qc.invalidateQueries({ queryKey: requestKeys.all });
       void qc.invalidateQueries({ queryKey: requestKeys.forSpace(request.space_id) });
+    },
+  });
+}
+
+/** Authoritative price for an accepted request; the server prices, we render. */
+export function useRequestPriceState(requestId: string | undefined) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: [...requestKeys.detail(requestId ?? "none"), "price"] as const,
+    queryFn: () => getRequestPriceState(requestId as string),
+    enabled: Boolean(user && requestId),
+    staleTime: 0,
+  });
+}
+
+export function useAcknowledgeRequestPrice(requestId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => acknowledgeRequestPrice(requestId as string),
+    onSuccess: (price) => {
+      qc.setQueryData([...requestKeys.detail(requestId ?? "none"), "price"] as const, price);
     },
   });
 }

@@ -10,6 +10,8 @@ import { Field, TextInput } from "@/components/form/Field";
 import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useGuestClaim } from "@/hooks/useGuestClaim";
+
 
 const title = "Log in — " + brand.name;
 const description = "Log in to your " + brand.name + " account to rent or host storage space.";

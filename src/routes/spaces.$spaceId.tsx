@@ -13,6 +13,31 @@ import { RequestSpaceCta } from "@/components/requests/RequestSpaceCta";
 import { ListingSpaceFitPanel } from "@/components/spacefit/ListingSpaceFitPanel";
 import { toMatchSpace } from "@/lib/spacefit/adapters";
 import { SpaceReviews } from "@/components/reviews/SpaceReviews";
+import { TrustSignals } from "@/components/trust/TrustSignals";
+import { buildTrustSummary } from "@/lib/trust/signals";
+import { useSpaceReviewSummary } from "@/hooks/useReviews";
+
+/** Facts about a listing, sourced only from the published row and finished bookings. */
+function SpaceTrustPanel({
+  spaceId,
+  listing,
+}: {
+  spaceId: string;
+  listing: Awaited<ReturnType<typeof getPublishedSpace>>;
+}) {
+  const { data: summary } = useSpaceReviewSummary(spaceId);
+  if (!listing) return null;
+  return (
+    <TrustSignals
+      summary={buildTrustSummary(listing, {
+        review_count: summary?.review_count ?? 0,
+        average_rating: summary?.average_rating ?? null,
+        completed_bookings: summary?.completed_bookings ?? 0,
+      })}
+    />
+  );
+}
+
 
 export const Route = createFileRoute("/spaces/$spaceId")({
   head: () => ({

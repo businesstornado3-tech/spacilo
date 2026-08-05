@@ -32,6 +32,7 @@ import { Route as AuthenticatedHostEarningsRouteImport } from './routes/_authent
 import { Route as AuthenticatedRenterIndexRouteImport } from './routes/_authenticated.renter.index'
 import { Route as AuthenticatedRenterMatchesRouteImport } from './routes/_authenticated.renter.matches'
 import { Route as AuthenticatedRenterSearchRouteImport } from './routes/_authenticated.renter.search'
+import { Route as AuthenticatedAdminSupportIndexRouteImport } from './routes/_authenticated.admin.support.index'
 import { Route as AuthenticatedHostMessagesIndexRouteImport } from './routes/_authenticated.host.messages.index'
 import { Route as AuthenticatedHostMessagesBookingIdRouteImport } from './routes/_authenticated.host.messages.$bookingId'
 import { Route as AuthenticatedHostPayoutsRefreshRouteImport } from './routes/_authenticated.host.payouts.refresh'
@@ -176,6 +177,12 @@ const AuthenticatedRenterSearchRoute =
     id: '/search',
     path: '/search',
     getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
+const AuthenticatedAdminSupportIndexRoute =
+  AuthenticatedAdminSupportIndexRouteImport.update({
+    id: '/admin/support/',
+    path: '/admin/support/',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedHostMessagesIndexRoute =
   AuthenticatedHostMessagesIndexRouteImport.update({
@@ -365,6 +372,7 @@ export interface FileRoutesByFullPath {
   '/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/admin/support/': typeof AuthenticatedAdminSupportIndexRoute
   '/host/messages/': typeof AuthenticatedHostMessagesIndexRoute
   '/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/renter/bookings/': typeof AuthenticatedRenterBookingsIndexRoute
@@ -411,6 +419,7 @@ export interface FileRoutesByTo {
   '/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/admin/support': typeof AuthenticatedAdminSupportIndexRoute
   '/host/messages': typeof AuthenticatedHostMessagesIndexRoute
   '/host/spaces': typeof AuthenticatedHostSpacesIndexRoute
   '/renter/bookings': typeof AuthenticatedRenterBookingsIndexRoute
@@ -462,6 +471,7 @@ export interface FileRoutesById {
   '/_authenticated/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/_authenticated/admin/support/': typeof AuthenticatedAdminSupportIndexRoute
   '/_authenticated/host/messages/': typeof AuthenticatedHostMessagesIndexRoute
   '/_authenticated/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
   '/_authenticated/renter/bookings/': typeof AuthenticatedRenterBookingsIndexRoute
@@ -513,6 +523,7 @@ export interface FileRouteTypes {
     | '/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/admin/support/'
     | '/host/messages/'
     | '/host/spaces/'
     | '/renter/bookings/'
@@ -559,6 +570,7 @@ export interface FileRouteTypes {
     | '/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/admin/support'
     | '/host/messages'
     | '/host/spaces'
     | '/renter/bookings'
@@ -609,6 +621,7 @@ export interface FileRouteTypes {
     | '/_authenticated/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/_authenticated/admin/support/'
     | '/_authenticated/host/messages/'
     | '/_authenticated/host/spaces/'
     | '/_authenticated/renter/bookings/'
@@ -801,6 +814,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/renter/search'
       preLoaderRoute: typeof AuthenticatedRenterSearchRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
+    }
+    '/_authenticated/admin/support/': {
+      id: '/_authenticated/admin/support/'
+      path: '/admin/support'
+      fullPath: '/admin/support/'
+      preLoaderRoute: typeof AuthenticatedAdminSupportIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/host/messages/': {
       id: '/_authenticated/host/messages/'
@@ -1083,6 +1103,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRenterRoute: typeof AuthenticatedRenterRouteWithChildren
   AuthenticatedSupportCasesCaseIdRoute: typeof AuthenticatedSupportCasesCaseIdRoute
+  AuthenticatedAdminSupportIndexRoute: typeof AuthenticatedAdminSupportIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -1090,6 +1111,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRenterRoute: AuthenticatedRenterRouteWithChildren,
   AuthenticatedSupportCasesCaseIdRoute: AuthenticatedSupportCasesCaseIdRoute,
+  AuthenticatedAdminSupportIndexRoute: AuthenticatedAdminSupportIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

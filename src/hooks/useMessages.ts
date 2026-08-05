@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useAuth } from "@/hooks/useAuth";
 import {
+  getConversation,
   getOrCreateBookingConversation,
+  getOrCreateSpaceConversation,
   listMessages,
   listMyConversations,
   sendMessage,
@@ -13,6 +15,7 @@ import {
 export const messageKeys = {
   conversations: ["conversations"] as const,
   forBooking: (bookingId: string) => ["conversations", "booking", bookingId] as const,
+  forSpace: (spaceId: string) => ["conversations", "space", spaceId] as const,
   thread: (conversationId: string) => ["messages", conversationId] as const,
 };
 
@@ -57,5 +60,25 @@ export function useSendMessage(conversation: Conversation | null | undefined) {
       void qc.invalidateQueries({ queryKey: messageKeys.thread(message.conversation_id) });
       void qc.invalidateQueries({ queryKey: messageKeys.conversations });
     },
+  });
+}
+
+/** Opens (creating if needed) the renter's pre-booking enquiry for a space. */
+export function useSpaceConversation(spaceId: string | undefined, enabled = true) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: messageKeys.forSpace(spaceId ?? "none"),
+    queryFn: () => getOrCreateSpaceConversation(spaceId as string),
+    enabled: Boolean(user && spaceId && enabled),
+    retry: false,
+  });
+}
+
+export function useConversation(conversationId: string | undefined) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["conversation", conversationId ?? "none"] as const,
+    queryFn: () => getConversation(conversationId as string),
+    enabled: Boolean(user && conversationId),
   });
 }

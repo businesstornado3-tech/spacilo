@@ -29,7 +29,7 @@ import { useBookingExactAddress, useBookingPayments, useStartCheckout } from "@/
 import { bookingFinancials } from "@/lib/bookings";
 import { lifecycleMeta, lifecycleState } from "@/lib/bookings-lifecycle";
 import { paidStoragePence, paymentHistory, storageRefundSummary } from "@/lib/payments/history";
-import { track } from "@/lib/analytics";
+import { track } from "@/lib/analytics/tracker";
 
 const description = "Your booking details, taken from the request the host accepted.";
 
@@ -87,7 +87,7 @@ function BookingDetailPage() {
     if (!booking) return;
     try {
       const result = await startCheckout.mutateAsync(booking.id);
-      track("checkout_started", { booking_id: booking.id });
+      track("checkout_started", { props: { booking_id: booking.id } });
       window.location.href = result.url;
     } catch (cause) {
       toast.error(

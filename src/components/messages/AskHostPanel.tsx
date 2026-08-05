@@ -5,6 +5,8 @@
  * charges nothing and tells the host nothing beyond what you write. Once a
  * booking exists the conversation moves to the booking thread.
  */
+import { track } from "@/lib/analytics/tracker";
+import * as React from "react";
 import { Link } from "@tanstack/react-router";
 import { MessageSquare } from "lucide-react";
 
@@ -16,6 +18,14 @@ import { MessageThread } from "@/components/messages/MessageThread";
 export function AskHostPanel({ spaceId, spaceTitle }: { spaceId: string; spaceTitle?: string }) {
   const { user } = useAuth();
   const { data: conversation, isLoading, error } = useSpaceConversation(spaceId, Boolean(user));
+  const started = React.useRef(false);
+
+  // One "started" per listing view, the moment a real thread is available.
+  React.useEffect(() => {
+    if (!user || !conversation || started.current) return;
+    started.current = true;
+    track("enquiry_started", { props: { space_id: spaceId } });
+  }, [user, conversation, spaceId]);
 
   return (
     <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-card">
@@ -45,6 +55,7 @@ export function AskHostPanel({ spaceId, spaceTitle }: { spaceId: string; spaceTi
                 viewerId={user.id}
                 audience="renter"
                 isLoading={isLoading}
+                onSent={() => track("enquiry_sent", { props: { space_id: spaceId } })}
                 emptyHint={`No messages yet. Ask about ${spaceTitle ? `“${spaceTitle}”` : "this space"} before you send a request.`}
               />
             </div>

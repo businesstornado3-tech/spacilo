@@ -7,7 +7,7 @@ import { SpaceFitDemo } from "@/components/home/SpaceFitDemo";
 import { SpaceFitAiMark } from "@/components/trust/SpaceFitAI";
 import { HostEntryButton } from "@/components/home/HostEntryButton";
 import { Button } from "@/components/ui/button";
-import { track } from "@/lib/analytics";
+import { track } from "@/lib/analytics/tracker";
 
 /**
  * First viewport. Both sides of the marketplace carry equal weight —
@@ -59,7 +59,7 @@ export function Hero() {
               <Link
                 to="/search"
                 search={{ location: "", radius: 5, sort: "recommended" }}
-                onClick={() => track("location_search_submitted", { from: "homepage_hero_browse" })}
+                onClick={() => track("storage_search_started", { props: { from: "homepage_hero_browse" } })}
               >
                 Browse storage nearby
                 <ArrowRight className="size-4" aria-hidden="true" />
@@ -82,7 +82,7 @@ export function Hero() {
             <SearchControls
               submitLabel="Find storage"
               onSubmit={({ location, radius }) => {
-                track("location_search_submitted", { radius, from: "homepage" });
+                track("storage_search_started", { props: { radius, from: "homepage" } });
                 void navigate({ to: "/search", search: { location, radius } });
               }}
             />

@@ -24,7 +24,7 @@ import {
 } from "@/lib/bookings";
 import { isWithdrawable } from "@/lib/storage-requests";
 import { requestStatusDetail } from "@/lib/request-booking-copy";
-import { track } from "@/lib/analytics";
+import { track } from "@/lib/analytics/tracker";
 
 export const Route = createFileRoute("/_authenticated/renter/requests/$requestId/")({
   head: () => ({
@@ -51,7 +51,7 @@ function RequestDetailPage() {
     if (!request) return;
     try {
       await withdraw.mutateAsync(request.id);
-      track("storage_request_withdrawn", { space_id: request.space_id });
+      track("storage_request_withdrawn", { props: { space_id: request.space_id } });
       toast.success("Request withdrawn", "The host will no longer see this request.");
       setConfirmOpen(false);
     } catch {

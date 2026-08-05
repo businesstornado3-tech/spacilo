@@ -7,6 +7,7 @@
  *
  * Scan photos are private to the host and never appear on the public listing.
  */
+import { track } from "@/lib/analytics/tracker";
 import * as React from "react";
 import { Camera, ImagePlus, Loader2, Ruler, Sparkles, Trash2 } from "lucide-react";
 
@@ -248,7 +249,10 @@ export function SpaceScanner({
         <Button
           type="button"
           variant="secondary"
-          onClick={() => cameraRef.current?.click()}
+          onClick={() => {
+            track("scan_photo_fallback_used", { props: { mode: "host", source: "camera" } });
+            cameraRef.current?.click();
+          }}
           disabled={busy || scanning || photos.length >= MAX_SPACE_SCAN_PHOTOS}
         >
           <Camera className="size-4" aria-hidden="true" />
@@ -257,7 +261,10 @@ export function SpaceScanner({
         <Button
           type="button"
           variant="ghost"
-          onClick={() => uploadRef.current?.click()}
+          onClick={() => {
+            track("scan_photo_fallback_used", { props: { mode: "host", source: "upload" } });
+            uploadRef.current?.click();
+          }}
           disabled={busy || scanning || photos.length >= MAX_SPACE_SCAN_PHOTOS}
         >
           <ImagePlus className="size-4" aria-hidden="true" />
@@ -265,7 +272,10 @@ export function SpaceScanner({
         </Button>
         <Button
           type="button"
-          onClick={() => void runScan()}
+          onClick={() => {
+            track("spacefit_space_started", { props: { photo_count: photos.length } });
+            void runScan();
+          }}
           disabled={photos.length === 0 || busy || scanning}
         >
           {scanning ? (
@@ -304,6 +314,7 @@ export function SpaceScanner({
           <ManualMeasurements
             onCancel={() => setManualOpen(false)}
             onApply={(values) => {
+              track("scan_manual_fallback_used", { props: { mode: "host" } });
               onApplied?.(values);
               setManualOpen(false);
               toast.success("Measurements saved", "You can still change them on your listing.");
@@ -338,6 +349,7 @@ export function SpaceScanner({
               ...values,
             });
             setProposal(null);
+            track("spacefit_space_completed", { props: { confirmed: true } });
             onApplied?.({
               lengthM: values.lengthM,
               widthM: values.widthM,

@@ -1,10 +1,11 @@
 import * as React from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeftRight, ChevronDown, LogOut, User, Boxes, Home, Shield, LifeBuoy } from "lucide-react";
+import { ArrowLeftRight, ChevronDown, LogOut, User, Boxes, Home, Shield, LifeBuoy, LineChart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/overlay/toast";
 import { useAuth, type UserMode } from "@/hooks/useAuth";
+import { useIsPlatformAdmin } from "@/hooks/useAdminDashboard";
 import { cn } from "@/lib/utils";
 
 /** Switches the account between renting and hosting, enabling the mode if new. */
@@ -69,6 +70,7 @@ export function AccountMenu() {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
   const { switchMode, switching } = useModeSwitch();
+  const { data: isAdmin } = useIsPlatformAdmin();
   const other: UserMode = mode === "host" ? "renter" : "host";
 
   React.useEffect(() => {
@@ -146,6 +148,18 @@ export function AccountMenu() {
                 </Link>
               </li>
             ))}
+            {isAdmin ? (
+              <li>
+                <Link
+                  to="/admin/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="flex min-h-11 items-center gap-3 rounded-lg px-3 type-nav text-foreground transition-colors hover:bg-secondary"
+                >
+                  <LineChart className="size-4 text-muted-foreground" aria-hidden="true" />
+                  Founder dashboard
+                </Link>
+              </li>
+            ) : null}
             <li>
               <button
                 type="button"

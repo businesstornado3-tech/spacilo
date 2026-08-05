@@ -34,7 +34,7 @@ import {
 import { evaluateCompatibility, summariseScreening } from "@/lib/policy/engine";
 
 import { publicLocation, spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
-import { track } from "@/lib/analytics";
+import { track } from "@/lib/analytics/tracker";
 import {
   durationDays,
   meetsMinimumStay,
@@ -197,7 +197,7 @@ function NewRequestPage() {
         declaration,
       });
 
-      track("storage_request_submitted", { space_id: space.id });
+      track("storage_request_created", { props: { space_id: space.id } });
       toast.success("Request sent", "The host has 48 hours to respond.");
       void navigate({ to: "/renter/requests/$requestId", params: { requestId: request.id } });
     } catch (error) {

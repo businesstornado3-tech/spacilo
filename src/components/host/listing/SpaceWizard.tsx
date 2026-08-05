@@ -1,4 +1,5 @@
 import * as React from "react";
+import { track } from "@/lib/analytics/tracker";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
@@ -155,6 +156,7 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
     }
     try {
       await publishSpace(space.id);
+      track("host_listing_published", { props: { space_id: space.id } });
       setJustPublished(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {

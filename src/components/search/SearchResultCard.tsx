@@ -16,7 +16,7 @@ import type { SpaceTypeValue } from "@/lib/spaces";
 import { ReasonList, SpaceFitResultBadge, WhyThisMatches } from "@/components/spacefit/SpaceFitResult";
 import { SpaceFitSpark } from "@/components/trust/SpaceFitAI";
 import { formatMilesAway } from "@/lib/location/distance";
-import { track } from "@/lib/analytics";
+import { track } from "@/lib/analytics/tracker";
 import type { SearchResult } from "@/hooks/useStorageSearch";
 
 export interface SearchResultCardProps {
@@ -59,7 +59,7 @@ export function SearchResultCard({
         type="button"
         onClick={() => {
           onSelect?.(row.id);
-          track("search_result_selected", { hasSpaceFit: Boolean(result) });
+          track("search_result_selected", { props: { has_fit_score: Boolean(result) } });
         }}
         aria-pressed={selected}
         aria-label={`Show ${row.title ?? "this space"} on the map`}
@@ -115,7 +115,7 @@ export function SearchResultCard({
               <Link
                 to={spaceFitHref.to}
                 search={spaceFitHref.search as never}
-                onClick={() => track("get_spacefit_selected", { from: "search_card" })}
+                onClick={() => track("cta_clicked", { props: { cta: "scan_stuff", from: "search_card" } })}
                 className="inline-flex items-center gap-2 rounded-xl border border-signal/25 bg-signal-soft/50 px-3 py-2 type-body-sm text-signal-soft-foreground hover:bg-signal-soft"
               >
                 <SpaceFitSpark />

@@ -33,6 +33,7 @@ import { Route as AuthenticatedSpacefitRouteImport } from './routes/_authenticat
 import { Route as SpacefitSpaceRouteImport } from './routes/spacefit.space'
 import { Route as SpacefitStuffRouteImport } from './routes/spacefit.stuff'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated.admin.index'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated.admin.dashboard'
 import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated.host.index'
 import { Route as AuthenticatedHostBookingsRouteImport } from './routes/_authenticated.host.bookings'
@@ -191,6 +192,11 @@ const SpacesSpaceIdRoute = SpacesSpaceIdRouteImport.update({
   id: '/spaces/$spaceId',
   path: '/spaces/$spaceId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedAdminDashboardRoute =
   AuthenticatedAdminDashboardRouteImport.update({
@@ -447,6 +453,7 @@ export interface FileRoutesByFullPath {
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
   '/renter/search': typeof AuthenticatedRenterSearchRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/host/': typeof AuthenticatedHostIndexRoute
   '/renter/': typeof AuthenticatedRenterIndexRoute
   '/admin/support/$caseId': typeof AuthenticatedAdminSupportCaseIdRoute
@@ -508,6 +515,7 @@ export interface FileRoutesByTo {
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
   '/renter/search': typeof AuthenticatedRenterSearchRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/host': typeof AuthenticatedHostIndexRoute
   '/renter': typeof AuthenticatedRenterIndexRoute
   '/admin/support/$caseId': typeof AuthenticatedAdminSupportCaseIdRoute
@@ -572,6 +580,7 @@ export interface FileRoutesById {
   '/_authenticated/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/_authenticated/renter/matches': typeof AuthenticatedRenterMatchesRoute
   '/_authenticated/renter/search': typeof AuthenticatedRenterSearchRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
   '/_authenticated/renter/': typeof AuthenticatedRenterIndexRoute
   '/_authenticated/admin/support/$caseId': typeof AuthenticatedAdminSupportCaseIdRoute
@@ -637,6 +646,7 @@ export interface FileRouteTypes {
     | '/host/earnings'
     | '/renter/matches'
     | '/renter/search'
+    | '/admin/'
     | '/host/'
     | '/renter/'
     | '/admin/support/$caseId'
@@ -698,6 +708,7 @@ export interface FileRouteTypes {
     | '/host/earnings'
     | '/renter/matches'
     | '/renter/search'
+    | '/admin'
     | '/host'
     | '/renter'
     | '/admin/support/$caseId'
@@ -761,6 +772,7 @@ export interface FileRouteTypes {
     | '/_authenticated/host/earnings'
     | '/_authenticated/renter/matches'
     | '/_authenticated/renter/search'
+    | '/_authenticated/admin/'
     | '/_authenticated/host/'
     | '/_authenticated/renter/'
     | '/_authenticated/admin/support/$caseId'
@@ -989,6 +1001,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/spaces/$spaceId'
       preLoaderRoute: typeof SpacesSpaceIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/admin/dashboard': {
       id: '/_authenticated/admin/dashboard'
@@ -1370,6 +1389,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRenterRoute: typeof AuthenticatedRenterRouteWithChildren
   AuthenticatedSpacefitRoute: typeof AuthenticatedSpacefitRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminSupportCaseIdRoute: typeof AuthenticatedAdminSupportCaseIdRoute
   AuthenticatedSupportCasesCaseIdRoute: typeof AuthenticatedSupportCasesCaseIdRoute
   AuthenticatedAdminPolicyIndexRoute: typeof AuthenticatedAdminPolicyIndexRoute
@@ -1384,6 +1404,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRenterRoute: AuthenticatedRenterRouteWithChildren,
   AuthenticatedSpacefitRoute: AuthenticatedSpacefitRoute,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminSupportCaseIdRoute: AuthenticatedAdminSupportCaseIdRoute,
   AuthenticatedSupportCasesCaseIdRoute: AuthenticatedSupportCasesCaseIdRoute,
   AuthenticatedAdminPolicyIndexRoute: AuthenticatedAdminPolicyIndexRoute,
@@ -1421,13 +1442,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

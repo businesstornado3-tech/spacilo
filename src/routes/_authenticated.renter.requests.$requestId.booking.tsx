@@ -24,7 +24,7 @@ import {
   bookingActionState,
   bookingWindowLabel,
 } from "@/lib/bookings";
-import { track } from "@/lib/analytics";
+import { track } from "@/lib/analytics/tracker";
 import { BookingJourney } from "@/components/trust/BookingJourney";
 import { PriceReviewGate } from "@/components/payments/PriceReviewGate";
 import { commitDecision, priceChangeDetail } from "@/lib/pricing/commitment";
@@ -63,7 +63,7 @@ function BookingReviewPage() {
     if (!request) return;
     try {
       const booking = await create.mutateAsync(request.id);
-      track("booking_created", { request_id: request.id, status: booking.status });
+      track("booking_created", { props: { request_id: request.id, status: booking.status } });
       toast.success("Booking started", "It stays awaiting payment for now.");
       void navigate({ to: "/renter/bookings/$bookingId", params: { bookingId: booking.id } });
     } catch (err) {

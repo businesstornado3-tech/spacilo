@@ -8,7 +8,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { hostEntryTarget } from "@/lib/host-entry";
-import { track } from "@/lib/analytics";
+import { track } from "@/lib/analytics/tracker";
 
 interface HostEntryButtonProps {
   label?: string;
@@ -40,7 +40,7 @@ export function HostEntryButton({
       {...(variant ? { variant } : {})}
       {...(block ? { block: true } : {})}
       {...(className ? { className } : {})}
-      onClick={() => track("list_space_selected", { from })}
+      onClick={() => track("cta_clicked", { props: { cta: "list_space", from } })}
     >
       {target.to === "/host/spaces/new" ? (
         <Link to="/host/spaces/new">

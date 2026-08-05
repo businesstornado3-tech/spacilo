@@ -1,4 +1,5 @@
 import * as React from "react";
+import { track } from "@/lib/analytics/tracker";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { brand } from "@/config/brand";
@@ -86,6 +87,7 @@ function LoginPage() {
       setSubmitting(false);
       return;
     }
+    track("login_completed");
     // The auth listener hydrates the profile; the effect above routes onward.
   }
 

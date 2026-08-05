@@ -4,6 +4,7 @@
  * Public route. AI proposes items, the visitor corrects them, and the shared
  * deterministic requirement engine decides the numbers. Nothing is saved.
  */
+import { track } from "@/lib/analytics/tracker";
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Sparkles, Trash2 } from "lucide-react";
@@ -78,6 +79,13 @@ function GuestStuffPage() {
     () => (items && items.length > 0 ? guestRequirementPreview(items) : null),
     [items],
   );
+
+  const viewed = React.useRef(false);
+  React.useEffect(() => {
+    if (!preview || viewed.current) return;
+    viewed.current = true;
+    track("guest_scan_result_viewed", { props: { kind: "stuff" } });
+  }, [preview]);
 
   return (
     <MarketingLayout>

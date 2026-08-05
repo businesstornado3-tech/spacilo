@@ -1,4 +1,5 @@
 import * as React from "react";
+import { track } from "@/lib/analytics/tracker";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { brand } from "@/config/brand";
@@ -82,6 +83,7 @@ function SignupPage() {
     }
 
     setSubmitting(true);
+    track("signup_started", { props: { mode } });
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -101,6 +103,8 @@ function SignupPage() {
       setSubmitting(false);
       return;
     }
+
+    track("signup_completed", { props: { mode, confirmed: Boolean(data.session) } });
 
     // With email confirmation on, there is no session yet.
     if (!data.session) {

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { SpaceFitAiMark } from "@/components/trust/SpaceFitAI";
 import { useAuth } from "@/hooks/useAuth";
 import { scanSpaceTarget, scanStuffTarget } from "@/lib/spacefit-entry";
-import { track } from "@/lib/analytics";
+import { track } from "@/lib/analytics/tracker";
 
 function ScanStuffButton({ from, block = true }: { from: string; block?: boolean }) {
   const { user } = useAuth();
@@ -26,7 +26,7 @@ function ScanStuffButton({ from, block = true }: { from: string; block?: boolean
   );
 
   return (
-    <Button asChild size="lg" {...(block ? { block: true } : {})} onClick={() => track("get_spacefit_selected", { from })}>
+    <Button asChild size="lg" {...(block ? { block: true } : {})} onClick={() => track("cta_clicked", { props: { cta: "scan_stuff", from } })}>
       {target.to === "/renter/inventory/photos" ? (
         <Link to="/renter/inventory/photos">{label}</Link>
       ) : (
@@ -53,7 +53,7 @@ function ScanSpaceButton({ from, block = true }: { from: string; block?: boolean
       size="lg"
       variant="secondary"
       {...(block ? { block: true } : {})}
-      onClick={() => track("get_spacefit_selected", { from: `${from}_host` })}
+      onClick={() => track("cta_clicked", { props: { cta: "scan_space", from } })}
     >
       {target.to === "/host/spaces/new" ? (
         <Link to="/host/spaces/new">{label}</Link>

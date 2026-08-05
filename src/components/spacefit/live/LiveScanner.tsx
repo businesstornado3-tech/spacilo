@@ -8,6 +8,7 @@
  * shows a metre figure. Live labels are provisional; the captured photo goes to
  * the existing secure Spacilo AI pipeline, which remains the authority.
  */
+import { track } from "@/lib/analytics/tracker";
 import * as React from "react";
 import { Camera, CameraOff, Loader2, RefreshCw, ScanLine, X } from "lucide-react";
 
@@ -53,7 +54,13 @@ const HEADLINE: Record<LiveScanMode, string> = {
 };
 
 export function LiveScanner({ fallback, className, ...options }: LiveScannerProps) {
-  const scan = useLiveScan(options);
+  const scan = useLiveScan({
+    ...options,
+    onCapture: async (file) => {
+      track("live_scan_completed", { props: { mode: options.mode } });
+      await options.onCapture(file);
+    },
+  });
   const { mode } = options;
   // The <video> element stays mounted for the whole camera lifecycle: it must
   // exist BEFORE a stream is attached, and it must never be remounted mid-start.
@@ -97,7 +104,10 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
             <Button
               type="button"
               size="lg"
-              onClick={() => void scan.start()}
+              onClick={() => {
+                track("live_scan_started", { props: { mode } });
+                void scan.start();
+              }}
               disabled={scan.status === "starting"}
             >
               {scan.status === "starting" ? (

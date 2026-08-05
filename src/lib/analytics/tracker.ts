@@ -249,7 +249,14 @@ export interface TrackOptions {
  * strictly best-effort and a failure must not affect the product.
  */
 export function track(event: AnalyticsEvent, options: TrackOptions = {}): void {
-  if (!isAnalyticsEvent(event)) return;
+  if (!isAnalyticsEvent(event)) {
+    // Loud in development so taxonomy drift is caught while building, silent
+    // in production so a stale name can never break the product.
+    if (import.meta.env.DEV) {
+      console.warn(`[analytics] "${event}" is not in ANALYTICS_EVENTS — event dropped.`);
+    }
+    return;
+  }
   const context = browserContext();
   if (!context) return;
 

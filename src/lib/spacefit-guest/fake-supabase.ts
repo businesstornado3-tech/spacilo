@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- test double mirrors the untyped PostgREST builder surface */
 /**
  * In-memory stand-in for the Supabase clients used by the guest SpaceFit
  * server boundary.

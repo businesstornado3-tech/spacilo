@@ -4,6 +4,7 @@ import { Camera, ImagePlus, X, ArrowLeft, ArrowRight, Loader2 } from "lucide-rea
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { LiveScanner } from "@/components/spacefit/live/LiveScanner";
 import { Badge } from "@/components/ui/badge";
 import {
   deleteInventoryPhoto,
@@ -90,6 +91,9 @@ export function InventoryPhotoManager({
 
   return (
     <div className="space-y-4">
+      {/* Live Scan sits in FRONT of this existing upload pipeline. */}
+      <LiveScanner mode="renter" onCapture={(file: File) => handleFiles([file])} />
+
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => cameraRef.current?.click()} disabled={busy}>
           <Camera aria-hidden="true" />

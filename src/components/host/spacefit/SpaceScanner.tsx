@@ -14,6 +14,7 @@ import { Alert } from "@/components/common/Alert";
 import { Field, TextInput } from "@/components/form/Field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LiveScanner } from "@/components/spacefit/live/LiveScanner";
 import { toast } from "@/components/overlay/toast";
 import {
   applySpaceMeasurementProposal,
@@ -200,6 +201,26 @@ export function SpaceScanner({
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {/* Live Scan helps frame the shot; the captured photo enters the
+          existing secure host analysis pipeline unchanged. */}
+      {photos.length < MAX_SPACE_SCAN_PHOTOS ? (
+        <LiveScanner
+          mode="host"
+          className="mt-4"
+          onCapture={async (file: File) => {
+            setBusy(true);
+            try {
+              await uploadScanPhoto(spaceId, file);
+              await refresh();
+            } catch {
+              toast.error("Couldn't add that photo");
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
       ) : null}
 
       <div className="mt-4 flex flex-wrap gap-2">

@@ -21,6 +21,7 @@ import { useCreateRequest } from "@/hooks/useStorageRequests";
 import { getPublishedSpace } from "@/lib/spaces-api";
 import { toMatchSpace } from "@/lib/spacefit/adapters";
 import { buildSpaceFitPlanSnapshot, packSpaceFromListing } from "@/lib/spacefit/plan";
+import { PackPlanView } from "@/components/spacefit/PackPlanView";
 
 import { publicLocation, spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import { track } from "@/lib/analytics";
@@ -224,6 +225,15 @@ function NewRequestPage() {
               </>
             )}
           </section>
+
+          {planSnapshot ? (
+            <PackPlanView
+              plan={planSnapshot.plan}
+              space={planSnapshot.space}
+              title="SpaceFit Pack — sent with your request"
+              intro="This plan is saved with your request so you and the host see the same thing later."
+            />
+          ) : null}
 
           <form onSubmit={onSubmit} className="space-y-6">
             <section className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-card">

@@ -93,8 +93,8 @@ function KpiCard({
 }: {
   label: string;
   value: string;
-  delta?: ReturnType<typeof formatDelta>;
-  note?: string;
+  delta?: ReturnType<typeof formatDelta> | undefined;
+  note?: string | undefined;
 }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-3 sm:p-4">

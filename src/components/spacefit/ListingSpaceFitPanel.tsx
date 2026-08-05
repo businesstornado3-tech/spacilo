@@ -10,11 +10,21 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useSpaceFitForSpace } from "@/hooks/useSpaceFitMatches";
 import { ReasonList, SpaceFitResultBadge, WhyThisMatches } from "@/components/spacefit/SpaceFitResult";
+import { PackPlanView } from "@/components/spacefit/PackPlanView";
+import { buildSpaceFitPlanSnapshot, packSpaceFromListing, type PackSpaceSource } from "@/lib/spacefit/plan";
 import type { MatchSpace } from "@/lib/spacefit/types";
 
-export function ListingSpaceFitPanel({ space }: { space: MatchSpace }) {
+export function ListingSpaceFitPanel({
+  space,
+  listing,
+}: {
+  space: MatchSpace;
+  /** Raw listing row, used for the live packing preview's geometry. */
+  listing?: PackSpaceSource;
+}) {
   const { user } = useAuth();
-  const { result, hasInventory } = useSpaceFitForSpace(user ? space : null);
+  const { result, items } = useSpaceFitForSpace(user ? space : null);
+  const hasInventory = items.length > 0;
 
   if (!user || !hasInventory || !result) {
     return (
@@ -37,26 +47,42 @@ export function ListingSpaceFitPanel({ space }: { space: MatchSpace }) {
     );
   }
 
+  // Live preview only: nothing is stored until a request is sent.
+  const preview = listing ? buildSpaceFitPlanSnapshot(items, packSpaceFromListing(listing)) : null;
+
   return (
-    <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-card">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="type-h3">SpaceFit for your stuff</h2>
-        <SpaceFitResultBadge result={result} />
-      </div>
-      <p className="mt-1 type-body-sm font-semibold">{result.label}</p>
-      <div className="mt-3">
-        {result.compatible ? (
-          <ReasonList positives={result.positives} warnings={result.warnings} limit={4} />
-        ) : (
-          <ReasonList failures={result.hard_failures.map((failure) => failure.message)} />
-        )}
-      </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <WhyThisMatches result={result} />
-        <Button asChild variant="ghost" size="sm">
-          <Link to="/renter/matches">See all your matches</Link>
-        </Button>
-      </div>
-    </section>
+    <>
+      <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-card">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="type-h3">SpaceFit for your stuff</h2>
+          <SpaceFitResultBadge result={result} />
+        </div>
+        <p className="mt-1 type-body-sm font-semibold">{result.label}</p>
+        <div className="mt-3">
+          {result.compatible ? (
+            <ReasonList positives={result.positives} warnings={result.warnings} limit={4} />
+          ) : (
+            <ReasonList failures={result.hard_failures.map((failure) => failure.message)} />
+          )}
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <WhyThisMatches result={result} />
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/renter/matches">See all your matches</Link>
+          </Button>
+        </div>
+      </section>
+
+      {preview ? (
+        <PackPlanView
+          plan={preview.plan}
+          space={preview.space}
+          title="How your stuff could fit"
+          intro="A suggested arrangement for the items you've confirmed in My Stuff."
+          className="mt-6"
+        />
+      ) : null}
+    </>
   );
 }
+

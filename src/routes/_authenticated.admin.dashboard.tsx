@@ -398,6 +398,54 @@ function AdminDashboardRoute() {
         <p className="mt-2 type-body-xs text-muted-foreground">
           Gross booking value and paid value are distinct concepts and are never combined into a single figure.
         </p>
+
+        <h3 className="mt-5 type-label">Financial trend</h3>
+        {trends.isLoading ? (
+          <Skeleton className="mt-2 h-56 w-full" />
+        ) : trendRows.length === 0 ? (
+          <EmptyState className="mt-2" title="No activity yet" description="No booking value recorded for this period." />
+        ) : (
+          <>
+            <div
+              className="mt-2 h-56 w-full"
+              role="img"
+              aria-label={`Line chart of daily gross booking value and Spacilo fees (pence) for ${DATE_RANGE_LABEL[rangeKey]}`}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={trendRows}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="gbv_pence" stroke="var(--color-primary)" strokeWidth={2} dot={false} name="GBV (pence)" />
+                  <Line type="monotone" dataKey="fees_pence" stroke="var(--color-accent, var(--color-primary))" strokeWidth={2} dot={false} name="Fees (pence)" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <details className="mt-2">
+              <summary className="type-body-xs text-muted-foreground">Table equivalent</summary>
+              <table className="mt-2 w-full type-body-xs">
+                <caption className="sr-only">Gross booking value and Spacilo fees by day, {DATE_RANGE_LABEL[rangeKey]}</caption>
+                <thead>
+                  <tr>
+                    <th className="text-left">Date</th>
+                    <th className="text-left">GBV</th>
+                    <th className="text-left">Fees</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {trendRows.map((row, i) => (
+                    <tr key={i}>
+                      <td>{String(row["date"])}</td>
+                      <td>{formatPence(Number(row["gbv_pence"]))}</td>
+                      <td>{formatPence(Number(row["fees_pence"]))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </details>
+          </>
+        )}
       </section>
 
       {/* §48 operational attention */}

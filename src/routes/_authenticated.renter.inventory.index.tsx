@@ -18,6 +18,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { InventorySummary } from "@/components/inventory/InventorySummary";
+import { RequirementCard } from "@/components/spacefit/RequirementCard";
+
 import { ItemRow } from "@/components/inventory/ItemRow";
 import { ItemDialog } from "@/components/inventory/ItemDialog";
 import {

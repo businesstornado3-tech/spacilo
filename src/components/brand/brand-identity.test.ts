@@ -1,7 +1,7 @@
 /**
  * Prompt 23B closeout — approved visual identity + customer-facing brand purity.
  *
- * 1. The symbol is the approved hexagonal SPACE + VALUE mark.
+ * 1. The symbol is the approved geometric S + VALUE mark.
  * 2. The favicon is derived from that same mark.
  * 3. No customer-facing string carries a legacy brand name any more —
  *    the internal SpaceFit architecture (modules, types, identifiers, code
@@ -40,17 +40,18 @@ const isInternalLine = (line: string) => {
   );
 };
 
-/** The approved hexagon-into-S arm, shared by the component and the favicon. */
-const HEX_S_ARM = "M6 33.4V17.3L32 3.2l26 14.1v16.1H25.4";
+/** The approved spatial S, shared by the component and the favicon. */
+const SPATIAL_S = "M52 13H25L12 23v8l10 7h20l10 7v6L42 59H12";
 /** The stylised $ spine, shared by the master mark and the small-size variant. */
 const DOLLAR_SPINE = "M39.4 25.2c-1.9-2.1-4.4-3.1-7.4-3.1";
 
 describe("Spacilo symbol", () => {
   const mark = read("src/components/brand/SpaciloMark.tsx");
 
-  it("uses the approved hexagonal geometry", () => {
-    expect(mark).toContain(HEX_S_ARM);
-    expect(mark).toContain("M58 30.6v16.1L32 60.8 6 46.7V30.6h32.6");
+  it("uses one open geometric S rather than a closed hexagon", () => {
+    expect(mark).toContain(SPATIAL_S);
+    expect(mark).not.toContain("HEX_ARM");
+    expect(mark).not.toContain("M32 3.6 57 17.6v28.8");
   });
 
   it("carries both halves of the concept: space and value", () => {
@@ -83,7 +84,7 @@ describe("favicon", () => {
   const favicon = read("public/favicon.svg");
 
   it("is the simplified variant of the same mark, $ intact", () => {
-    expect(favicon).toContain("M32 3.6 57 17.6v28.8L32 60.4 7 46.4V17.6Z");
+    expect(favicon).toContain(SPATIAL_S);
     expect(favicon).toContain(DOLLAR_SPINE);
     expect(favicon).toContain('d="M32 17.4V47.6"');
   });

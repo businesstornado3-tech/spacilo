@@ -60,7 +60,7 @@ export function guestItemsFromDetections(detections: NormalisedDetection[]): Gue
     .filter((detection) => detection.inventory_intent !== "likely_environment")
     .slice(0, MAX_GUEST_PREVIEW_ITEMS)
     .map((detection) => {
-      const catalogue = detection.catalogue_key ? CATALOGUE_BY_KEY[detection.catalogue_key] : undefined;
+      const catalogue = detection.catalogue_key ? CATALOGUE_BY_KEY.get(detection.catalogue_key) : undefined;
       return {
         id: nextId("ai"),
         label: detection.label.slice(0, 80),
@@ -81,7 +81,7 @@ export function guestItemsFromDetections(detections: NormalisedDetection[]): Gue
 
 /** Manual fallback: a guest can always build the list by hand instead. */
 export function guestItemFromCatalogue(key: string, quantity = 1): GuestItem | null {
-  const catalogue = CATALOGUE_BY_KEY[key];
+  const catalogue = CATALOGUE_BY_KEY.get(key);
   if (!catalogue) return null;
   return {
     id: nextId("manual"),

@@ -119,6 +119,13 @@ function NewRequestPage() {
   }, [space, startDate, endDate, dateErrors.start, dateErrors.end]);
   const hasItems = (items?.length ?? 0) > 0;
 
+  // Frozen at request time: the requirement and packing plan derived from the
+  // renter's CONFIRMED items against this space's verified geometry.
+  const planSnapshot = React.useMemo(() => {
+    if (!space || !items || items.length === 0) return null;
+    return buildSpaceFitPlanSnapshot(items, packSpaceFromListing(space));
+  }, [space, items]);
+
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitted(true);
@@ -131,7 +138,9 @@ function NewRequestPage() {
         endDate,
         ...(note.trim() ? { note: note.trim() } : {}),
         spaceFit: result,
+        plan: planSnapshot,
       });
+
       track("storage_request_submitted", { space_id: space.id });
       toast.success("Request sent", "The host has 48 hours to respond.");
       void navigate({ to: "/renter/requests/$requestId", params: { requestId: request.id } });

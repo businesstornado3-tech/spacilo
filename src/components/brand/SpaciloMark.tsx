@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
  * terminal. It remains an unmistakable S when the value mark is hidden.
  */
 export const SPATIAL_S_PATH =
-  "M53.5 17.2 32 5.2 10.5 17.2v12.3L45.8 48v.8L32 56.6 10.5 44.6";
+  "M51 15 42 8 23 8 12 16v11l8 6 23 6 9 7v6l-9 7H23l-11-8";
 
 /** The stylised $ — an S spine pierced by a vertical value stroke. */
 export const DOLLAR_SPINE =

@@ -138,6 +138,17 @@ export function RequestSummary({
         </section>
       ) : null}
 
+      <SnapshotPackPlan
+        planSnapshot={request.spacefit_plan_snapshot}
+        dimensionsSnapshot={request.spacefit_space_dimensions_snapshot}
+        intro={
+          audience === "host"
+            ? "How the renter is planning to use the space, worked out from the items they confirmed."
+            : "How your belongings are likely to fit, worked out when you sent this request."
+        }
+      />
+
+
       {view.note ? (
         <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
           <h2 className="type-h3">Your message to the host</h2>

@@ -140,7 +140,7 @@ function ModerationRow({ review }: { review: ReportedReview }) {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <StarRatingDisplay value={review.rating} />
-          <Badge variant="secondary">
+          <Badge variant="neutral">
             {review.reviewer_role === "renter" ? "Renter → host" : "Host → renter"}
           </Badge>
           <Badge variant={review.moderation_status === "hidden" ? "destructive" : "outline"}>

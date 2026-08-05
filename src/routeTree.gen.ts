@@ -32,6 +32,7 @@ import { Route as AuthenticatedHostEarningsRouteImport } from './routes/_authent
 import { Route as AuthenticatedRenterIndexRouteImport } from './routes/_authenticated.renter.index'
 import { Route as AuthenticatedRenterMatchesRouteImport } from './routes/_authenticated.renter.matches'
 import { Route as AuthenticatedRenterSearchRouteImport } from './routes/_authenticated.renter.search'
+import { Route as AuthenticatedAdminReviewsIndexRouteImport } from './routes/_authenticated.admin.reviews.index'
 import { Route as AuthenticatedAdminSupportIndexRouteImport } from './routes/_authenticated.admin.support.index'
 import { Route as AuthenticatedAdminSupportCaseIdRouteImport } from './routes/_authenticated.admin.support.$caseId'
 import { Route as AuthenticatedHostMessagesIndexRouteImport } from './routes/_authenticated.host.messages.index'
@@ -178,6 +179,12 @@ const AuthenticatedRenterSearchRoute =
     id: '/search',
     path: '/search',
     getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
+const AuthenticatedAdminReviewsIndexRoute =
+  AuthenticatedAdminReviewsIndexRouteImport.update({
+    id: '/admin/reviews/',
+    path: '/admin/reviews/',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAdminSupportIndexRoute =
   AuthenticatedAdminSupportIndexRouteImport.update({
@@ -380,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/admin/reviews/': typeof AuthenticatedAdminReviewsIndexRoute
   '/admin/support/': typeof AuthenticatedAdminSupportIndexRoute
   '/host/messages/': typeof AuthenticatedHostMessagesIndexRoute
   '/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
@@ -428,6 +436,7 @@ export interface FileRoutesByTo {
   '/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/admin/reviews': typeof AuthenticatedAdminReviewsIndexRoute
   '/admin/support': typeof AuthenticatedAdminSupportIndexRoute
   '/host/messages': typeof AuthenticatedHostMessagesIndexRoute
   '/host/spaces': typeof AuthenticatedHostSpacesIndexRoute
@@ -481,6 +490,7 @@ export interface FileRoutesById {
   '/_authenticated/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/_authenticated/admin/reviews/': typeof AuthenticatedAdminReviewsIndexRoute
   '/_authenticated/admin/support/': typeof AuthenticatedAdminSupportIndexRoute
   '/_authenticated/host/messages/': typeof AuthenticatedHostMessagesIndexRoute
   '/_authenticated/host/spaces/': typeof AuthenticatedHostSpacesIndexRoute
@@ -534,6 +544,7 @@ export interface FileRouteTypes {
     | '/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/admin/reviews/'
     | '/admin/support/'
     | '/host/messages/'
     | '/host/spaces/'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/admin/reviews'
     | '/admin/support'
     | '/host/messages'
     | '/host/spaces'
@@ -634,6 +646,7 @@ export interface FileRouteTypes {
     | '/_authenticated/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/_authenticated/admin/reviews/'
     | '/_authenticated/admin/support/'
     | '/_authenticated/host/messages/'
     | '/_authenticated/host/spaces/'
@@ -827,6 +840,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/renter/search'
       preLoaderRoute: typeof AuthenticatedRenterSearchRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
+    }
+    '/_authenticated/admin/reviews/': {
+      id: '/_authenticated/admin/reviews/'
+      path: '/admin/reviews'
+      fullPath: '/admin/reviews/'
+      preLoaderRoute: typeof AuthenticatedAdminReviewsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/admin/support/': {
       id: '/_authenticated/admin/support/'
@@ -1124,6 +1144,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRenterRoute: typeof AuthenticatedRenterRouteWithChildren
   AuthenticatedAdminSupportCaseIdRoute: typeof AuthenticatedAdminSupportCaseIdRoute
   AuthenticatedSupportCasesCaseIdRoute: typeof AuthenticatedSupportCasesCaseIdRoute
+  AuthenticatedAdminReviewsIndexRoute: typeof AuthenticatedAdminReviewsIndexRoute
   AuthenticatedAdminSupportIndexRoute: typeof AuthenticatedAdminSupportIndexRoute
 }
 
@@ -1133,6 +1154,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRenterRoute: AuthenticatedRenterRouteWithChildren,
   AuthenticatedAdminSupportCaseIdRoute: AuthenticatedAdminSupportCaseIdRoute,
   AuthenticatedSupportCasesCaseIdRoute: AuthenticatedSupportCasesCaseIdRoute,
+  AuthenticatedAdminReviewsIndexRoute: AuthenticatedAdminReviewsIndexRoute,
   AuthenticatedAdminSupportIndexRoute: AuthenticatedAdminSupportIndexRoute,
 }
 

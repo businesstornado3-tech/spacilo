@@ -7,6 +7,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
+import { canonicalUrl, publicRouteMeta } from "@/lib/seo/meta";
 import { isPrivateRoute } from "@/lib/seo/routes";
 
 const HOMEPAGE_FILES = [
@@ -109,5 +110,44 @@ describe("homepage honesty", () => {
     expect(homepage).toContain(
       "Sending a request doesn't book the space or take payment. The host still needs to respond.",
     );
+  });
+});
+
+describe("homepage SEO boundary", () => {
+  const head = publicRouteMeta({
+    title: "Spacilo | Neighbourhood Storage Near You",
+    description: "Find trusted neighbourhood storage near you.",
+    path: "/",
+  });
+  const metaValue = (key: string) =>
+    head.meta.find((m) => (m as { name?: string; property?: string }).name === key ||
+      (m as { property?: string }).property === key) as { content?: string } | undefined;
+
+  it("self-references its canonical URL", () => {
+    expect(head.links).toContainEqual({ rel: "canonical", href: canonicalUrl("/") });
+    expect(metaValue("og:url")?.content).toBe(canonicalUrl("/"));
+  });
+
+  it("tells crawlers the homepage is indexable", () => {
+    expect(metaValue("robots")?.content).toBe("index, follow");
+  });
+
+  it("derives the canonical origin from configuration, not a hard-coded preview host", () => {
+    expect(read("src/routes/index.tsx")).not.toContain("lovable.app");
+    expect(read("src/routes/index.tsx")).toContain("publicRouteMeta");
+  });
+
+  it("keeps private and admin areas out of any homepage-reachable path", () => {
+    expect(isPrivateRoute("/admin/dashboard")).toBe(true);
+    expect(isPrivateRoute("/renter")).toBe(true);
+    expect(isPrivateRoute("/host")).toBe(true);
+    expect(isPrivateRoute("/search")).toBe(false);
+  });
+
+  it("publishes structured data that matches visible page content", () => {
+    const page = read("src/routes/index.tsx");
+    expect(page).toContain('"@type": "WebSite"');
+    expect(page).toContain('"@type": "Organization"');
+    expect(page).not.toMatch(/aggregateRating|"@type": "Review"|priceRange/);
   });
 });

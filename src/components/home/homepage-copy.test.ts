@@ -177,7 +177,7 @@ describe("homepage structure", () => {
 
   it("gives the homepage marketplace-led metadata and a self-referencing canonical", () => {
     expect(page).toContain("Neighbourhood Storage Near You");
-    expect(page).toContain('rel: "canonical"');
+    expect(page).toContain("publicRouteMeta");
     expect(page).toContain('"@type": "WebSite"');
   });
 });

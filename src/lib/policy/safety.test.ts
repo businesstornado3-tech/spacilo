@@ -229,7 +229,7 @@ describe("compatibility engine", () => {
       screening: screening([item({ item_id: "a", policy_category: "documents" })]),
       rules,
       suitability: dryAndDry,
-      spaceFit: { score: 0.8, compatible: true },
+      spaceFit: { score: 80, compatible: true },
     };
     expect(evaluateCompatibility(input)).toEqual(evaluateCompatibility(input));
   });
@@ -263,7 +263,7 @@ describe("compatibility engine", () => {
       screening: screening([item({ item_id: "a" })]),
       rules,
       suitability: null,
-      spaceFit: { score: 0.9, compatible: true },
+      spaceFit: { score: 90, compatible: true },
     });
     expect(report.suitability.status).toBe("compatible_with_care");
     expect(report.suitability.reasons).toContain("suitability_unknown");
@@ -275,7 +275,7 @@ describe("compatibility engine", () => {
       screening: result,
       rules,
       suitability: dryAndDry,
-      spaceFit: { score: 1, compatible: true },
+      spaceFit: { score: 100, compatible: true },
     });
     expect(report.overall).toBe("not_compatible");
     expect(compatibilityOutcome(report, summariseScreening(result)).outcome).toBe("blocked_by_policy");
@@ -287,7 +287,7 @@ describe("compatibility engine", () => {
       screening: result,
       rules,
       suitability: dryAndDry,
-      spaceFit: { score: 0.9, compatible: true },
+      spaceFit: { score: 90, compatible: true },
     });
     expect(compatibilityOutcome(report, summariseScreening(result)).outcome).toBe("strong_match");
   });
@@ -301,7 +301,7 @@ describe("request readiness", () => {
     screening: clean,
     rules: [],
     suitability: { damp_risk: "low" },
-    spaceFit: { score: 0.9, compatible: true },
+    spaceFit: { score: 90, compatible: true },
   });
 
   it("allows a request when nothing is outstanding", () => {
@@ -435,7 +435,9 @@ describe("server enforcement (migration invariants)", () => {
       "policy_acceptances",
       "policy_audit_events",
     ]) {
-      expect(MIGRATIONS).toContain(`alter table public.${table} enable row level security`);
+      expect(MIGRATIONS).toMatch(
+        new RegExp(`alter table public\\.${table} enable row level security`, "i"),
+      );
     }
   });
 
@@ -452,8 +454,8 @@ describe("server enforcement (migration invariants)", () => {
   });
 
   it("keeps policy lifecycle RPCs away from anonymous callers", () => {
-    expect(MIGRATIONS).toMatch(/revoke all on function public\.create_policy_draft/i);
-    expect(MIGRATIONS).toMatch(/revoke all on function public\.publish_policy_version/i);
+    expect(MIGRATIONS).toMatch(/revoke execute on function public\.create_policy_draft/i);
+    expect(MIGRATIONS).toMatch(/revoke execute on function public\.publish_policy_version/i);
   });
 });
 

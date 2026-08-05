@@ -126,8 +126,24 @@ function GuestSpacePage() {
               onAdd={(files) => void scan.addFiles(files)}
               onRemove={scan.removeImage}
               disabled={scan.analysing}
+              onManualEntry={() => setProposal({ ...MANUAL_START, spaceType })}
+              onBoundary={(measurement) => {
+                // A drawn outline is a PROPOSAL: it pre-fills the fields the
+                // visitor then checks. It never becomes a verified measurement.
+                setProposal((current) => ({
+                  ...(current ?? MANUAL_START),
+                  spaceType,
+                  widthM: measurement.widthM,
+                  depthM: measurement.depthM,
+                  usableHeightM:
+                    measurement.volumeM3 && measurement.usableM2
+                      ? Math.round((measurement.volumeM3 / measurement.usableM2) * 100) / 100
+                      : (current?.usableHeightM ?? null),
+                }));
+              }}
             />
           </div>
+
 
           {scan.analysing ? (
             <GuestScanningState label="Measuring your space…" />

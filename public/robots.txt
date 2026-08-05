@@ -10,7 +10,9 @@ Disallow: /admin
 Disallow: /profile
 Disallow: /notifications
 Disallow: /support
-Disallow: /spacefit
+Disallow: /spacefit$
+Allow: /spacefit/stuff
+Allow: /spacefit/space
 Disallow: /login
 Disallow: /signup
 Disallow: /forgot-password

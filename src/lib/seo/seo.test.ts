@@ -110,9 +110,8 @@ describe("robots.txt and sitemap wiring", () => {
 
   it("does not disallow any PUBLIC_ROUTES path", () => {
     for (const route of PUBLIC_ROUTES) {
-      const segment = route.path.split("/")[1];
-      if (!segment) continue;
-      expect(robots).not.toMatch(new RegExp(`Disallow: /${segment}$`, "m"));
+      if (route.path === "/") continue;
+      expect(robots).not.toMatch(new RegExp(`^Disallow: ${route.path}\\$?\\s*$`, "m"));
     }
   });
 });

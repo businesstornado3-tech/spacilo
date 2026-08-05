@@ -110,8 +110,10 @@ function PublicSpacePage() {
             <div className="mx-auto max-w-3xl">
               <ListingPreview view={state.view} />
               {state.matchSpace ? <ListingSpaceFitPanel space={state.matchSpace} /> : null}
+              <div className="mt-6">
+                <SpaceReviews spaceId={spaceId} />
+              </div>
               <RequestSpaceCta spaceId={spaceId} />
-            </div>
           </>
         ) : null}
 

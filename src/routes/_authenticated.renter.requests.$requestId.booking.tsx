@@ -21,6 +21,8 @@ import {
   bookingWindowLabel,
 } from "@/lib/bookings";
 import { track } from "@/lib/analytics";
+import { BookingJourney } from "@/components/trust/BookingJourney";
+import { stageFromStatus } from "@/lib/trust/journey";
 
 const description =
   "Check the space, dates, price and belongings captured when the host accepted your request.";
@@ -101,6 +103,9 @@ function BookingReviewPage() {
           </section>
 
           <RequestSummary request={request} />
+
+          <BookingJourney stage={existing ? stageFromStatus(existing.status) : "accepted"} />
+
 
           {state.kind === "started" ? (
             <section className="rounded-2xl border border-border bg-card p-5 shadow-card">

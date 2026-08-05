@@ -203,7 +203,7 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
       ) : null}
 
       {step === 0 ? <StepSpace form={form} patch={patch} /> : null}
-      {step === 1 ? <StepSize form={form} patch={patch} /> : null}
+      {step === 1 ? <StepSize form={form} patch={patch} spaceId={space.id} /> : null}
       {step === 2 ? (
         <StepPhotos
           form={form}

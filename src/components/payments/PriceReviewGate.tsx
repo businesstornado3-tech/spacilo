@@ -8,7 +8,7 @@
 import { AlertCircle, Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { formatPence } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
 import {
   PRICE_REVIEW_COPY,
   commitDecision,
@@ -50,24 +50,24 @@ export function PriceReviewGate({
         <div className="flex items-baseline justify-between gap-3">
           <dt className="type-body-sm text-muted-foreground">Price you reviewed</dt>
           <dd className="type-body-sm tabular-nums line-through">
-            {formatPence(price.reviewedTotalAmountPence)}
+            {formatPrice(price.reviewedTotalAmountPence ?? 0)}
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-3">
           <dt className="type-body-sm font-semibold">Storage</dt>
           <dd className="type-body-sm tabular-nums">
-            {formatPence(price.currentStorageAmountPence)}
+            {formatPrice(price.currentStorageAmountPence ?? 0)}
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-3">
           <dt className="type-body-sm font-semibold">Service fee</dt>
           <dd className="type-body-sm tabular-nums">
-            {formatPence(price.currentServiceFeePence)}
+            {formatPrice(price.currentServiceFeePence ?? 0)}
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-3 border-t border-border pt-2">
           <dt className="type-body font-semibold">New total to pay now</dt>
-          <dd className="type-price tabular-nums">{formatPence(price.currentTotalAmountPence)}</dd>
+          <dd className="type-price tabular-nums">{formatPrice(price.currentTotalAmountPence ?? 0)}</dd>
         </div>
       </dl>
 

@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Logo } from "@/components/layout/Logo";
 import { AppSideNav, MobileBottomNav } from "@/components/layout/AppNav";
 import { AccountMenu, ModeSwitchButton } from "@/components/account/AccountMenu";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { Skeleton } from "@/components/common/Skeletons";
 import type { UserMode } from "@/config/navigation";
 import { useAuth } from "@/hooks/useAuth";

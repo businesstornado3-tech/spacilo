@@ -44,23 +44,34 @@ function LoginPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
   const { loading, session, profile } = useAuth();
+  const claimGuestScan = useGuestClaim();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
 
-  // Already signed in: send them straight to their current experience.
+  // Already signed in: send them straight to their current experience — after
+  // claiming any guest SpaceFit preview they ran before logging in.
   React.useEffect(() => {
     if (loading || !session) return;
-    const target = safeRedirect(search.redirect);
-    if (target) {
-      void navigate({ to: target, replace: true });
-      return;
-    }
-    if (profile) {
-      void navigate({ to: profile.current_mode === "host" ? "/host" : "/renter", replace: true });
-    }
-  }, [loading, session, profile, search.redirect, navigate]);
+    let cancelled = false;
+    void (async () => {
+      const claimed = await claimGuestScan();
+      if (cancelled) return;
+      const target = claimed ?? safeRedirect(search.redirect);
+      if (target) {
+        void navigate({ to: target, replace: true });
+        return;
+      }
+      if (profile) {
+        void navigate({ to: profile.current_mode === "host" ? "/host" : "/renter", replace: true });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, session, profile, search.redirect, navigate, claimGuestScan]);
+
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();

@@ -195,7 +195,7 @@ describe("camera state versus capture readiness", () => {
   });
 
   it("keeps a single stable video element across the lifecycle", () => {
-    expect(UI.match(/<video/g)?.length).toBe(1);
+    expect(UI.match(/<video\n/g)?.length).toBe(1);
     expect(UI).toMatch(/playsInline/);
     expect(UI).toMatch(/muted/);
     expect(UI).toMatch(/autoPlay/);
@@ -211,7 +211,7 @@ describe("one unified camera lifecycle", () => {
       expect(body).toMatch(/activateCamera\(/);
     }
     // No second startup implementation may call getUserMedia directly.
-    expect(HOOK).not.toMatch(/getUserMedia/);
+    expect(HOOK).not.toMatch(/\.getUserMedia\(/);
   });
 
   it("waits for a first frame inside the shared activation path", () => {

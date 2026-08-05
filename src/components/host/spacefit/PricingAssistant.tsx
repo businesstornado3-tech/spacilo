@@ -96,12 +96,11 @@ export function PricingAssistant({
               <Check aria-hidden="true" />
               Use suggested price
             </Button>
-            <Button type="button" variant="secondary" asChild={false} disabled>
-              <span>
-                <PoundSterling aria-hidden="true" />
-                Or set my own price above
-              </span>
-            </Button>
+            <p className="flex items-center gap-1.5 self-center type-body-sm text-muted-foreground">
+              <PoundSterling className="size-4" aria-hidden="true" />
+              Or keep your own price — you decide.
+            </p>
+
           </div>
 
           <p className="mt-3 type-body-sm text-muted-foreground">{PRICING_GUIDANCE_NOTE}</p>

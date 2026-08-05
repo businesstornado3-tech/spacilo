@@ -23,6 +23,12 @@ const NOW = new Date("2026-08-03T12:00:00Z");
 const hours = (n: number) => new Date(NOW.getTime() + n * 3_600_000).toISOString();
 
 const request: StorageRequest = {
+  policy_version_snapshot: null,
+  policy_version_id_snapshot: null,
+  policy_screening_snapshot: null,
+  compatibility_snapshot: null,
+  renter_declaration_snapshot: null,
+  space_suitability_snapshot: null,
   daily_rate_snapshot: null,
   weekly_rate_snapshot: null,
   minimum_stay_days_snapshot: null,
@@ -73,6 +79,12 @@ const request: StorageRequest = {
 };
 
 const booking: Booking = {
+  policy_version_snapshot: null,
+  policy_version_id_snapshot: null,
+  policy_screening_snapshot: null,
+  compatibility_snapshot: null,
+  renter_declaration_snapshot: null,
+  space_suitability_snapshot: null,
   activated_at: null,
   completed_at: null,
   renter_handover_confirmed_at: null,

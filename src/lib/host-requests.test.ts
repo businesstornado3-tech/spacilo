@@ -12,6 +12,12 @@ import {
 } from "@/lib/storage-requests";
 
 const base: StorageRequest = {
+  policy_version_snapshot: null,
+  policy_version_id_snapshot: null,
+  policy_screening_snapshot: null,
+  compatibility_snapshot: null,
+  renter_declaration_snapshot: null,
+  space_suitability_snapshot: null,
   daily_rate_snapshot: null,
   weekly_rate_snapshot: null,
   minimum_stay_days_snapshot: null,

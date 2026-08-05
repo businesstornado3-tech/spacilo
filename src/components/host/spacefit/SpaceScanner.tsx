@@ -204,8 +204,29 @@ export function SpaceScanner({
       ) : null}
 
       {/* Live Scan helps frame the shot; the captured photo enters the
-          existing secure host analysis pipeline unchanged. */}
-      {photos.length < MAX_SPACE_SCAN_PHOTOS ? (
+          existing secure host analysis pipeline unchanged. The frozen frame
+          then powers the boundary editor, with the camera already released. */}
+      {frozen ? (
+        <BoundaryEditor
+          className="mt-4"
+          imageUrl={frozen}
+          onCancel={clearFrozen}
+          onConfirm={(measurement) => {
+            onApplied?.({
+              lengthM: measurement.depthM,
+              widthM: measurement.widthM,
+              heightM: measurement.volumeM3 && measurement.usableM2
+                ? Math.round((measurement.volumeM3 / measurement.usableM2) * 100) / 100
+                : null,
+            });
+            clearFrozen();
+            toast.success(
+              "Outline saved",
+              "We've used your outline as an estimate — check it against the real space.",
+            );
+          }}
+        />
+      ) : photos.length < MAX_SPACE_SCAN_PHOTOS ? (
         <LiveScanner
           mode="host"
           className="mt-4"
@@ -214,6 +235,11 @@ export function SpaceScanner({
             try {
               await uploadScanPhoto(spaceId, file);
               await refresh();
+              // Freeze the captured frame locally so the host can outline it.
+              setFrozen((previous) => {
+                if (previous) URL.revokeObjectURL(previous);
+                return URL.createObjectURL(file);
+              });
             } catch {
               toast.error("Couldn't add that photo");
             } finally {
@@ -222,6 +248,7 @@ export function SpaceScanner({
           }}
         />
       ) : null}
+
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button

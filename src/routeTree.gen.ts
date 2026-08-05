@@ -63,6 +63,7 @@ import { Route as AuthenticatedRenterRequestsNewRouteImport } from './routes/_au
 import { Route as AuthenticatedSupportCasesCaseIdRouteImport } from './routes/_authenticated.support.cases.$caseId'
 import { Route as ApiPublicPayoutsReleaseRouteImport } from './routes/api/public/payouts/release'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
+import { Route as AuthenticatedHostMessagesEnquiryConversationIdRouteImport } from './routes/_authenticated.host.messages.enquiry.$conversationId'
 import { Route as AuthenticatedHostSpacesSpaceIdEditRouteImport } from './routes/_authenticated.host.spaces.$spaceId.edit'
 import { Route as AuthenticatedRenterMessagesEnquiryConversationIdRouteImport } from './routes/_authenticated.renter.messages.enquiry.$conversationId'
 import { Route as AuthenticatedRenterRequestsRequestIdIndexRouteImport } from './routes/_authenticated.renter.requests.$requestId.index'
@@ -367,6 +368,12 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   path: '/api/public/stripe/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedHostMessagesEnquiryConversationIdRoute =
+  AuthenticatedHostMessagesEnquiryConversationIdRouteImport.update({
+    id: '/messages/enquiry/$conversationId',
+    path: '/messages/enquiry/$conversationId',
+    getParentRoute: () => AuthenticatedHostRoute,
+  } as any)
 const AuthenticatedHostSpacesSpaceIdEditRoute =
   AuthenticatedHostSpacesSpaceIdEditRouteImport.update({
     id: '/spaces/$spaceId/edit',
@@ -446,6 +453,7 @@ export interface FileRoutesByFullPath {
   '/renter/inventory/': typeof AuthenticatedRenterInventoryIndexRoute
   '/renter/messages/': typeof AuthenticatedRenterMessagesIndexRoute
   '/renter/requests/': typeof AuthenticatedRenterRequestsIndexRoute
+  '/host/messages/enquiry/$conversationId': typeof AuthenticatedHostMessagesEnquiryConversationIdRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
   '/renter/messages/enquiry/$conversationId': typeof AuthenticatedRenterMessagesEnquiryConversationIdRoute
   '/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
@@ -502,6 +510,7 @@ export interface FileRoutesByTo {
   '/renter/inventory': typeof AuthenticatedRenterInventoryIndexRoute
   '/renter/messages': typeof AuthenticatedRenterMessagesIndexRoute
   '/renter/requests': typeof AuthenticatedRenterRequestsIndexRoute
+  '/host/messages/enquiry/$conversationId': typeof AuthenticatedHostMessagesEnquiryConversationIdRoute
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
   '/renter/messages/enquiry/$conversationId': typeof AuthenticatedRenterMessagesEnquiryConversationIdRoute
   '/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
@@ -563,6 +572,7 @@ export interface FileRoutesById {
   '/_authenticated/renter/inventory/': typeof AuthenticatedRenterInventoryIndexRoute
   '/_authenticated/renter/messages/': typeof AuthenticatedRenterMessagesIndexRoute
   '/_authenticated/renter/requests/': typeof AuthenticatedRenterRequestsIndexRoute
+  '/_authenticated/host/messages/enquiry/$conversationId': typeof AuthenticatedHostMessagesEnquiryConversationIdRoute
   '/_authenticated/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
   '/_authenticated/renter/messages/enquiry/$conversationId': typeof AuthenticatedRenterMessagesEnquiryConversationIdRoute
   '/_authenticated/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
@@ -624,6 +634,7 @@ export interface FileRouteTypes {
     | '/renter/inventory/'
     | '/renter/messages/'
     | '/renter/requests/'
+    | '/host/messages/enquiry/$conversationId'
     | '/host/spaces/$spaceId/edit'
     | '/renter/messages/enquiry/$conversationId'
     | '/renter/requests/$requestId/booking'
@@ -680,6 +691,7 @@ export interface FileRouteTypes {
     | '/renter/inventory'
     | '/renter/messages'
     | '/renter/requests'
+    | '/host/messages/enquiry/$conversationId'
     | '/host/spaces/$spaceId/edit'
     | '/renter/messages/enquiry/$conversationId'
     | '/renter/requests/$requestId/booking'
@@ -740,6 +752,7 @@ export interface FileRouteTypes {
     | '/_authenticated/renter/inventory/'
     | '/_authenticated/renter/messages/'
     | '/_authenticated/renter/requests/'
+    | '/_authenticated/host/messages/enquiry/$conversationId'
     | '/_authenticated/host/spaces/$spaceId/edit'
     | '/_authenticated/renter/messages/enquiry/$conversationId'
     | '/_authenticated/renter/requests/$requestId/booking'
@@ -1148,6 +1161,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/host/messages/enquiry/$conversationId': {
+      id: '/_authenticated/host/messages/enquiry/$conversationId'
+      path: '/messages/enquiry/$conversationId'
+      fullPath: '/host/messages/enquiry/$conversationId'
+      preLoaderRoute: typeof AuthenticatedHostMessagesEnquiryConversationIdRouteImport
+      parentRoute: typeof AuthenticatedHostRoute
+    }
     '/_authenticated/host/spaces/$spaceId/edit': {
       id: '/_authenticated/host/spaces/$spaceId/edit'
       path: '/spaces/$spaceId/edit'
@@ -1190,6 +1210,7 @@ interface AuthenticatedHostRouteChildren {
   AuthenticatedHostSpacesNewRoute: typeof AuthenticatedHostSpacesNewRoute
   AuthenticatedHostMessagesIndexRoute: typeof AuthenticatedHostMessagesIndexRoute
   AuthenticatedHostSpacesIndexRoute: typeof AuthenticatedHostSpacesIndexRoute
+  AuthenticatedHostMessagesEnquiryConversationIdRoute: typeof AuthenticatedHostMessagesEnquiryConversationIdRoute
   AuthenticatedHostSpacesSpaceIdEditRoute: typeof AuthenticatedHostSpacesSpaceIdEditRoute
 }
 
@@ -1206,6 +1227,8 @@ const AuthenticatedHostRouteChildren: AuthenticatedHostRouteChildren = {
   AuthenticatedHostSpacesNewRoute: AuthenticatedHostSpacesNewRoute,
   AuthenticatedHostMessagesIndexRoute: AuthenticatedHostMessagesIndexRoute,
   AuthenticatedHostSpacesIndexRoute: AuthenticatedHostSpacesIndexRoute,
+  AuthenticatedHostMessagesEnquiryConversationIdRoute:
+    AuthenticatedHostMessagesEnquiryConversationIdRoute,
   AuthenticatedHostSpacesSpaceIdEditRoute:
     AuthenticatedHostSpacesSpaceIdEditRoute,
 }

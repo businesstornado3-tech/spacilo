@@ -10,6 +10,7 @@ import { ListingPreview, type ListingView } from "@/components/host/listing/List
 import { publicLocation } from "@/lib/spaces";
 import { getPublishedSpace, signedPhotoUrls } from "@/lib/spaces-api";
 import { RequestSpaceCta } from "@/components/requests/RequestSpaceCta";
+import { AskHostPanel } from "@/components/messages/AskHostPanel";
 import { ListingSpaceFitPanel } from "@/components/spacefit/ListingSpaceFitPanel";
 import { toMatchSpace } from "@/lib/spacefit/adapters";
 import { SpaceReviews } from "@/components/reviews/SpaceReviews";
@@ -155,6 +156,7 @@ function PublicSpacePage() {
                 <SpaceReviews spaceId={spaceId} />
               </div>
               <RequestSpaceCta spaceId={spaceId} />
+              <AskHostPanel spaceId={spaceId} spaceTitle={state.view.title} />
             </div>
           </>
         ) : null}

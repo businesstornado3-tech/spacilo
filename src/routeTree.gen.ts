@@ -26,6 +26,8 @@ import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated.h
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedRenterRouteImport } from './routes/_authenticated.renter'
+import { Route as SpacefitSpaceRouteImport } from './routes/spacefit.space'
+import { Route as SpacefitStuffRouteImport } from './routes/spacefit.stuff'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
 import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated.host.index'
 import { Route as AuthenticatedHostBookingsRouteImport } from './routes/_authenticated.host.bookings'
@@ -146,6 +148,16 @@ const AuthenticatedRenterRoute = AuthenticatedRenterRouteImport.update({
   id: '/renter',
   path: '/renter',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const SpacefitSpaceRoute = SpacefitSpaceRouteImport.update({
+  id: '/spacefit/space',
+  path: '/spacefit/space',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpacefitStuffRoute = SpacefitStuffRouteImport.update({
+  id: '/spacefit/stuff',
+  path: '/spacefit/stuff',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const SpacesSpaceIdRoute = SpacesSpaceIdRouteImport.update({
   id: '/spaces/$spaceId',
@@ -371,6 +383,8 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/renter': typeof AuthenticatedRenterRouteWithChildren
+  '/spacefit/space': typeof SpacefitSpaceRoute
+  '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
@@ -422,6 +436,8 @@ export interface FileRoutesByTo {
   '/trust': typeof TrustRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/spacefit/space': typeof SpacefitSpaceRoute
+  '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
@@ -476,6 +492,8 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/renter': typeof AuthenticatedRenterRouteWithChildren
+  '/spacefit/space': typeof SpacefitSpaceRoute
+  '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/_authenticated/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/_authenticated/host/earnings': typeof AuthenticatedHostEarningsRoute
@@ -531,6 +549,8 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/renter'
+    | '/spacefit/space'
+    | '/spacefit/stuff'
     | '/spaces/$spaceId'
     | '/host/bookings'
     | '/host/earnings'
@@ -582,6 +602,8 @@ export interface FileRouteTypes {
     | '/trust'
     | '/notifications'
     | '/profile'
+    | '/spacefit/space'
+    | '/spacefit/stuff'
     | '/spaces/$spaceId'
     | '/host/bookings'
     | '/host/earnings'
@@ -635,6 +657,8 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/renter'
+    | '/spacefit/space'
+    | '/spacefit/stuff'
     | '/spaces/$spaceId'
     | '/_authenticated/host/bookings'
     | '/_authenticated/host/earnings'
@@ -686,6 +710,8 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   SignupRoute: typeof SignupRoute
   TrustRoute: typeof TrustRoute
+  SpacefitSpaceRoute: typeof SpacefitSpaceRoute
+  SpacefitStuffRoute: typeof SpacefitStuffRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
   ApiPublicPayoutsReleaseRoute: typeof ApiPublicPayoutsReleaseRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
@@ -811,6 +837,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/renter'
       preLoaderRoute: typeof AuthenticatedRenterRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/spacefit/space': {
+      id: '/spacefit/space'
+      path: '/spacefit/space'
+      fullPath: '/spacefit/space'
+      preLoaderRoute: typeof SpacefitSpaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spacefit/stuff': {
+      id: '/spacefit/stuff'
+      path: '/spacefit/stuff'
+      fullPath: '/spacefit/stuff'
+      preLoaderRoute: typeof SpacefitStuffRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/spaces/$spaceId': {
       id: '/spaces/$spaceId'
@@ -1198,6 +1238,8 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   SignupRoute: SignupRoute,
   TrustRoute: TrustRoute,
+  SpacefitSpaceRoute: SpacefitSpaceRoute,
+  SpacefitStuffRoute: SpacefitStuffRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,
   ApiPublicPayoutsReleaseRoute: ApiPublicPayoutsReleaseRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
@@ -1205,13 +1247,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

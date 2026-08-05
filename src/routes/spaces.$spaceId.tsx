@@ -116,12 +116,16 @@ function PublicSpacePage() {
             <h1 className="sr-only">{state.view.title}</h1>
             <div className="mx-auto max-w-3xl">
               <ListingPreview view={state.view} />
+              <div className="mt-6">
+                <SpaceTrustPanel spaceId={spaceId} listing={state.listing} />
+              </div>
               {state.matchSpace ? (
                 <ListingSpaceFitPanel
                   space={state.matchSpace}
                   {...(state.listing ? { listing: state.listing } : {})}
                 />
               ) : null}
+
               <div className="mt-6">
                 <SpaceReviews spaceId={spaceId} />
               </div>

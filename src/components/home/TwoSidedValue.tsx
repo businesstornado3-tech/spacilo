@@ -32,7 +32,8 @@ export function TwoSidedValue() {
       <Reveal>
         <h2 className="type-h2">Space works better when it's shared.</h2>
         <p className="mt-3 max-w-xl type-body text-muted-foreground">
-          {brand.name} connects people who need storage with people who have space they're not using.
+          {brand.name} connects people who need storage with people who have space they're not
+          using.
         </p>
       </Reveal>
 
@@ -50,7 +51,10 @@ export function TwoSidedValue() {
             <ul className="mt-4 space-y-2.5">
               {renterPoints.map((point) => (
                 <li key={point} className="flex gap-2.5 type-body-sm text-muted-foreground">
-                  <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
+                  <span
+                    aria-hidden="true"
+                    className="mt-2 size-1.5 shrink-0 rounded-full bg-primary"
+                  />
                   {point}
                 </li>
               ))}

@@ -9,7 +9,10 @@ const items = [
 
 export function TrustStrip() {
   return (
-    <section aria-label="How Spacilo keeps things transparent" className="border-y border-border bg-surface">
+    <section
+      aria-label="How Spacilo keeps things transparent"
+      className="border-y border-border bg-surface"
+    >
       <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-x-4 gap-y-3 px-4 py-4 sm:px-6 md:grid-cols-4 md:py-5">
         {items.map(({ icon: Icon, label }) => (
           <li key={label} className="flex items-center gap-2 type-body-sm text-muted-foreground">

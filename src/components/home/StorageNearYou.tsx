@@ -20,7 +20,8 @@ export function StorageNearYou() {
       <Reveal>
         <h2 className="type-h2">Real storage nearby.</h2>
         <p className="mt-3 max-w-xl type-body text-muted-foreground">
-          Browse spaces in the Portsmouth pilot area — garages, spare rooms, lofts and sheds, with the monthly price shown up front.
+          Browse spaces in the Portsmouth pilot area — garages, spare rooms, lofts and sheds, with
+          the monthly price shown up front.
         </p>
       </Reveal>
 

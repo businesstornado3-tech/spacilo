@@ -93,12 +93,7 @@ export function SpaceFitDemo({
   }, [state.mode, onModeChange]);
 
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-3xl bg-card shadow-raised",
-        className,
-      )}
-    >
+    <div className={cn("relative overflow-hidden rounded-3xl bg-card shadow-raised", className)}>
       <img
         src={heroPhoto}
         alt="Household boxes, a bicycle and suitcases stored neatly in a British home garage"

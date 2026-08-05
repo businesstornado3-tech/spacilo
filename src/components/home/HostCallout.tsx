@@ -18,7 +18,10 @@ export function HostCallout() {
         </h2>
         <ul className="mt-5 flex flex-wrap gap-2">
           {spaces.map((space) => (
-            <li key={space} className="rounded-full bg-card px-3 py-1.5 type-badge text-muted-foreground">
+            <li
+              key={space}
+              className="rounded-full bg-card px-3 py-1.5 type-badge text-muted-foreground"
+            >
               {space}
             </li>
           ))}

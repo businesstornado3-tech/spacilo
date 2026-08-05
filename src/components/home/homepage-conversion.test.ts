@@ -120,8 +120,11 @@ describe("homepage SEO boundary", () => {
     path: "/",
   });
   const metaValue = (key: string) =>
-    head.meta.find((m) => (m as { name?: string; property?: string }).name === key ||
-      (m as { property?: string }).property === key) as { content?: string } | undefined;
+    head.meta.find(
+      (m) =>
+        (m as { name?: string; property?: string }).name === key ||
+        (m as { property?: string }).property === key,
+    ) as { content?: string } | undefined;
 
   it("self-references its canonical URL", () => {
     expect(head.links).toContainEqual({ rel: "canonical", href: canonicalUrl("/") });

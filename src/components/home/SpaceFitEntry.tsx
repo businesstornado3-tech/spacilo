@@ -35,13 +35,17 @@ function ScanStuffButton({
   );
 
   return (
-    <Button asChild size="lg" {...(block ? { block: true } : {})} onClick={() => track("cta_clicked", { props: { cta: "scan_stuff", from } })}>
+    <Button
+      asChild
+      size="lg"
+      {...(block ? { block: true } : {})}
+      onClick={() => track("cta_clicked", { props: { cta: "scan_stuff", from } })}
+    >
       {target.to === "/renter/inventory/photos" ? (
         <Link to="/renter/inventory/photos">{label}</Link>
       ) : (
         <Link to="/spacefit/stuff">{label}</Link>
       )}
-
     </Button>
   );
 }
@@ -79,14 +83,19 @@ function ScanSpaceButton({
       ) : (
         <Link to="/spacefit/space">{label}</Link>
       )}
-
     </Button>
   );
 }
 
 export { ScanStuffButton, ScanSpaceButton };
 
-export function SpaceFitEntry({ from = "homepage_hero", className }: { from?: string; className?: string }) {
+export function SpaceFitEntry({
+  from = "homepage_hero",
+  className,
+}: {
+  from?: string;
+  className?: string;
+}) {
   return (
     <section
       aria-labelledby="spacefit-entry-heading"
@@ -106,8 +115,8 @@ export function SpaceFitEntry({ from = "homepage_hero", className }: { from?: st
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="flex h-full flex-col rounded-2xl bg-card p-4">
           <span className="inline-flex items-center gap-2 type-label">
-            <Boxes className="size-4 text-signal-soft-foreground" aria-hidden="true" />
-            I have stuff to store
+            <Boxes className="size-4 text-signal-soft-foreground" aria-hidden="true" />I have stuff
+            to store
           </span>
           <p className="mt-1.5 mb-4 type-body-sm text-muted-foreground">
             Scan your belongings and see how much storage you need.
@@ -119,8 +128,8 @@ export function SpaceFitEntry({ from = "homepage_hero", className }: { from?: st
 
         <div className="flex h-full flex-col rounded-2xl bg-card p-4">
           <span className="inline-flex items-center gap-2 type-label">
-            <Home className="size-4 text-signal-soft-foreground" aria-hidden="true" />
-            I have space to spare
+            <Home className="size-4 text-signal-soft-foreground" aria-hidden="true" />I have space
+            to spare
           </span>
           <p className="mt-1.5 mb-4 type-body-sm text-muted-foreground">
             Scan your unused space and see what it could hold and what it could earn.

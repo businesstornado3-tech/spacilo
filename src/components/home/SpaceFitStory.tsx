@@ -40,9 +40,7 @@ export function SpaceFitStory() {
         <Reveal>
           <SpaceFitAiMark size="sm" />
           <h2 className="mt-3 type-h2">Meet Spacilo AI.</h2>
-          <p className="mt-2 type-h3 text-muted-foreground">
-            Don't measure boxes. Just show us.
-          </p>
+          <p className="mt-2 type-h3 text-muted-foreground">Don't measure boxes. Just show us.</p>
           <p className="mt-3 max-w-xl type-body text-muted-foreground">
             Take a photo of what you want to store. Spacilo AI helps identify your belongings,
             estimate the space they may need and find spaces that could fit.

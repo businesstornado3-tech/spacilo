@@ -69,8 +69,8 @@ export function Hero() {
           </div>
 
           <p className="mt-4 max-w-md type-body-sm text-muted-foreground">
-            Not sure how much space you need? Spacilo AI can estimate it from a photo — more on
-            that below.
+            Not sure how much space you need? Spacilo AI can estimate it from a photo — more on that
+            below.
           </p>
         </div>
 

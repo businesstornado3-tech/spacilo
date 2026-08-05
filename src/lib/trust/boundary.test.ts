@@ -141,7 +141,7 @@ describe("the browser cannot state a price", () => {
   });
 
   it("does not compute totals or fees in the review gate", () => {
-    expect(gate).not.toMatch(/[-+*/]\s*(price|fee|amount)/i);
+    expect(gate).not.toMatch(/\b(price|fee|amount)[A-Za-z]*\s*[-+*/]\s*\w/i);
     expect(gate).not.toContain("supabase");
   });
 

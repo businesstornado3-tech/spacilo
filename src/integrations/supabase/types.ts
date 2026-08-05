@@ -1085,6 +1085,113 @@ export type Database = {
           },
         ]
       }
+      guest_spacefit_runs: {
+        Row: {
+          client_request_id: string | null
+          completed_at: string | null
+          created_at: string
+          detection_count: number
+          duration_ms: number | null
+          error_category: string | null
+          id: string
+          model: string | null
+          photo_count: number
+          provider: string | null
+          result: Json | null
+          session_id: string
+          status: string
+        }
+        Insert: {
+          client_request_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          detection_count?: number
+          duration_ms?: number | null
+          error_category?: string | null
+          id?: string
+          model?: string | null
+          photo_count?: number
+          provider?: string | null
+          result?: Json | null
+          session_id: string
+          status?: string
+        }
+        Update: {
+          client_request_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          detection_count?: number
+          duration_ms?: number | null
+          error_category?: string | null
+          id?: string
+          model?: string | null
+          photo_count?: number
+          provider?: string | null
+          result?: Json | null
+          session_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_spacefit_runs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "guest_spacefit_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_spacefit_sessions: {
+        Row: {
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          ip_hash: string | null
+          kind: string
+          photo_count: number
+          result: Json | null
+          result_at: string | null
+          run_count: number
+          status: string
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_hash?: string | null
+          kind: string
+          photo_count?: number
+          result?: Json | null
+          result_at?: string | null
+          run_count?: number
+          status?: string
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip_hash?: string | null
+          kind?: string
+          photo_count?: number
+          result?: Json | null
+          result_at?: string | null
+          run_count?: number
+          status?: string
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       host_balance_adjustments: {
         Row: {
           amount_pence: number
@@ -3047,6 +3154,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      cleanup_guest_spacefit: { Args: { _limit?: number }; Returns: number }
       complete_booking: {
         Args: { p_booking_id: string }
         Returns: {

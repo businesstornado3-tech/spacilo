@@ -121,6 +121,7 @@ function GuestSpacePage() {
 
           <div className="mt-5">
             <GuestPhotoPicker
+              mode="host"
               images={scan.images}
               onAdd={(files) => void scan.addFiles(files)}
               onRemove={scan.removeImage}

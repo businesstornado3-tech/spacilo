@@ -22,6 +22,7 @@ import {
 } from "@/lib/bookings";
 import { track } from "@/lib/analytics";
 import { BookingJourney } from "@/components/trust/BookingJourney";
+import { PriceChangeNotice } from "@/components/payments/PriceChangeNotice";
 import { stageFromStatus } from "@/lib/trust/journey";
 
 const description =
@@ -101,6 +102,11 @@ function BookingReviewPage() {
               later.
             </p>
           </section>
+
+          <PriceChangeNotice
+            spaceId={request.space_id}
+            snapshotPence={request.monthly_price_snapshot}
+          />
 
           <RequestSummary request={request} />
 

@@ -57,6 +57,71 @@ export interface TrustSpaceInput {
   published_at?: string | null;
   moisture_condition?: string | null;
   temperature_condition?: string | null;
+  /** jsonb from `get_host_response_stats` — facts about request replies. */
+  host_response_stats?: unknown;
+}
+
+export interface HostResponseStats {
+  sample_size: number;
+  responded_count: number;
+  median_response_hours: number | null;
+}
+
+/** Too few requests to say anything honest about responsiveness. */
+export const MIN_RESPONSE_SAMPLE = 3;
+
+export function parseResponseStats(raw: unknown): HostResponseStats | null {
+  if (!raw || typeof raw !== "object") return null;
+  const record = raw as Record<string, unknown>;
+  const sample = Number(record["sample_size"] ?? 0);
+  if (!Number.isFinite(sample) || sample <= 0) return null;
+  const responded = Number(record["responded_count"] ?? 0);
+  const median = record["median_response_hours"];
+  const medianHours = median === null || median === undefined ? null : Number(median);
+  return {
+    sample_size: Math.trunc(sample),
+    responded_count: Number.isFinite(responded) ? Math.trunc(responded) : 0,
+    median_response_hours:
+      medianHours !== null && Number.isFinite(medianHours) ? medianHours : null,
+  };
+}
+
+export function formatResponseTime(hours: number): string {
+  if (hours < 1) return "under an hour";
+  if (hours < 2) return "about an hour";
+  if (hours < 24) return `about ${Math.round(hours)} hours`;
+  const days = hours / 24;
+  return days < 2 ? "about a day" : `about ${Math.round(days)} days`;
+}
+
+/**
+ * Reply behaviour over the host's last 90 days of requests. Reported only
+ * once there is a real sample, and never turned into a badge.
+ */
+export function responseSignal(space: TrustSpaceInput): TrustSignal | null {
+  const stats = parseResponseStats(space.host_response_stats);
+  if (!stats) return null;
+  if (stats.sample_size < MIN_RESPONSE_SAMPLE) {
+    return {
+      key: "responsiveness",
+      label: "Not enough requests to judge replies",
+      detail: "This host hasn't had enough recent requests for a reliable figure.",
+      tone: "absent",
+      source: "platform",
+    };
+  }
+  const percent = Math.round((stats.responded_count / stats.sample_size) * 100);
+  const speed =
+    stats.median_response_hours === null
+      ? ""
+      : ` Typically replies in ${formatResponseTime(stats.median_response_hours)}.`;
+  return {
+    key: "responsiveness",
+    label: `Replied to ${percent}% of recent requests`,
+    detail: `Based on ${stats.sample_size} requests in the last 90 days.${speed}`,
+    tone: "verified",
+    source: "platform",
+  };
 }
 
 export interface TrustReputationInput {
@@ -234,6 +299,7 @@ export function buildTrustSummary(
     phoneSignal(space),
     accessSignal(space),
     securitySignal(space),
+    responseSignal(space),
     historySignal(reputation),
   ].filter((signal): signal is TrustSignal => signal !== null);
 

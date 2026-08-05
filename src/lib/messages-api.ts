@@ -66,3 +66,29 @@ export async function sendMessage(input: {
   if (error) throw error;
   return data;
 }
+
+/**
+ * Pre-booking enquiry thread for a published space (Prompt 23E).
+ * One thread per renter per space; the server decides the host and refuses
+ * self-enquiries. Nothing about this reserves capacity or moves money.
+ */
+export async function getOrCreateSpaceConversation(spaceId: string): Promise<Conversation> {
+  const { data, error } = await supabase.rpc("get_or_create_space_conversation", {
+    p_space_id: spaceId,
+  });
+  if (error) throw error;
+  return data as unknown as Conversation;
+}
+
+export async function getConversation(conversationId: string): Promise<Conversation | null> {
+  const { data, error } = await supabase
+    .from("conversations")
+    .select("*")
+    .eq("id", conversationId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+/** True for a thread that exists before any booking. */
+export const isEnquiry = (conversation: Conversation): boolean => conversation.booking_id === null;

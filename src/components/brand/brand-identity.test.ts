@@ -3,7 +3,7 @@
  *
  * 1. The symbol is the approved hexagonal SPACE + VALUE mark.
  * 2. The favicon is derived from that same mark.
- * 3. No customer-facing string says "SpaceFit" or "Project Stow" any more —
+ * 3. No customer-facing string carries a legacy brand name any more —
  *    the internal SpaceFit architecture (modules, types, identifiers, code
  *    comments) is deliberately untouched.
  */

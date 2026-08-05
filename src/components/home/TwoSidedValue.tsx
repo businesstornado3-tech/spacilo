@@ -54,12 +54,15 @@ export function TwoSidedValue() {
                 </li>
               ))}
             </ul>
-            <Button asChild size="lg" className="mt-6 self-start">
-              <Link to="/search" search={{ location: "", radius: 5, sort: "recommended" }}>
-                Find my space
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
-            </Button>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Button asChild size="lg">
+                <Link to="/search" search={{ location: "", radius: 5, sort: "recommended" }}>
+                  Find my space
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </Link>
+              </Button>
+              <ScanStuffButton from="homepage_two_sided" block={false} />
+            </div>
           </article>
         </Reveal>
 

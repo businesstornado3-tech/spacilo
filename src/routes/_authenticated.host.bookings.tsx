@@ -255,6 +255,7 @@ function HostBookingCard({
           audience="host"
         />
         )}
+        <BookingReviewSection bookingId={booking.id} audience="host" />
         <SupportSection bookingId={booking.id} role="host" viewerId={viewerId} />
       </div>
     </article>

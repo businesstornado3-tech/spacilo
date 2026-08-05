@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Logo } from "@/components/layout/Logo";
 import { AppSideNav, MobileBottomNav } from "@/components/layout/AppNav";
 import { AccountMenu, ModeSwitchButton } from "@/components/account/AccountMenu";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { Skeleton } from "@/components/common/Skeletons";
 import type { UserMode } from "@/config/navigation";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,8 +30,9 @@ export function AppLayout({
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6">
           <Logo to={mode === "host" ? "/host" : "/renter"} />
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <ModeSwitchButton />
+            <NotificationBell />
             <AccountMenu />
           </div>
         </div>

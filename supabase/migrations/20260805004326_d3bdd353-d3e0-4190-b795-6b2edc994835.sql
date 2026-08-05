@@ -1,0 +1,13 @@
+REVOKE ALL ON FUNCTION public.user_notifications_guard() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_storage_request() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_booking() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_payment() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_refund() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_change_request() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_booking_message() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_handover_issue() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_support_case() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_support_case_message() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_review_published() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_review_moderation() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notification_booking_path(uuid, text) FROM PUBLIC, anon;

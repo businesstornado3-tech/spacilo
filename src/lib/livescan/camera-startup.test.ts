@@ -253,8 +253,7 @@ describe("both scan journeys share the fixed camera", () => {
   it("renter and host surfaces use the same LiveScanner and hook", () => {
     for (const path of [
       "src/components/inventory/InventoryPhotoManager.tsx",
-      "src/components/host/spacefit/SpaceScanner.tsx",
-      "src/components/spacefit/GuestScanShell.tsx",
+      "src/components/spacefit/live/HostSpaceCapture.tsx",
     ]) {
       expect(read(path)).toMatch(/<LiveScanner/);
     }

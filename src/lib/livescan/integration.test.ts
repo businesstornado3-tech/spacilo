@@ -27,8 +27,9 @@ describe("live scan is offered on every scan surface", () => {
     expect(read(SURFACES.renterPhotos)).toMatch(/<LiveScanner/);
   });
 
-  it("is offered to authenticated hosts", () => {
-    expect(read(SURFACES.hostScanner)).toMatch(/<LiveScanner/);
+  it("is offered to authenticated hosts through the shared host flow", () => {
+    expect(read(SURFACES.hostScanner)).toMatch(/<HostSpaceCapture/);
+    expect(read("src/components/spacefit/live/HostSpaceCapture.tsx")).toMatch(/<LiveScanner/);
   });
 
   it("runs in host mode on the guest space journey", () => {
@@ -40,7 +41,7 @@ describe("live scan is offered on every scan surface", () => {
   });
 
   it("runs in host mode for authenticated spaces", () => {
-    expect(read(SURFACES.hostScanner)).toMatch(/mode="host"/);
+    expect(read("src/components/spacefit/live/HostSpaceCapture.tsx")).toMatch(/mode="host"/);
   });
 });
 
@@ -70,7 +71,7 @@ describe("the existing journeys still work without a camera", () => {
 describe("captured frames enter the unchanged server pipeline", () => {
   it("hosts upload the captured photo through the existing scan upload", () => {
     const source = read(SURFACES.hostScanner);
-    expect(source).toMatch(/onCapture[\s\S]{0,240}uploadScanPhoto\(spaceId, file\)/);
+    expect(source).toMatch(/onCaptured[\s\S]{0,240}uploadScanPhoto\(spaceId, file\)/);
   });
 
   it("hosts still analyse through the existing server function", () => {

@@ -14,8 +14,7 @@ import { Alert } from "@/components/common/Alert";
 import { Field, TextInput } from "@/components/form/Field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BoundaryEditor } from "@/components/spacefit/live/BoundaryEditor";
-import { LiveScanner } from "@/components/spacefit/live/LiveScanner";
+import { HostSpaceCapture } from "@/components/spacefit/live/HostSpaceCapture";
 import { toast } from "@/components/overlay/toast";
 import type { BoundaryMeasurement } from "@/lib/livescan/boundary-scale";
 import {
@@ -68,18 +67,9 @@ export function SpaceScanner({
   const [busy, setBusy] = React.useState(false);
   const [scanning, setScanning] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  /** Object URL of the frame just captured, shown frozen in the editor. */
-  const [frozen, setFrozen] = React.useState<string | null>(null);
+  /** Manual measurement entry — the host must never be trapped in drawing. */
+  const [manualOpen, setManualOpen] = React.useState(false);
 
-  const clearFrozen = React.useCallback(() => {
-    setFrozen((previous) => {
-      if (previous) URL.revokeObjectURL(previous);
-      return null;
-    });
-  }, []);
-
-  // Never leak the frozen frame's blob when the scanner unmounts.
-  React.useEffect(() => clearFrozen, [clearFrozen]);
 
   const refresh = React.useCallback(async () => {
     const [list, current] = await Promise.all([listScanPhotos(spaceId), latestProposal(spaceId)]);
@@ -220,48 +210,38 @@ export function SpaceScanner({
       {/* Live Scan helps frame the shot; the captured photo enters the
           existing secure host analysis pipeline unchanged. The frozen frame
           then powers the boundary editor, with the camera already released. */}
-      {frozen ? (
-        <BoundaryEditor
+      {photos.length < MAX_SPACE_SCAN_PHOTOS ? (
+        <HostSpaceCapture
           className="mt-4"
-          imageUrl={frozen}
-          onCancel={clearFrozen}
-          onConfirm={(measurement: BoundaryMeasurement) => {
-            onApplied?.({
-              lengthM: measurement.depthM,
-              widthM: measurement.widthM,
-              heightM: measurement.volumeM3 && measurement.usableM2
-                ? Math.round((measurement.volumeM3 / measurement.usableM2) * 100) / 100
-                : null,
-            });
-            clearFrozen();
-            toast.success(
-              "Outline saved",
-              "We've used your outline as an estimate — check it against the real space.",
-            );
-          }}
-        />
-      ) : photos.length < MAX_SPACE_SCAN_PHOTOS ? (
-        <LiveScanner
-          mode="host"
-          className="mt-4"
-          onCapture={async (file: File) => {
+          onManualEntry={() => setManualOpen(true)}
+          onCaptured={async (file: File) => {
             setBusy(true);
             try {
               await uploadScanPhoto(spaceId, file);
               await refresh();
-              // Freeze the captured frame locally so the host can outline it.
-              setFrozen((previous: string | null) => {
-                if (previous) URL.revokeObjectURL(previous);
-                return URL.createObjectURL(file);
-              });
             } catch {
               toast.error("Couldn't add that photo");
             } finally {
               setBusy(false);
             }
           }}
+          onMeasured={(measurement: BoundaryMeasurement) => {
+            onApplied?.({
+              lengthM: measurement.depthM,
+              widthM: measurement.widthM,
+              heightM:
+                measurement.volumeM3 && measurement.usableM2
+                  ? Math.round((measurement.volumeM3 / measurement.usableM2) * 100) / 100
+                  : null,
+            });
+            toast.success(
+              "Outline saved",
+              "We've used your outline as an estimate — check it against the real space.",
+            );
+          }}
         />
       ) : null}
+
 
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -318,6 +298,25 @@ export function SpaceScanner({
         {photos.length} of {MAX_SPACE_SCAN_PHOTOS} scan photos. These stay private and never appear
         on your listing.
       </p>
+
+      <div className="mt-3">
+        {manualOpen ? (
+          <ManualMeasurements
+            onCancel={() => setManualOpen(false)}
+            onApply={(values) => {
+              onApplied?.(values);
+              setManualOpen(false);
+              toast.success("Measurements saved", "You can still change them on your listing.");
+            }}
+          />
+        ) : (
+          <Button type="button" variant="ghost" onClick={() => setManualOpen(true)}>
+            <Ruler className="size-4" aria-hidden="true" />
+            Enter measurements manually
+          </Button>
+        )}
+      </div>
+
 
       {error ? (
         <Alert tone="warning" title="Scan unavailable" className="mt-4">
@@ -587,4 +586,80 @@ function parseObstacles(raw: unknown): ConfirmedObstacle[] {
     const volume = Number(record["estimated_volume_m3"] ?? record["volume_m3"] ?? 0);
     return [{ key: kind, label, volume_m3: Number.isFinite(volume) && volume > 0 ? volume : 0 }];
   });
+}
+
+/* ------------------------------------------------------ manual fallback */
+
+/** Always available: a host can type real measurements instead of drawing. */
+function ManualMeasurements({
+  onApply,
+  onCancel,
+}: {
+  onApply: (values: { lengthM: number | null; widthM: number | null; heightM: number | null }) => void;
+  onCancel: () => void;
+}) {
+  const [length, setLength] = React.useState("");
+  const [width, setWidth] = React.useState("");
+  const [height, setHeight] = React.useState("");
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <h4 className="type-h3">Enter measurements manually</h4>
+      <p className="mt-1 type-body-sm text-muted-foreground">
+        Measure the space with a tape and type it in — this always beats an estimate.
+      </p>
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <Field label="Length (m)" htmlFor="manual-length">
+          <TextInput
+            id="manual-length"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.1"
+            value={length}
+            onChange={(event) => setLength(event.target.value)}
+          />
+        </Field>
+        <Field label="Width (m)" htmlFor="manual-width">
+          <TextInput
+            id="manual-width"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.1"
+            value={width}
+            onChange={(event) => setWidth(event.target.value)}
+          />
+        </Field>
+        <Field label="Usable height (m)" htmlFor="manual-height">
+          <TextInput
+            id="manual-height"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.1"
+            value={height}
+            onChange={(event) => setHeight(event.target.value)}
+          />
+        </Field>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          type="button"
+          onClick={() =>
+            onApply({
+              lengthM: toNum(length),
+              widthM: toNum(width),
+              heightM: toNum(height),
+            })
+          }
+        >
+          Use these measurements
+        </Button>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </div>
+  );
 }

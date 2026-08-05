@@ -16,7 +16,7 @@ describe("public route titles & descriptions", () => {
     const descriptions = new Set<string>();
     for (const route of PUBLIC_ROUTES) {
       const meta = publicRouteMeta({ title: `T-${route.path}`, description: `D-${route.path}`, path: route.path });
-      expect(meta.links[0].href).toBe(canonicalUrl(route.path));
+      expect(meta.links[0]?.href).toBe(canonicalUrl(route.path));
       expect(titles.has(route.path)).toBe(false);
       titles.add(route.path);
       expect(descriptions.has(route.path)).toBe(false);
@@ -76,7 +76,7 @@ describe("structured data", () => {
     // No full UK postcode pattern (district + inward code, e.g. "PO4 9AB").
     expect(serialised).not.toMatch(/\b[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}\b/);
     expect(serialised).not.toMatch(/\d+\s+\w+\s+(Street|Road|Avenue|Lane)/i);
-    expect(json.offers).toBeTruthy();
+    expect(json["offers"]).toBeTruthy();
   });
 
   it("listing JSON-LD omits offers when no price is known and never fabricates ratings/reviews", () => {
@@ -91,7 +91,7 @@ describe("structured data", () => {
     const serialised = JSON.stringify(json);
     expect(serialised).not.toContain("aggregateRating");
     expect(serialised).not.toContain("review");
-    expect(json.offers).toBeUndefined();
+    expect(json["offers"]).toBeUndefined();
   });
 });
 

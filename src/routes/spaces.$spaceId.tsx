@@ -116,7 +116,7 @@ function PublicSpacePage() {
   }, [load]);
 
   React.useEffect(() => {
-    if (state.kind === "ready") track("listing_viewed", { space_id: spaceId });
+    if (state.kind === "ready") track("listing_viewed", { props: { space_id: spaceId } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.kind, spaceId]);
 

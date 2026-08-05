@@ -38,7 +38,7 @@ function SearchPage() {
 
   // Fires once per distinct location search — a calm proxy for "a search happened".
   React.useEffect(() => {
-    if (state.location) track("storage_search_started", { has_location: true });
+    if (state.location) track("storage_search_started", { props: { has_location: true } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.location]);
 

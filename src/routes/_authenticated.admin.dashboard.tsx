@@ -126,21 +126,22 @@ function AdminDashboardRoute() {
     : {}) as Record<string, number> | undefined;
   const topPages = (breakdowns.data && typeof breakdowns.data === "object"
     ? (breakdowns.data as Record<string, unknown>)["top_pages"]
-    : []) as Array<{ path: string; views: number }> | undefined;
+    : []) as Array<{ path: string; page_views: number; visitors: number }> | undefined;
 
-  const trendRows = Array.isArray((trends.data as Record<string, unknown> | undefined)?.["daily"])
-    ? ((trends.data as Record<string, unknown>)["daily"] as Array<Record<string, unknown>>)
+  const trendRows = Array.isArray((trends.data as Record<string, unknown> | undefined)?.["series"])
+    ? ((trends.data as Record<string, unknown>)["series"] as Array<Record<string, unknown>>)
     : [];
 
   const kpiDefs: Array<{ key: string; label: string }> = [
     { key: "unique_visitors", label: "Unique visitors" },
     { key: "new_accounts", label: "New accounts" },
-    { key: "published_spaces", label: "Published spaces" },
+    { key: "spaces_published", label: "Published spaces (period)" },
     { key: "storage_requests", label: "Storage requests" },
     { key: "bookings", label: "Bookings" },
-    { key: "gross_booking_value_pence", label: "Gross booking value" },
-    { key: "spacilo_fees_pence", label: "Spacilo fees" },
+    { key: "gbv_booked_pence", label: "Gross booking value (booked)" },
+    { key: "fees_booked_pence", label: "Spacilo fees (booked)" },
   ];
+  const publishedSpacesNow = num(current, "published_spaces_now");
 
   const funnel = buildFunnel([
     { key: "visitor", label: "Visitor", value: num(current, "unique_visitors"), attributable: true },
@@ -150,14 +151,18 @@ function AdminDashboardRoute() {
   ]);
 
   const financial = [
-    { label: "Gross booking value (booked)", value: formatPence(num(current, "gross_booking_value_pence")) },
-    { label: "Paid value", value: formatPence(num(current, "paid_value_pence")) },
-    { label: "Spacilo fees", value: formatPence(num(current, "spacilo_fees_pence")) },
-    { label: "Host amount", value: formatPence(num(current, "host_amount_pence")) },
+    { label: "Gross booking value — BOOKED", value: formatPence(num(current, "gbv_booked_pence")) },
+    { label: "Gross value — PAID", value: formatPence(num(current, "gbv_paid_pence")) },
+    { label: "Spacilo fees — booked", value: formatPence(num(current, "fees_booked_pence")) },
+    { label: "Spacilo fees — paid", value: formatPence(num(current, "fees_paid_pence")) },
+    { label: "Host amount — booked", value: formatPence(num(current, "host_amount_booked_pence")) },
+    { label: "Host amount — paid", value: formatPence(num(current, "host_amount_paid_pence")) },
     { label: "Refunds", value: formatPence(num(current, "refunds_pence")) },
+    { label: "Refunded fees", value: formatPence(num(current, "refunded_fees_pence")) },
     { label: "Net Spacilo fees after refunds", value: formatPence(num(current, "net_fees_pence")) },
     { label: "Refund count", value: formatCount(num(current, "refund_count")) },
-    { label: "Open disputes", value: formatCount(num(current, "open_disputes")) },
+    { label: "Disputed count", value: formatCount(num(current, "disputed_count")) },
+    { label: "Failed payments", value: formatCount(num(current, "failed_payment_count")) },
   ];
 
   const attentionItems = [
@@ -219,6 +224,9 @@ function AdminDashboardRoute() {
         <h2 id="kpi-heading" className="type-h3">
           Overview — {DATE_RANGE_LABEL[rangeKey]}
         </h2>
+        <p className="mt-1 type-body-xs text-muted-foreground">
+          Published spaces right now: {formatCount(publishedSpacesNow)} (live figure, not tied to the date range).
+        </p>
         {kpis.isLoading ? (
           <Skeleton className="mt-3 h-32 w-full" />
         ) : (
@@ -242,9 +250,21 @@ function AdminDashboardRoute() {
         </h2>
         <p className="mt-1 type-body-xs text-muted-foreground">{UNIQUE_VISITOR_DEFINITION}</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <KpiCard label="Unique visitors" value={formatCount(num(current, "unique_visitors"))} delta={{ kind: "unavailable" }} />
-          <KpiCard label="Sessions" value={formatCount(num(current, "sessions"))} delta={{ kind: "unavailable" }} />
-          <KpiCard label="Page views" value={formatCount(num(current, "page_views"))} delta={{ kind: "unavailable" }} />
+          <KpiCard
+            label="Unique visitors"
+            value={formatCount(num(current, "unique_visitors"))}
+            delta={formatDelta(current ? num(current, "unique_visitors") : null, prior ? num(prior, "unique_visitors") : null)}
+          />
+          <KpiCard
+            label="Sessions"
+            value={formatCount(num(current, "sessions"))}
+            delta={formatDelta(current ? num(current, "sessions") : null, prior ? num(prior, "sessions") : null)}
+          />
+          <KpiCard
+            label="Page views"
+            value={formatCount(num(current, "page_views"))}
+            delta={formatDelta(current ? num(current, "page_views") : null, prior ? num(prior, "page_views") : null)}
+          />
         </div>
 
         <h3 className="mt-5 type-label">Visitor trend</h3>
@@ -261,7 +281,7 @@ function AdminDashboardRoute() {
                   <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                   <Tooltip />
-                  <Line type="monotone" dataKey="unique_visitors" stroke="var(--color-primary)" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="visitors" stroke="var(--color-primary)" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -279,7 +299,7 @@ function AdminDashboardRoute() {
                   {trendRows.map((row, i) => (
                     <tr key={i}>
                       <td>{String(row["date"])}</td>
-                      <td>{formatCount(Number(row["unique_visitors"]))}</td>
+                      <td>{formatCount(Number(row["visitors"]))}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -296,7 +316,7 @@ function AdminDashboardRoute() {
             {topPages.slice(0, 8).map((p) => (
               <li key={p.path} className="flex justify-between type-body-sm">
                 <span>{p.path}</span>
-                <span className="text-muted-foreground">{formatCount(p.views)}</span>
+                <span className="text-muted-foreground">{formatCount(p.page_views)}</span>
               </li>
             ))}
           </ul>

@@ -184,7 +184,10 @@ function GuestSpacePage() {
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => scan.reset?.()}
+                    onClick={() => {
+                      scan.clearImages();
+                      setProposal(null);
+                    }}
                   >
                     Take another photo
                   </Button>

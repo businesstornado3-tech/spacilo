@@ -43,6 +43,8 @@ export interface GuestScanState {
   images: PickedImage[];
   addFiles: (files: FileList | File[]) => Promise<void>;
   removeImage: (index: number) => void;
+  /** Clears the picked photos so the visitor can capture the space again. */
+  clearImages: () => void;
   analysing: boolean;
   error: string | null;
   items: GuestItem[] | null;
@@ -94,6 +96,10 @@ export function useGuestSpaceFit(kind: GuestKind): GuestScanState {
 
   const removeImage = React.useCallback((index: number) => {
     setImages((current) => current.filter((_, i) => i !== index));
+  }, []);
+
+  const clearImages = React.useCallback(() => {
+    setImages([]);
   }, []);
 
   const analyse = React.useCallback(
@@ -156,6 +162,7 @@ export function useGuestSpaceFit(kind: GuestKind): GuestScanState {
     images,
     addFiles,
     removeImage,
+    clearImages,
     analysing,
     error,
     items,

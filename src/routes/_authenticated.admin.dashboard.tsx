@@ -50,6 +50,7 @@ import {
   toCsv,
 } from "@/lib/admin/dashboard";
 import { filterTopPublicPages, TRAFFIC_LIMITATIONS } from "@/lib/admin/traffic";
+import { normalizeAdminBreakdowns } from "@/lib/admin/response";
 import {
   renterAiFunnel,
   hostAiFunnel,
@@ -193,15 +194,12 @@ function AdminDashboardRoute() {
   const prior = comparable ? (kpis.data?.previous ?? null) : null;
   const live = kpis.data?.live ?? null;
 
-  const breakdownObj = (breakdowns.data && typeof breakdowns.data === "object"
-    ? (breakdowns.data as Record<string, unknown>)
-    : {}) as Record<string, unknown>;
-  const eventCounts = (breakdownObj["event_counts"] ?? {}) as Record<string, number>;
-  const attentionCounts = (breakdownObj["attention"] ?? {}) as Record<string, number>;
-  const devices = (breakdownObj["devices"] ?? []) as Array<{ source: string; sessions: number }>;
-  const topPages = filterTopPublicPages(
-    (breakdownObj["top_pages"] ?? []) as Array<{ path: string; page_views: number }>,
+  const normalizedBreakdowns = React.useMemo(
+    () => normalizeAdminBreakdowns(breakdowns.data),
+    [breakdowns.data],
   );
+  const { eventCounts, attentionCounts, devices } = normalizedBreakdowns;
+  const topPages = filterTopPublicPages(normalizedBreakdowns.topPages);
 
   const trendRows = Array.isArray((trends.data as Record<string, unknown> | undefined)?.["series"])
     ? ((trends.data as Record<string, unknown>)["series"] as Array<Record<string, unknown>>)
@@ -469,7 +467,14 @@ function AdminDashboardRoute() {
           </div>
 
           <h3 className="mt-6 type-label">Visitor trend</h3>
-          {trends.isLoading ? (
+          {trends.isError ? (
+            <ErrorState
+              className="mt-2"
+              title="Traffic data couldn't be loaded"
+              description="The traffic chart is unavailable. No values have been substituted."
+              onRetry={() => void trends.refetch()}
+            />
+          ) : trends.isLoading ? (
             <Skeleton className="mt-2 h-56 w-full" />
           ) : trendRows.length === 0 ? (
             <EmptyState className="mt-2" title="No activity yet" description="No public traffic recorded for this period." />
@@ -519,7 +524,14 @@ function AdminDashboardRoute() {
           <p className="mt-1 type-body-xs text-muted-foreground">
             Customer-facing pages only — the founder console, sign-in and account areas are excluded.
           </p>
-          {topPages.length === 0 ? (
+          {breakdowns.isError ? (
+            <ErrorState
+              className="mt-2"
+              title="Page and device data couldn't be loaded"
+              description="This analytics breakdown is unavailable. No values have been substituted."
+              onRetry={() => void breakdowns.refetch()}
+            />
+          ) : topPages.length === 0 ? (
             <EmptyState className="mt-2" title="No public page views yet" />
           ) : (
             <ul className="mt-2 space-y-1">
@@ -548,7 +560,13 @@ function AdminDashboardRoute() {
           title="Spacilo AI"
           note="Renter and host journeys are reported separately. Aggregate counts only — no photo, scan or item detail reaches this console."
         >
-          {aiEmpty ? (
+          {breakdowns.isError ? (
+            <ErrorState
+              title="Spacilo AI data couldn't be loaded"
+              description="This analytics breakdown is unavailable. No values have been substituted."
+              onRetry={() => void breakdowns.refetch()}
+            />
+          ) : aiEmpty ? (
             <EmptyState title="No Spacilo AI activity yet" description="Nothing was scanned in this period." />
           ) : (
             <div className="space-y-3">
@@ -593,7 +611,13 @@ function AdminDashboardRoute() {
           title="Needs attention"
           note="Only conditions that are actually present are listed. Nothing here is a health score or an estimate."
         >
-          {breakdowns.isLoading ? (
+          {breakdowns.isError ? (
+            <ErrorState
+              title="Operational data couldn't be loaded"
+              description="Needs-attention counts are unavailable. An all-clear cannot be shown."
+              onRetry={() => void breakdowns.refetch()}
+            />
+          ) : breakdowns.isLoading ? (
             <Skeleton className="h-24 w-full" />
           ) : isAllClear(attention) ? (
             <Alert tone="success" title="Nothing needs attention">

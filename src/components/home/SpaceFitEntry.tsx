@@ -5,6 +5,7 @@
  * Both CTAs route to the real SpaceFit journeys via `spacefit-entry.ts`.
  * Nothing here loads any AI code — analysis only starts inside those flows.
  */
+import * as React from "react";
 import { Link } from "@tanstack/react-router";
 import { Boxes, Camera, Home } from "lucide-react";
 
@@ -15,13 +16,21 @@ import { useAuth } from "@/hooks/useAuth";
 import { scanSpaceTarget, scanStuffTarget } from "@/lib/spacefit-entry";
 import { track } from "@/lib/analytics/tracker";
 
-function ScanStuffButton({ from, block = true }: { from: string; block?: boolean }) {
+function ScanStuffButton({
+  from,
+  block = true,
+  children = "Scan my stuff",
+}: {
+  from: string;
+  block?: boolean;
+  children?: React.ReactNode;
+}) {
   const { user } = useAuth();
   const target = scanStuffTarget(Boolean(user));
   const label = (
     <>
       <Camera className="size-4" aria-hidden="true" />
-      Scan my stuff
+      {children}
     </>
   );
 
@@ -37,13 +46,23 @@ function ScanStuffButton({ from, block = true }: { from: string; block?: boolean
   );
 }
 
-function ScanSpaceButton({ from, block = true }: { from: string; block?: boolean }) {
+function ScanSpaceButton({
+  from,
+  block = true,
+  variant = "secondary",
+  children = "Scan my space",
+}: {
+  from: string;
+  block?: boolean;
+  variant?: "default" | "secondary";
+  children?: React.ReactNode;
+}) {
   const { user } = useAuth();
   const target = scanSpaceTarget(Boolean(user));
   const label = (
     <>
       <Camera className="size-4" aria-hidden="true" />
-      Scan my space
+      {children}
     </>
   );
 
@@ -51,7 +70,7 @@ function ScanSpaceButton({ from, block = true }: { from: string; block?: boolean
     <Button
       asChild
       size="lg"
-      variant="secondary"
+      variant={variant}
       {...(block ? { block: true } : {})}
       onClick={() => track("cta_clicked", { props: { cta: "scan_space", from } })}
     >

@@ -158,6 +158,13 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
               </Badge>
             </div>
 
+            {scan.performanceMode !== "full" ? (
+              <p className="mt-1 type-body-sm text-muted-foreground">
+                {PERFORMANCE_MODE_COPY[scan.performanceMode]}
+              </p>
+            ) : null}
+
+
             {/* Text, not just boxes — guidance never depends on colour alone. */}
             <ul className="mt-2 grid gap-1 type-body-sm text-muted-foreground sm:grid-cols-2">
               {scan.guidance.checks.map((check) => (

@@ -34,6 +34,8 @@ import {
 export interface StepProps {
   form: SpacePatch;
   patch: (p: SpacePatch) => void;
+  /** Present once the draft listing exists, which SpaceFit scanning needs. */
+  spaceId?: string;
 }
 
 const toggle = (list: string[] | null | undefined, value: string) => {

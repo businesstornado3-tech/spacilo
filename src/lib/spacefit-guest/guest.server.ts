@@ -193,7 +193,9 @@ export async function runGuestAnalysis(args: GuestAnalyseArgs): Promise<GuestAna
     throw new GuestSpaceFitError("invalid_request", "That preview is for a different kind of scan.");
   }
 
-  /* 1 — idempotency: a repeated tap returns the first answer. */
+  /* 1 — idempotency: a repeated tap returns the first answer. A run that
+     already FAILED must not lock the visitor out — it is released so the same
+     attempt id can be retried once. */
   if (args.clientRequestId) {
     const { data: existing } = await db
       .from("guest_spacefit_runs")
@@ -204,10 +206,16 @@ export async function runGuestAnalysis(args: GuestAnalyseArgs): Promise<GuestAna
     if (existing?.status === "completed" && existing.result) {
       return hydrate(args.kind, existing.result, existing.photo_count ?? 0, true, args.spaceType ?? null);
     }
-    if (existing) {
+    if (existing?.status === "failed") {
+      await db
+        .from("guest_spacefit_runs")
+        .update({ client_request_id: null })
+        .eq("id", existing.id);
+    } else if (existing) {
       throw new GuestSpaceFitError("rate_limited", "That scan is already running.");
     }
   }
+
 
   /* 2 — per-session, per-IP and concurrency limits. */
   if ((session.run_count ?? 0) >= MAX_RUNS_PER_GUEST_SESSION) {

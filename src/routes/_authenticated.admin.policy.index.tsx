@@ -18,6 +18,7 @@ import { NativeSelect } from "@/components/form/Field";
 import { usePolicyRules, usePolicyVersions } from "@/hooks/usePolicy";
 import { DECISION_LABEL } from "@/lib/policy/engine";
 import { policyCategoryLabel } from "@/lib/policy/categories";
+import { PolicyLifecyclePanel } from "@/components/policy/PolicyLifecyclePanel";
 
 const title = "Storage policy admin — " + brand.name;
 const description = "Review published and draft storage policy versions and the rules they apply.";
@@ -73,6 +74,16 @@ function PolicyAdminPage() {
               </Badge>
             ) : null}
           </div>
+
+          {version ? (
+            <PolicyLifecyclePanel
+              version={version}
+              versions={versions}
+              activeRuleCount={rules?.length ?? 0}
+            />
+          ) : null}
+
+
 
           {version ? (
             <section className="rounded-2xl border border-border bg-card p-5">

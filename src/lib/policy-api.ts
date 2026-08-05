@@ -7,6 +7,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import type {
+  PolicySection,
   PolicyRule,
   PolicyVersion,
   ScreeningResult,
@@ -115,4 +116,38 @@ export async function saveSuitabilityProfile(input: {
     { onConflict: "space_id" },
   );
   if (error) throw error;
+}
+
+/**
+ * Policy lifecycle. Both calls are staff-only and re-check the caller's role
+ * inside the database, so a signed-in renter calling them directly is refused.
+ */
+export async function createPolicyDraft(input: {
+  version: string;
+  title: string;
+  summary?: string;
+  sections?: PolicySection[];
+  copyRulesFromVersionId?: string | null;
+}): Promise<PolicyVersion> {
+  const { data, error } = await supabase.rpc("create_policy_draft", {
+    p_version: input.version,
+    p_title: input.title,
+    p_summary: input.summary ?? "",
+    p_sections: (input.sections ?? []) as unknown as Json,
+    ...(input.copyRulesFromVersionId ? { p_copy_rules_from: input.copyRulesFromVersionId } : {}),
+  });
+  if (error) throw error;
+  return data as unknown as PolicyVersion;
+}
+
+export async function publishPolicyVersion(input: {
+  versionId: string;
+  effectiveAt?: string;
+}): Promise<PolicyVersion> {
+  const { data, error } = await supabase.rpc("publish_policy_version", {
+    p_version_id: input.versionId,
+    p_effective_at: input.effectiveAt ?? new Date().toISOString(),
+  });
+  if (error) throw error;
+  return data as unknown as PolicyVersion;
 }

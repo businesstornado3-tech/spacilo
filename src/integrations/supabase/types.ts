@@ -3790,6 +3790,36 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_policy_draft: {
+        Args: {
+          p_copy_rules_from?: string
+          p_sections?: Json
+          p_summary?: string
+          p_title: string
+          p_version: string
+        }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          effective_at: string | null
+          id: string
+          legal_review_required: boolean
+          published_at: string | null
+          retired_at: string | null
+          sections: Json
+          status: Database["public"]["Enums"]["policy_version_status"]
+          summary: string
+          title: string
+          updated_at: string
+          version: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "storage_policy_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_storage_request: {
         Args: {
           p_declaration?: Json
@@ -4139,6 +4169,30 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "booking_support_cases"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      publish_policy_version: {
+        Args: { p_effective_at?: string; p_version_id: string }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          effective_at: string | null
+          id: string
+          legal_review_required: boolean
+          published_at: string | null
+          retired_at: string | null
+          sections: Json
+          status: Database["public"]["Enums"]["policy_version_status"]
+          summary: string
+          title: string
+          updated_at: string
+          version: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "storage_policy_versions"
           isOneToOne: true
           isSetofReturn: false
         }

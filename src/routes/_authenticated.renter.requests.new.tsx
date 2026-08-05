@@ -20,6 +20,8 @@ import { useSpaceFitForSpace } from "@/hooks/useSpaceFitMatches";
 import { useCreateRequest } from "@/hooks/useStorageRequests";
 import { getPublishedSpace } from "@/lib/spaces-api";
 import { toMatchSpace } from "@/lib/spacefit/adapters";
+import { buildSpaceFitPlanSnapshot, packSpaceFromListing } from "@/lib/spacefit/plan";
+
 import { publicLocation, spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import { track } from "@/lib/analytics";
 import {

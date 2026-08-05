@@ -78,8 +78,8 @@ function HostDashboardPage() {
       {pendingCount > 0 ? (
         <div className="mb-6 rounded-2xl border border-border bg-accent-soft p-5 shadow-card">
           <p className="type-body font-semibold">
-            You have {pendingCount} storage {pendingCount === 1 ? "request" : "requests"} awaiting your
-            response.
+            You have {pendingCount} storage {pendingCount === 1 ? "request" : "requests"} awaiting
+            your response.
           </p>
           <Button asChild className="mt-4">
             <Link to="/host/bookings">

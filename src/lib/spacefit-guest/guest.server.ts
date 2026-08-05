@@ -17,7 +17,11 @@
  */
 import { CATALOGUE } from "@/lib/inventory-catalogue";
 import { reconcileDetections } from "@/lib/spacefit-vision/normalise";
-import { ITEM_CATEGORIES, BAND_SCORE, type VisionErrorCategory } from "@/lib/spacefit-vision/schema";
+import {
+  ITEM_CATEGORIES,
+  BAND_SCORE,
+  type VisionErrorCategory,
+} from "@/lib/spacefit-vision/schema";
 import {
   getVisionProvider,
   VisionProviderError,
@@ -111,7 +115,10 @@ export async function createGuestSession(
       .eq("ip_hash", ipHash)
       .gte("created_at", windowStart);
     if ((count ?? 0) >= MAX_GUEST_SESSIONS_PER_IP) {
-      throw new GuestSpaceFitError("rate_limited", "Too many previews from this connection. Please try later.");
+      throw new GuestSpaceFitError(
+        "rate_limited",
+        "Too many previews from this connection. Please try later.",
+      );
     }
   }
 
@@ -133,7 +140,10 @@ export async function createGuestSession(
 
 async function loadSession(db: AdminClient, token: unknown) {
   if (!isPlausibleGuestToken(token)) {
-    throw new GuestSpaceFitError("session_invalid", "That preview link isn't valid. Please scan again.");
+    throw new GuestSpaceFitError(
+      "session_invalid",
+      "That preview link isn't valid. Please scan again.",
+    );
   }
   const { data } = await db
     .from("guest_spacefit_sessions")
@@ -141,13 +151,19 @@ async function loadSession(db: AdminClient, token: unknown) {
     .eq("token_hash", hashGuestToken(token))
     .maybeSingle();
   if (!data) {
-    throw new GuestSpaceFitError("session_invalid", "That preview link isn't valid. Please scan again.");
+    throw new GuestSpaceFitError(
+      "session_invalid",
+      "That preview link isn't valid. Please scan again.",
+    );
   }
   if (isGuestSessionExpired(data)) {
     throw new GuestSpaceFitError("session_expired", "That preview has expired. Please scan again.");
   }
   if (data.claimed_by) {
-    throw new GuestSpaceFitError("already_claimed", "That preview has already been saved to an account.");
+    throw new GuestSpaceFitError(
+      "already_claimed",
+      "That preview has already been saved to an account.",
+    );
   }
   return data;
 }
@@ -190,7 +206,10 @@ export async function runGuestAnalysis(args: GuestAnalyseArgs): Promise<GuestAna
   const startedAt = Date.now();
 
   if (session.kind !== args.kind) {
-    throw new GuestSpaceFitError("invalid_request", "That preview is for a different kind of scan.");
+    throw new GuestSpaceFitError(
+      "invalid_request",
+      "That preview is for a different kind of scan.",
+    );
   }
 
   /* 1 — idempotency: a repeated tap returns the first answer. A run that
@@ -204,7 +223,13 @@ export async function runGuestAnalysis(args: GuestAnalyseArgs): Promise<GuestAna
       .eq("client_request_id", args.clientRequestId)
       .maybeSingle();
     if (existing?.status === "completed" && existing.result) {
-      return hydrate(args.kind, existing.result, existing.photo_count ?? 0, true, args.spaceType ?? null);
+      return hydrate(
+        args.kind,
+        existing.result,
+        existing.photo_count ?? 0,
+        true,
+        args.spaceType ?? null,
+      );
     }
     if (existing?.status === "failed") {
       await db
@@ -215,7 +240,6 @@ export async function runGuestAnalysis(args: GuestAnalyseArgs): Promise<GuestAna
       throw new GuestSpaceFitError("rate_limited", "That scan is already running.");
     }
   }
-
 
   /* 2 — per-session, per-IP and concurrency limits. */
   if ((session.run_count ?? 0) >= MAX_RUNS_PER_GUEST_SESSION) {
@@ -249,17 +273,26 @@ export async function runGuestAnalysis(args: GuestAnalyseArgs): Promise<GuestAna
       0,
     );
     if (runs >= MAX_GUEST_RUNS_PER_IP) {
-      throw new GuestSpaceFitError("rate_limited", "Too many previews from this connection. Please try later.");
+      throw new GuestSpaceFitError(
+        "rate_limited",
+        "Too many previews from this connection. Please try later.",
+      );
     }
   }
 
   /* 3 — authoritative upload validation. */
   const images = args.images.slice(0, MAX_GUEST_PHOTOS);
   const validation = validateGuestUpload(
-    images.map((image) => ({ mimeType: image.mimeType, byteLength: base64ByteLength(image.base64) })),
+    images.map((image) => ({
+      mimeType: image.mimeType,
+      byteLength: base64ByteLength(image.base64),
+    })),
   );
   if (!validation.ok) {
-    throw new GuestSpaceFitError("invalid_request", validation.message ?? "Those photos can't be scanned.");
+    throw new GuestSpaceFitError(
+      "invalid_request",
+      validation.message ?? "Those photos can't be scanned.",
+    );
   }
 
   const { data: run, error: runError } = await db
@@ -299,7 +332,7 @@ export async function runGuestAnalysis(args: GuestAnalyseArgs): Promise<GuestAna
   try {
     const provider = await getVisionProvider();
     let payload: unknown;
-    let photoCount = visionImages.length;
+    const photoCount = visionImages.length;
 
     if (args.kind === "renter") {
       const response = await provider.analyseInventoryPhotos({
@@ -404,7 +437,13 @@ export interface GuestClaimArgs {
 }
 
 export type GuestClaimResult =
-  | { kind: "renter"; inventoryId: string; runId: string; detectionCount: number; idempotent: boolean }
+  | {
+      kind: "renter";
+      inventoryId: string;
+      runId: string;
+      detectionCount: number;
+      idempotent: boolean;
+    }
   | { kind: "host"; proposal: GuestSpaceProposal; idempotent: boolean };
 
 export async function claimGuestSession(args: GuestClaimArgs): Promise<GuestClaimResult> {
@@ -460,7 +499,8 @@ export async function claimGuestSession(args: GuestClaimArgs): Promise<GuestClai
       .insert({ user_id: args.userId, name: "My Stuff" })
       .select("id")
       .single();
-    if (error || !created) throw new GuestSpaceFitError("unknown", "Couldn't set up your inventory.");
+    if (error || !created)
+      throw new GuestSpaceFitError("unknown", "Couldn't set up your inventory.");
     inventoryId = created.id;
   }
 

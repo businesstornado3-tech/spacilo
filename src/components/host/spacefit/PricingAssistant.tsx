@@ -100,7 +100,6 @@ export function PricingAssistant({
               <PoundSterling className="size-4" aria-hidden="true" />
               Or keep your own price — you decide.
             </p>
-
           </div>
 
           <p className="mt-3 type-body-sm text-muted-foreground">{PRICING_GUIDANCE_NOTE}</p>

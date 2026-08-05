@@ -80,7 +80,10 @@ function RenterHomePage() {
               <span className="mt-1.5 type-body-sm text-muted-foreground">{action.body}</span>
               <span className="mt-4 flex items-center gap-1.5 type-body-sm font-semibold text-primary">
                 {action.cta}
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                <ArrowRight
+                  className="size-4 transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
               </span>
             </Link>
           </li>

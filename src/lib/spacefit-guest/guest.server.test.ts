@@ -45,12 +45,8 @@ let active: FakeSupabase = db;
 const currentDb = () => active;
 const currentProvider = () => provider;
 
-const {
-  claimGuestSession,
-  createGuestSession,
-  GuestSpaceFitError,
-  runGuestAnalysis,
-} = await import("@/lib/spacefit-guest/guest.server");
+const { claimGuestSession, createGuestSession, GuestSpaceFitError, runGuestAnalysis } =
+  await import("@/lib/spacefit-guest/guest.server");
 
 /* ------------------------------------------------------------- helpers */
 
@@ -423,7 +419,11 @@ describe("claiming a guest scan", () => {
 
   it("creates pending, reviewable detections owned by the claimant", async () => {
     const session = await scannedRenter();
-    const result = await claimGuestSession({ supabase: db, userId: "user-1", token: session.token });
+    const result = await claimGuestSession({
+      supabase: db,
+      userId: "user-1",
+      token: session.token,
+    });
 
     expect(result.kind).toBe("renter");
     const detections = db.rows("inventory_detections");
@@ -488,7 +488,12 @@ describe("claiming a guest scan", () => {
     sessionRow(session.token)!["result"] = {
       kind: "renter",
       detections: [
-        { ...detection("server-truth sofa"), catalogue_key: null, category: "boxes", catalogue_strength: "none" },
+        {
+          ...detection("server-truth sofa"),
+          catalogue_key: null,
+          category: "boxes",
+          catalogue_strength: "none",
+        },
       ],
     };
 
@@ -501,7 +506,11 @@ describe("claiming a guest scan", () => {
     const session = await createGuestSession("host", null);
     await runGuestAnalysis({ token: session.token, kind: "host", images: [image()] });
 
-    const result = await claimGuestSession({ supabase: db, userId: "host-1", token: session.token });
+    const result = await claimGuestSession({
+      supabase: db,
+      userId: "host-1",
+      token: session.token,
+    });
 
     expect(result.kind).toBe("host");
     expect(db.rows("spaces")).toHaveLength(0);

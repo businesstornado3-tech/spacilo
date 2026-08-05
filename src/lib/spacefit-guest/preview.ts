@@ -60,7 +60,9 @@ export function guestItemsFromDetections(detections: NormalisedDetection[]): Gue
     .filter((detection) => detection.inventory_intent !== "likely_environment")
     .slice(0, MAX_GUEST_PREVIEW_ITEMS)
     .map((detection) => {
-      const catalogue = detection.catalogue_key ? CATALOGUE_BY_KEY.get(detection.catalogue_key) : undefined;
+      const catalogue = detection.catalogue_key
+        ? CATALOGUE_BY_KEY.get(detection.catalogue_key)
+        : undefined;
       return {
         id: nextId("ai"),
         label: detection.label.slice(0, 80),
@@ -221,8 +223,6 @@ export const GUEST_SPACE_OUTCOME_COPY: Record<
   },
 };
 
-
-
 /** Back to the shared schema shape so `deriveSpaceFigures` stays the authority. */
 function toScanResult(proposal: GuestSpaceProposal): SpaceScanResult {
   return {
@@ -253,7 +253,10 @@ export interface GuestSpacePreview {
  * deliberately cautious inputs: no security features, no access uplift and no
  * condition uplift are assumed, because a guest hasn't declared any of them.
  */
-export function guestSpacePreview(proposal: GuestSpaceProposal, occupancy = 0.8): GuestSpacePreview {
+export function guestSpacePreview(
+  proposal: GuestSpaceProposal,
+  occupancy = 0.8,
+): GuestSpacePreview {
   const figures = deriveSpaceFigures(toScanResult(proposal));
   const price = suggestPrice({
     usableVolumeM3: figures.usableVolumeM3,

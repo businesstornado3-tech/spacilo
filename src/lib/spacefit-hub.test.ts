@@ -68,7 +68,10 @@ describe("renterSpaceFitState", () => {
   });
 
   it("always recommends at least the raw volume of the belongings", () => {
-    const state = renterSpaceFitState([item(), item({ id: "item-2", item_name: "Sofa", quantity: 1 })]);
+    const state = renterSpaceFitState([
+      item(),
+      item({ id: "item-2", item_name: "Sofa", quantity: 1 }),
+    ]);
     if (state.state !== "ready") throw new Error("expected ready");
     expect(state.requirementM3).toBeGreaterThanOrEqual(state.itemVolumeM3);
   });

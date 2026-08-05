@@ -7,10 +7,7 @@
 import * as React from "react";
 import { useServerFn } from "@tanstack/react-start";
 
-import {
-  analyseGuestSpaceFit,
-  startGuestSpaceFit,
-} from "@/lib/spacefit-guest.functions";
+import { analyseGuestSpaceFit, startGuestSpaceFit } from "@/lib/spacefit-guest.functions";
 import {
   base64ByteLength,
   isAllowedGuestMime,
@@ -66,33 +63,30 @@ export function useGuestSpaceFit(kind: GuestKind): GuestScanState {
   const [proposal, setProposal] = React.useState<GuestSpaceProposal | null>(null);
   const requestIdRef = React.useRef<string | null>(null);
 
-  const addFiles = React.useCallback(
-    async (files: FileList | File[]) => {
-      setError(null);
-      const list = Array.from(files);
-      const read = (await Promise.all(list.map(readImageFile))).filter(
-        (image): image is PickedImage => image !== null,
+  const addFiles = React.useCallback(async (files: FileList | File[]) => {
+    setError(null);
+    const list = Array.from(files);
+    const read = (await Promise.all(list.map(readImageFile))).filter(
+      (image): image is PickedImage => image !== null,
+    );
+    if (read.length < list.length) {
+      setError("Some files weren't supported images and were skipped.");
+    }
+    setImages((current) => {
+      const next = [...current, ...read].slice(0, MAX_GUEST_PHOTOS);
+      const validation = validateGuestUpload(
+        next.map((image) => ({
+          mimeType: image.mimeType,
+          byteLength: base64ByteLength(image.base64),
+        })),
       );
-      if (read.length < list.length) {
-        setError("Some files weren't supported images and were skipped.");
+      if (!validation.ok) {
+        setError(validation.message);
+        return current;
       }
-      setImages((current) => {
-        const next = [...current, ...read].slice(0, MAX_GUEST_PHOTOS);
-        const validation = validateGuestUpload(
-          next.map((image) => ({
-            mimeType: image.mimeType,
-            byteLength: base64ByteLength(image.base64),
-          })),
-        );
-        if (!validation.ok) {
-          setError(validation.message);
-          return current;
-        }
-        return next;
-      });
-    },
-    [],
-  );
+      return next;
+    });
+  }, []);
 
   const removeImage = React.useCallback((index: number) => {
     setImages((current) => current.filter((_, i) => i !== index));
@@ -153,7 +147,6 @@ export function useGuestSpaceFit(kind: GuestKind): GuestScanState {
       } finally {
         setAnalysing(false);
       }
-
     },
     [analyseFn, analysing, images, kind, start],
   );

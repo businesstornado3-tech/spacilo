@@ -92,7 +92,6 @@ function GuestSpacePage() {
   );
   const outcome = spaceMeasurementOutcome(proposal);
 
-
   return (
     <MarketingLayout>
       <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
@@ -203,8 +202,6 @@ function GuestSpacePage() {
               </Alert>
             )}
 
-
-
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
               <Field label="Width (m)" htmlFor="guest-width">
                 <TextInput
@@ -237,7 +234,10 @@ function GuestSpacePage() {
                 <p className="type-label">What SpaceFit AI spotted in the way</p>
                 <ul className="mt-2 grid gap-1.5">
                   {proposal.obstacles.map((obstacle, index) => (
-                    <li key={`${obstacle.kind}-${index}`} className="type-body-sm text-muted-foreground">
+                    <li
+                      key={`${obstacle.kind}-${index}`}
+                      className="type-body-sm text-muted-foreground"
+                    >
                       {obstacle.label}
                       {obstacle.estimatedVolumeM3 ? ` · ~${obstacle.estimatedVolumeM3} m³` : ""}
                     </li>

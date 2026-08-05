@@ -1,4 +1,5 @@
 import * as React from "react";
+import { track } from "@/lib/analytics/tracker";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 
@@ -57,6 +58,7 @@ function NewSpacePage() {
     setPhase({ kind: "loading" });
     try {
       const space = await createDraftSpace(user.id);
+      track("host_listing_started", { props: { space_id: space.id } });
       setPhase({ kind: "ready", space, photos: [] });
     } catch {
       setPhase({ kind: "error" });

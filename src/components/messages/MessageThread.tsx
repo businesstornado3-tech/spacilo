@@ -28,12 +28,15 @@ export function MessageThread({
   audience,
   emptyHint,
   isLoading = false,
+  onSent,
 }: {
   conversation: Conversation | null | undefined;
   viewerId: string | null | undefined;
   audience: "renter" | "host";
   emptyHint?: string;
   isLoading?: boolean;
+  /** Fired after a message is stored; used for enquiry analytics. */
+  onSent?: () => void;
 }) {
   const { data: messages } = useMessages(conversation?.id);
   const send = useSendMessage(conversation ?? null);
@@ -47,6 +50,7 @@ export function MessageThread({
     try {
       await send.mutateAsync(draft);
       setDraft("");
+      onSent?.();
     } catch (cause) {
       toast.error(
         "We couldn't send that message",

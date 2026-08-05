@@ -22,18 +22,37 @@ export type CameraStartResult =
   | { ok: true; stream: MediaStream }
   | { ok: false; code: LiveScanErrorCode };
 
+export interface CameraPreviewProfile {
+  width: number;
+  height: number;
+  frameRate: number;
+}
+
 export interface CameraControllerOptions {
   mediaDevices?: MediaDevicesLike | null;
   facing?: CameraFacing;
+  /** Requested preview resolution. Smaller previews keep phones responsive. */
+  preview?: CameraPreviewProfile;
 }
 
-export function cameraConstraints(facing: CameraFacing): MediaStreamConstraints {
+/** Default preview: deliberately modest, because 1080p previews cause lag. */
+export const DEFAULT_PREVIEW_PROFILE: CameraPreviewProfile = {
+  width: 960,
+  height: 540,
+  frameRate: 30,
+};
+
+export function cameraConstraints(
+  facing: CameraFacing,
+  preview: CameraPreviewProfile = DEFAULT_PREVIEW_PROFILE,
+): MediaStreamConstraints {
   return {
     audio: false,
     video: {
       facingMode: { ideal: facing },
-      width: { ideal: 1280 },
-      height: { ideal: 720 },
+      width: { ideal: preview.width, max: 1280 },
+      height: { ideal: preview.height, max: 720 },
+      frameRate: { ideal: preview.frameRate, max: 30 },
     },
   };
 }
@@ -49,10 +68,12 @@ export class CameraController {
   private mediaDevices: MediaDevicesLike | null;
   private stream: MediaStream | null = null;
   private currentFacing: CameraFacing;
+  private readonly preview: CameraPreviewProfile;
 
   constructor(options: CameraControllerOptions = {}) {
     this.mediaDevices = options.mediaDevices ?? null;
     this.currentFacing = options.facing ?? "environment";
+    this.preview = options.preview ?? DEFAULT_PREVIEW_PROFILE;
   }
 
   get active(): boolean {
@@ -74,7 +95,7 @@ export class CameraController {
     // Never run two streams at once.
     this.stop();
     try {
-      const stream = await this.mediaDevices.getUserMedia(cameraConstraints(facing));
+      const stream = await this.mediaDevices.getUserMedia(cameraConstraints(facing, this.preview));
       this.stream = stream;
       this.currentFacing = facing;
       return { ok: true, stream };

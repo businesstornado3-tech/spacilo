@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLiveScan, type UseLiveScanOptions } from "@/hooks/useLiveScan";
 import { liveDetectionLabel } from "@/lib/livescan/taxonomy";
 import { hostPossibleObstructions, HOST_RESHOOT_TIPS } from "@/lib/livescan/guidance";
+import { PERFORMANCE_MODE_COPY } from "@/lib/livescan/performance";
 import {
   CAPTURE_READINESS_LABEL,
   LIVE_SCAN_ERROR_COPY,
@@ -110,26 +111,28 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
               className="size-full object-cover"
             />
 
-            {/* Provisional overlays. Never canonical data. */}
+            {/* Provisional overlays. Never canonical data. Boxes are expressed
+                as a share of the analysed frame so they scale with the view. */}
             <div className="pointer-events-none absolute inset-0">
-              {scan.detections.map((detection) => (
-                <span
-                  key={detection.id}
-                  className="absolute rounded-lg border-2 border-signal bg-signal/10"
-                  style={{
-                    left: `${detection.bbox[0]}px`,
-                    top: `${detection.bbox[1]}px`,
-                    width: `${detection.bbox[2]}px`,
-                    height: `${detection.bbox[3]}px`,
-                    maxWidth: "100%",
-                  }}
-                >
-                  <span className="absolute -top-6 left-0 whitespace-nowrap rounded-md bg-background/90 px-2 py-0.5 type-body-sm">
-                    {liveDetectionLabel(detection.label, detection.confirmed)}
+              {scan.frameSize.width > 0 &&
+                scan.detections.map((detection) => (
+                  <span
+                    key={detection.id}
+                    className="absolute rounded-lg border-2 border-signal bg-signal/10"
+                    style={{
+                      left: `${(detection.bbox[0] / scan.frameSize.width) * 100}%`,
+                      top: `${(detection.bbox[1] / scan.frameSize.height) * 100}%`,
+                      width: `${(detection.bbox[2] / scan.frameSize.width) * 100}%`,
+                      height: `${(detection.bbox[3] / scan.frameSize.height) * 100}%`,
+                    }}
+                  >
+                    <span className="absolute -top-6 left-0 whitespace-nowrap rounded-md bg-background/90 px-2 py-0.5 type-body-sm">
+                      {liveDetectionLabel(detection.label, detection.confirmed)}
+                    </span>
                   </span>
-                </span>
-              ))}
+                ))}
             </div>
+
 
             <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 type-body-sm">
               <span className="size-2 rounded-full bg-destructive" aria-hidden="true" />
@@ -155,6 +158,13 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
                   : CAPTURE_READINESS_LABEL[scan.guidance.readiness]}
               </Badge>
             </div>
+
+            {scan.performanceMode !== "full" ? (
+              <p className="mt-1 type-body-sm text-muted-foreground">
+                {PERFORMANCE_MODE_COPY[scan.performanceMode]}
+              </p>
+            ) : null}
+
 
             {/* Text, not just boxes — guidance never depends on colour alone. */}
             <ul className="mt-2 grid gap-1 type-body-sm text-muted-foreground sm:grid-cols-2">

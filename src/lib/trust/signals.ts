@@ -157,7 +157,7 @@ export function dimensionsSignal(space: TrustSpaceInput): TrustSignal {
   if (space.measurement_source === "spacefit_ai") {
     return {
       key: "dimensions",
-      label: "Measurements estimated by SpaceFit",
+      label: "Measurements estimated by Spacilo AI",
       detail: `${size}. Estimated from photos and not yet confirmed by the host.`,
       tone: "estimated",
       source: "spacefit",

@@ -216,7 +216,7 @@ function GuestStuffPage() {
           body="Create a free account and we'll move this scan straight into My Stuff for you to confirm — then match it against real spaces near you."
           withheld={[
             "Saving your inventory permanently",
-            "Matching against real listings and SpaceFit scores",
+            "Matching against real listings and fit scores",
             "Sending a storage request, messaging a host, booking and paying",
           ]}
         />

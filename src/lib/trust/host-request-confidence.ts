@@ -156,7 +156,7 @@ export function hostConfidenceChecks(request: StorageRequest): HostCheck[] {
   const fitDetail =
     score === null || score === undefined
       ? capacity.detail
-      : `SpaceFit ${score}%${scoreLabel ? ` — ${scoreLabel}` : ""}. ${capacity.detail}`;
+      : `Fit ${score}%${scoreLabel ? ` — ${scoreLabel}` : ""}. ${capacity.detail}`;
 
   const policyState: CheckState = screening?.blocked
     ? "blocked"
@@ -441,6 +441,6 @@ export function hostNextAction(request: StorageRequest, respondable: boolean): N
 export function compactConfidenceLine(request: StorageRequest): string {
   const capacity = capacityComparison(request);
   const score = request.spacefit_score_snapshot;
-  const fit = score === null || score === undefined ? "SpaceFit not recorded" : `SpaceFit ${score}%`;
+  const fit = score === null || score === undefined ? "Fit not recorded" : `Fit ${score}%`;
   return `${fit} · ${capacity.headline}`;
 }

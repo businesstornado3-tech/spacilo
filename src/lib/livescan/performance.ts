@@ -52,7 +52,7 @@ export const PERFORMANCE_PROFILES: Record<LivePerformanceMode, PerformanceProfil
 export const PERFORMANCE_MODE_COPY: Record<LivePerformanceMode, string> = {
   full: "Live guidance on",
   reduced: "Simplified live guidance — keeping the camera smooth",
-  photo: "Camera only — take a photo for SpaceFit analysis",
+  photo: "Camera only — take a photo for Spacilo AI analysis",
 };
 
 export interface PerformanceGovernorOptions {

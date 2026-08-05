@@ -114,4 +114,4 @@ export function spaceFitLabel(score: number): SpaceFitLabel {
 }
 
 export const SPACEFIT_MATCH_DISCLAIMER =
-  "SpaceFit is decision support based on estimated figures you and the host have provided. It is not a guarantee that everything will physically fit.";
+  "The fit score is decision support based on estimated figures you and the host have provided. It is not a guarantee that everything will physically fit.";

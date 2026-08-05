@@ -37,7 +37,7 @@ export const DEMO_STATES: readonly DemoState[] = [
       "Checking suitable spaces…",
     ],
     resultLabel: "Suitable storage nearby",
-    resultValue: "94% SpaceFit*",
+    resultValue: "94% fit*",
     footnote: "*Illustrative SpaceFit example — not your result.",
   },
   {
@@ -50,7 +50,7 @@ export const DEMO_STATES: readonly DemoState[] = [
     ],
     resultLabel: "Potential earnings",
     resultValue: "£85–£115 / month*",
-    footnote: "*Illustrative SpaceFit estimate — not a promise of income.",
+    footnote: "*Illustrative Spacilo AI estimate — not a promise of income.",
   },
 ] as const;
 

@@ -95,7 +95,7 @@ function Schematic({ plan }: { plan: PackPlan }) {
 export function PackPlanView({
   plan,
   space,
-  title = "SpaceFit Pack",
+  title = "Packing plan",
   intro,
   className,
 }: {
@@ -152,7 +152,7 @@ export function PackPlanView({
 
       {schematic ? (
         <div className="mt-4">
-          <h3 className="type-label">SpaceFit suggested arrangement</h3>
+          <h3 className="type-label">Suggested arrangement</h3>
           <Schematic plan={plan} />
           <p className="mt-2 type-body-xs text-muted-foreground">{SCHEMATIC_DISCLAIMER}</p>
         </div>

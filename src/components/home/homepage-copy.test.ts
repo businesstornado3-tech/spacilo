@@ -192,7 +192,7 @@ describe("SpaceFit story section", () => {
     expect(story).toContain("If you have space");
   });
 
-  it("carries the SpaceFit estimate disclaimer", () => {
+  it("carries the Spacilo AI estimate disclaimer", () => {
     expect(story).toContain("SPACEFIT_DISCLAIMER");
   });
 

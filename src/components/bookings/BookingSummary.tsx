@@ -140,22 +140,22 @@ export function BookingSummary({
       {view.spaceFitScore !== null ? (
         <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="type-h3">SpaceFit at time of request</h2>
+            <h2 className="type-h3">Fit at time of request</h2>
             <span className="inline-flex items-center rounded-full bg-primary-soft px-2.5 py-1 type-badge tabular-nums text-primary-soft-foreground">
-              {view.spaceFitScore}% SpaceFit
+              {view.spaceFitScore}% fit
             </span>
           </div>
           {view.spaceFitLabel ? (
             <p className="mt-1 type-body-sm font-semibold">{view.spaceFitLabel}</p>
           ) : null}
-          <p className="mt-1 type-body-sm text-muted-foreground">SpaceFit is an estimate.</p>
+          <p className="mt-1 type-body-sm text-muted-foreground">Fit is an estimate.</p>
         </section>
       ) : null}
 
       <SnapshotPackPlan
         planSnapshot={booking.spacefit_plan_snapshot}
         dimensionsSnapshot={booking.spacefit_space_dimensions_snapshot}
-        title="SpaceFit Pack — agreed for this booking"
+        title="Packing plan — agreed for this booking"
         intro="Carried over from the request. Use it as a guide on handover day."
       />
 

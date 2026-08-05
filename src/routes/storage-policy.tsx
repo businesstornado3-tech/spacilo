@@ -115,7 +115,7 @@ function StoragePolicyPage() {
 
         <Alert tone="info" className="mt-12" title="Checks, not guarantees">
           {brand.name} is a marketplace, not an insurer or a licensed storage operator. Screening,
-          declarations and SpaceFit estimates reduce risk — they don&apos;t remove it. Read{" "}
+          declarations and Spacilo AI estimates reduce risk — they don&apos;t remove it. Read{" "}
           <Link to="/trust" className="underline underline-offset-2">
             how we build trust
           </Link>{" "}

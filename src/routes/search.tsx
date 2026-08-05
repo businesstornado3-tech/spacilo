@@ -13,7 +13,7 @@ import type { StorageSearchParams } from "@/hooks/useStorageSearch";
 
 const title = "Search storage near you — " + brand.name;
 const description =
-  "Search verified garages, lofts, sheds and spare rooms near your postcode. See distance, price and SpaceFit suitability on a map or in a list.";
+  "Search verified garages, lofts, sheds and spare rooms near your postcode. See distance, price and fit suitability on a map or in a list.";
 
 export const Route = createFileRoute("/search")({
   validateSearch: validateSearchParams,

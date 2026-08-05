@@ -19,7 +19,7 @@ const steps = [
   {
     icon: Boxes,
     title: "Understand",
-    body: "SpaceFit estimates items, volume and usable space — you review and correct it.",
+    body: "Spacilo AI estimates items, volume and usable space — you review and correct it.",
   },
   {
     icon: Ruler,

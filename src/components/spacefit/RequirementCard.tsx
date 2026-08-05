@@ -59,7 +59,7 @@ export function RequirementCard({
     >
       <h2 id="spacefit-estimate-heading" className="flex items-center gap-2 type-h2">
         <Sparkles className="size-5 text-primary" aria-hidden="true" />
-        SpaceFit estimate
+        Spacilo AI estimate
       </h2>
       <p className="mt-1 type-body-sm text-muted-foreground">
         Based on the {requirement.itemCount === 1 ? "item" : `${requirement.itemCount} items`}{" "}

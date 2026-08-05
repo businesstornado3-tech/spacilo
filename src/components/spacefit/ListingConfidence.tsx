@@ -70,7 +70,7 @@ export function ListingConfidenceSection({
   return (
     <section
       className={cn("rounded-2xl border border-border bg-card p-5 shadow-card", className)}
-      aria-label="SpaceFit confidence"
+      aria-label="Fit confidence"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="type-h3">Is this space right for your stuff?</h2>

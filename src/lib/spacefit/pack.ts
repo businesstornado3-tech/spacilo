@@ -249,7 +249,7 @@ function buildTextSummary(
 }
 
 export const PACK_PLAN_DISCLAIMER =
-  "SpaceFit Pack is a suggested arrangement based on estimated sizes. It's guidance, not a guarantee that everything will fit, and the host's own rules always come first.";
+  "Packing plan is a suggested arrangement based on estimated sizes. It's guidance, not a guarantee that everything will fit, and the host's own rules always come first.";
 
 export const CATEGORY_ZONE_LABELS = Object.fromEntries(
   (Object.keys(CATEGORY_ZONE) as ItemCategory[]).map((key) => [

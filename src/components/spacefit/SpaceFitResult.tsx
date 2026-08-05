@@ -45,7 +45,7 @@ export function SpaceFitResultBadge({
         className,
       )}
     >
-      {result.compatible ? `${result.score}% SpaceFit` : "Not suitable"}
+      {result.compatible ? `${result.score}% fit` : "Not suitable"}
     </span>
   );
 }
@@ -130,7 +130,7 @@ export function WhyThisMatches({ result }: { result: SpaceFitResult }) {
         open={open}
         onOpenChange={setOpen}
         title="Why this matches"
-        description={`${result.score}% SpaceFit — ${result.label}`}
+        description={`${result.score}% fit — ${result.label}`}
       >
         <SpaceFitBreakdown result={result} />
       </Modal>

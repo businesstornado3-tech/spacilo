@@ -24,7 +24,7 @@ function spaceFromDimensions(value: unknown): PlanSpaceSnapshot {
 export function SnapshotPackPlan({
   planSnapshot,
   dimensionsSnapshot,
-  title = "SpaceFit Pack — agreed at request",
+  title = "Packing plan — agreed at request",
   intro,
   className,
 }: {

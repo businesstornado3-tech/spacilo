@@ -106,7 +106,7 @@ function HostSpaceFitSummary({
         {featured.verified ? (
           <Button asChild>
             <Link to="/host/spaces/$spaceId/edit" params={{ spaceId: space.id }}>
-              {variant === "hub" ? "View analysis" : "View SpaceFit"}
+              {variant === "hub" ? "View analysis" : "View fit"}
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </Button>

@@ -4,101 +4,71 @@ import { brand } from "@/config/brand";
 import { cn } from "@/lib/utils";
 
 /**
- * The approved Spacilo symbol — production SVG of the brand-board master mark.
+ * The approved Spacilo symbol — a faithful vector reproduction of the final
+ * approved brand asset.
  *
- * Geometry traced from the approved reference:
- *  - one open, angular S is the dominant silhouette (SPACILO / SPACE / STORAGE),
- *  - its upper and lower turns imply an isometric room without closing into a
- *    hexagon, cube, house or shield,
- *  - a stylised dollar mark — the brand's universal symbol for VALUE and
- *    EARNING from unused space — sitting at the centre and knocked out of the
- *    arms exactly as the reference does.
+ * Geometry (do not reinterpret):
+ *  - an open hexagonal spatial frame broken into two identical arms that are
+ *    180°-rotationally symmetric,
+ *  - each arm runs from a free rounded terminal, around three hexagon edges,
+ *    then turns horizontally into the centre — creating the open horizontal
+ *    relationship through the middle of the mark,
+ *  - a recognisable "$" sits free in the central opening: VALUE / EARNING.
  *
- * The whole mark is drawn in `currentColor`, so it inherits any semantic
- * token: emerald on light, reversed on dark, single-ink in monochrome.
+ * The whole mark is drawn in `currentColor`, so every variant (default, light,
+ * dark/reversed, monochrome) derives from this one master geometry and differs
+ * only in colour treatment.
  */
 
-/**
- * The master spatial S. Read from its open top-right terminal through the
- * upper room, centre transition and lower room to the open bottom-left
- * terminal. It remains an unmistakable S when the value mark is hidden.
- */
-export const SPATIAL_S_PATH =
-  "M52 13H25L12 23v8l10 7h20l10 7v6L42 59H12";
+/** Upper arm: terminal on the right, over the top, down the left, into the centre. */
+export const FRAME_ARM_UPPER = "M58 26V18L32 4 6 18v14h14";
+/** Lower arm: exact 180° rotation of the upper arm. */
+export const FRAME_ARM_LOWER = "M6 38v8l26 14 26-14V32H44";
 
 /** The stylised $ — an S spine pierced by a vertical value stroke. */
 export const DOLLAR_SPINE =
-  "M39.4 25.2c-1.9-2.1-4.4-3.1-7.4-3.1-4 0-6.8 2-6.8 4.9 0 3.1 2.9 4.2 7 5.1 4.5 1 7.8 2.4 7.8 5.9 0 3.3-3 5.5-7.6 5.5-3.3 0-6.2-1.2-8.2-3.5";
-export const DOLLAR_STEM = "M32 17.4V47.6";
+  "M38 26c0-2.6-2.7-4.4-6-4.4s-6 1.8-6 4.4c0 2.4 2 3.6 6 4.6s6 2.2 6 4.6c0 2.6-2.7 4.4-6 4.4s-6-1.8-6-4.4";
+export const DOLLAR_STEM = "M32 19.4V47.2";
+
+function MarkPaths({
+  frameWidth,
+  spineWidth,
+  stemWidth,
+}: {
+  frameWidth: number;
+  spineWidth: number;
+  stemWidth: number;
+}) {
+  return (
+    <g stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      {/* SPACE / STORAGE — the open hexagonal frame */}
+      <g strokeWidth={frameWidth}>
+        <path d={FRAME_ARM_UPPER} />
+        <path d={FRAME_ARM_LOWER} />
+      </g>
+      {/* VALUE / EARNING — the central $ */}
+      <path d={DOLLAR_SPINE} strokeWidth={spineWidth} />
+      <path d={DOLLAR_STEM} strokeWidth={stemWidth} />
+    </g>
+  );
+}
 
 export function SpaciloSymbol({ className }: { className?: string }) {
-  const maskId = React.useId();
-
   return (
-    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true" className={cn("size-8", className)}>
-      <defs>
-        {/* Give the secondary value mark breathing room inside the spatial S. */}
-        <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-          <rect x="0" y="0" width="64" height="64" fill="white" />
-          <g stroke="black" fill="none" strokeLinecap="round" strokeLinejoin="round">
-            <path d={DOLLAR_SPINE} strokeWidth="8.6" />
-            <path d={DOLLAR_STEM} strokeWidth="8" />
-          </g>
-        </mask>
-      </defs>
-
-      {/* SPACILO / SPACE / STORAGE — one open geometric S */}
-      <g
-        mask={`url(#${maskId})`}
-        stroke="currentColor"
-        strokeWidth="8"
-        strokeLinecap="square"
-        strokeLinejoin="bevel"
-        fill="none"
-      >
-        <path d={SPATIAL_S_PATH} />
-      </g>
-
-      {/* VALUE — the stylised $: earning from unused space */}
-      <g stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" fill="none">
-        <path d={DOLLAR_SPINE} strokeWidth="4.4" />
-        <path d={DOLLAR_STEM} strokeWidth="3.4" />
-      </g>
+    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false" className={cn("size-8", className)}>
+      <MarkPaths frameWidth={6} spineWidth={4.4} stemWidth={3.6} />
     </svg>
   );
 }
 
 /**
- * Small-size variant: exactly the same master S + $ geometry with heavier
- * optical weights. No alternate hexagonal icon is introduced.
+ * Small-size / icon-only variant: identical approved geometry with slightly
+ * heavier optical weights so the $ stays recognisable at favicon sizes.
  */
 export function SpaciloSymbolCompact({ className }: { className?: string }) {
-  const maskId = React.useId();
-
   return (
-    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true" className={cn("size-8", className)}>
-      <defs>
-        <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-          <rect x="0" y="0" width="64" height="64" fill="white" />
-          <g stroke="black" fill="none" strokeLinecap="round" strokeLinejoin="round">
-            <path d={DOLLAR_SPINE} strokeWidth="12" />
-            <path d={DOLLAR_STEM} strokeWidth="11" />
-          </g>
-        </mask>
-      </defs>
-      <path
-        d={SPATIAL_S_PATH}
-        mask={`url(#${maskId})`}
-        stroke="currentColor"
-        strokeWidth="8.8"
-        strokeLinecap="square"
-        strokeLinejoin="bevel"
-        fill="none"
-      />
-      <g stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" fill="none">
-        <path d={DOLLAR_SPINE} strokeWidth="5.2" />
-        <path d={DOLLAR_STEM} strokeWidth="4" />
-      </g>
+    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false" className={cn("size-8", className)}>
+      <MarkPaths frameWidth={6.6} spineWidth={5} stemWidth={4.2} />
     </svg>
   );
 }
@@ -127,3 +97,6 @@ export function SpaciloLockup({
     </span>
   );
 }
+
+/** Kept so `React` import stays meaningful for consumers using refs/ids later. */
+export type SpaciloMarkProps = React.ComponentProps<typeof SpaciloSymbol>;

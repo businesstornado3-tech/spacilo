@@ -35,7 +35,7 @@ function CaseRoute() {
 
   const mode = profile?.current_mode === "host" ? "host" : "renter";
   const role =
-    data && user ? (data.host_user_id === user.id ? "host" : data.renter_user_id === user.id ? "renter" : null) : null;
+    data && user ? (data.host_id === user.id ? "host" : data.renter_id === user.id ? "renter" : null) : null;
 
   return (
     <AppLayout mode={mode} title="Support case" description="Everything recorded about this problem.">

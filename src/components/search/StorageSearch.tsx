@@ -19,6 +19,8 @@ import { SearchResultCard } from "@/components/search/SearchResultCard";
 import type { MapSpace } from "@/components/search/StorageMap";
 import { useStorageSearch, type SearchFilters, type SortKey, type StorageSearchParams } from "@/hooks/useStorageSearch";
 import { track } from "@/lib/analytics";
+import { estimateRequiredSpace } from "@/lib/spacefit/requirement";
+import { formatVolume } from "@/lib/inventory-model";
 import { useAuth } from "@/hooks/useAuth";
 
 const StorageMap = React.lazy(() => import("@/components/search/StorageMap"));

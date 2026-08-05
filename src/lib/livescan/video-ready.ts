@@ -39,9 +39,7 @@ export const HAVE_CURRENT_DATA = 2;
 
 /** True when the element already holds a usable, sized frame. */
 export function hasUsableFrame(video: VideoElementLike): boolean {
-  return (
-    video.videoWidth > 0 && video.videoHeight > 0 && video.readyState >= HAVE_CURRENT_DATA
-  );
+  return video.videoWidth > 0 && video.videoHeight > 0 && video.readyState >= HAVE_CURRENT_DATA;
 }
 
 /**

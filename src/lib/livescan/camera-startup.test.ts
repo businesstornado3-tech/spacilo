@@ -8,7 +8,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 
-import { cameraConstraints, simpleCameraConstraints, CameraController } from "@/lib/livescan/camera";
+import {
+  cameraConstraints,
+  simpleCameraConstraints,
+  CameraController,
+} from "@/lib/livescan/camera";
 import {
   attachStreamAndAwaitFirstFrame,
   hasUsableFrame,
@@ -54,8 +58,7 @@ class FakeVideo implements VideoElementLike {
   }
 }
 
-const fakeStream = () =>
-  ({ getTracks: () => [] }) as unknown as MediaStream;
+const fakeStream = () => ({ getTracks: () => [] }) as unknown as MediaStream;
 
 describe("first-frame readiness", () => {
   it("does not treat a resolved getUserMedia as a ready camera", async () => {
@@ -147,8 +150,8 @@ describe("no duplicate media streams", () => {
     const makeStream = (id: string) =>
       ({ getTracks: () => [{ stop: () => stopped.push(id) }] }) as unknown as MediaStream;
     let index = 0;
-    const getUserMedia = vi.fn(
-      async (_constraints: MediaStreamConstraints) => makeStream(`s${(index += 1)}`),
+    const getUserMedia = vi.fn(async (_constraints: MediaStreamConstraints) =>
+      makeStream(`s${(index += 1)}`),
     );
     const controller = new CameraController({ mediaDevices: { getUserMedia } });
 
@@ -227,7 +230,10 @@ describe("one unified camera lifecycle", () => {
   });
 
   it("keeps the user on the environment camera during recovery", () => {
-    const activation = HOOK.slice(HOOK.indexOf("const activateCamera"), HOOK.indexOf("const start ="));
+    const activation = HOOK.slice(
+      HOOK.indexOf("const activateCamera"),
+      HOOK.indexOf("const start ="),
+    );
     expect(activation).not.toMatch(/"user"/);
   });
 
@@ -235,7 +241,10 @@ describe("one unified camera lifecycle", () => {
     const start = HOOK.slice(HOOK.indexOf("const start ="), HOOK.indexOf("const switchCamera ="));
     expect(start.indexOf("activateCamera")).toBeLessThan(start.indexOf("startVision"));
     expect(start).toMatch(/if \(!ok\)/);
-    const vision = HOOK.slice(HOOK.indexOf("const startVision"), HOOK.indexOf("const waitForVideoElement"));
+    const vision = HOOK.slice(
+      HOOK.indexOf("const startVision"),
+      HOOK.indexOf("const waitForVideoElement"),
+    );
     expect(vision).toMatch(/loadLiveDetector/);
   });
 });

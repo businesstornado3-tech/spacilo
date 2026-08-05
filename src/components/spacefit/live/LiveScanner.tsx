@@ -151,7 +151,6 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
                 ))}
             </div>
 
-
             {!cameraReady ? (
               <div className="absolute inset-0 grid place-items-center bg-foreground/95 p-6 text-center">
                 {cameraFailed ? (
@@ -215,7 +214,6 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
                 {PERFORMANCE_MODE_COPY[scan.performanceMode]}
               </p>
             ) : null}
-
 
             {/* Text, not just boxes — guidance never depends on colour alone. */}
             <ul

@@ -19,8 +19,7 @@ export interface MediaDevicesLike {
 export type CameraFacing = "environment" | "user";
 
 export type CameraStartResult =
-  | { ok: true; stream: MediaStream }
-  | { ok: false; code: LiveScanErrorCode };
+  { ok: true; stream: MediaStream } | { ok: false; code: LiveScanErrorCode };
 
 export interface CameraPreviewProfile {
   width: number;
@@ -71,7 +70,6 @@ export function simpleCameraConstraints(
     video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: facing } },
   };
 }
-
 
 /** Maps a raw media error onto our small, non-sensitive error vocabulary. */
 export function cameraErrorCode(error: unknown): LiveScanErrorCode {
@@ -126,7 +124,6 @@ export class CameraController {
       return { ok: false, code: cameraErrorCode(error) };
     }
   }
-
 
   /** Flips between rear and front where the device offers both. */
   async switchCamera(): Promise<CameraStartResult> {

@@ -39,7 +39,12 @@ import {
 } from "@/lib/livescan/capability";
 import { loadLiveDetector, type DetectorLoader } from "@/lib/livescan/detector";
 import { FrameQualitySampler } from "@/lib/livescan/frame-quality";
-import { hostGuidance, objectCoverage, renterGuidance, type LiveGuidance } from "@/lib/livescan/guidance";
+import {
+  hostGuidance,
+  objectCoverage,
+  renterGuidance,
+  type LiveGuidance,
+} from "@/lib/livescan/guidance";
 import {
   PerformanceGovernor,
   PERFORMANCE_PROFILES,
@@ -48,10 +53,7 @@ import {
 } from "@/lib/livescan/performance";
 import { InferenceScheduler } from "@/lib/livescan/scheduler";
 import { DetectionStabiliser } from "@/lib/livescan/stabiliser";
-import {
-  attachStreamAndAwaitFirstFrame,
-  type VideoElementLike,
-} from "@/lib/livescan/video-ready";
+import { attachStreamAndAwaitFirstFrame, type VideoElementLike } from "@/lib/livescan/video-ready";
 import type {
   CameraLifecycleState,
   LiveDetector,
@@ -254,10 +256,7 @@ export function useLiveScan(options: UseLiveScanOptions): LiveScanState {
       stable = stabiliserRef.current.update(raw, Date.now());
     }
 
-    if (
-      frameSizeRef.current.width !== size.width ||
-      frameSizeRef.current.height !== size.height
-    ) {
+    if (frameSizeRef.current.width !== size.width || frameSizeRef.current.height !== size.height) {
       frameSizeRef.current = size;
       setFrameSize(size);
     }

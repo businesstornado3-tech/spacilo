@@ -186,7 +186,7 @@ describe("buildPackPlan", () => {
   });
 
   it("says so in the text summary when floor space looks tight", () => {
-    const p = plan([boxes], space({ floorAreaM2: 1.1 }));
+    const p = plan([boxes], space({ floorAreaM2: 0.62 }));
     expect(["tight", "fail"]).toContain(p.floorAreaCheck);
     expect(p.textSummary.toLowerCase()).toContain("floor space");
   });

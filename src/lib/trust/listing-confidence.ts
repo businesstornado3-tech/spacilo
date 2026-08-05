@@ -195,7 +195,7 @@ export function capacityProvenance(space: HostSpaceLike): string {
     case "host_entered":
       return "Entered by the host";
     case "ai_estimate":
-      return "Estimated by SpaceFit AI — not yet confirmed by the host";
+      return "Estimated by Spacilo AI — not yet confirmed by the host";
     default:
       return "Not measured yet";
   }
@@ -267,7 +267,7 @@ function listingFacts(space: HostSpaceLike, capacityCovers: boolean | null): str
   if (measurement === "host_verified") facts.push("Host-confirmed dimensions");
   else if (measurement === "host_entered") facts.push("Dimensions entered by the host");
   else if (measurement === "ai_estimate")
-    facts.push("Dimensions estimated by SpaceFit AI — not yet confirmed by the host");
+    facts.push("Dimensions estimated by Spacilo AI — not yet confirmed by the host");
   return facts;
 }
 

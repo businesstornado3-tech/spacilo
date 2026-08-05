@@ -177,4 +177,4 @@ function round(value: number, dp: number) {
 }
 
 export const SPACE_SCAN_DISCLAIMER =
-  "SpaceFit AI estimates from photos and can be wrong. Check every figure against the real space before you publish — nothing is saved to your listing until you confirm it.";
+  "Spacilo AI estimates from photos and can be wrong. Check every figure against the real space before you publish — nothing is saved to your listing until you confirm it.";

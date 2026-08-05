@@ -36,7 +36,7 @@ export function SpaceFitSection() {
       <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
         <Reveal>
           <p className="type-overline text-signal-soft-foreground">
-            <SpaceFitSpark /> SpaceFit AI
+            <SpaceFitSpark /> Spacilo AI
           </p>
           <h2 className="mt-3 type-h2">Just show us your stuff.</h2>
           <p className="mt-3 max-w-xl type-body text-muted-foreground">
@@ -78,7 +78,7 @@ export function SpaceFitSection() {
             {!analysed ? (
               <div>
                 <p className="type-label text-signal-soft-foreground">
-                  SpaceFit AI is analysing your items…
+                  Spacilo AI is analysing your items…
                 </p>
                 <div className="mt-5 space-y-2.5">
                   {[100, 82, 64].map((w) => (

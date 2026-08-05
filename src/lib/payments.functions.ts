@@ -79,7 +79,7 @@ export const createBookingCheckout = createServerFn({ method: "POST" })
             price_data: {
               currency,
               unit_amount: payment.service_fee_amount_pence,
-              product_data: { name: "Project Stow service fee" },
+              product_data: { name: "Spacilo service fee" },
             },
           },
         ],

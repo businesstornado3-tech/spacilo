@@ -12,13 +12,13 @@ export const Route = createFileRoute("/_authenticated/admin/support/$caseId")({
   component: StaffCaseRoute,
   head: () => ({
     meta: [
-      { title: "Support case review · Project Stow" },
+      { title: "Support case review · Spacilo" },
       {
         name: "description",
-        content: "Internal review of a Project Stow booking support case, its evidence and outcome.",
+        content: "Internal review of a Spacilo booking support case, its evidence and outcome.",
       },
-      { property: "og:title", content: "Support case review · Project Stow" },
-      { property: "og:description", content: "Internal review of a Project Stow support case." },
+      { property: "og:title", content: "Support case review · Spacilo" },
+      { property: "og:description", content: "Internal review of a Spacilo support case." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -48,7 +48,7 @@ function StaffCaseRoute() {
       <AppLayout mode={mode} title="Support case">
         <EmptyState
           title="You don't have access to this area"
-          description="Case review is only available to Project Stow support staff."
+          description="Case review is only available to Spacilo support staff."
         />
       </AppLayout>
     );

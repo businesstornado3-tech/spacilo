@@ -15,7 +15,7 @@
  *  4. `stripe_transfer_id` is UNIQUE in the database, the last line of defence.
  *
  * The amount transferred is always the snapshotted host entitlement. The
- * Project Stow service fee is never part of it.
+ * Spacilo service fee is never part of it.
  */
 import { stripeClient } from "@/lib/payments/stripe.server";
 import {
@@ -107,7 +107,7 @@ export async function releaseEligibleHostEarnings(limit = 25): Promise<ReleaseRe
           currency: earning.currency.toLowerCase(),
           destination,
           transfer_group: group,
-          description: `Project Stow host earnings ${earning.period_label}`,
+          description: `Spacilo host earnings ${earning.period_label}`,
           metadata: transferMetadata(earning),
         },
         { idempotencyKey: transferIdempotencyKey(earning.id) },

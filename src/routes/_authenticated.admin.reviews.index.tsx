@@ -28,13 +28,13 @@ export const Route = createFileRoute("/_authenticated/admin/reviews/")({
   component: ReviewModerationRoute,
   head: () => ({
     meta: [
-      { title: "Review moderation · Project Stow" },
+      { title: "Review moderation · Spacilo" },
       {
         name: "description",
-        content: "Internal Project Stow queue for reported reviews and moderation decisions.",
+        content: "Internal Spacilo queue for reported reviews and moderation decisions.",
       },
-      { property: "og:title", content: "Review moderation · Project Stow" },
-      { property: "og:description", content: "Internal Project Stow review moderation queue." },
+      { property: "og:title", content: "Review moderation · Spacilo" },
+      { property: "og:description", content: "Internal Spacilo review moderation queue." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -63,7 +63,7 @@ function ReviewModerationRoute() {
       <AppLayout mode={mode} title="Review moderation">
         <EmptyState
           title="You don't have access to this area"
-          description="Review moderation is only available to Project Stow support staff."
+          description="Review moderation is only available to Spacilo support staff."
         />
       </AppLayout>
     );

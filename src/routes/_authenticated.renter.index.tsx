@@ -31,7 +31,7 @@ const actions = [
     to: "/renter/inventory/photos" as const,
     icon: ScanLine,
     title: "Scan my stuff",
-    body: "Upload photos and SpaceFit AI will propose an itemised list you review.",
+    body: "Upload photos and Spacilo AI will propose an itemised list you review.",
     cta: "Upload photos",
   },
   {

@@ -1,10 +1,10 @@
 /**
  * Refund allocation primitives (Prompt 12).
  *
- * Project Stow does not yet have an agreed cancellation/refund business
+ * Spacilo does not yet have an agreed cancellation/refund business
  * policy, so nothing here decides WHETHER to refund. These functions only
  * describe how an amount that HAS been refunded is split between the
- * host's storage entitlement and the Project Stow service fee, so the
+ * host's storage entitlement and the Spacilo service fee, so the
  * earnings ledger can be adjusted safely and auditably.
  *
  * Current allocation: refunds consume the storage amount first, then the

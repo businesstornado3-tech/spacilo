@@ -1,5 +1,5 @@
 /**
- * SpaceFit AI host space scan — browser-side data access.
+ * Spacilo AI host space scan — browser-side data access.
  *
  * Scan photos live in a private bucket under the host's own user folder and
  * are NEVER shown to renters or promoted into listing photos: they exist only
@@ -173,7 +173,7 @@ export async function saveObstacles(spaceId: string, obstacles: ConfirmedObstacl
 /* ----------------------------------------------------------------- labels */
 
 export const MEASUREMENT_SOURCE_LABEL: Record<string, string> = {
-  ai_estimated: "Estimated by SpaceFit AI — not yet checked",
+  ai_estimated: "Estimated by Spacilo AI — not yet checked",
   host_entered: "Entered by the host",
   host_verified: "Checked and confirmed by the host",
 };

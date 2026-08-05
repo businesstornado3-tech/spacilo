@@ -18,8 +18,8 @@ import {
 import { signedInventoryPhotoUrls } from "@/lib/inventory-api";
 import type { ItemCategory } from "@/lib/inventory-model";
 
-const title = "Review SpaceFit AI results — " + brand.name;
-const description = "Check what SpaceFit AI spotted in your photos before adding it to My Stuff.";
+const title = "Review Spacilo AI results — " + brand.name;
+const description = "Check what Spacilo AI spotted in your photos before adding it to My Stuff.";
 
 export const Route = createFileRoute("/_authenticated/renter/inventory/review")({
   head: () => ({
@@ -135,7 +135,7 @@ function ReviewPage() {
             description={
               run?.status === "failed"
                 ? "The last scan didn't complete. You can try analysing your photos again."
-                : "Upload photos and run SpaceFit AI to see suggestions here."
+                : "Upload photos and run Spacilo AI to see suggestions here."
             }
           />
           <div className="flex flex-wrap justify-center gap-2">

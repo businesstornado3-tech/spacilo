@@ -34,7 +34,7 @@ export const LIVE_SCAN_ERROR_COPY: Record<LiveScanErrorCode, string> = {
     "Live guidance isn't available on this device, but you can still take a photo for SpaceFit analysis.",
   capture_failed: "We couldn't capture that frame. Please try again.",
   post_capture_analysis_failed:
-    "SpaceFit AI couldn't finish that scan. Please try again, or enter the details yourself.",
+    "Spacilo AI couldn't finish that scan. Please try again, or enter the details yourself.",
 };
 
 /** [x, y, width, height] in source-pixel coordinates. */

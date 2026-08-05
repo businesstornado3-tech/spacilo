@@ -248,7 +248,7 @@ function DesignSystemPage() {
         </Block>
 
         <Block
-          title="SpaceFit AI"
+          title="Spacilo AI"
           description="The intelligent layer of the product: a scanning state, an analysis summary and an animated score. Always framed as an estimate."
         >
           <div className="flex flex-wrap items-center gap-3">

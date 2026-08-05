@@ -11,16 +11,16 @@ export const Route = createFileRoute("/_authenticated/support/cases/$caseId")({
   component: CaseRoute,
   head: () => ({
     meta: [
-      { title: "Support case · Project Stow" },
+      { title: "Support case · Spacilo" },
       {
         name: "description",
         content:
-          "Track a Project Stow support case: what was reported, the updates from both sides and the outcome.",
+          "Track a Spacilo support case: what was reported, the updates from both sides and the outcome.",
       },
-      { property: "og:title", content: "Support case · Project Stow" },
+      { property: "og:title", content: "Support case · Spacilo" },
       {
         property: "og:description",
-        content: "Track a Project Stow support case and its outcome.",
+        content: "Track a Spacilo support case and its outcome.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

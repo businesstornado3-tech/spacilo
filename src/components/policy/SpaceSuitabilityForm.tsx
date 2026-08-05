@@ -1,7 +1,7 @@
 /**
  * The host's honest description of their space.
  *
- * These answers are the host's own — SpaceFit AI never fills them in. "Not
+ * These answers are the host's own — Spacilo AI never fills them in. "Not
  * sure" is always allowed and stays visible to renters, because an unknown is
  * more useful than a guess.
  */

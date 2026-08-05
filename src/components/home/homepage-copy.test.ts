@@ -1,5 +1,5 @@
 /**
- * Guards the homepage promise hierarchy: SpaceFit AI is the primary USP, both
+ * Guards the homepage promise hierarchy: Spacilo AI is the primary USP, both
  * marketplace sides are visible in the first viewport, every CTA routes to a
  * real flow, and we still make no unsupported trust or payment claims.
  */
@@ -78,10 +78,10 @@ describe("homepage copy", () => {
   });
 
   it("removes the redundant technology eyebrow above the headline", () => {
-    expect(hero).not.toMatch(/Neighbourhood storage, powered by SpaceFit AI/i);
+    expect(hero).not.toMatch(/Neighbourhood storage, powered by Spacilo AI/i);
   });
 
-  it("introduces SpaceFit AI with its own promise line", () => {
+  it("introduces Spacilo AI with its own promise line", () => {
     expect(hero).toContain("SpaceFitAiMark");
     expect(hero).toContain("Your stuff. Your space. Just show us.");
   });
@@ -101,8 +101,8 @@ describe("homepage copy", () => {
     expect(hero).toContain("HostEntryButton");
   });
 
-  it("names SpaceFit AI above the fold", () => {
-    expect(hero).toContain("SpaceFit AI");
+  it("names Spacilo AI above the fold", () => {
+    expect(hero).toContain("Spacilo AI");
     expect(hero).toContain("SpaceFitEntry");
   });
 
@@ -233,7 +233,7 @@ describe("homepage structure", () => {
   });
 
   it("gives the homepage SpaceFit-led metadata", () => {
-    expect(page).toContain("SpaceFit AI");
+    expect(page).toContain("Spacilo AI");
   });
 });
 

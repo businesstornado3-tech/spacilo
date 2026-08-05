@@ -12,7 +12,7 @@ const steps = [
   {
     n: "02",
     title: "We estimate the space",
-    body: "SpaceFit AI helps work out approximately what you need.",
+    body: "Spacilo AI helps work out approximately what you need.",
   },
   {
     n: "03",

@@ -20,7 +20,7 @@ function HowItWorksPage() {
   return (
     <MarketingLayout>
       <PageSection>
-        <h1 className="type-h1">How Project Stow works</h1>
+        <h1 className="type-h1">How Spacilo works</h1>
         <p className="mt-3 max-w-prose type-body text-muted-foreground">A simple, guided journey for both renters and hosts, from first search to check-out.</p>
         <div className="mt-8">
           <PagePlaceholder

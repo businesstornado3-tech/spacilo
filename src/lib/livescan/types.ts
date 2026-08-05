@@ -15,6 +15,7 @@ export type LiveScanMode = "renter" | "host";
 export type LiveScanErrorCode =
   | "camera_permission_denied"
   | "camera_unavailable"
+  | "camera_no_frame"
   | "live_model_load_failed"
   | "live_model_unsupported"
   | "capture_failed"
@@ -25,6 +26,8 @@ export const LIVE_SCAN_ERROR_COPY: Record<LiveScanErrorCode, string> = {
     "We don't have camera access. You can still take or upload a photo for SpaceFit analysis.",
   camera_unavailable:
     "We couldn't open a camera on this device. You can still take or upload a photo.",
+  camera_no_frame:
+    "We couldn't start the back camera. Try again, switch camera, or upload a photo instead.",
   live_model_load_failed:
     "Live guidance isn't available right now, but you can still take a photo for SpaceFit analysis.",
   live_model_unsupported:
@@ -81,6 +84,23 @@ export interface FrameQuality {
   sharpness: number;
   /** 0–1 change since the previous sample — a motion proxy. */
   motion: number;
+}
+
+/**
+ * Camera lifecycle, kept strictly separate from capture readiness. A black
+ * viewport is a CAMERA state, never a "not ready to capture" state.
+ */
+export type CameraLifecycleState =
+  | "idle"
+  | "requesting_permission"
+  | "opening_camera"
+  | "waiting_for_first_frame"
+  | "ready"
+  | "failed";
+
+/** Capture readiness may only be shown once the camera state is "ready". */
+export function canShowCaptureReadiness(state: CameraLifecycleState): boolean {
+  return state === "ready";
 }
 
 export type CaptureReadiness = "not_ready" | "improving" | "ready";

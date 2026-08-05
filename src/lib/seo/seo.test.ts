@@ -124,3 +124,18 @@ describe("favicon single source of truth", () => {
     expect(root).not.toContain("/favicon.png");
   });
 });
+
+describe("sitemap document", () => {
+  it("lists public routes, includes located listings, and excludes private paths", async () => {
+    const { buildSitemapXml } = await import("@/lib/seo/sitemap");
+    const xml = buildSitemapXml([
+      { id: "with-area", updated_at: "2026-01-05T00:00:00Z", approximate_area: "Southsea", postcode_district: "PO4" },
+      { id: "no-location", updated_at: null, approximate_area: null, postcode_district: null },
+    ]);
+    for (const route of PUBLIC_ROUTES) expect(xml).toContain(canonicalUrl(route.path));
+    expect(xml).toContain("/spaces/with-area");
+    expect(xml).not.toContain("/spaces/no-location");
+    for (const prefix of PRIVATE_ROUTE_PREFIXES) expect(xml).not.toContain(`<loc>${canonicalUrl(prefix)}<`);
+    expect(xml).not.toMatch(/\b[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}\b/);
+  });
+});

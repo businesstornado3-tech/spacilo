@@ -2873,6 +2873,8 @@ export type Database = {
           policy_screening_snapshot: Json | null
           policy_version_id_snapshot: string | null
           policy_version_snapshot: string | null
+          price_reviewed_amount_pence: number | null
+          price_reviewed_at: string | null
           pricing_breakdown_snapshot: Json | null
           pricing_version_snapshot: string | null
           renter_declaration_snapshot: Json | null
@@ -2926,6 +2928,8 @@ export type Database = {
           policy_screening_snapshot?: Json | null
           policy_version_id_snapshot?: string | null
           policy_version_snapshot?: string | null
+          price_reviewed_amount_pence?: number | null
+          price_reviewed_at?: string | null
           pricing_breakdown_snapshot?: Json | null
           pricing_version_snapshot?: string | null
           renter_declaration_snapshot?: Json | null
@@ -2979,6 +2983,8 @@ export type Database = {
           policy_screening_snapshot?: Json | null
           policy_version_id_snapshot?: string | null
           policy_version_snapshot?: string | null
+          price_reviewed_amount_pence?: number | null
+          price_reviewed_at?: string | null
           pricing_breakdown_snapshot?: Json | null
           pricing_version_snapshot?: string | null
           renter_declaration_snapshot?: Json | null
@@ -3234,6 +3240,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      acknowledge_request_price: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
       activate_booking: {
         Args: { p_booking_id: string }
         Returns: {
@@ -3853,6 +3863,8 @@ export type Database = {
           policy_screening_snapshot: Json | null
           policy_version_id_snapshot: string | null
           policy_version_snapshot: string | null
+          price_reviewed_amount_pence: number | null
+          price_reviewed_at: string | null
           pricing_breakdown_snapshot: Json | null
           pricing_version_snapshot: string | null
           renter_declaration_snapshot: Json | null
@@ -4487,6 +4499,8 @@ export type Database = {
           policy_screening_snapshot: Json | null
           policy_version_id_snapshot: string | null
           policy_version_snapshot: string | null
+          price_reviewed_amount_pence: number | null
+          price_reviewed_at: string | null
           pricing_breakdown_snapshot: Json | null
           pricing_version_snapshot: string | null
           renter_declaration_snapshot: Json | null
@@ -4652,6 +4666,10 @@ export type Database = {
       stow_recompute_earning_status: {
         Args: { p_earning_id: string }
         Returns: Database["public"]["Enums"]["host_earning_status"]
+      }
+      stow_request_price_state: {
+        Args: { p_request_id: string }
+        Returns: Json
       }
       stow_review_window_days: { Args: never; Returns: number }
       stow_screen_inventory: {

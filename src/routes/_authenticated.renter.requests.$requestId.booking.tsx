@@ -12,7 +12,11 @@ import { ErrorState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/overlay/toast";
 import { RequestSummary } from "@/components/requests/RequestSummary";
-import { useRequest } from "@/hooks/useStorageRequests";
+import {
+  useRequest,
+  useRequestPriceState,
+  useAcknowledgeRequestPrice,
+} from "@/hooks/useStorageRequests";
 import { useBookingForRequest, useCreateBooking } from "@/hooks/useBookings";
 import {
   BOOKING_PAYMENT_NOTE,
@@ -22,7 +26,8 @@ import {
 } from "@/lib/bookings";
 import { track } from "@/lib/analytics";
 import { BookingJourney } from "@/components/trust/BookingJourney";
-import { PriceChangeNotice } from "@/components/payments/PriceChangeNotice";
+import { PriceReviewGate } from "@/components/payments/PriceReviewGate";
+import { commitDecision, priceChangeDetail } from "@/lib/pricing/commitment";
 import { stageFromStatus } from "@/lib/trust/journey";
 
 const description =
@@ -48,6 +53,9 @@ function BookingReviewPage() {
   const { data: request, isLoading, error, refetch } = useRequest(requestId);
   const { data: existing, isLoading: bookingLoading } = useBookingForRequest(requestId);
   const create = useCreateBooking();
+  const { data: price, refetch: refetchPrice } = useRequestPriceState(requestId);
+  const acknowledge = useAcknowledgeRequestPrice(requestId);
+  const decision = commitDecision(price);
 
   const state = request ? bookingActionState(request, existing) : { kind: "none" as const };
 
@@ -58,7 +66,16 @@ function BookingReviewPage() {
       track("booking_created", { request_id: request.id, status: booking.status });
       toast.success("Booking started", "It stays awaiting payment for now.");
       void navigate({ to: "/renter/bookings/$bookingId", params: { bookingId: booking.id } });
-    } catch {
+    } catch (err) {
+      const changed = priceChangeDetail(err);
+      if (changed) {
+        void refetchPrice();
+        toast.error(
+          "The price changed",
+          "Nothing has been charged. Review the new price to continue.",
+        );
+        return;
+      }
       toast.error("We couldn't start that booking", "Please refresh and try again.");
     }
   };
@@ -103,9 +120,10 @@ function BookingReviewPage() {
             </p>
           </section>
 
-          <PriceChangeNotice
-            spaceId={request.space_id}
-            snapshotPence={request.monthly_price_snapshot}
+          <PriceReviewGate
+            price={price}
+            reviewing={acknowledge.isPending}
+            onReview={() => acknowledge.mutate()}
           />
 
           <RequestSummary request={request} />
@@ -143,9 +161,18 @@ function BookingReviewPage() {
                   {bookingWindowLabel(request)}
                 </p>
               ) : null}
-              <Button className="mt-4" onClick={() => void onContinue()} disabled={create.isPending}>
+              <Button
+                className="mt-4"
+                onClick={() => void onContinue()}
+                disabled={create.isPending || decision.kind !== "commit"}
+              >
                 {create.isPending ? "Starting…" : "Create booking"}
               </Button>
+              {decision.kind !== "commit" ? (
+                <p className="mt-2 type-body-sm text-muted-foreground">
+                  Review the current price above before you continue.
+                </p>
+              ) : null}
             </section>
           ) : null}
         </div>

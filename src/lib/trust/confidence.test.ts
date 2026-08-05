@@ -8,7 +8,6 @@ import {
   parseResponseStats,
   responseSignal,
 } from "@/lib/trust/signals";
-import { comparePrice, priceChangeCopy } from "@/lib/trust/price-change";
 
 describe("host responsiveness signal", () => {
   it("ignores an empty or malformed payload", () => {
@@ -48,24 +47,5 @@ describe("host responsiveness signal", () => {
     expect(formatResponseTime(1.5)).toBe("about an hour");
     expect(formatResponseTime(30)).toBe("about a day");
     expect(formatResponseTime(80)).toBe("about 3 days");
-  });
-});
-
-describe("price-change safeguard", () => {
-  it("treats a missing live price as unknown", () => {
-    expect(comparePrice(5000, null)).toBe("unknown");
-    expect(priceChangeCopy("unknown")).toBeNull();
-  });
-
-  it("says nothing when the price is unchanged", () => {
-    expect(comparePrice(5000, 5000)).toBe("unchanged");
-    expect(priceChangeCopy("unchanged")).toBeNull();
-  });
-
-  it("explains both directions without recalculating", () => {
-    expect(comparePrice(5000, 4000)).toBe("cheaper_now");
-    expect(priceChangeCopy("cheaper_now")).toContain("withdraw");
-    expect(comparePrice(5000, 6000)).toBe("dearer_now");
-    expect(priceChangeCopy("dearer_now")).toContain("lower price you were accepted at");
   });
 });

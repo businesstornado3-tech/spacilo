@@ -41,7 +41,7 @@ const isInternalLine = (line: string) => {
 };
 
 /** The approved spatial S, shared by the component and the favicon. */
-const SPATIAL_S = "M51 15 42 8 23 8 12 16v11l8 6 23 6 9 7v6l-9 7H23l-11-8";
+const SPATIAL_S = "M52 13H25L12 23v8l10 7h20l10 7v6L42 59H12";
 /** The stylised $ spine, shared by the master mark and the small-size variant. */
 const DOLLAR_SPINE = "M39.4 25.2c-1.9-2.1-4.4-3.1-7.4-3.1";
 

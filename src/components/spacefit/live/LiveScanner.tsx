@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLiveScan, type UseLiveScanOptions } from "@/hooks/useLiveScan";
 import { liveDetectionLabel } from "@/lib/livescan/taxonomy";
 import { hostPossibleObstructions, HOST_RESHOOT_TIPS } from "@/lib/livescan/guidance";
+import { PERFORMANCE_MODE_COPY } from "@/lib/livescan/performance";
 import {
   CAPTURE_READINESS_LABEL,
   LIVE_SCAN_ERROR_COPY,

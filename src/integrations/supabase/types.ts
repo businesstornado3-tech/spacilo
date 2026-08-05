@@ -1057,7 +1057,7 @@ export type Database = {
       }
       conversations: {
         Row: {
-          booking_id: string
+          booking_id: string | null
           created_at: string
           host_id: string
           id: string
@@ -1067,7 +1067,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          booking_id: string
+          booking_id?: string | null
           created_at?: string
           host_id: string
           id?: string
@@ -1077,7 +1077,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          booking_id?: string
+          booking_id?: string | null
           created_at?: string
           host_id?: string
           id?: string
@@ -1861,7 +1861,7 @@ export type Database = {
       messages: {
         Row: {
           body: string
-          booking_id: string
+          booking_id: string | null
           conversation_id: string
           created_at: string
           id: string
@@ -1870,7 +1870,7 @@ export type Database = {
         }
         Insert: {
           body: string
-          booking_id: string
+          booking_id?: string | null
           conversation_id: string
           created_at?: string
           id?: string
@@ -1879,7 +1879,7 @@ export type Database = {
         }
         Update: {
           body?: string
-          booking_id?: string
+          booking_id?: string | null
           conversation_id?: string
           created_at?: string
           id?: string
@@ -3934,10 +3934,30 @@ export type Database = {
         Returns: Json
       }
       get_host_reputation: { Args: { p_host_id: string }; Returns: Json }
+      get_host_response_stats: { Args: { p_host_id: string }; Returns: Json }
       get_or_create_booking_conversation: {
         Args: { p_booking_id: string }
         Returns: {
-          booking_id: string
+          booking_id: string | null
+          created_at: string
+          host_id: string
+          id: string
+          last_message_at: string | null
+          renter_id: string
+          space_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "conversations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      get_or_create_space_conversation: {
+        Args: { p_space_id: string }
+        Returns: {
+          booking_id: string | null
           created_at: string
           host_id: string
           id: string
@@ -3977,10 +3997,13 @@ export type Database = {
           host_available_percentage: number
           host_display_name: string
           host_phone_verified: boolean
+          host_response_stats: Json
           host_restrictions: string[]
           id: string
           length_m: number
           lift_available: Database["public"]["Enums"]["tri_state"]
+          measurement_source: string
+          measurements_verified_at: string
           minimum_stay_days: number
           minimum_storage_period_months: number
           moisture_condition: Database["public"]["Enums"]["moisture_condition"]

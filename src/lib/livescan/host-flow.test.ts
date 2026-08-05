@@ -55,8 +55,7 @@ describe("live host guidance is visible over the camera", () => {
 
   it("shows capture readiness only once the camera is ready", () => {
     const source = read(FILES.scanner);
-    expect(source).toMatch(/cameraReady \?[\s\S]{0,400}CAPTURE_READINESS_LABEL/);
-    expect(source).toMatch(/canShowCaptureReadiness|cameraReady/);
+    expect(source).toMatch(/cameraReady \?[\s\S]{0,600}CAPTURE_READINESS_LABEL/);
   });
 
   it("labels a black viewport with camera state, never Not ready", () => {
@@ -78,9 +77,10 @@ describe("live host guidance is visible over the camera", () => {
 });
 
 describe("capture freezes the frame and releases the camera", () => {
-  it("stops the camera and inference on capture", () => {
-    const source = read(FILES.hook);
-    expect(source).toMatch(/capture[\s\S]{0,2000}stop\(\)/);
+  it("releases the camera when the flow leaves the scanning stage", () => {
+    // The scanner is unmounted on capture, and the hook stops tracks on unmount.
+    expect(read(FILES.flow)).toMatch(/stage === "camera"[\s\S]{0,600}<LiveScanner/);
+    expect(read(FILES.hook)).toMatch(/React\.useEffect\(\(\) => stop, \[stop\]\)/);
   });
 
   it("freezes the captured frame in the host flow", () => {

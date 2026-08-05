@@ -55,7 +55,13 @@ function MarkPaths({
 
 export function SpaciloSymbol({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false" className={cn("size-8", className)}>
+    <svg
+      viewBox="0 0 64 64"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+      className={cn("size-8", className)}
+    >
       <MarkPaths frameWidth={6} spineWidth={4.4} stemWidth={3.6} />
     </svg>
   );
@@ -67,7 +73,13 @@ export function SpaciloSymbol({ className }: { className?: string }) {
  */
 export function SpaciloSymbolCompact({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false" className={cn("size-8", className)}>
+    <svg
+      viewBox="0 0 64 64"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+      className={cn("size-8", className)}
+    >
       <MarkPaths frameWidth={6.6} spineWidth={5} stemWidth={4.2} />
     </svg>
   );

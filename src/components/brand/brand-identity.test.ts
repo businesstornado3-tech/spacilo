@@ -103,7 +103,6 @@ describe("favicon", () => {
   });
 });
 
-
 describe("customer-facing brand purity", () => {
   it("never shows SpaceFit in product copy", () => {
     const offenders: string[] = [];

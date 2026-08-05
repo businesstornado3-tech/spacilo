@@ -587,3 +587,79 @@ function parseObstacles(raw: unknown): ConfirmedObstacle[] {
     return [{ key: kind, label, volume_m3: Number.isFinite(volume) && volume > 0 ? volume : 0 }];
   });
 }
+
+/* ------------------------------------------------------ manual fallback */
+
+/** Always available: a host can type real measurements instead of drawing. */
+function ManualMeasurements({
+  onApply,
+  onCancel,
+}: {
+  onApply: (values: { lengthM: number | null; widthM: number | null; heightM: number | null }) => void;
+  onCancel: () => void;
+}) {
+  const [length, setLength] = React.useState("");
+  const [width, setWidth] = React.useState("");
+  const [height, setHeight] = React.useState("");
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4">
+      <h4 className="type-h3">Enter measurements manually</h4>
+      <p className="mt-1 type-body-sm text-muted-foreground">
+        Measure the space with a tape and type it in — this always beats an estimate.
+      </p>
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <Field label="Length (m)" htmlFor="manual-length">
+          <TextInput
+            id="manual-length"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.1"
+            value={length}
+            onChange={(event) => setLength(event.target.value)}
+          />
+        </Field>
+        <Field label="Width (m)" htmlFor="manual-width">
+          <TextInput
+            id="manual-width"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.1"
+            value={width}
+            onChange={(event) => setWidth(event.target.value)}
+          />
+        </Field>
+        <Field label="Usable height (m)" htmlFor="manual-height">
+          <TextInput
+            id="manual-height"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.1"
+            value={height}
+            onChange={(event) => setHeight(event.target.value)}
+          />
+        </Field>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          type="button"
+          onClick={() =>
+            onApply({
+              lengthM: toNum(length),
+              widthM: toNum(width),
+              heightM: toNum(height),
+            })
+          }
+        >
+          Use these measurements
+        </Button>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </div>
+  );
+}

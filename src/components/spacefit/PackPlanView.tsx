@@ -6,7 +6,14 @@
  * safety guidance. When the geometry is too thin for a meaningful schematic we
  * say so and fall back to text, rather than drawing fake precision.
  */
-import { ArrowDownWideNarrow, Boxes, DoorOpen, Info, ShieldAlert, TriangleAlert } from "lucide-react";
+import {
+  ArrowDownWideNarrow,
+  Boxes,
+  DoorOpen,
+  Info,
+  ShieldAlert,
+  TriangleAlert,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { PACK_PLAN_DISCLAIMER, type PackPlan } from "@/lib/spacefit/pack";
@@ -132,7 +139,9 @@ export function PackPlanView({
                 <p className="type-body-xs text-muted-foreground">{zone.description}</p>
                 <p className="mt-1 type-body-sm">
                   {zone.items
-                    .map((item) => (item.quantity > 1 ? `${item.quantity} × ${item.label}` : item.label))
+                    .map((item) =>
+                      item.quantity > 1 ? `${item.quantity} × ${item.label}` : item.label,
+                    )
                     .join(", ")}
                 </p>
               </li>

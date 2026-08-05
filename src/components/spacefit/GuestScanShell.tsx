@@ -83,7 +83,10 @@ export function GuestPhotoPicker({
       {images.length > 0 ? (
         <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {images.map((image, index) => (
-            <li key={image.previewUrl} className="relative overflow-hidden rounded-2xl border border-border">
+            <li
+              key={image.previewUrl}
+              className="relative overflow-hidden rounded-2xl border border-border"
+            >
               <img src={image.previewUrl} alt="" className="aspect-square w-full object-cover" />
               <button
                 type="button"

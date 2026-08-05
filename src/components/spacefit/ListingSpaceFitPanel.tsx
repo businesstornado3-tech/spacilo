@@ -9,9 +9,17 @@ import { Boxes } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useSpaceFitForSpace } from "@/hooks/useSpaceFitMatches";
-import { ReasonList, SpaceFitResultBadge, WhyThisMatches } from "@/components/spacefit/SpaceFitResult";
+import {
+  ReasonList,
+  SpaceFitResultBadge,
+  WhyThisMatches,
+} from "@/components/spacefit/SpaceFitResult";
 import { PackPlanView } from "@/components/spacefit/PackPlanView";
-import { buildSpaceFitPlanSnapshot, packSpaceFromListing, type PackSpaceSource } from "@/lib/spacefit/plan";
+import {
+  buildSpaceFitPlanSnapshot,
+  packSpaceFromListing,
+  type PackSpaceSource,
+} from "@/lib/spacefit/plan";
 import type { MatchSpace } from "@/lib/spacefit/types";
 
 export function ListingSpaceFitPanel({
@@ -85,4 +93,3 @@ export function ListingSpaceFitPanel({
     </>
   );
 }
-

@@ -50,7 +50,11 @@ export function SpaceScanner({
 }: {
   spaceId: string;
   /** Called with host-confirmed values so the wizard form stays in sync. */
-  onApplied?: (values: { lengthM: number | null; widthM: number | null; heightM: number | null }) => void;
+  onApplied?: (values: {
+    lengthM: number | null;
+    widthM: number | null;
+    heightM: number | null;
+  }) => void;
 }) {
   const cameraRef = React.useRef<HTMLInputElement>(null);
   const uploadRef = React.useRef<HTMLInputElement>(null);
@@ -177,7 +181,10 @@ export function SpaceScanner({
                   />
                 ) : (
                   <div className="grid size-full place-items-center">
-                    <Loader2 className="size-4 animate-spin text-muted-foreground" aria-hidden="true" />
+                    <Loader2
+                      className="size-4 animate-spin text-muted-foreground"
+                      aria-hidden="true"
+                    />
                   </div>
                 )}
               </div>
@@ -214,8 +221,16 @@ export function SpaceScanner({
           <ImagePlus className="size-4" aria-hidden="true" />
           Upload
         </Button>
-        <Button type="button" onClick={() => void runScan()} disabled={photos.length === 0 || busy || scanning}>
-          {scanning ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Ruler className="size-4" aria-hidden="true" />}
+        <Button
+          type="button"
+          onClick={() => void runScan()}
+          disabled={photos.length === 0 || busy || scanning}
+        >
+          {scanning ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Ruler className="size-4" aria-hidden="true" />
+          )}
           {scanning ? "Scanning…" : "Scan my space"}
         </Button>
       </div>
@@ -238,8 +253,8 @@ export function SpaceScanner({
       />
 
       <p className="mt-3 type-body-sm text-muted-foreground">
-        {photos.length} of {MAX_SPACE_SCAN_PHOTOS} scan photos. These stay private and never appear on your
-        listing.
+        {photos.length} of {MAX_SPACE_SCAN_PHOTOS} scan photos. These stay private and never appear
+        on your listing.
       </p>
 
       {error ? (
@@ -262,7 +277,11 @@ export function SpaceScanner({
               ...values,
             });
             setProposal(null);
-            onApplied?.({ lengthM: values.lengthM, widthM: values.widthM, heightM: values.heightM });
+            onApplied?.({
+              lengthM: values.lengthM,
+              widthM: values.widthM,
+              heightM: values.heightM,
+            });
             toast.success("Measurements saved", "Your listing now shows your confirmed figures.");
           }}
         />
@@ -316,7 +335,9 @@ function ProposalReview({
     <div className="mt-5 rounded-2xl border border-primary/30 bg-primary/5 p-5">
       <div className="flex flex-wrap items-center gap-2">
         <h4 className="type-h3">Check these figures</h4>
-        <Badge variant="neutral">{CONFIDENCE_LABEL[proposal.confidence] ?? proposal.confidence}</Badge>
+        <Badge variant="neutral">
+          {CONFIDENCE_LABEL[proposal.confidence] ?? proposal.confidence}
+        </Badge>
       </div>
       <p className="mt-1 type-body-sm text-muted-foreground">{SPACE_SCAN_DISCLAIMER}</p>
 
@@ -330,7 +351,9 @@ function ProposalReview({
         <ul className="mt-4 grid gap-1 type-body-sm text-muted-foreground">
           {limitations.map((limitation) => (
             <li key={limitation}>
-              • {SCAN_LIMITATION_LABELS[limitation as keyof typeof SCAN_LIMITATION_LABELS] ?? limitation}
+              •{" "}
+              {SCAN_LIMITATION_LABELS[limitation as keyof typeof SCAN_LIMITATION_LABELS] ??
+                limitation}
             </li>
           ))}
         </ul>
@@ -342,13 +365,37 @@ function ProposalReview({
 
       <div className="mt-5 grid grid-cols-3 gap-3">
         <Field label="Length (m)" htmlFor="scan-length">
-          <TextInput id="scan-length" type="number" inputMode="decimal" min={0} step="0.1" value={length} onChange={(e) => setLength(e.target.value)} />
+          <TextInput
+            id="scan-length"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.1"
+            value={length}
+            onChange={(e) => setLength(e.target.value)}
+          />
         </Field>
         <Field label="Width (m)" htmlFor="scan-width">
-          <TextInput id="scan-width" type="number" inputMode="decimal" min={0} step="0.1" value={width} onChange={(e) => setWidth(e.target.value)} />
+          <TextInput
+            id="scan-width"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.1"
+            value={width}
+            onChange={(e) => setWidth(e.target.value)}
+          />
         </Field>
         <Field label="Usable height (m)" htmlFor="scan-height">
-          <TextInput id="scan-height" type="number" inputMode="decimal" min={0} step="0.1" value={height} onChange={(e) => setHeight(e.target.value)} />
+          <TextInput
+            id="scan-height"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.1"
+            value={height}
+            onChange={(e) => setHeight(e.target.value)}
+          />
         </Field>
       </div>
 
@@ -357,8 +404,11 @@ function ProposalReview({
           That's about <strong className="tabular-nums">{volume} m³</strong> in total
           {obstacleVolume > 0 ? (
             <>
-              , or <strong className="tabular-nums">{Math.max(Math.round((volume - obstacleVolume) * 100) / 100, 0)} m³</strong> once
-              the obstacles below are taken off
+              , or{" "}
+              <strong className="tabular-nums">
+                {Math.max(Math.round((volume - obstacleVolume) * 100) / 100, 0)} m³
+              </strong>{" "}
+              once the obstacles below are taken off
             </>
           ) : null}
           .
@@ -373,13 +423,18 @@ function ProposalReview({
           </p>
           <ul className="mt-3 space-y-2">
             {obstacles.map((obstacle, index) => (
-              <li key={`${obstacle.key}-${index}`} className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-3">
+              <li
+                key={`${obstacle.key}-${index}`}
+                className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-3"
+              >
                 <label className="flex flex-1 items-center gap-3 type-body-sm">
                   <input
                     type="checkbox"
                     checked={accepted[index] ?? false}
                     onChange={(event) =>
-                      setAccepted((prev) => prev.map((value, i) => (i === index ? event.target.checked : value)))
+                      setAccepted((prev) =>
+                        prev.map((value, i) => (i === index ? event.target.checked : value)),
+                      )
                     }
                     className="size-5 rounded-[6px] border border-input accent-primary"
                   />
@@ -397,7 +452,9 @@ function ProposalReview({
                     onChange={(event) =>
                       setObstacles((prev) =>
                         prev.map((value, i) =>
-                          i === index ? { ...value, volume_m3: Math.max(0, Number(event.target.value) || 0) } : value,
+                          i === index
+                            ? { ...value, volume_m3: Math.max(0, Number(event.target.value) || 0) }
+                            : value,
                         ),
                       )
                     }

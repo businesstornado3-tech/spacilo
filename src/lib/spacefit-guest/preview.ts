@@ -60,7 +60,9 @@ export function guestItemsFromDetections(detections: NormalisedDetection[]): Gue
     .filter((detection) => detection.inventory_intent !== "likely_environment")
     .slice(0, MAX_GUEST_PREVIEW_ITEMS)
     .map((detection) => {
-      const catalogue = detection.catalogue_key ? CATALOGUE_BY_KEY.get(detection.catalogue_key) : undefined;
+      const catalogue = detection.catalogue_key
+        ? CATALOGUE_BY_KEY.get(detection.catalogue_key)
+        : undefined;
       return {
         id: nextId("ai"),
         label: detection.label.slice(0, 80),
@@ -200,21 +202,26 @@ export function spaceMeasurementOutcome(
   return "partial";
 }
 
-export const GUEST_SPACE_OUTCOME_COPY: Record<GuestSpaceOutcome, { title: string; body: string }> = {
+export const GUEST_SPACE_OUTCOME_COPY: Record<
+  GuestSpaceOutcome,
+  { title: string; body: string; tip: string | null }
+> = {
   measured: {
     title: "SpaceFit AI estimated your space",
     body: "Check each figure against the real space and correct anything that looks wrong.",
+    tip: null,
   },
   partial: {
-    title: "SpaceFit AI could only estimate part of your space",
-    body: "Fill in the missing measurements below — a tape measure beats a photo every time.",
+    title: "We couldn't estimate the full space confidently from this photo.",
+    body: "Fill in the missing measurements below — a tape measure beats a photo every time — or take another photo.",
+    tip: "Try photographing the space from another corner with the floor and two walls visible.",
   },
   insufficient_information: {
-    title: "SpaceFit AI couldn't measure this space",
-    body: "The photos didn't show enough of the room, or nothing in them gave a sense of scale. Add a wider photo with a door or person in shot, or enter the measurements yourself below.",
+    title: "We couldn't estimate the full space confidently from this photo.",
+    body: "The photos didn't show enough of the room, or nothing in them gave a sense of scale. Take another photo, or enter the measurements yourself below.",
+    tip: "Try photographing the space from another corner with the floor and two walls visible.",
   },
 };
-
 
 /** Back to the shared schema shape so `deriveSpaceFigures` stays the authority. */
 function toScanResult(proposal: GuestSpaceProposal): SpaceScanResult {
@@ -246,7 +253,10 @@ export interface GuestSpacePreview {
  * deliberately cautious inputs: no security features, no access uplift and no
  * condition uplift are assumed, because a guest hasn't declared any of them.
  */
-export function guestSpacePreview(proposal: GuestSpaceProposal, occupancy = 0.8): GuestSpacePreview {
+export function guestSpacePreview(
+  proposal: GuestSpaceProposal,
+  occupancy = 0.8,
+): GuestSpacePreview {
   const figures = deriveSpaceFigures(toScanResult(proposal));
   const price = suggestPrice({
     usableVolumeM3: figures.usableVolumeM3,

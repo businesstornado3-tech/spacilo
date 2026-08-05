@@ -11,6 +11,8 @@ import { ReviewPrompts } from "@/components/reviews/ReviewPrompts";
 import { useAuth } from "@/hooks/useAuth";
 import { useActiveInventory, useInventoryItems, useInventorySummary } from "@/hooks/useInventory";
 import { formatVolume } from "@/lib/inventory-model";
+import { RenterSpaceFitCard } from "@/components/spacefit/RenterSpaceFitCard";
+import { renterSpaceFitState } from "@/lib/spacefit-hub";
 
 export const Route = createFileRoute("/_authenticated/renter/")({
   head: () => ({
@@ -29,8 +31,7 @@ const actions = [
     to: "/renter/inventory/photos" as const,
     icon: ScanLine,
     title: "Scan my stuff",
-    body: "Upload photos of what you want to store.",
-    note: "SpaceFit AI analysis will be added in the next stage.",
+    body: "Upload photos and SpaceFit AI will propose an itemised list you review.",
     cta: "Upload photos",
   },
   {
@@ -50,6 +51,7 @@ function RenterHomePage() {
   const { data: items } = useInventoryItems(inventory?.id);
   const { totals, readiness } = useInventorySummary(items);
   const hasItems = (items?.length ?? 0) > 0;
+  const spaceFit = renterSpaceFitState(items);
 
   return (
     <AppLayout
@@ -59,6 +61,11 @@ function RenterHomePage() {
     >
       <ActionsNeeded audience="renter" />
       <ReviewPrompts audience="renter" />
+
+      <div className="mb-6">
+        <RenterSpaceFitCard state={spaceFit} />
+      </div>
+
       <ul className="grid gap-4 sm:grid-cols-2">
         {actions.map((action) => (
           <li key={action.title}>
@@ -71,12 +78,12 @@ function RenterHomePage() {
               </span>
               <span className="mt-4 type-h3">{action.title}</span>
               <span className="mt-1.5 type-body-sm text-muted-foreground">{action.body}</span>
-              {action.note ? (
-                <span className="mt-2 type-body-sm text-muted-foreground/80">{action.note}</span>
-              ) : null}
               <span className="mt-4 flex items-center gap-1.5 type-body-sm font-semibold text-primary">
                 {action.cta}
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                <ArrowRight
+                  className="size-4 transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
               </span>
             </Link>
           </li>

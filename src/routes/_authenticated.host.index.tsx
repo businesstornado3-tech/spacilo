@@ -12,7 +12,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useHostRequests } from "@/hooks/useStorageRequests";
 import { pendingForHost } from "@/lib/storage-requests";
 import { formatM3, remainingVolume } from "@/lib/spaces";
-import { listMySpaces, type Space } from "@/lib/spaces-api";
+import { useMySpaces } from "@/hooks/useMySpaces";
+import { HostSpaceFitCard } from "@/components/host/spacefit/HostSpaceFitCard";
+import { hostSpaceFitState } from "@/lib/spacefit-hub";
 
 export const Route = createFileRoute("/_authenticated/host/")({
   head: () => ({
@@ -29,17 +31,9 @@ export const Route = createFileRoute("/_authenticated/host/")({
 function HostDashboardPage() {
   const { profile } = useAuth();
   const firstName = profile?.first_name?.trim();
-  const [spaces, setSpaces] = React.useState<Space[] | null>(null);
-
-  React.useEffect(() => {
-    let active = true;
-    void listMySpaces()
-      .then((rows) => active && setSpaces(rows))
-      .catch(() => active && setSpaces([]));
-    return () => {
-      active = false;
-    };
-  }, []);
+  const { data: spacesData, isPending: spacesPending } = useMySpaces();
+  const spaces = spacesPending ? null : (spacesData ?? []);
+  const spaceFit = hostSpaceFitState(spaces);
 
   const listed = (spaces ?? []).filter((s) => s.listing_status === "published");
   const capacity = listed.reduce(
@@ -77,11 +71,15 @@ function HostDashboardPage() {
     >
       <ActionsNeeded audience="host" />
       <ReviewPrompts audience="host" />
+
+      <div className="mb-6">
+        <HostSpaceFitCard state={spaceFit} />
+      </div>
       {pendingCount > 0 ? (
         <div className="mb-6 rounded-2xl border border-border bg-accent-soft p-5 shadow-card">
           <p className="type-body font-semibold">
-            You have {pendingCount} storage {pendingCount === 1 ? "request" : "requests"} awaiting your
-            response.
+            You have {pendingCount} storage {pendingCount === 1 ? "request" : "requests"} awaiting
+            your response.
           </p>
           <Button asChild className="mt-4">
             <Link to="/host/bookings">

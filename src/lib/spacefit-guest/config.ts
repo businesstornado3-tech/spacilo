@@ -100,11 +100,7 @@ export interface GuestUploadCandidate {
 }
 
 export type GuestValidationCode =
-  | "no_photos"
-  | "too_many_photos"
-  | "unsupported_type"
-  | "file_too_large"
-  | "request_too_large";
+  "no_photos" | "too_many_photos" | "unsupported_type" | "file_too_large" | "request_too_large";
 
 export interface GuestValidation {
   ok: boolean;
@@ -133,7 +129,10 @@ export function validateGuestUpload(files: GuestUploadCandidate[]): GuestValidat
   let total = 0;
   for (const file of files) {
     if (!isAllowedGuestMime(file.mimeType)) {
-      return fail("unsupported_type", "That file isn't a supported image (JPEG, PNG, WebP or HEIC).");
+      return fail(
+        "unsupported_type",
+        "That file isn't a supported image (JPEG, PNG, WebP or HEIC).",
+      );
     }
     if (file.byteLength <= 0 || file.byteLength > MAX_GUEST_IMAGE_BYTES) {
       return fail("file_too_large", "Each photo needs to be under 8 MB.");
@@ -142,7 +141,10 @@ export function validateGuestUpload(files: GuestUploadCandidate[]): GuestValidat
   }
 
   if (total > MAX_GUEST_REQUEST_BYTES) {
-    return fail("request_too_large", "Those photos are too large together. Try fewer or smaller ones.");
+    return fail(
+      "request_too_large",
+      "Those photos are too large together. Try fewer or smaller ones.",
+    );
   }
 
   return OK;
@@ -164,19 +166,16 @@ export function isGuestSessionExpired(
   session: { expires_at: string | Date },
   now: Date = new Date(),
 ): boolean {
-  const expires = session.expires_at instanceof Date ? session.expires_at : new Date(session.expires_at);
+  const expires =
+    session.expires_at instanceof Date ? session.expires_at : new Date(session.expires_at);
   return !(expires.getTime() > now.getTime());
 }
 
 export type GuestClaimRejection =
-  | "not_found"
-  | "expired"
-  | "already_claimed_by_other"
-  | "no_result";
+  "not_found" | "expired" | "already_claimed_by_other" | "no_result";
 
 export type GuestClaimDecision =
-  | { ok: true; idempotent: boolean }
-  | { ok: false; reason: GuestClaimRejection };
+  { ok: true; idempotent: boolean } | { ok: false; reason: GuestClaimRejection };
 
 /**
  * Pure claim policy. Claiming is possession-based (an unguessable reference),

@@ -92,7 +92,6 @@ function GuestSpacePage() {
   );
   const outcome = spaceMeasurementOutcome(proposal);
 
-
   return (
     <MarketingLayout>
       <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
@@ -173,10 +172,35 @@ function GuestSpacePage() {
                 className="mt-3"
                 title={GUEST_SPACE_OUTCOME_COPY[outcome].title}
               >
-                {GUEST_SPACE_OUTCOME_COPY[outcome].body}
+                <span data-testid="guest-space-outcome-body">
+                  {GUEST_SPACE_OUTCOME_COPY[outcome].body}
+                </span>
+                {GUEST_SPACE_OUTCOME_COPY[outcome].tip ? (
+                  <span className="mt-2 block">{GUEST_SPACE_OUTCOME_COPY[outcome].tip}</span>
+                ) : null}
+                <span className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      scan.clearImages();
+                      setProposal(null);
+                    }}
+                  >
+                    Take another photo
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setProposal({ ...MANUAL_START, spaceType })}
+                  >
+                    Enter measurements manually
+                  </Button>
+                </span>
               </Alert>
             )}
-
 
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
               <Field label="Width (m)" htmlFor="guest-width">
@@ -210,7 +234,10 @@ function GuestSpacePage() {
                 <p className="type-label">What SpaceFit AI spotted in the way</p>
                 <ul className="mt-2 grid gap-1.5">
                   {proposal.obstacles.map((obstacle, index) => (
-                    <li key={`${obstacle.kind}-${index}`} className="type-body-sm text-muted-foreground">
+                    <li
+                      key={`${obstacle.kind}-${index}`}
+                      className="type-body-sm text-muted-foreground"
+                    >
                       {obstacle.label}
                       {obstacle.estimatedVolumeM3 ? ` · ~${obstacle.estimatedVolumeM3} m³` : ""}
                     </li>

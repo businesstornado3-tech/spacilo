@@ -10,7 +10,11 @@ import { Button } from "@/components/ui/button";
 import { PriceDisplay } from "@/components/marketplace/PriceDisplay";
 import { formatM3, publicLocation, spaceTypeLabel } from "@/lib/spaces";
 import type { SpaceTypeValue } from "@/lib/spaces";
-import { ReasonList, SpaceFitResultBadge, WhyThisMatches } from "@/components/spacefit/SpaceFitResult";
+import {
+  ReasonList,
+  SpaceFitResultBadge,
+  WhyThisMatches,
+} from "@/components/spacefit/SpaceFitResult";
 import type { MatchEntry } from "@/hooks/useSpaceFitMatches";
 
 export function MatchCard({ entry }: { entry: MatchEntry }) {
@@ -55,11 +59,7 @@ export function MatchCard({ entry }: { entry: MatchEntry }) {
           {formatM3(row.estimated_available_volume_m3)} estimated available capacity
         </p>
 
-        <ReasonList
-          positives={result.positives}
-          warnings={result.warnings.slice(0, 1)}
-          limit={3}
-        />
+        <ReasonList positives={result.positives} warnings={result.warnings.slice(0, 1)} limit={3} />
 
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <Button asChild size="sm">

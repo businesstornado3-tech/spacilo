@@ -29,7 +29,6 @@ function tone(result: SpaceFitResult) {
   return TONE.possible;
 }
 
-
 /** Score pill — "92% SpaceFit" or "Not suitable". */
 export function SpaceFitResultBadge({
   result,

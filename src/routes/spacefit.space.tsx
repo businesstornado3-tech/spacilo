@@ -173,9 +173,33 @@ function GuestSpacePage() {
                 className="mt-3"
                 title={GUEST_SPACE_OUTCOME_COPY[outcome].title}
               >
-                {GUEST_SPACE_OUTCOME_COPY[outcome].body}
+                <span data-testid="guest-space-outcome-body">
+                  {GUEST_SPACE_OUTCOME_COPY[outcome].body}
+                </span>
+                {GUEST_SPACE_OUTCOME_COPY[outcome].tip ? (
+                  <span className="mt-2 block">{GUEST_SPACE_OUTCOME_COPY[outcome].tip}</span>
+                ) : null}
+                <span className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => scan.reset?.()}
+                  >
+                    Take another photo
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setProposal({ ...MANUAL_START, spaceType })}
+                  >
+                    Enter measurements manually
+                  </Button>
+                </span>
               </Alert>
             )}
+
 
 
             <div className="mt-4 grid gap-4 sm:grid-cols-3">

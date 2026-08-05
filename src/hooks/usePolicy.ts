@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   confirmItemPolicy,
+  createPolicyDraft,
+  publishPolicyVersion,
   getActivePolicy,
   getSuitabilityProfile,
   listPolicyRules,
@@ -77,6 +79,27 @@ export function useSaveSuitability(spaceId: string | undefined) {
     mutationFn: saveSuitabilityProfile,
     onSuccess: () => {
       if (spaceId) void qc.invalidateQueries({ queryKey: policyKeys.suitability(spaceId) });
+    },
+  });
+}
+
+export function useCreatePolicyDraft() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: createPolicyDraft,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: policyKeys.versions });
+    },
+  });
+}
+
+export function usePublishPolicyVersion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: publishPolicyVersion,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: policyKeys.versions });
+      void qc.invalidateQueries({ queryKey: policyKeys.active });
     },
   });
 }

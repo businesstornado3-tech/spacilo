@@ -40,18 +40,22 @@ const isInternalLine = (line: string) => {
   );
 };
 
+/** The approved hexagon-into-S arm, shared by the component and the favicon. */
+const HEX_S_ARM = "M58 22.5V17.5L32 3.2 6 17.5v16.9l52-4v16.1L32 60.8 6 46.5v-4.2";
+
 describe("Spacilo symbol", () => {
   const mark = read("src/components/brand/SpaciloMark.tsx");
 
   it("uses the approved hexagonal geometry", () => {
-    expect(mark).toContain("M16 2.2 27.9 9v14L16 29.8 4.1 23V9Z");
+    expect(mark).toContain(HEX_S_ARM);
   });
 
   it("carries both halves of the concept: space and value", () => {
     expect(mark).toMatch(/SPACE/);
     expect(mark).toMatch(/VALUE/);
-    // three rising value bars
-    expect((mark.match(/<rect /g) ?? []).length).toBe(3);
+    // the value token is a coin pierced by a vertical stroke
+    expect(mark).toContain('<circle cx="32" cy="32" r="7.2"');
+    expect(mark).toContain('d="M32 21.5V42.5"');
   });
 
   it("inherits semantic tokens rather than hard-coded colour", () => {
@@ -71,8 +75,9 @@ describe("favicon", () => {
   const favicon = read("public/favicon.svg");
 
   it("is the same hexagonal mark", () => {
-    expect(favicon).toContain("M16 2.2 27.9 9v14L16 29.8 4.1 23V9Z");
+    expect(favicon).toContain(HEX_S_ARM);
   });
+
 
   it("is referenced from the root route", () => {
     expect(read("src/routes/__root.tsx")).toContain("/favicon.svg");

@@ -819,15 +819,24 @@ export function StepPrice({ form, patch }: StepProps) {
         ) : null}
       </div>
 
+      <PricingAssistant
+        input={{
+          usableVolumeM3,
+          spaceType: form.space_type ?? null,
+          accessType: form.access_type ?? null,
+          moistureCondition: form.moisture_condition ?? null,
+          temperatureCondition: form.temperature_condition ?? null,
+          features: form.features ?? [],
+        }}
+        currentPricePence={form.monthly_price_pence ?? null}
+        onUseSuggestedPrice={(pence) => patch({ monthly_price_pence: pence })}
+      />
+
       <p className="mt-4 type-body-sm text-muted-foreground">
         Renters can book by the day, week or month. We always quote the cheapest combination of the
         rates you set, so a longer stay never costs more than a shorter one.
       </p>
 
-      <p className="mt-2 type-body-sm text-muted-foreground">
-        We don't have enough local market data yet to suggest an accurate price, so this is entirely your
-        call. Anything shown as an “example estimate” elsewhere is illustrative only.
-      </p>
     </div>
   );
 }

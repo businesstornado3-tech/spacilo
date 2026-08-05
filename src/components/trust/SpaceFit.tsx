@@ -36,7 +36,7 @@ export function SpaceFitBadge({ score, className }: SpaceFitProps) {
       )}
       title={`${label} — ${SPACEFIT_DISCLAIMER}`}
     >
-      {Math.round(score)}% SpaceFit
+      {Math.round(score)}% fit
     </span>
   );
 }
@@ -54,7 +54,7 @@ export function SpaceFitMeter({
   return (
     <div className={cn("rounded-2xl border border-border bg-card p-4", className)}>
       <div className="flex items-baseline justify-between gap-3">
-        <p className="type-price tabular-nums">{Math.round(animated)}% SpaceFit</p>
+        <p className="type-price tabular-nums">{Math.round(animated)}% fit</p>
         <SpaceFitBadge score={value} className="shrink-0" />
       </div>
       <div
@@ -63,7 +63,7 @@ export function SpaceFitMeter({
         aria-valuenow={value}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label="SpaceFit compatibility estimate"
+        aria-label="Spacilo AI compatibility estimate"
       >
         <div
           className={cn("h-full rounded-full transition-none", BAR_CLASSES[band])}

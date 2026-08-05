@@ -46,7 +46,7 @@ export const Route = createFileRoute("/design-system")({
       { title: `Design system — ${brand.name}` },
       {
         name: "description",
-        content: `Internal showcase of ${brand.name} typography, colour tokens, buttons, form controls, trust badges, SpaceFit and marketplace cards.`,
+        content: `Internal showcase of ${brand.name} typography, colour tokens, buttons, form controls, trust badges, fit and marketplace cards.`,
       },
       { property: "og:title", content: `Design system — ${brand.name}` },
       {
@@ -232,7 +232,7 @@ function DesignSystemPage() {
         </Block>
 
         <Block
-          title="SpaceFit"
+          title="Fit"
           description="An estimated compatibility score between declared belongings and a space — never a guarantee."
         >
           <div className="flex flex-wrap gap-2">

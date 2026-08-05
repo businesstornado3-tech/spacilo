@@ -12,7 +12,7 @@ const benefits = [
   {
     icon: Ruler,
     title: "Only pay for the space you need",
-    body: "Describe what you're storing and SpaceFit helps identify suitable nearby spaces, instead of a fixed-size unit. It's an estimate, not a guarantee.",
+    body: "Describe what you're storing and Spacilo AI helps identify suitable nearby spaces, instead of a fixed-size unit. It's an estimate, not a guarantee.",
   },
   {
     icon: Tag,

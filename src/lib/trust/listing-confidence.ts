@@ -73,7 +73,7 @@ function fitCheck(report: CompatibilityReport, spaceFit: SpaceFitResult | null):
         statusText: CHECK_STATE_TEXT.fail,
         detail:
           spaceFit.hard_failures[0]?.message ??
-          "SpaceFit can't fit your current items into this space.",
+          "Spacilo AI can't fit your current items into this space.",
       };
     }
     return {
@@ -333,6 +333,6 @@ function dedupe(values: string[]): string[] {
 /** Copy shown when the renter has nothing in My Stuff yet. Never a fake match. */
 export const NO_INVENTORY_COPY = {
   title: "Scan my stuff",
-  body: "SpaceFit can estimate how much space you need and check this listing against your own items. Nothing is checked until you add them.",
+  body: "Spacilo AI can estimate how much space you need and check this listing against your own items. Nothing is checked until you add them.",
   cta: "Scan my stuff",
 } as const;

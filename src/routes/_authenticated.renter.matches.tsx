@@ -13,7 +13,7 @@ import { usePendingDetections } from "@/hooks/useSpaceFitVision";
 import { formatM3 } from "@/lib/spaces";
 import { SPACEFIT_MATCH_DISCLAIMER } from "@/lib/spacefit/config";
 
-const title = "Your SpaceFit matches — " + brand.name;
+const title = "Your matches — " + brand.name;
 const description = "Storage spaces ranked by how well they suit the belongings you've confirmed.";
 
 export const Route = createFileRoute("/_authenticated/renter/matches")({
@@ -37,7 +37,7 @@ function MatchesPage() {
   const [showIncompatible, setShowIncompatible] = React.useState(false);
 
   return (
-    <AppLayout mode="renter" title="Your SpaceFit matches" description={description}>
+    <AppLayout mode="renter" title="Your matches" description={description}>
       {isLoading ? (
         <div className="space-y-4">
           <Skeleton className="h-24 w-full" />
@@ -50,7 +50,7 @@ function MatchesPage() {
           <EmptyState
             icon={Boxes}
             title="Add what you're storing first"
-            description="SpaceFit compares your confirmed belongings with each space, so we need your inventory before we can match."
+            description="Spacilo AI compares your confirmed belongings with each space, so we need your inventory before we can match."
           />
           <div className="flex flex-wrap justify-center gap-2">
             <Button asChild>

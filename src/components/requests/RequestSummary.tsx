@@ -129,9 +129,9 @@ export function RequestSummary({
       {view.spaceFitScore !== null ? (
         <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="type-h3">SpaceFit at time of request</h2>
+            <h2 className="type-h3">Fit at time of request</h2>
             <span className="inline-flex items-center rounded-full bg-primary-soft px-2.5 py-1 type-badge tabular-nums text-primary-soft-foreground">
-              {view.spaceFitScore}% SpaceFit
+              {view.spaceFitScore}% fit
             </span>
           </div>
           {view.spaceFitLabel ? (

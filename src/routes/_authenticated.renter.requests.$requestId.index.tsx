@@ -30,9 +30,9 @@ export const Route = createFileRoute("/_authenticated/renter/requests/$requestId
   head: () => ({
     meta: [
       { title: "Storage request — " + brand.name },
-      { name: "description", content: "Review the dates, belongings, price and SpaceFit captured when you sent this storage request." },
+      { name: "description", content: "Review the dates, belongings, price and fit captured when you sent this storage request." },
       { property: "og:title", content: "Storage request — " + brand.name },
-      { property: "og:description", content: "Review the dates, belongings, price and SpaceFit captured when you sent this storage request." },
+      { property: "og:description", content: "Review the dates, belongings, price and fit captured when you sent this storage request." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

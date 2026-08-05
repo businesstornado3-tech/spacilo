@@ -16,9 +16,9 @@ export const Route = createFileRoute("/_authenticated/renter/search")({
   head: () => ({
     meta: [
       { title: "Search — Renting — " + brand.name },
-      { name: "description", content: "Find storage near you and compare SpaceFit matches." },
+      { name: "description", content: "Find storage near you and compare fit matches." },
       { property: "og:title", content: "Search — Renting — " + brand.name },
-      { property: "og:description", content: "Find storage near you and compare SpaceFit matches." },
+      { property: "og:description", content: "Find storage near you and compare fit matches." },
     ],
   }),
   component: RenterSearchPage,
@@ -52,7 +52,7 @@ function RenterSearchPage() {
     <AppLayout
       mode="renter"
       title="Search"
-      description="Find storage near you and compare SpaceFit matches."
+      description="Find storage near you and compare fit matches."
     >
       <StorageSearch params={params} onParamsChange={handleChange} />
     </AppLayout>

@@ -328,7 +328,7 @@ describe("host confidence checks", () => {
   it("reads the frozen snapshot, not live data", () => {
     const checks = hostConfidenceChecks(request());
     expect(checks.map((c) => c.key)).toEqual(["fit", "policy", "suitability"]);
-    expect(checks[0]?.detail).toContain("SpaceFit 88%");
+    expect(checks[0]?.detail).toContain("Fit 88%");
     expect(checks[1]?.detail).toContain("2026.1");
     expect(checks.every((c) => c.state === "pass")).toBe(true);
   });
@@ -426,8 +426,8 @@ describe("host next-action guidance", () => {
 });
 
 describe("dashboard compact line", () => {
-  it("packs SpaceFit and capacity into one factual line", () => {
-    expect(compactConfidenceLine(request())).toContain("SpaceFit 88%");
+  it("packs fit and capacity into one factual line", () => {
+    expect(compactConfidenceLine(request())).toContain("Fit 88%");
     expect(compactConfidenceLine(request())).toContain("3.6 m³");
     expect(compactConfidenceLine(request({ spacefit_score_snapshot: null }))).toContain(
       "not recorded",

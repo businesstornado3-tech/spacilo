@@ -49,7 +49,7 @@ export function PricingAssistant({
     <section className="mt-5 rounded-2xl border border-signal/25 bg-signal-soft/30 p-5">
       <h3 className="flex items-center gap-2 type-h3">
         <Sparkles className="size-5 text-primary" aria-hidden="true" />
-        SpaceFit price &amp; earnings
+        Spacilo AI price &amp; earnings
       </h3>
 
       {suggestion.suggestedMonthlyPence === null ? (
@@ -60,7 +60,7 @@ export function PricingAssistant({
         <>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-border bg-background/70 p-3">
-              <p className="type-body-sm text-muted-foreground">SpaceFit pricing guidance</p>
+              <p className="type-body-sm text-muted-foreground">Spacilo AI pricing guidance</p>
               <p className="mt-0.5 type-h3 tabular-nums">
                 {formatPrice(suggestion.lowMonthlyPence ?? 0)}–
                 {formatPrice(suggestion.highMonthlyPence ?? 0)}/month

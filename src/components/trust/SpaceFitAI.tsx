@@ -92,7 +92,7 @@ export function AnimatedSpaceFitScore({
         aria-valuenow={Math.round(target)}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={`SpaceFit estimate ${Math.round(target)} per cent — ${label}`}
+        aria-label={`Spacilo AI estimate ${Math.round(target)} per cent — ${label}`}
       >
         <div className="grid size-[82%] place-items-center rounded-full bg-card text-center">
           <div>
@@ -105,7 +105,7 @@ export function AnimatedSpaceFitScore({
             >
               {Math.round(animated)}%
             </p>
-            <p className="type-overline text-muted-foreground">SpaceFit</p>
+            <p className="type-overline text-muted-foreground">Fit</p>
           </div>
         </div>
       </div>

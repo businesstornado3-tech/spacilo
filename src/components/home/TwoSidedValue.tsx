@@ -44,7 +44,7 @@ export function TwoSidedValue() {
             </span>
             <h3 className="mt-4 type-h3">I need space</h3>
             <p className="mt-2 type-body-sm text-muted-foreground">
-              Tell us what you're storing. SpaceFit helps you find nearby storage that fits your
+              Tell us what you're storing. Spacilo AI helps you find nearby storage that fits your
               belongings — so you don't pay for space you don't need.
             </p>
             <ul className="mt-4 space-y-2.5">

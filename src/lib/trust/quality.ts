@@ -51,7 +51,7 @@ export function listingChecks(space: QualitySpaceInput): QualityCheck[] {
     {
       key: "dimensions",
       label: "Room dimensions",
-      why: "Without measurements, SpaceFit can't estimate whether belongings fit.",
+      why: "Without measurements, Spacilo AI can't estimate whether belongings fit.",
       action: "Measure length, width and height, or scan the space.",
       weight: "essential",
       complete: Boolean(space.length_m && space.width_m && space.height_m),

@@ -116,7 +116,7 @@ function RequestGroup({
                 <p className="mt-3 type-body-sm">{view.period}</p>
                 <p className="type-body-sm text-muted-foreground">
                   {view.priceLabel} · {view.itemCount} items · {view.requirementM3.toFixed(2)} m³
-                  {view.spaceFitScore !== null ? ` · ${view.spaceFitScore}% SpaceFit` : ""}
+                  {view.spaceFitScore !== null ? ` · ${view.spaceFitScore}% fit` : ""}
                 </p>
                 {expiry ? (
                   <p className="mt-1 type-body-sm text-muted-foreground">{expiry}</p>

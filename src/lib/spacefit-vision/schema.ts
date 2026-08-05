@@ -182,13 +182,13 @@ export type VisionErrorCategory =
   | "unknown";
 
 export const VISION_ERROR_MESSAGES: Record<VisionErrorCategory, string> = {
-  provider_unavailable: "SpaceFit Vision isn't available right now. Please try again shortly.",
+  provider_unavailable: "Spacilo AI Vision isn't available right now. Please try again shortly.",
   provider_timeout: "That took longer than expected. Please try again.",
   rate_limited: "You've run a few scans in quick succession. Please wait a moment and try again.",
-  payment_required: "SpaceFit Vision is temporarily unavailable. Please try again later.",
+  payment_required: "Spacilo AI Vision is temporarily unavailable. Please try again later.",
   malformed_response: "We couldn't read the results of that scan. Please try again.",
   photo_unavailable: "We couldn't open one of your photos.",
   unsupported_image: "One of your photos isn't a supported image.",
-  not_configured: "SpaceFit Vision isn't switched on for this environment yet.",
+  not_configured: "Spacilo AI Vision isn't switched on for this environment yet.",
   unknown: "Something went wrong while analysing your photos.",
 };

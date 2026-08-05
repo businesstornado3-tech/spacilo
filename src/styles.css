@@ -35,6 +35,8 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-soft: var(--primary-soft);
   --color-primary-soft-foreground: var(--primary-soft-foreground);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -87,9 +89,9 @@
   --radius: 0.875rem;
 
   /* Soft mint canvas over deep navy ink — calm, premium, residential */
-  --background: oklch(0.988 0.006 165);
-  --foreground: oklch(0.22 0.028 258);
-  --surface: oklch(0.965 0.019 168);
+  --background: oklch(0.993 0.002 250);
+  --foreground: oklch(0.21 0.033 265);
+  --surface: oklch(0.968 0.004 250);
   --surface-foreground: oklch(0.22 0.021 240);
 
   --card: oklch(1 0 0);
@@ -97,11 +99,15 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.021 240);
 
-  /* Deep navy — the Spacilo anchor colour */
-  --primary: oklch(0.31 0.062 258);
-  --primary-foreground: oklch(0.985 0.006 170);
-  --primary-soft: oklch(0.945 0.022 250);
-  --primary-soft-foreground: oklch(0.33 0.062 258);
+  /* Spacilo emerald — the action colour from the approved identity */
+  --primary: oklch(0.58 0.125 162);
+  --primary-foreground: oklch(0.995 0.004 160);
+  --primary-soft: oklch(0.952 0.048 158);
+  --primary-soft-foreground: oklch(0.42 0.1 160);
+
+  /* Deep navy ink — the Spacilo anchor colour */
+  --ink: oklch(0.21 0.033 265);
+  --ink-foreground: oklch(0.985 0.005 160);
 
   --secondary: oklch(0.955 0.008 220);
   --secondary-foreground: oklch(0.28 0.03 225);
@@ -110,8 +116,8 @@
   --muted-foreground: oklch(0.505 0.02 232);
 
   /* Soft mint accent for highlights and quiet emphasis */
-  --accent: oklch(0.94 0.042 168);
-  --accent-foreground: oklch(0.33 0.07 178);
+  --accent: oklch(0.945 0.05 158);
+  --accent-foreground: oklch(0.4 0.1 160);
 
   --success: oklch(0.52 0.105 158);
   --success-foreground: oklch(0.99 0.003 160);
@@ -136,9 +142,9 @@
   --border: oklch(0.915 0.008 225);
   --border-strong: oklch(0.845 0.012 225);
   --input: oklch(0.9 0.009 225);
-  --ring: oklch(0.31 0.062 258);
+  --ring: oklch(0.58 0.125 162);
 
-  --chart-1: oklch(0.31 0.062 258);
+  --chart-1: oklch(0.58 0.125 162);
   --chart-2: oklch(0.52 0.105 158);
   --chart-3: oklch(0.72 0.132 74);
   --chart-4: oklch(0.55 0.09 250);
@@ -146,12 +152,12 @@
 
   --sidebar: oklch(0.975 0.014 168);
   --sidebar-foreground: oklch(0.22 0.021 240);
-  --sidebar-primary: oklch(0.31 0.062 258);
+  --sidebar-primary: oklch(0.58 0.125 162);
   --sidebar-primary-foreground: oklch(0.99 0.003 200);
   --sidebar-accent: oklch(0.945 0.022 250);
   --sidebar-accent-foreground: oklch(0.33 0.062 258);
   --sidebar-border: oklch(0.915 0.008 225);
-  --sidebar-ring: oklch(0.31 0.062 258);
+  --sidebar-ring: oklch(0.58 0.125 162);
 
   --elevation-card: 0 1px 2px oklch(0.22 0.021 240 / 0.04), 0 6px 20px -12px oklch(0.22 0.021 240 / 0.16);
   --elevation-raised: 0 2px 4px oklch(0.22 0.021 240 / 0.05), 0 14px 34px -18px oklch(0.22 0.021 240 / 0.24);
@@ -169,10 +175,13 @@
   --popover: oklch(0.235 0.02 240);
   --popover-foreground: oklch(0.97 0.004 220);
 
-  --primary: oklch(0.8 0.098 172);
+  --primary: oklch(0.78 0.135 165);
   --primary-foreground: oklch(0.19 0.026 258);
-  --primary-soft: oklch(0.3 0.05 200);
-  --primary-soft-foreground: oklch(0.9 0.06 172);
+  --primary-soft: oklch(0.31 0.06 165);
+  --primary-soft-foreground: oklch(0.9 0.08 165);
+
+  --ink: oklch(0.97 0.004 220);
+  --ink-foreground: oklch(0.19 0.026 258);
 
   --secondary: oklch(0.29 0.022 240);
   --secondary-foreground: oklch(0.95 0.005 220);
@@ -206,9 +215,9 @@
   --border: oklch(1 0 0 / 12%);
   --border-strong: oklch(1 0 0 / 22%);
   --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.8 0.098 172);
+  --ring: oklch(0.78 0.135 165);
 
-  --chart-1: oklch(0.8 0.098 172);
+  --chart-1: oklch(0.78 0.135 165);
   --chart-2: oklch(0.68 0.115 158);
   --chart-3: oklch(0.79 0.13 78);
   --chart-4: oklch(0.7 0.1 250);
@@ -216,12 +225,12 @@
 
   --sidebar: oklch(0.235 0.02 240);
   --sidebar-foreground: oklch(0.97 0.004 220);
-  --sidebar-primary: oklch(0.8 0.098 172);
+  --sidebar-primary: oklch(0.78 0.135 165);
   --sidebar-primary-foreground: oklch(0.19 0.026 258);
   --sidebar-accent: oklch(0.3 0.045 205);
   --sidebar-accent-foreground: oklch(0.88 0.05 200);
   --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.8 0.098 172);
+  --sidebar-ring: oklch(0.78 0.135 165);
 
   --elevation-card: 0 1px 2px oklch(0 0 0 / 0.3), 0 6px 20px -12px oklch(0 0 0 / 0.6);
   --elevation-raised: 0 2px 4px oklch(0 0 0 / 0.35), 0 14px 34px -18px oklch(0 0 0 / 0.7);
@@ -358,10 +367,10 @@
 
 :root {
   /* Teal/emerald — reserved almost entirely for Spacilo AI */
-  --signal: oklch(0.66 0.125 175);
-  --signal-foreground: oklch(0.2 0.035 250);
-  --signal-soft: oklch(0.955 0.038 168);
-  --signal-soft-foreground: oklch(0.39 0.088 176);
+  --signal: oklch(0.72 0.15 163);
+  --signal-foreground: oklch(0.21 0.033 265);
+  --signal-soft: oklch(0.952 0.055 156);
+  --signal-soft-foreground: oklch(0.42 0.1 160);
 
   --accent-soft: oklch(0.968 0.026 168);
   --accent-soft-foreground: oklch(0.33 0.07 178);
@@ -372,10 +381,10 @@
 }
 
 .dark {
-  --signal: oklch(0.78 0.11 172);
+  --signal: oklch(0.8 0.14 165);
   --signal-foreground: oklch(0.18 0.03 250);
-  --signal-soft: oklch(0.31 0.055 172);
-  --signal-soft-foreground: oklch(0.89 0.075 172);
+  --signal-soft: oklch(0.31 0.06 165);
+  --signal-soft-foreground: oklch(0.9 0.09 165);
 
   --accent-soft: oklch(0.3 0.04 70);
   --accent-soft-foreground: oklch(0.93 0.04 80);

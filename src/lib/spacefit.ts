@@ -37,4 +37,4 @@ export function spaceFitBand(score: number): SpaceFitPresentation {
 }
 
 export const SPACEFIT_DISCLAIMER =
-  "SpaceFit is an estimate based on the belongings you declare. It is a compatibility score, not a guarantee that everything will fit.";
+  "Fit is an estimate based on the belongings you declare. It is a compatibility score, not a guarantee that everything will fit.";

@@ -27,7 +27,7 @@ const StorageMap = React.lazy(() => import("@/components/search/StorageMap"));
 
 const SORTS_WITH_INVENTORY: { value: SortKey; label: string }[] = [
   { value: "recommended", label: "Recommended" },
-  { value: "spacefit", label: "Highest SpaceFit" },
+  { value: "spacefit", label: "Best fit" },
   { value: "distance", label: "Nearest" },
   { value: "price_asc", label: "Price: low to high" },
   { value: "price_desc", label: "Price: high to low" },
@@ -162,7 +162,7 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
         <div className="rounded-2xl border border-signal/25 bg-signal-soft/40 p-4">
           <p className="type-label">Not sure how much space you need?</p>
           <p className="mt-1 type-body-sm text-signal-soft-foreground">
-            SpaceFit compares your belongings with each space and shows how well they suit each other. It's an
+            Spacilo AI compares your belongings with each space and shows how well they suit each other. It's an
             estimate, not a guarantee.
           </p>
           <Button asChild size="sm" className="mt-3">
@@ -171,7 +171,7 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
               search={spaceFitHref.search as never}
               onClick={() => track("get_spacefit_selected", { from: "search_banner" })}
             >
-              Get your SpaceFit
+              Get your fit score
             </Link>
           </Button>
         </div>

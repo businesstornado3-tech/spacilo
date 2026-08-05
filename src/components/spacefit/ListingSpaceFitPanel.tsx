@@ -115,7 +115,7 @@ export function ListingSpaceFitPanel({
 
       <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-card">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="type-h3">SpaceFit for your stuff</h2>
+          <h2 className="type-h3">Fit for your stuff</h2>
           <SpaceFitResultBadge result={result} />
         </div>
         <p className="mt-1 type-body-sm font-semibold">{result.label}</p>

@@ -246,8 +246,8 @@ function NewRequestPage() {
             {result ? (
               <p className="mt-2 type-body-sm text-muted-foreground">
                 {result.compatible
-                  ? `${result.score}% SpaceFit — ${result.label}`
-                  : "SpaceFit says this space may not suit your belongings."}
+                  ? `${result.score}% fit — ${result.label}`
+                  : "Spacilo AI says this space may not suit your belongings."}
               </p>
             ) : null}
           </section>
@@ -283,7 +283,7 @@ function NewRequestPage() {
             <PackPlanView
               plan={planSnapshot.plan}
               space={planSnapshot.space}
-              title="SpaceFit Pack — sent with your request"
+              title="Packing plan — sent with your request"
               intro="This plan is saved with your request so you and the host see the same thing later."
             />
           ) : null}

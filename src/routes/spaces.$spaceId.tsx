@@ -31,7 +31,13 @@ export const Route = createFileRoute("/spaces/$spaceId")({
 function PublicSpacePage() {
   const { spaceId } = Route.useParams();
   const [state, setState] = React.useState<
-    { kind: "loading" } | { kind: "missing" } | { kind: "error" } | { kind: "ready"; view: ListingView; matchSpace: ReturnType<typeof toMatchSpace> }
+    { kind: "loading" } | { kind: "missing" } | { kind: "error" } | {
+        kind: "ready";
+        view: ListingView;
+        matchSpace: ReturnType<typeof toMatchSpace>;
+        /** Raw published row — geometry for the SpaceFit packing preview. */
+        listing: Awaited<ReturnType<typeof getPublishedSpace>>;
+      }
   >({ kind: "loading" });
 
   const load = React.useCallback(async () => {
@@ -44,6 +50,7 @@ function PublicSpacePage() {
       setState({
         kind: "ready",
         matchSpace: toMatchSpace(row),
+        listing: row,
         view: {
           title: row.title ?? "",
           spaceType: row.space_type,
@@ -109,7 +116,9 @@ function PublicSpacePage() {
             <h1 className="sr-only">{state.view.title}</h1>
             <div className="mx-auto max-w-3xl">
               <ListingPreview view={state.view} />
-              {state.matchSpace ? <ListingSpaceFitPanel space={state.matchSpace} /> : null}
+              {state.matchSpace ? (
+                <ListingSpaceFitPanel space={state.matchSpace} listing={state.listing ?? undefined} />
+              ) : null}
               <div className="mt-6">
                 <SpaceReviews spaceId={spaceId} />
               </div>

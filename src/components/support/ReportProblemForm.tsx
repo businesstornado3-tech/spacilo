@@ -19,7 +19,6 @@ import {
   CASE_CATEGORY_LABEL,
   CASE_STAGES,
   CASE_STAGE_LABEL,
-  ISSUE_CATEGORY_LABEL_FALLBACK,
   SUPPORT_CASE_DISCLAIMER,
   type CaseParty,
   type SupportCase,
@@ -112,7 +111,7 @@ export function ReportProblemForm({
           <p className="type-label">Related handover issue</p>
           <p className="mt-1 type-body-sm text-muted-foreground">{relatedIssueText}</p>
           <p className="mt-1 type-body-sm text-muted-foreground">
-            {ISSUE_CATEGORY_LABEL_FALLBACK}
+            The original handover record stays exactly as it was recorded.
           </p>
         </div>
       ) : null}

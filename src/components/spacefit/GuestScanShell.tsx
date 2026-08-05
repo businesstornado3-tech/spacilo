@@ -10,6 +10,7 @@ import { Camera, ImagePlus, Lock, Trash2 } from "lucide-react";
 
 import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/ui/button";
+import { LiveScanner } from "@/components/spacefit/live/LiveScanner";
 import { SpaceFitAiMark, SpaceFitScanning } from "@/components/trust/SpaceFitAI";
 import {
   GUEST_ALLOWED_MIME_TYPES,
@@ -17,6 +18,7 @@ import {
   GUEST_SESSION_TTL_MINUTES,
   MAX_GUEST_PHOTOS,
 } from "@/lib/spacefit-guest/config";
+import type { GuestKind } from "@/lib/spacefit-guest/config";
 import type { PickedImage } from "@/hooks/useGuestSpaceFit";
 
 export function GuestPhotoPicker({
@@ -24,11 +26,14 @@ export function GuestPhotoPicker({
   onAdd,
   onRemove,
   disabled,
+  mode = "renter",
 }: {
   images: PickedImage[];
-  onAdd: (files: FileList) => void;
+  onAdd: (files: FileList | File[]) => void;
   onRemove: (index: number) => void;
   disabled?: boolean;
+  /** Which live experience to offer: "Scan my stuff" or "Scan my space". */
+  mode?: GuestKind;
 }) {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const cameraRef = React.useRef<HTMLInputElement | null>(null);
@@ -36,6 +41,15 @@ export function GuestPhotoPicker({
 
   return (
     <div>
+      {/* Progressive enhancement: the upload path below always remains. */}
+      {full ? null : (
+        <LiveScanner
+          mode={mode}
+          className="mb-4"
+          onCapture={(file: File) => onAdd([file])}
+        />
+      )}
+
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"

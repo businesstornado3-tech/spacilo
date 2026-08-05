@@ -166,75 +166,7 @@ function HostRequestDetailPage() {
             </dl>
           </section>
 
-          <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
-            <h2 className="type-h3">What the renter wants to store</h2>
-            <dl className="mt-4 grid gap-4 sm:grid-cols-3">
-              <div>
-                <dt className="type-label text-muted-foreground">Items</dt>
-                <dd className="mt-1 flex items-center gap-1.5 type-body tabular-nums">
-                  <Boxes className="size-4 text-muted-foreground" aria-hidden="true" />
-                  {view.itemCount}
-                </dd>
-              </div>
-              <div>
-                <dt className="type-label text-muted-foreground">Estimated space needed</dt>
-                <dd className="mt-1 type-body tabular-nums">{view.requirementM3.toFixed(2)} m³</dd>
-              </div>
-              <div>
-                <dt className="type-label text-muted-foreground">Space capacity then</dt>
-                <dd className="mt-1 type-body tabular-nums">
-                  {view.capacityM3 === null ? "Not stated" : `${view.capacityM3.toFixed(2)} m³`}
-                </dd>
-              </div>
-            </dl>
-
-            {largest ? (
-              <p className="mt-4 flex items-center gap-1.5 type-body-sm text-muted-foreground">
-                <Ruler className="size-4" aria-hidden="true" />
-                Largest item: {largest.label}
-                {largest.longest_edge_cm
-                  ? ` · longest edge ${Math.round(largest.longest_edge_cm)} cm`
-                  : ""}
-              </p>
-            ) : null}
-
-            {items.length > 0 ? (
-              <ul className="mt-4 divide-y divide-border rounded-xl border border-border">
-                {items.map((item, index) => (
-                  <li
-                    key={`${item.catalogue_key ?? item.label}-${index}`}
-                    className="flex items-baseline justify-between gap-3 px-4 py-2.5"
-                  >
-                    <span className="type-body-sm">{item.label}</span>
-                    <span className="type-body-sm tabular-nums text-muted-foreground">
-                      × {item.quantity}
-                      {item.estimated_volume_m3
-                        ? ` · ${Number(item.estimated_volume_m3).toFixed(2)} m³`
-                        : ""}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </section>
-
-          {view.spaceFitScore !== null ? (
-            <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="type-h3">SpaceFit at time of request</h2>
-                <span className="inline-flex items-center rounded-full bg-primary-soft px-2.5 py-1 type-badge tabular-nums text-primary-soft-foreground">
-                  {view.spaceFitScore}% SpaceFit
-                </span>
-              </div>
-              {view.spaceFitLabel ? (
-                <p className="mt-1 type-body-sm font-semibold">{view.spaceFitLabel}</p>
-              ) : null}
-              <p className="mt-2 type-body-sm text-muted-foreground">
-                SpaceFit is an estimate to help you decide. It doesn't guarantee that everything will
-                physically fit.
-              </p>
-            </section>
-          ) : null}
+          <HostRequestConfidence request={request} respondable={isRespondable(request)} />
 
           {view.note ? (
             <section className="rounded-2xl border border-border bg-card p-5 shadow-card">

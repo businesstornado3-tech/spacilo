@@ -18,6 +18,7 @@ import { NativeSelect } from "@/components/form/Field";
 import { usePolicyRules, usePolicyVersions } from "@/hooks/usePolicy";
 import { DECISION_LABEL } from "@/lib/policy/engine";
 import { policyCategoryLabel } from "@/lib/policy/categories";
+import { PolicyLifecyclePanel } from "@/components/policy/PolicyLifecyclePanel";
 
 const title = "Storage policy admin — " + brand.name;
 const description = "Review published and draft storage policy versions and the rules they apply.";

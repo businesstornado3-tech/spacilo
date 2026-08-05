@@ -134,7 +134,7 @@ export async function createPolicyDraft(input: {
     p_title: input.title,
     p_summary: input.summary ?? "",
     p_sections: (input.sections ?? []) as unknown as Json,
-    p_copy_rules_from: input.copyRulesFromVersionId ?? undefined,
+    ...(input.copyRulesFromVersionId ? { p_copy_rules_from: input.copyRulesFromVersionId } : {}),
   });
   if (error) throw error;
   return data as unknown as PolicyVersion;

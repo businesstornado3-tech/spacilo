@@ -152,7 +152,7 @@ export function HostSpaceCapture({
   return (
     <LiveScanner
       mode="host"
-      className={className}
+      className={className ?? ""}
       fallback={fallback}
       onCapture={async (file: File) => {
         await onCaptured(file);

@@ -1,11 +1,12 @@
 import { Link } from "@tanstack/react-router";
 
 import { brand } from "@/config/brand";
+import { SpaciloSymbol } from "@/components/brand/SpaciloMark";
 import { cn } from "@/lib/utils";
 
 /**
- * Temporary wordmark for the working brand name.
- * The name is read from the central brand config.
+ * Brand lock-up: the geometric Spacilo symbol plus the wordmark.
+ * The name is read from the central brand config so the migration is reversible.
  */
 export function Logo({
   className,
@@ -23,13 +24,10 @@ export function Logo({
       )}
       aria-label={`${brand.name} home`}
     >
-      <span
-        aria-hidden="true"
-        className="grid size-8 place-items-center rounded-[10px] bg-primary font-display text-sm font-bold text-primary-foreground"
-      >
-        {brand.shortName.slice(0, 1)}
+      <span className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-primary text-primary-foreground">
+        <SpaciloSymbol className="size-6" />
       </span>
-      <span className="font-display text-[1.0625rem] font-bold tracking-tight text-foreground">
+      <span className="font-display text-[1.125rem] font-bold tracking-[-0.03em] text-foreground">
         {brand.name}
       </span>
     </Link>

@@ -299,6 +299,25 @@ export function SpaceScanner({
         on your listing.
       </p>
 
+      <div className="mt-3">
+        {manualOpen ? (
+          <ManualMeasurements
+            onCancel={() => setManualOpen(false)}
+            onApply={(values) => {
+              onApplied?.(values);
+              setManualOpen(false);
+              toast.success("Measurements saved", "You can still change them on your listing.");
+            }}
+          />
+        ) : (
+          <Button type="button" variant="ghost" onClick={() => setManualOpen(true)}>
+            <Ruler className="size-4" aria-hidden="true" />
+            Enter measurements manually
+          </Button>
+        )}
+      </div>
+
+
       {error ? (
         <Alert tone="warning" title="Scan unavailable" className="mt-4">
           {error}

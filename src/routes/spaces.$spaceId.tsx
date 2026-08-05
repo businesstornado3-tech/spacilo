@@ -114,6 +114,7 @@ function PublicSpacePage() {
                 <SpaceReviews spaceId={spaceId} />
               </div>
               <RequestSpaceCta spaceId={spaceId} />
+            </div>
           </>
         ) : null}
 

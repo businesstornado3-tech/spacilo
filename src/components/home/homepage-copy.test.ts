@@ -148,22 +148,22 @@ describe("SpaceFit homepage entry points", () => {
     expect(scanStuffTarget(true)).toEqual({ to: "/renter/inventory/photos" });
   });
 
-  it("sends signed-out renters through signup in renter mode", () => {
-    expect(scanStuffTarget(false)).toEqual({ to: "/signup", search: { mode: "renter" } });
+  it("sends signed-out renters to the guest SpaceFit preview", () => {
+    expect(scanStuffTarget(false)).toEqual({ to: "/spacefit/stuff" });
   });
 
   it("sends signed-in hosts to the listing wizard that contains the space scanner", () => {
     expect(scanSpaceTarget(true)).toEqual({ to: "/host/spaces/new" });
   });
 
-  it("sends signed-out hosts through signup in host mode", () => {
-    expect(scanSpaceTarget(false)).toEqual({ to: "/signup", search: { mode: "host" } });
+  it("sends signed-out hosts to the guest space preview", () => {
+    expect(scanSpaceTarget(false)).toEqual({ to: "/spacefit/space" });
   });
 
-  it("reuses the single host entry helper for the host scan path", () => {
+  it("keeps the signed-in host scan path aligned with the single host entry helper", () => {
     expect(scanSpaceTarget(true)).toEqual(hostEntryTarget(true));
-    expect(scanSpaceTarget(false)).toEqual(hostEntryTarget(false));
   });
+
 
   it("links scan buttons with typed router links, never raw anchors", () => {
     expect(entry).toContain('<Link to="/renter/inventory/photos">');

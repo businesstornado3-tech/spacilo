@@ -9,6 +9,8 @@ import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import { formatPrice } from "@/lib/format";
 import { lifecycleMeta, lifecycleState } from "@/lib/bookings-lifecycle";
 import type { StorageRefundSummary } from "@/lib/payments/history";
+import { SnapshotPackPlan } from "@/components/spacefit/SnapshotPackPlan";
+
 import {
   bookingItems,
   bookingStatusMeta,
@@ -149,6 +151,14 @@ export function BookingSummary({
           <p className="mt-1 type-body-sm text-muted-foreground">SpaceFit is an estimate.</p>
         </section>
       ) : null}
+
+      <SnapshotPackPlan
+        planSnapshot={booking.spacefit_plan_snapshot}
+        dimensionsSnapshot={booking.spacefit_space_dimensions_snapshot}
+        title="SpaceFit Pack — agreed for this booking"
+        intro="Carried over from the request. Use it as a guide on handover day."
+      />
+
     </div>
   );
 }

@@ -139,7 +139,8 @@ export function Hero() {
 
           {intent === "renter" ? (
             <Link
-              to="/how-it-works"
+              to="/renter/inventory/photos"
+
               className="group mt-4 flex items-center gap-3 rounded-2xl border border-signal/25 bg-signal-soft/50 px-4 py-3.5 transition-[background-color,transform] duration-200 hover:-translate-y-0.5 hover:bg-signal-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <SpaceFitSpark className="text-lg" />

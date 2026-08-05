@@ -102,14 +102,22 @@ export function useSpaceFitForSpace(space: MatchSpace | null) {
   return React.useMemo(() => {
     const confirmed = items ?? [];
     if (!space || confirmed.length === 0) {
-      return { result: null as SpaceFitResult | null, matchInventory: null, isLoading, hasInventory: confirmed.length > 0 };
+      return {
+        result: null as SpaceFitResult | null,
+        matchInventory: null,
+        items: confirmed,
+        isLoading,
+        hasInventory: confirmed.length > 0,
+      };
     }
     const matchInventory = buildMatchInventory(confirmed);
     return {
       result: evaluateSpace(space, matchInventory),
       matchInventory,
+      items: confirmed,
       isLoading,
       hasInventory: true,
     };
   }, [space, items, isLoading]);
 }
+

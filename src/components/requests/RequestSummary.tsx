@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import type { Booking } from "@/lib/bookings";
 import { requestNote } from "@/lib/request-booking-copy";
+import { SnapshotPackPlan } from "@/components/spacefit/SnapshotPackPlan";
+
 import {
   expiryLabel,
   formatApproximateDuration,
@@ -137,6 +139,17 @@ export function RequestSummary({
           ) : null}
         </section>
       ) : null}
+
+      <SnapshotPackPlan
+        planSnapshot={request.spacefit_plan_snapshot}
+        dimensionsSnapshot={request.spacefit_space_dimensions_snapshot}
+        intro={
+          audience === "host"
+            ? "How the renter is planning to use the space, worked out from the items they confirmed."
+            : "How your belongings are likely to fit, worked out when you sent this request."
+        }
+      />
+
 
       {view.note ? (
         <section className="rounded-2xl border border-border bg-card p-5 shadow-card">

@@ -20,6 +20,9 @@ import { useSpaceFitForSpace } from "@/hooks/useSpaceFitMatches";
 import { useCreateRequest } from "@/hooks/useStorageRequests";
 import { getPublishedSpace } from "@/lib/spaces-api";
 import { toMatchSpace } from "@/lib/spacefit/adapters";
+import { buildSpaceFitPlanSnapshot, packSpaceFromListing } from "@/lib/spacefit/plan";
+import { PackPlanView } from "@/components/spacefit/PackPlanView";
+
 import { publicLocation, spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import { track } from "@/lib/analytics";
 import {
@@ -119,6 +122,13 @@ function NewRequestPage() {
   }, [space, startDate, endDate, dateErrors.start, dateErrors.end]);
   const hasItems = (items?.length ?? 0) > 0;
 
+  // Frozen at request time: the requirement and packing plan derived from the
+  // renter's CONFIRMED items against this space's verified geometry.
+  const planSnapshot = React.useMemo(() => {
+    if (!space || !items || items.length === 0) return null;
+    return buildSpaceFitPlanSnapshot(items, packSpaceFromListing(space));
+  }, [space, items]);
+
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitted(true);
@@ -131,7 +141,9 @@ function NewRequestPage() {
         endDate,
         ...(note.trim() ? { note: note.trim() } : {}),
         spaceFit: result,
+        plan: planSnapshot,
       });
+
       track("storage_request_submitted", { space_id: space.id });
       toast.success("Request sent", "The host has 48 hours to respond.");
       void navigate({ to: "/renter/requests/$requestId", params: { requestId: request.id } });
@@ -213,6 +225,15 @@ function NewRequestPage() {
               </>
             )}
           </section>
+
+          {planSnapshot ? (
+            <PackPlanView
+              plan={planSnapshot.plan}
+              space={planSnapshot.space}
+              title="SpaceFit Pack — sent with your request"
+              intro="This plan is saved with your request so you and the host see the same thing later."
+            />
+          ) : null}
 
           <form onSubmit={onSubmit} className="space-y-6">
             <section className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-card">

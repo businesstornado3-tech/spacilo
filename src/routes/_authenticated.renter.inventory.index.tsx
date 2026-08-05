@@ -18,6 +18,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { InventorySummary } from "@/components/inventory/InventorySummary";
+import { RequirementCard } from "@/components/spacefit/RequirementCard";
+
 import { ItemRow } from "@/components/inventory/ItemRow";
 import { ItemDialog } from "@/components/inventory/ItemDialog";
 import {
@@ -114,6 +116,10 @@ function MyStuffPage() {
         <div className="space-y-8 pb-28">
           <PendingSuggestionsBanner inventoryId={inventory?.id} />
           <InventorySummary totals={totals} largest={largest} readiness={readiness} />
+
+          <RequirementCard items={list} />
+
+
 
 
           <div className="space-y-6">

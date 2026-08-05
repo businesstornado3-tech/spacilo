@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { PriceDisplay } from "@/components/marketplace/PriceDisplay";
 import { PhotoManager } from "@/components/host/listing/PhotoManager";
 import { SpaceScanner } from "@/components/host/spacefit/SpaceScanner";
+import { PricingAssistant } from "@/components/host/spacefit/PricingAssistant";
+
 import { ChipToggle, Fieldset, OptionRow, SelectableCard, StepHeading } from "@/components/host/listing/wizard-ui";
 import type { SpacePatch, SpacePhoto } from "@/lib/spaces-api";
 import {
@@ -728,9 +730,20 @@ export function StepPrice({ form, patch }: StepProps) {
       ? ""
       : String(form.monthly_price_pence / 100);
 
+  // Guidance is derived from the host's own space, never from AI.
+  const dims = {
+    length_m: form.length_m ?? null,
+    width_m: form.width_m ?? null,
+    height_m: form.height_m ?? null,
+  };
+  const usableVolumeM3 = form.dimensions_unknown
+    ? null
+    : availableVolume(dims, form.storage_mode ?? null, form.host_available_percentage ?? null);
+
   return (
     <div>
       <StepHeading title="What would you like to earn?" description="You can change your price later." />
+
 
       <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
         <Field label="Monthly price" htmlFor="price" required>
@@ -808,15 +821,24 @@ export function StepPrice({ form, patch }: StepProps) {
         ) : null}
       </div>
 
+      <PricingAssistant
+        input={{
+          usableVolumeM3,
+          spaceType: form.space_type ?? null,
+          accessType: form.access_type ?? null,
+          moistureCondition: form.moisture_condition ?? null,
+          temperatureCondition: form.temperature_condition ?? null,
+          features: form.features ?? [],
+        }}
+        currentPricePence={form.monthly_price_pence ?? null}
+        onUseSuggestedPrice={(pence) => patch({ monthly_price_pence: pence })}
+      />
+
       <p className="mt-4 type-body-sm text-muted-foreground">
         Renters can book by the day, week or month. We always quote the cheapest combination of the
         rates you set, so a longer stay never costs more than a shorter one.
       </p>
 
-      <p className="mt-2 type-body-sm text-muted-foreground">
-        We don't have enough local market data yet to suggest an accurate price, so this is entirely your
-        call. Anything shown as an “example estimate” elsewhere is illustrative only.
-      </p>
     </div>
   );
 }

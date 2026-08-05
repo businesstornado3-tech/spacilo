@@ -15,6 +15,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { friendlyCaseError as friendly } from "@/lib/support-errors";
 
 const caseId = z.string().uuid();
 
@@ -44,28 +45,6 @@ const refundInput = z.object({
   resolutionSummary: z.string().trim().min(1).max(4000),
   internalNote: z.string().trim().max(4000).optional(),
 });
-
-/** Support-safe error text. Never leaks SQL or Stripe internals. */
-const CASE_ERRORS: Record<string, string> = {
-  not_support_staff: "You don't have permission to do that.",
-  case_not_found: "That case could not be found.",
-  case_already_resolved: "This case has already been resolved.",
-  payment_not_found: "That payment could not be found.",
-  payment_not_on_booking: "That payment does not belong to this booking.",
-  payment_not_succeeded: "That payment did not succeed, so it cannot be refunded.",
-  payment_fully_refunded: "That payment has already been fully refunded.",
-  refund_exceeds_remaining: "The refund amount is higher than the remaining refundable amount.",
-  refund_amount_invalid: "Enter a refund amount greater than zero.",
-  resolution_summary_required: "Add a resolution summary before recording the outcome.",
-  assignee_not_support_staff: "That person is not a support user.",
-};
-
-function friendly(message: string, fallback: string): string {
-  for (const [key, text] of Object.entries(CASE_ERRORS)) {
-    if (message.includes(key)) return text;
-  }
-  return fallback;
-}
 
 export type SupportStatusInput = z.infer<typeof statusInput>;
 export type SupportResolutionInput = z.infer<typeof resolutionInput>;

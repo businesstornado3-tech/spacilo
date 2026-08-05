@@ -15,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, NativeSelect, TextArea } from "@/components/form/Field";
 import { toast } from "@/components/overlay/toast";
+import { ReportProblemForm } from "@/components/support/ReportProblemForm";
+import { caseCategoryForIssue, stageForHandoverStage } from "@/lib/support-cases";
 import {
   useAddConditionNote,
   useConditionNotes,

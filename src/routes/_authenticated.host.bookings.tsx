@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { BookingLifecyclePanel } from "@/components/bookings/BookingLifecyclePanel";
 import { EarlyTerminationPanel } from "@/components/bookings/EarlyTerminationPanel";
 import { CancellationPanel } from "@/components/payments/CancellationPanel";
+import { SupportSection } from "@/components/bookings/SupportSection";
 import {
   GROUP_LABEL,
   GROUP_ORDER,
@@ -254,6 +255,7 @@ function HostBookingCard({
           audience="host"
         />
         )}
+        <SupportSection bookingId={booking.id} role="host" viewerId={viewerId} />
       </div>
     </article>
   );

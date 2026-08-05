@@ -11,6 +11,8 @@ import { CheckboxField } from "@/components/form/Controls";
 import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useGuestClaim } from "@/hooks/useGuestClaim";
+
 
 const title = "Create your account — " + brand.name;
 const description =

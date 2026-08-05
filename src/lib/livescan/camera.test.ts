@@ -23,7 +23,7 @@ function fakeStream() {
 }
 
 function fakeDevices(stream: MediaStream) {
-  const getUserMedia = vi.fn(async () => stream);
+  const getUserMedia = vi.fn(async (_constraints: MediaStreamConstraints) => stream);
   return { getUserMedia, devices: { getUserMedia } };
 }
 
@@ -119,7 +119,7 @@ describe("CameraController", () => {
     const second = fakeStream();
     let call = 0;
     const devices = {
-      getUserMedia: vi.fn(async () => (call++ === 0 ? first.stream : second.stream)),
+      getUserMedia: vi.fn(async (_constraints: MediaStreamConstraints) => (call++ === 0 ? first.stream : second.stream)),
     };
     const controller = new CameraController({ mediaDevices: devices });
     await controller.start();

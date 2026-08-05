@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import type { Booking } from "@/lib/bookings";
 import { requestNote } from "@/lib/request-booking-copy";
+import { SnapshotPackPlan } from "@/components/spacefit/SnapshotPackPlan";
+
 import {
   expiryLabel,
   formatApproximateDuration,

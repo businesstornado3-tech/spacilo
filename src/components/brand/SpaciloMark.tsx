@@ -42,8 +42,8 @@ export function SpaciloSymbol({ className }: { className?: string }) {
         <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
           <rect x="0" y="0" width="64" height="64" fill="white" />
           <g stroke="black" fill="none" strokeLinecap="round" strokeLinejoin="round">
-            <path d={DOLLAR_SPINE} strokeWidth="10" />
-            <path d={DOLLAR_STEM} strokeWidth="9" />
+            <path d={DOLLAR_SPINE} strokeWidth="8.6" />
+            <path d={DOLLAR_STEM} strokeWidth="8" />
           </g>
         </mask>
       </defs>

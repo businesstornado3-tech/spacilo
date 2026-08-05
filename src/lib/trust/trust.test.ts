@@ -28,7 +28,7 @@ const measuredSpace: TrustSpaceInput = {
   height_m: 2.4,
   photo_paths: ["a", "b", "c"],
   host_phone_verified: true,
-  access_type: "own_key",
+  access_type: "independent",
   features: ["lockable", "indoor"],
   estimated_available_volume_m3: 9.2,
 };

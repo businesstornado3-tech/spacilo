@@ -27,6 +27,8 @@ export function GuestPhotoPicker({
   onRemove,
   disabled,
   mode = "renter",
+  onBoundary,
+  onManualEntry,
 }: {
   images: PickedImage[];
   onAdd: (files: FileList | File[]) => void;
@@ -34,6 +36,9 @@ export function GuestPhotoPicker({
   disabled?: boolean;
   /** Which live experience to offer: "Scan my stuff" or "Scan my space". */
   mode?: GuestKind;
+  /** Host only: a boundary the visitor drew and confirmed on the frozen frame. */
+  onBoundary?: (measurement: BoundaryMeasurement) => void;
+  onManualEntry?: () => void;
 }) {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const cameraRef = React.useRef<HTMLInputElement | null>(null);
@@ -42,13 +47,21 @@ export function GuestPhotoPicker({
   return (
     <div>
       {/* Progressive enhancement: the upload path below always remains. */}
-      {full ? null : (
+      {full ? null : mode === "host" ? (
+        <HostSpaceCapture
+          className="mb-4"
+          onCaptured={(file: File) => onAdd([file])}
+          onMeasured={(measurement) => onBoundary?.(measurement)}
+          {...(onManualEntry ? { onManualEntry } : {})}
+        />
+      ) : (
         <LiveScanner
           mode={mode}
           className="mb-4"
           onCapture={(file: File) => onAdd([file])}
         />
       )}
+
 
       <div className="flex flex-wrap gap-2">
         <Button

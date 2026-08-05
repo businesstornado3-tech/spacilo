@@ -87,8 +87,25 @@ export function resolveDateRange(
     return { from: start, to: end };
   }
 
-  if (key === "7d" || key === "30d") {
-    const span = key === "7d" ? 7 : 30;
+  if (key === "all_time") {
+    const nextDay = addDays(today.year, today.month, today.day, 1);
+    return {
+      from: londonMidnightUtc(ALL_TIME_START.year, ALL_TIME_START.month, ALL_TIME_START.day),
+      to: londonMidnightUtc(nextDay.year, nextDay.month, nextDay.day),
+    };
+  }
+
+  if (key === "last_month") {
+    const startOfThis = { year: today.year, month: today.month, day: 1 };
+    const prev = today.month === 1 ? { year: today.year - 1, month: 12 } : { year: today.year, month: today.month - 1 };
+    return {
+      from: londonMidnightUtc(prev.year, prev.month, 1),
+      to: londonMidnightUtc(startOfThis.year, startOfThis.month, 1),
+    };
+  }
+
+  if (key === "7d" || key === "30d" || key === "90d") {
+    const span = key === "7d" ? 7 : key === "30d" ? 30 : 90;
     const nextDay = addDays(today.year, today.month, today.day, 1);
     const end = londonMidnightUtc(nextDay.year, nextDay.month, nextDay.day);
     const startDay = addDays(today.year, today.month, today.day, 1 - span);
@@ -111,9 +128,31 @@ export const DATE_RANGE_LABEL: Record<DateRangeKey, string> = {
   today: "Today",
   "7d": "Last 7 days",
   "30d": "Last 30 days",
+  "90d": "Last 90 days",
   this_month: "This month",
+  last_month: "Last month",
+  all_time: "All time",
   custom: "Custom range",
 };
+
+/** Ranges the founder can pick in the console, in presentation order. */
+export const SELECTABLE_DATE_RANGES: DateRangeKey[] = [
+  "today",
+  "7d",
+  "30d",
+  "90d",
+  "this_month",
+  "last_month",
+  "all_time",
+];
+
+/**
+ * "All time" has no equivalent preceding window, so a comparison would be
+ * meaningless rather than merely empty.
+ */
+export function rangeSupportsComparison(key: DateRangeKey): boolean {
+  return key !== "all_time";
+}
 
 export type Delta =
   | { kind: "new" }

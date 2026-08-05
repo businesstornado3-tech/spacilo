@@ -50,7 +50,7 @@ export const DEMO_STATES: readonly DemoState[] = [
     ],
     resultLabel: "Potential earnings",
     resultValue: "£85–£115 / month*",
-    footnote: "*Illustrative SpaceFit estimate — not guaranteed earnings.",
+    footnote: "*Illustrative SpaceFit estimate — not a promise of income.",
   },
 ] as const;
 

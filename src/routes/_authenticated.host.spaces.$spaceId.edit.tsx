@@ -8,6 +8,32 @@ import { ErrorState } from "@/components/common/States";
 import { SpaceWizard } from "@/components/host/listing/SpaceWizard";
 import { ListingQualityCard } from "@/components/host/listing/ListingQualityCard";
 import { getMySpace, listSpacePhotos, type Space, type SpacePhoto } from "@/lib/spaces-api";
+import { useSuitabilityProfile } from "@/hooks/usePolicy";
+
+/** Completeness checklist. Suitability and declarations come from the profile. */
+function QualityPanel({
+  spaceId,
+  space,
+  photoPaths,
+}: {
+  spaceId: string;
+  space: Space;
+  photoPaths: string[];
+}) {
+  const { data: profile } = useSuitabilityProfile(spaceId);
+  return (
+    <ListingQualityCard
+      space={{
+        ...space,
+        photo_paths: photoPaths,
+        suitability_confirmed: Boolean(profile?.host_confirmed_at),
+        declarations_complete: Boolean(
+          profile?.declaration_authority && profile?.declaration_compliance && profile?.declaration_accuracy,
+        ),
+      }}
+    />
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/host/spaces/$spaceId/edit")({
   head: () => ({

@@ -2,17 +2,15 @@
   <defs>
     <mask id="value" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
       <rect x="0" y="0" width="64" height="64" fill="white"/>
-      <g stroke="black" fill="none" stroke-linecap="round">
-        <path d="M32 19V45" stroke-width="11"/>
-        <circle cx="32" cy="32" r="7.2" stroke-width="8.5"/>
+      <g stroke="black" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M39.4 25.2c-1.9-2.1-4.4-3.1-7.4-3.1-4 0-6.8 2-6.8 4.9 0 3.1 2.9 4.2 7 5.1 4.5 1 7.8 2.4 7.8 5.9 0 3.3-3 5.5-7.6 5.5-3.3 0-6.2-1.2-8.2-3.5" stroke-width="12"/>
+        <path d="M32 17.4V47.6" stroke-width="11"/>
       </g>
     </mask>
   </defs>
-  <g mask="url(#value)" stroke="#10b981" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <path d="M58 22.5V17.5L32 3.2 6 17.5v16.9l52-4v16.1L32 60.8 6 46.5v-4.2"/>
-  </g>
-  <g stroke="#10b981" stroke-linecap="round" fill="none">
-    <path d="M32 21.5V42.5" stroke-width="3.6"/>
-    <circle cx="32" cy="32" r="7.2" stroke-width="4"/>
+  <path d="M32 3.6 57 17.6v28.8L32 60.4 7 46.4V17.6Z" mask="url(#value)" stroke="#10b981" stroke-width="7" stroke-linejoin="round" fill="none"/>
+  <g stroke="#10b981" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M39.4 25.2c-1.9-2.1-4.4-3.1-7.4-3.1-4 0-6.8 2-6.8 4.9 0 3.1 2.9 4.2 7 5.1 4.5 1 7.8 2.4 7.8 5.9 0 3.3-3 5.5-7.6 5.5-3.3 0-6.2-1.2-8.2-3.5" stroke-width="5.2"/>
+    <path d="M32 17.4V47.6" stroke-width="4"/>
   </g>
 </svg>

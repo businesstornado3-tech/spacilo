@@ -51,7 +51,6 @@ export const PRIVATE_ROUTE_PREFIXES: readonly string[] = [
   "/profile",
   "/notifications",
   "/support",
-  "/_authenticated/spacefit", // authenticated Spacilo AI hub — distinct from the public /spacefit/stuff and /spacefit/space marketing demos
   "/login",
   "/signup",
   "/forgot-password",
@@ -59,12 +58,20 @@ export const PRIVATE_ROUTE_PREFIXES: readonly string[] = [
   "/api",
 ] as const;
 
+/**
+ * Paths that are private at that EXACT url only. `/spacefit` is the
+ * authenticated Spacilo AI hub, but `/spacefit/stuff` and `/spacefit/space`
+ * are public marketing demos, so a prefix rule would be wrong here.
+ */
+export const PRIVATE_EXACT_ROUTES: readonly string[] = ["/spacefit"] as const;
+
 /** True if a given path is one of the always-public static routes. */
 export function isPublicStaticRoute(path: string): boolean {
   return PUBLIC_ROUTES.some((r) => r.path === path);
 }
 
-/** True if a given path falls under a private/noindex prefix. */
+/** True if a given path falls under a private/noindex prefix or exact rule. */
 export function isPrivateRoute(path: string): boolean {
+  if (PRIVATE_EXACT_ROUTES.includes(path)) return true;
   return PRIVATE_ROUTE_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
 }

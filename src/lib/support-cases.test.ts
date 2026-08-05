@@ -77,8 +77,8 @@ describe("refund guards", () => {
 describe("handover issue escalation", () => {
   it("maps a Prompt 15 issue onto a case category and stage", () => {
     expect(caseCategoryForIssue("condition_concern")).toBeTruthy();
-    expect(stageForHandoverStage("check_in")).toBe("handover");
-    expect(stageForHandoverStage("check_out")).toBe("collection");
+    expect(stageForHandoverStage("check_in")).toBe("checkin");
+    expect(stageForHandoverStage("check_out")).toBe("checkout");
   });
 });
 

@@ -12,6 +12,7 @@ import { getPublishedSpace, signedPhotoUrls } from "@/lib/spaces-api";
 import { RequestSpaceCta } from "@/components/requests/RequestSpaceCta";
 import { ListingSpaceFitPanel } from "@/components/spacefit/ListingSpaceFitPanel";
 import { toMatchSpace } from "@/lib/spacefit/adapters";
+import { SpaceReviews } from "@/components/reviews/SpaceReviews";
 
 export const Route = createFileRoute("/spaces/$spaceId")({
   head: () => ({

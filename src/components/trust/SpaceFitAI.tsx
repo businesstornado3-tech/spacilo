@@ -105,7 +105,7 @@ export function AnimatedSpaceFitScore({
             >
               {Math.round(animated)}%
             </p>
-            <p className="type-overline text-muted-foreground">SpaceFit</p>
+            <p className="type-overline text-muted-foreground">Fit</p>
           </div>
         </div>
       </div>

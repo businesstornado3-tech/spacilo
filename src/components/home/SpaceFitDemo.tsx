@@ -38,7 +38,7 @@ export const DEMO_STATES: readonly DemoState[] = [
     ],
     resultLabel: "Suitable storage nearby",
     resultValue: "94% fit*",
-    footnote: "*Illustrative SpaceFit example — not your result.",
+    footnote: "*Illustrative Spacilo AI example — not your result.",
   },
   {
     mode: "host",

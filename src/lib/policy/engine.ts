@@ -282,3 +282,62 @@ export const COMPATIBILITY_LABEL: Record<CompatibilityStatus, string> = {
   compatible_with_care: "Suitable with care",
   not_compatible: "Not suitable",
 };
+
+/**
+ * The single overall outcome, derived only from the three dimensions.
+ *
+ * Deterministic: no AI, no scoring, no percentages beyond the SpaceFit
+ * estimate the renter already saw. A policy block outranks everything, so a
+ * good physical fit can never soften an item that can't be stored.
+ */
+export type CompatibilityOutcome =
+  | "strong_match"
+  | "match_with_notes"
+  | "action_required"
+  | "incompatible"
+  | "blocked_by_policy";
+
+export const OUTCOME_LABEL: Record<CompatibilityOutcome, string> = {
+  strong_match: "Strong match",
+  match_with_notes: "Match, with a few notes",
+  action_required: "Needs your attention first",
+  incompatible: "Not suitable",
+  blocked_by_policy: "Can't be stored here",
+};
+
+export function compatibilityOutcome(
+  report: CompatibilityReport,
+  summary: ScreeningSummary,
+): { outcome: CompatibilityOutcome; reasons: string[] } {
+  const reasons = [
+    ...report.policy.reasons,
+    ...report.physical.reasons,
+    ...report.suitability.reasons,
+  ];
+  if (summary.blocked || report.policy.status === "not_compatible")
+    return { outcome: "blocked_by_policy", reasons };
+  if (report.physical.status === "not_compatible") return { outcome: "incompatible", reasons };
+  if (summary.actionRequired) return { outcome: "action_required", reasons };
+  if (report.overall === "compatible_with_care") return { outcome: "match_with_notes", reasons };
+  return { outcome: "strong_match", reasons };
+}
+
+/** A request may only be sent when nothing is blocked and nothing is pending. */
+export function requestReadiness(input: {
+  screening: ScreeningResult | null | undefined;
+  declaration: RenterDeclaration | null | undefined;
+  policyVersion: string | null;
+  report: CompatibilityReport | null;
+}): { ready: boolean; blockers: string[] } {
+  const summary = summariseScreening(input.screening);
+  const blockers: string[] = [];
+  if (!input.policyVersion) blockers.push("no_active_policy");
+  if (!summary.available) blockers.push("screening_unavailable");
+  if (summary.blocked) blockers.push("prohibited_items");
+  if (summary.actionRequired) blockers.push("items_need_action");
+  if (!declarationComplete(input.declaration, input.policyVersion))
+    blockers.push("declaration_incomplete");
+  if (input.report && input.report.physical.status === "not_compatible")
+    blockers.push("physical_fit");
+  return { ready: blockers.length === 0, blockers };
+}

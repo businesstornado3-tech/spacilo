@@ -5,6 +5,7 @@
  * Both CTAs route to the real SpaceFit journeys via `spacefit-entry.ts`.
  * Nothing here loads any AI code — analysis only starts inside those flows.
  */
+import * as React from "react";
 import { Link } from "@tanstack/react-router";
 import { Boxes, Camera, Home } from "lucide-react";
 
@@ -15,35 +16,21 @@ import { useAuth } from "@/hooks/useAuth";
 import { scanSpaceTarget, scanStuffTarget } from "@/lib/spacefit-entry";
 import { track } from "@/lib/analytics/tracker";
 
-function ScanStuffButton({ from, block = true }: { from: string; block?: boolean }) {
+function ScanStuffButton({
+  from,
+  block = true,
+  children = "Scan my stuff",
+}: {
+  from: string;
+  block?: boolean;
+  children?: React.ReactNode;
+}) {
   const { user } = useAuth();
   const target = scanStuffTarget(Boolean(user));
   const label = (
     <>
       <Camera className="size-4" aria-hidden="true" />
-      Scan my stuff
-    </>
-  );
-
-  return (
-    <Button asChild size="lg" {...(block ? { block: true } : {})} onClick={() => track("cta_clicked", { props: { cta: "scan_stuff", from } })}>
-      {target.to === "/renter/inventory/photos" ? (
-        <Link to="/renter/inventory/photos">{label}</Link>
-      ) : (
-        <Link to="/spacefit/stuff">{label}</Link>
-      )}
-
-    </Button>
-  );
-}
-
-function ScanSpaceButton({ from, block = true }: { from: string; block?: boolean }) {
-  const { user } = useAuth();
-  const target = scanSpaceTarget(Boolean(user));
-  const label = (
-    <>
-      <Camera className="size-4" aria-hidden="true" />
-      Scan my space
+      {children}
     </>
   );
 
@@ -51,7 +38,43 @@ function ScanSpaceButton({ from, block = true }: { from: string; block?: boolean
     <Button
       asChild
       size="lg"
-      variant="secondary"
+      {...(block ? { block: true } : {})}
+      onClick={() => track("cta_clicked", { props: { cta: "scan_stuff", from } })}
+    >
+      {target.to === "/renter/inventory/photos" ? (
+        <Link to="/renter/inventory/photos">{label}</Link>
+      ) : (
+        <Link to="/spacefit/stuff">{label}</Link>
+      )}
+    </Button>
+  );
+}
+
+function ScanSpaceButton({
+  from,
+  block = true,
+  variant = "secondary",
+  children = "Scan my space",
+}: {
+  from: string;
+  block?: boolean;
+  variant?: "default" | "secondary";
+  children?: React.ReactNode;
+}) {
+  const { user } = useAuth();
+  const target = scanSpaceTarget(Boolean(user));
+  const label = (
+    <>
+      <Camera className="size-4" aria-hidden="true" />
+      {children}
+    </>
+  );
+
+  return (
+    <Button
+      asChild
+      size="lg"
+      variant={variant}
       {...(block ? { block: true } : {})}
       onClick={() => track("cta_clicked", { props: { cta: "scan_space", from } })}
     >
@@ -60,14 +83,19 @@ function ScanSpaceButton({ from, block = true }: { from: string; block?: boolean
       ) : (
         <Link to="/spacefit/space">{label}</Link>
       )}
-
     </Button>
   );
 }
 
 export { ScanStuffButton, ScanSpaceButton };
 
-export function SpaceFitEntry({ from = "homepage_hero", className }: { from?: string; className?: string }) {
+export function SpaceFitEntry({
+  from = "homepage_hero",
+  className,
+}: {
+  from?: string;
+  className?: string;
+}) {
   return (
     <section
       aria-labelledby="spacefit-entry-heading"
@@ -87,8 +115,8 @@ export function SpaceFitEntry({ from = "homepage_hero", className }: { from?: st
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="flex h-full flex-col rounded-2xl bg-card p-4">
           <span className="inline-flex items-center gap-2 type-label">
-            <Boxes className="size-4 text-signal-soft-foreground" aria-hidden="true" />
-            I have stuff to store
+            <Boxes className="size-4 text-signal-soft-foreground" aria-hidden="true" />I have stuff
+            to store
           </span>
           <p className="mt-1.5 mb-4 type-body-sm text-muted-foreground">
             Scan your belongings and see how much storage you need.
@@ -100,8 +128,8 @@ export function SpaceFitEntry({ from = "homepage_hero", className }: { from?: st
 
         <div className="flex h-full flex-col rounded-2xl bg-card p-4">
           <span className="inline-flex items-center gap-2 type-label">
-            <Home className="size-4 text-signal-soft-foreground" aria-hidden="true" />
-            I have space to spare
+            <Home className="size-4 text-signal-soft-foreground" aria-hidden="true" />I have space
+            to spare
           </span>
           <p className="mt-1.5 mb-4 type-body-sm text-muted-foreground">
             Scan your unused space and see what it could hold and what it could earn.

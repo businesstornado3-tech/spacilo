@@ -18,9 +18,10 @@ export function StorageNearYou() {
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
       <Reveal>
-        <h2 className="type-h2">Space around the corner.</h2>
+        <h2 className="type-h2">Real storage nearby.</h2>
         <p className="mt-3 max-w-xl type-body text-muted-foreground">
-          Discover storage in your neighbourhood — without paying for more space than you need.
+          Browse spaces in the Portsmouth pilot area — garages, spare rooms, lofts and sheds, with
+          the monthly price shown up front.
         </p>
       </Reveal>
 
@@ -78,7 +79,7 @@ export function StorageNearYou() {
         to="/find-storage"
         className="mt-7 inline-flex items-center gap-1.5 type-nav text-primary underline-offset-4 hover:underline"
       >
-        See storage near me
+        See spaces near me
         <ArrowRight className="size-4" aria-hidden="true" />
       </Link>
     </section>

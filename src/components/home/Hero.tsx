@@ -2,17 +2,15 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 
 import { SearchControls } from "@/components/search/SearchControls";
-import { ScanSpaceButton, ScanStuffButton } from "@/components/home/SpaceFitEntry";
 import { SpaceFitDemo } from "@/components/home/SpaceFitDemo";
-import { SpaceFitAiMark } from "@/components/trust/SpaceFitAI";
 import { HostEntryButton } from "@/components/home/HostEntryButton";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics/tracker";
 
 /**
- * First viewport. Both sides of the marketplace carry equal weight —
- * space nearby for renters, income at home for hosts — with Spacilo AI
- * demonstrated right beside the headline.
+ * First viewport. The marketplace proposition leads: space nearby for renters,
+ * income at home for hosts. Spacilo AI is introduced only as a supporting
+ * capability here — its dedicated entry points live further down the page.
  */
 export function Hero() {
   const navigate = useNavigate();
@@ -34,47 +32,29 @@ export function Hero() {
             Find trusted neighbourhood storage — or earn from the space you're not using.
           </p>
 
-          <div className="mt-6 rounded-3xl border border-signal/30 bg-signal-soft/60 p-4 shadow-raised sm:p-5">
-            <SpaceFitAiMark size="sm" />
-            <p className="mt-3 type-h3">Your stuff. Your space. Just show us.</p>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="flex h-full flex-col rounded-2xl bg-card p-4">
-                <ScanStuffButton from="homepage_hero" />
-                <p className="mt-2 type-body-sm text-muted-foreground">
-                  How much space do I really need?
-                </p>
-              </div>
-              <div className="flex h-full flex-col rounded-2xl bg-card p-4">
-                <ScanSpaceButton from="homepage_hero" />
-                <p className="mt-2 type-body-sm text-muted-foreground">
-                  What could my unused space earn?
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <Button asChild size="lg" variant="outline">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Button asChild size="lg">
               <Link
                 to="/search"
                 search={{ location: "", radius: 5, sort: "recommended" }}
-                onClick={() => track("storage_search_started", { props: { from: "homepage_hero_browse" } })}
+                onClick={() =>
+                  track("storage_search_started", { props: { from: "homepage_hero_find_storage" } })
+                }
               >
-                Browse storage nearby
+                Find storage
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </Button>
             <HostEntryButton
-              label="List my space"
+              label="Start earning"
               from="homepage_hero"
               size="lg"
-              variant="ghost"
+              variant="secondary"
               withArrow={false}
             />
           </div>
 
-          <div className="mt-5 rounded-2xl bg-card p-4 shadow-card sm:p-5">
+          <div className="mt-6 rounded-2xl bg-card p-4 shadow-card sm:p-5">
             <p className="type-label">Know your area already?</p>
             <p className="mt-1 mb-3 type-body-sm text-muted-foreground">
               Search garages, spare rooms and other unused spaces around your neighbourhood.
@@ -87,6 +67,11 @@ export function Hero() {
               }}
             />
           </div>
+
+          <p className="mt-4 max-w-md type-body-sm text-muted-foreground">
+            Not sure how much space you need? Spacilo AI can estimate it from a photo — more on that
+            below.
+          </p>
         </div>
 
         <SpaceFitDemo className="lg:sticky lg:top-24" />

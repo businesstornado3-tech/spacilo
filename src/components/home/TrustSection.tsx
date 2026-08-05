@@ -6,8 +6,8 @@ import { Reveal } from "@/components/common/Reveal";
 const items = [
   {
     icon: BadgeCheck,
-    title: "Identity verification",
-    body: "Users will be able to complete required verification checks. Planned for launch, not yet live.",
+    title: "Declared suitability",
+    body: "Hosts record what their space is suitable for, and Spacilo checks that against what a renter declares.",
   },
   {
     icon: Boxes,
@@ -21,8 +21,8 @@ const items = [
   },
   {
     icon: CreditCard,
-    title: "Secure payments",
-    body: "Payments will be handled through approved marketplace payment infrastructure when implemented.",
+    title: "Payments held to the agreed price",
+    body: "The amount you pay is calculated server-side from the price the host accepted, and is processed by Stripe.",
   },
   {
     icon: Star,

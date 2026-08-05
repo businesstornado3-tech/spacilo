@@ -6,7 +6,11 @@ import itemsPhoto from "@/assets/spacefit-items.jpg";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/common/Reveal";
 import { useInView } from "@/hooks/use-motion";
-import { AnimatedSpaceFitScore, SpaceFitAiMark, SpaceFitSpark } from "@/components/trust/SpaceFitAI";
+import {
+  AnimatedSpaceFitScore,
+  SpaceFitAiMark,
+  SpaceFitSpark,
+} from "@/components/trust/SpaceFitAI";
 
 const recognised = [
   { emoji: "🛋", label: "Sofa", qty: 1 },
@@ -101,7 +105,10 @@ export function SpaceFitSection() {
                       key={label}
                       className="flex items-center gap-3 rounded-xl bg-surface px-3 py-2.5"
                     >
-                      <Icon className="size-4 shrink-0 text-signal-soft-foreground" aria-hidden="true" />
+                      <Icon
+                        className="size-4 shrink-0 text-signal-soft-foreground"
+                        aria-hidden="true"
+                      />
                       <span className="type-label tabular-nums">{value}</span>
                       <span className="type-body-sm text-muted-foreground">{label}</span>
                     </li>

@@ -33,6 +33,7 @@ import { Route as AuthenticatedRenterIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedRenterMatchesRouteImport } from './routes/_authenticated.renter.matches'
 import { Route as AuthenticatedRenterSearchRouteImport } from './routes/_authenticated.renter.search'
 import { Route as AuthenticatedAdminSupportIndexRouteImport } from './routes/_authenticated.admin.support.index'
+import { Route as AuthenticatedAdminSupportCaseIdRouteImport } from './routes/_authenticated.admin.support.$caseId'
 import { Route as AuthenticatedHostMessagesIndexRouteImport } from './routes/_authenticated.host.messages.index'
 import { Route as AuthenticatedHostMessagesBookingIdRouteImport } from './routes/_authenticated.host.messages.$bookingId'
 import { Route as AuthenticatedHostPayoutsRefreshRouteImport } from './routes/_authenticated.host.payouts.refresh'
@@ -182,6 +183,12 @@ const AuthenticatedAdminSupportIndexRoute =
   AuthenticatedAdminSupportIndexRouteImport.update({
     id: '/admin/support/',
     path: '/admin/support/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminSupportCaseIdRoute =
+  AuthenticatedAdminSupportCaseIdRouteImport.update({
+    id: '/admin/support/$caseId',
+    path: '/admin/support/$caseId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedHostMessagesIndexRoute =
@@ -356,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/renter/search': typeof AuthenticatedRenterSearchRoute
   '/host/': typeof AuthenticatedHostIndexRoute
   '/renter/': typeof AuthenticatedRenterIndexRoute
+  '/admin/support/$caseId': typeof AuthenticatedAdminSupportCaseIdRoute
   '/host/messages/$bookingId': typeof AuthenticatedHostMessagesBookingIdRoute
   '/host/payouts/refresh': typeof AuthenticatedHostPayoutsRefreshRoute
   '/host/payouts/return': typeof AuthenticatedHostPayoutsReturnRoute
@@ -404,6 +412,7 @@ export interface FileRoutesByTo {
   '/renter/search': typeof AuthenticatedRenterSearchRoute
   '/host': typeof AuthenticatedHostIndexRoute
   '/renter': typeof AuthenticatedRenterIndexRoute
+  '/admin/support/$caseId': typeof AuthenticatedAdminSupportCaseIdRoute
   '/host/messages/$bookingId': typeof AuthenticatedHostMessagesBookingIdRoute
   '/host/payouts/refresh': typeof AuthenticatedHostPayoutsRefreshRoute
   '/host/payouts/return': typeof AuthenticatedHostPayoutsReturnRoute
@@ -455,6 +464,7 @@ export interface FileRoutesById {
   '/_authenticated/renter/search': typeof AuthenticatedRenterSearchRoute
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
   '/_authenticated/renter/': typeof AuthenticatedRenterIndexRoute
+  '/_authenticated/admin/support/$caseId': typeof AuthenticatedAdminSupportCaseIdRoute
   '/_authenticated/host/messages/$bookingId': typeof AuthenticatedHostMessagesBookingIdRoute
   '/_authenticated/host/payouts/refresh': typeof AuthenticatedHostPayoutsRefreshRoute
   '/_authenticated/host/payouts/return': typeof AuthenticatedHostPayoutsReturnRoute
@@ -507,6 +517,7 @@ export interface FileRouteTypes {
     | '/renter/search'
     | '/host/'
     | '/renter/'
+    | '/admin/support/$caseId'
     | '/host/messages/$bookingId'
     | '/host/payouts/refresh'
     | '/host/payouts/return'
@@ -555,6 +566,7 @@ export interface FileRouteTypes {
     | '/renter/search'
     | '/host'
     | '/renter'
+    | '/admin/support/$caseId'
     | '/host/messages/$bookingId'
     | '/host/payouts/refresh'
     | '/host/payouts/return'
@@ -605,6 +617,7 @@ export interface FileRouteTypes {
     | '/_authenticated/renter/search'
     | '/_authenticated/host/'
     | '/_authenticated/renter/'
+    | '/_authenticated/admin/support/$caseId'
     | '/_authenticated/host/messages/$bookingId'
     | '/_authenticated/host/payouts/refresh'
     | '/_authenticated/host/payouts/return'
@@ -820,6 +833,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/support'
       fullPath: '/admin/support/'
       preLoaderRoute: typeof AuthenticatedAdminSupportIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/support/$caseId': {
+      id: '/_authenticated/admin/support/$caseId'
+      path: '/admin/support/$caseId'
+      fullPath: '/admin/support/$caseId'
+      preLoaderRoute: typeof AuthenticatedAdminSupportCaseIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/host/messages/': {
@@ -1102,6 +1122,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedHostRoute: typeof AuthenticatedHostRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRenterRoute: typeof AuthenticatedRenterRouteWithChildren
+  AuthenticatedAdminSupportCaseIdRoute: typeof AuthenticatedAdminSupportCaseIdRoute
   AuthenticatedSupportCasesCaseIdRoute: typeof AuthenticatedSupportCasesCaseIdRoute
   AuthenticatedAdminSupportIndexRoute: typeof AuthenticatedAdminSupportIndexRoute
 }
@@ -1110,6 +1131,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedHostRoute: AuthenticatedHostRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRenterRoute: AuthenticatedRenterRouteWithChildren,
+  AuthenticatedAdminSupportCaseIdRoute: AuthenticatedAdminSupportCaseIdRoute,
   AuthenticatedSupportCasesCaseIdRoute: AuthenticatedSupportCasesCaseIdRoute,
   AuthenticatedAdminSupportIndexRoute: AuthenticatedAdminSupportIndexRoute,
 }

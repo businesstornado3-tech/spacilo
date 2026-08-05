@@ -51,6 +51,7 @@ import { Route as AuthenticatedRenterPaymentsReturnRouteImport } from './routes/
 import { Route as AuthenticatedRenterRequestsIndexRouteImport } from './routes/_authenticated.renter.requests.index'
 import { Route as AuthenticatedRenterRequestsRequestIdRouteImport } from './routes/_authenticated.renter.requests.$requestId'
 import { Route as AuthenticatedRenterRequestsNewRouteImport } from './routes/_authenticated.renter.requests.new'
+import { Route as AuthenticatedSupportCasesCaseIdRouteImport } from './routes/_authenticated.support.cases.$caseId'
 import { Route as ApiPublicPayoutsReleaseRouteImport } from './routes/api/public/payouts/release'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 import { Route as AuthenticatedHostSpacesSpaceIdEditRouteImport } from './routes/_authenticated.host.spaces.$spaceId.edit'
@@ -290,6 +291,12 @@ const AuthenticatedRenterRequestsNewRoute =
     path: '/requests/new',
     getParentRoute: () => AuthenticatedRenterRoute,
   } as any)
+const AuthenticatedSupportCasesCaseIdRoute =
+  AuthenticatedSupportCasesCaseIdRouteImport.update({
+    id: '/support/cases/$caseId',
+    path: '/support/cases/$caseId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const ApiPublicPayoutsReleaseRoute = ApiPublicPayoutsReleaseRouteImport.update({
   id: '/api/public/payouts/release',
   path: '/api/public/payouts/release',
@@ -355,6 +362,7 @@ export interface FileRoutesByFullPath {
   '/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   '/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
+  '/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/host/messages/': typeof AuthenticatedHostMessagesIndexRoute
@@ -400,6 +408,7 @@ export interface FileRoutesByTo {
   '/renter/messages/$bookingId': typeof AuthenticatedRenterMessagesBookingIdRoute
   '/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
+  '/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/host/messages': typeof AuthenticatedHostMessagesIndexRoute
@@ -450,6 +459,7 @@ export interface FileRoutesById {
   '/_authenticated/renter/payments/return': typeof AuthenticatedRenterPaymentsReturnRoute
   '/_authenticated/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdRouteWithChildren
   '/_authenticated/renter/requests/new': typeof AuthenticatedRenterRequestsNewRoute
+  '/_authenticated/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/_authenticated/host/messages/': typeof AuthenticatedHostMessagesIndexRoute
@@ -500,6 +510,7 @@ export interface FileRouteTypes {
     | '/renter/payments/return'
     | '/renter/requests/$requestId'
     | '/renter/requests/new'
+    | '/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
     | '/host/messages/'
@@ -545,6 +556,7 @@ export interface FileRouteTypes {
     | '/renter/messages/$bookingId'
     | '/renter/payments/return'
     | '/renter/requests/new'
+    | '/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
     | '/host/messages'
@@ -594,6 +606,7 @@ export interface FileRouteTypes {
     | '/_authenticated/renter/payments/return'
     | '/_authenticated/renter/requests/$requestId'
     | '/_authenticated/renter/requests/new'
+    | '/_authenticated/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
     | '/_authenticated/host/messages/'
@@ -922,6 +935,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRenterRequestsNewRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
     }
+    '/_authenticated/support/cases/$caseId': {
+      id: '/_authenticated/support/cases/$caseId'
+      path: '/support/cases/$caseId'
+      fullPath: '/support/cases/$caseId'
+      preLoaderRoute: typeof AuthenticatedSupportCasesCaseIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/api/public/payouts/release': {
       id: '/api/public/payouts/release'
       path: '/api/public/payouts/release'
@@ -1062,12 +1082,14 @@ interface AuthenticatedRouteChildren {
   AuthenticatedHostRoute: typeof AuthenticatedHostRouteWithChildren
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRenterRoute: typeof AuthenticatedRenterRouteWithChildren
+  AuthenticatedSupportCasesCaseIdRoute: typeof AuthenticatedSupportCasesCaseIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedHostRoute: AuthenticatedHostRouteWithChildren,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRenterRoute: AuthenticatedRenterRouteWithChildren,
+  AuthenticatedSupportCasesCaseIdRoute: AuthenticatedSupportCasesCaseIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

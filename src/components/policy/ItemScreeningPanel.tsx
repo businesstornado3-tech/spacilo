@@ -13,7 +13,7 @@ import { ShieldCheck, CircleCheck, Loader2 } from "lucide-react";
 import { Alert } from "@/components/common/Alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/form/Field";
+import { NativeSelect } from "@/components/form/Field";
 import { useActivePolicy, useConfirmItemPolicy, useInventoryScreening, usePolicyRules } from "@/hooks/usePolicy";
 import { DECISION_LABEL, DECISION_TONE, summariseScreening } from "@/lib/policy/engine";
 import { policyCategoryLabel } from "@/lib/policy/categories";
@@ -143,17 +143,17 @@ function ScreenedItemRow({
 
       {correcting ? (
         <div className="mt-3 space-y-2">
-          <Select
+          <NativeSelect
             aria-label={`What is ${item.label}?`}
             value={choice}
-            onChange={(event) => setChoice(event.target.value)}
+            onChange={(event: React.ChangeEvent<HTMLSelectElement>) => setChoice(event.target.value)}
           >
             {categories.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
-          </Select>
+          </NativeSelect>
           <div className="flex flex-wrap gap-2">
             <Button
               size="sm"

@@ -42,15 +42,41 @@ async function callAggregate(fn: "admin_dashboard_kpis" | "admin_dashboard_trend
   return data;
 }
 
-export function useAdminKpis(range: DateRange, previousRange: DateRange, enabled: boolean) {
-  return useQuery({
+export type MetricRecord = Record<string, number>;
+
+export interface AdminKpiResult {
+  /** Range-scoped metrics for the selected period. */
+  current: MetricRecord | null;
+  /** Range-scoped metrics for the immediately preceding equal-length period. */
+  previous: MetricRecord | null;
+  /** Point-in-time figures (live supply, account totals) — not range-scoped. */
+  live: MetricRecord;
+}
+
+function asRecord(value: unknown): MetricRecord | null {
+  if (!value || typeof value !== "object") return null;
+  const out: MetricRecord = {};
+  for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof raw === "number" && Number.isFinite(raw)) out[key] = raw;
+  }
+  return out;
+}
+
+/**
+ * One RPC round-trip per period: `admin_dashboard_kpis` already returns both
+ * the selected window and the preceding equivalent window under `windows`.
+ */
+export function useAdminKpis(range: DateRange, enabled: boolean) {
+  return useQuery<AdminKpiResult>({
     queryKey: adminDashboardKeys.kpis(range.from.toISOString(), range.to.toISOString()),
     queryFn: async () => {
-      const [current, previous] = await Promise.all([
-        callAggregate("admin_dashboard_kpis", range),
-        callAggregate("admin_dashboard_kpis", previousRange),
-      ]);
-      return { current, previous };
+      const payload = (await callAggregate("admin_dashboard_kpis", range)) as Record<string, unknown> | null;
+      const windows = (payload?.["windows"] ?? {}) as Record<string, unknown>;
+      return {
+        current: asRecord(windows["current"]),
+        previous: asRecord(windows["previous"]),
+        live: asRecord(payload) ?? {},
+      };
     },
     enabled,
   });

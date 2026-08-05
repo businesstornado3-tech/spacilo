@@ -6,7 +6,7 @@
  *
  * It never starts the camera on mount, never uploads a preview frame, and never
  * shows a metre figure. Live labels are provisional; the captured photo goes to
- * the existing secure SpaceFit AI pipeline, which remains the authority.
+ * the existing secure Spacilo AI pipeline, which remains the authority.
  */
 import * as React from "react";
 import { Camera, CameraOff, Loader2, RefreshCw, ScanLine, X } from "lucide-react";
@@ -180,7 +180,7 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
             {cameraReady ? (
               <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 type-body-sm">
                 <span className="size-2 rounded-full bg-destructive" aria-hidden="true" />
-                SpaceFit AI
+                Spacilo AI
                 <span className="font-medium">
                   {scan.status === "preparing"
                     ? "Preparing…"

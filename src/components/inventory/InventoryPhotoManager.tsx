@@ -18,7 +18,7 @@ import type { InventoryPhoto } from "@/lib/inventory-model";
 /**
  * Real uploads into a private bucket. No detection, no analysis, no fake
  * scanning — photos are stored with analysis_status "uploaded" ready for the
- * SpaceFit AI build.
+ * Spacilo AI build.
  */
 export function InventoryPhotoManager({
   inventoryId,

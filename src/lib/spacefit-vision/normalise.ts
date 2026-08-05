@@ -6,7 +6,7 @@
  * the same logic runs server-side (before storing detections) and client-side
  * (when the renter reviews them).
  *
- * PRINCIPLE: the provider identifies objects; Project Stow's own catalogue
+ * PRINCIPLE: the provider identifies objects; Spacilo's own catalogue
  * supplies typical dimensions. A detection is only forced onto a catalogue
  * entry when the match is reasonably confident — otherwise it stays a custom
  * item for the renter to confirm.
@@ -94,7 +94,7 @@ export interface CatalogueMatch {
 
 /**
  * Maps a free-text label (plus the provider's own catalogue guess) onto the
- * Project Stow catalogue. Uncertain matches return `none` so the renter is
+ * Spacilo catalogue. Uncertain matches return `none` so the renter is
  * asked rather than silently given the wrong typical size.
  */
 export function matchCatalogue(

@@ -24,7 +24,7 @@ import {
 const OCCUPANCY_SCENARIOS = [50, 75, 90, 100] as const;
 
 export const PRICING_GUIDANCE_NOTE =
-  "This estimate is based on the characteristics of your space and Project Stow's current pricing model. It is not a local market valuation.";
+  "This estimate is based on the characteristics of your space and Spacilo's current pricing model. It is not a local market valuation.";
 
 export function PricingAssistant({
   input,

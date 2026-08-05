@@ -20,13 +20,13 @@ export const Route = createFileRoute("/_authenticated/admin/support/")({
   component: SupportQueueRoute,
   head: () => ({
     meta: [
-      { title: "Support queue · Project Stow" },
+      { title: "Support queue · Spacilo" },
       {
         name: "description",
-        content: "Internal Project Stow support queue for booking issues, disputes and refunds.",
+        content: "Internal Spacilo support queue for booking issues, disputes and refunds.",
       },
-      { property: "og:title", content: "Support queue · Project Stow" },
-      { property: "og:description", content: "Internal Project Stow support queue." },
+      { property: "og:title", content: "Support queue · Spacilo" },
+      { property: "og:description", content: "Internal Spacilo support queue." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -61,7 +61,7 @@ function SupportQueueRoute() {
       <AppLayout mode={mode} title="Support queue">
         <EmptyState
           title="You don't have access to this area"
-          description="The support queue is only available to Project Stow support staff."
+          description="The support queue is only available to Spacilo support staff."
         />
       </AppLayout>
     );

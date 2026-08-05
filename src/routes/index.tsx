@@ -11,9 +11,9 @@ import { HowItWorks } from "@/components/home/HowItWorks";
 import { HostCallout } from "@/components/home/HostCallout";
 import { LaunchArea } from "@/components/home/LaunchArea";
 
-const title = `${brand.name} | SpaceFit AI Storage Near You`;
+const title = `${brand.name} | Spacilo AI Storage Near You`;
 const description =
-  "Scan your stuff or your spare space with SpaceFit AI. Find neighbourhood storage that actually fits, or earn from an unused garage, loft or spare room. Starting in Portsmouth.";
+  "Scan your stuff or your spare space with Spacilo AI. Find neighbourhood storage that actually fits, or earn from an unused garage, loft or spare room. Starting in Portsmouth.";
 
 export const Route = createFileRoute("/")({
   head: () => ({

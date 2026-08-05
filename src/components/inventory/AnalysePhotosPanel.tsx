@@ -51,7 +51,7 @@ export function AnalysePhotosPanel({
     <section className="rounded-2xl border border-border bg-card p-5">
       <h2 className="flex items-center gap-2 type-h2">
         <Sparkles className="size-5 text-primary" aria-hidden="true" />
-        Analyse with SpaceFit AI
+        Analyse with Spacilo AI
       </h2>
       <p className="mt-1 type-body text-muted-foreground">
         We&apos;ll suggest what you&apos;re storing from{" "}
@@ -85,7 +85,7 @@ export function AnalysePhotosPanel({
 
       <p className="mt-4 type-body-xs text-muted-foreground">
         Your photos stay private. They&apos;re only sent for analysis when you tap the button, and
-        SpaceFit AI estimates — it doesn&apos;t measure.
+        Spacilo AI estimates — it doesn&apos;t measure.
       </p>
     </section>
   );

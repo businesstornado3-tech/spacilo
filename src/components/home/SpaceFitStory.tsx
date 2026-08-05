@@ -1,5 +1,5 @@
 /**
- * SpaceFit AI explained as a two-sided intelligence layer:
+ * Spacilo AI explained as a two-sided intelligence layer:
  * SCAN → UNDERSTAND → MATCH → FIT, with what each side gets from it.
  * Illustrative figures only — the real numbers come from the scan flows.
  */
@@ -41,7 +41,7 @@ export function SpaceFitStory() {
           <SpaceFitAiMark size="sm" />
           <h2 className="mt-3 type-h2">One scan. Both sides of the deal.</h2>
           <p className="mt-3 max-w-xl type-body text-muted-foreground">
-            SpaceFit AI works for renters and hosts alike — estimating what needs storing, what a
+            Spacilo AI works for renters and hosts alike — estimating what needs storing, what a
             space can hold, and whether the two fit.
           </p>
         </Reveal>

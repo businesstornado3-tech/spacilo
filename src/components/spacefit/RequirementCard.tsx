@@ -1,7 +1,7 @@
 /**
  * SPACEFIT ESTIMATE — what the renter's CONFIRMED belongings actually need.
  *
- * Every figure comes from `src/lib/spacefit/requirement.ts`. SpaceFit AI only
+ * Every figure comes from `src/lib/spacefit/requirement.ts`. Spacilo AI only
  * ever proposes items; the numbers below are deterministic maths over the
  * inventory the renter has confirmed.
  */

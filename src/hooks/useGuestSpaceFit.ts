@@ -143,7 +143,7 @@ export function useGuestSpaceFit(kind: GuestKind): GuestScanState {
         else setProposal(response.result.proposal);
       } catch {
         requestIdRef.current = null;
-        setError("We couldn't reach SpaceFit AI. Please try again, or add things manually.");
+        setError("We couldn't reach Spacilo AI. Please try again, or add things manually.");
       } finally {
         setAnalysing(false);
       }

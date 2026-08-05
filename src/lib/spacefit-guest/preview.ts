@@ -207,7 +207,7 @@ export const GUEST_SPACE_OUTCOME_COPY: Record<
   { title: string; body: string; tip: string | null }
 > = {
   measured: {
-    title: "SpaceFit AI estimated your space",
+    title: "Spacilo AI estimated your space",
     body: "Check each figure against the real space and correct anything that looks wrong.",
     tip: null,
   },

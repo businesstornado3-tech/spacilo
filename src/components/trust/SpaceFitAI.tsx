@@ -6,7 +6,7 @@ import { useCountUp } from "@/hooks/use-motion";
 import { spaceFitBand, SPACEFIT_DISCLAIMER } from "@/lib/spacefit";
 import type { SpaceFitBand } from "@/types/models";
 
-/** The four-point sparkle that marks anything SpaceFit AI touches. */
+/** The four-point sparkle that marks anything Spacilo AI touches. */
 export function SpaceFitSpark({ className }: { className?: string | undefined }) {
   return (
     <span aria-hidden="true" className={cn("animate-twinkle text-signal", className)}>
@@ -16,7 +16,7 @@ export function SpaceFitSpark({ className }: { className?: string | undefined })
 }
 
 /**
- * "SpaceFit AI ✦" wordmark. Intelligent and quiet — not a chatbot avatar.
+ * "Spacilo AI ✦" wordmark. Intelligent and quiet — not a chatbot avatar.
  */
 export function SpaceFitAiMark({
   size = "md",
@@ -38,7 +38,7 @@ export function SpaceFitAiMark({
         className,
       )}
     >
-      SpaceFit AI
+      Spacilo AI
       <SpaceFitSpark />
     </span>
   );

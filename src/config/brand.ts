@@ -3,9 +3,9 @@
  * Change values here to rebrand the entire application.
  */
 export const brand = {
-  name: "Project Stow",
+  name: "Spacilo",
   shortName: "Stow",
-  legalName: "Project Stow Ltd",
+  legalName: "Spacilo Ltd",
   tagline: "Your stuff. Space nearby.",
   propositions: {
     renter: "Your stuff. Space nearby.",

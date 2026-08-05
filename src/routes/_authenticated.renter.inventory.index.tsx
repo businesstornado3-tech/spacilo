@@ -236,7 +236,7 @@ function PendingSuggestionsBanner({ inventoryId }: { inventoryId: string | undef
     <section className="flex flex-wrap items-center gap-3 rounded-2xl border border-signal/25 bg-signal-soft/40 p-4">
       <Sparkles className="size-5 text-primary" aria-hidden="true" />
       <p className="min-w-0 flex-1 type-body-sm">
-        SpaceFit AI has {count} {count === 1 ? "suggestion" : "suggestions"} waiting for you to
+        Spacilo AI has {count} {count === 1 ? "suggestion" : "suggestions"} waiting for you to
         check.
       </p>
       <Button asChild size="sm">

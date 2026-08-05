@@ -1,7 +1,7 @@
 /**
  * Cancellation & refund policy (Prompt 13).
  *
- * Project Stow's commercial policy lives here, versioned, in exactly one
+ * Spacilo's commercial policy lives here, versioned, in exactly one
  * place. The database repeats these rules inside `cancel_booking`, which is
  * the authority; this module keeps them testable and lets the UI explain
  * itself without inventing its own arithmetic.
@@ -83,7 +83,7 @@ export interface CancellationDecision {
 
 /**
  * Policy A/B/C/D. Pre-start cancellations by EITHER party refund 100% of the
- * storage amount AND 100% of the Project Stow service fee. Post-start
+ * storage amount AND 100% of the Spacilo service fee. Post-start
  * cancellations are never auto-priced.
  */
 export function cancellationDecision(
@@ -209,7 +209,7 @@ export function validateRefund(split: RefundSplit, caps: RefundCaps): RefundViol
 
 /**
  * Host entitlement after a refund. ONLY the storage portion reduces it — the
- * Project Stow service fee is platform revenue and is never taken from the
+ * Spacilo service fee is platform revenue and is never taken from the
  * host's storage earnings.
  */
 export function hostEntitlementAfterRefund(

@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Project Stow design system.
+ * Spacilo design system.
  *
  * All colour, typography, shadow and radius decisions live here.
  * Components must consume semantic tokens — never raw colour utilities.
@@ -357,7 +357,7 @@
 }
 
 :root {
-  /* Energetic accent derived from the harbour teal — used sparingly for SpaceFit AI */
+  /* Energetic accent derived from the harbour teal — used sparingly for Spacilo AI */
   --signal: oklch(0.68 0.115 196);
   --signal-foreground: oklch(0.2 0.03 220);
   --signal-soft: oklch(0.955 0.03 196);
@@ -449,7 +449,7 @@
   animation: stow-pop var(--duration-base) var(--ease-spring) both;
 }
 
-/** Scanning shimmer used by the SpaceFit AI analysis state. */
+/** Scanning shimmer used by the Spacilo AI analysis state. */
 @utility animate-sweep {
   animation: stow-sweep 1.5s var(--ease-out-soft) infinite;
 }

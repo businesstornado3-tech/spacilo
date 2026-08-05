@@ -14,7 +14,7 @@ const columns: { heading: string; links: FooterLink[] }[] = [
     links: [
       { label: "Find Storage", to: "/find-storage" },
       { label: "How It Works", to: "/how-it-works" },
-      { label: "SpaceFit AI", to: "/how-it-works" },
+      { label: "Spacilo AI", to: "/how-it-works" },
     ],
   },
   {

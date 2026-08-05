@@ -1,5 +1,5 @@
 /**
- * Host SpaceFit AI card — dashboard and hub.
+ * Host Spacilo AI card — dashboard and hub.
  *
  * Reads EXISTING host spaces and runs the shared deterministic pricing engine.
  * No AI call is made to render this. An unconfirmed AI measurement is always

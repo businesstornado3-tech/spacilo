@@ -1,7 +1,7 @@
 /**
  * Host payout policy (Prompt 12) — the single place the release rule lives.
  *
- * Project Stow takes the whole renter payment. The service fee stays with the
+ * Spacilo takes the whole renter payment. The service fee stays with the
  * platform; the host's storage entitlement is HELD and only later transferred
  * to the host's Stripe connected account.
  *

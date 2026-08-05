@@ -6,7 +6,7 @@
  *
  * The schema deliberately carries NO physical measurements: an ordinary
  * photograph cannot give reliable dimensions, so the provider only identifies
- * objects and Project Stow's own catalogue supplies typical sizes.
+ * objects and Spacilo's own catalogue supplies typical sizes.
  *
  * Two kinds of certainty are modelled SEPARATELY:
  *  - object_confidence   — how sure the provider is about WHAT it is

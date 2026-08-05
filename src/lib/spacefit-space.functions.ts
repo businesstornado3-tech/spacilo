@@ -1,5 +1,5 @@
 /**
- * SpaceFit AI host space scan — client-callable server functions.
+ * Spacilo AI host space scan — client-callable server functions.
  *
  * Thin wrappers only. Photo bytes and provider credentials never leave the
  * server, and every call is authenticated so a host can only scan and update

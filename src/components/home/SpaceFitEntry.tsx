@@ -1,5 +1,5 @@
 /**
- * The SpaceFit AI entry experience. Rendered inside the hero so both scan
+ * The Spacilo AI entry experience. Rendered inside the hero so both scan
  * paths are reachable without scrolling, on mobile and desktop.
  *
  * Both CTAs route to the real SpaceFit journeys via `spacefit-entry.ts`.

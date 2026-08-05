@@ -241,7 +241,7 @@ export function securitySignal(space: TrustSpaceInput): TrustSignal | null {
   return {
     key: "security",
     label: features.map(featureLabel).join(" · "),
-    detail: "Stated by the host. Project Stow hasn't inspected the space.",
+    detail: "Stated by the host. Spacilo hasn't inspected the space.",
     tone: "declared",
     source: "host",
   };
@@ -322,4 +322,4 @@ export const TRUST_TONE_LABEL: Record<TrustTone, string> = {
 };
 
 export const TRUST_DISCLAIMER =
-  "Project Stow checks what it can and shows the rest as stated or estimated. Nothing here is a guarantee.";
+  "Spacilo checks what it can and shows the rest as stated or estimated. Nothing here is a guarantee.";

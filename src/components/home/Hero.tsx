@@ -11,7 +11,7 @@ import { track } from "@/lib/analytics";
 
 /**
  * First viewport. Both sides of the marketplace carry equal weight —
- * space nearby for renters, income at home for hosts — with SpaceFit AI
+ * space nearby for renters, income at home for hosts — with Spacilo AI
  * demonstrated right beside the headline.
  */
 export function Hero() {

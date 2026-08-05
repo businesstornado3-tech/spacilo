@@ -11,6 +11,7 @@ import { EmptyState, ErrorState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RequestStatusBadge } from "@/components/requests/RequestSummary";
+import { compactConfidenceLine, hostEarningsView } from "@/lib/trust/host-request-confidence";
 import { useHostRequests } from "@/hooks/useStorageRequests";
 import { useMyBookings, useBookingChangeRequests } from "@/hooks/useBookings";
 import { useBookingRefunds } from "@/hooks/useCancellation";
@@ -303,6 +304,7 @@ function HostRequestCard({
   booking?: Booking | null;
 }) {
   const view = requestSnapshotView(request);
+  const earnings = hostEarningsView(request);
   const expiry = expiryLabel(request);
   const renter = request.renter_first_name_snapshot?.trim();
 
@@ -322,8 +324,13 @@ function HostRequestCard({
       <p className="mt-3 type-body-sm">{view.period}</p>
       <p className="type-body-sm text-muted-foreground">
         {view.priceLabel} · {view.itemCount} items · {view.requirementM3.toFixed(2)} m³
-        {view.spaceFitScore !== null ? ` · ${view.spaceFitScore}% SpaceFit` : ""}
       </p>
+      <p className="type-body-sm text-muted-foreground">{compactConfidenceLine(request)}</p>
+      {earnings.amount ? (
+        <p className="type-body-sm text-muted-foreground">
+          {earnings.label}: <span className="tabular-nums">{earnings.amount}</span>
+        </p>
+      ) : null}
       <p className="type-body-sm text-muted-foreground">
         {renter ? `Requested by ${renter}` : "Requested by a verified renter"}
       </p>

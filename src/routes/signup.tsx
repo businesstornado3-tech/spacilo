@@ -35,6 +35,7 @@ function SignupPage() {
   const navigate = useNavigate();
   const { mode } = Route.useSearch();
   const { loading, session, profile } = useAuth();
+  const claimGuestScan = useGuestClaim();
 
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
@@ -46,10 +47,23 @@ function SignupPage() {
   const [submitting, setSubmitting] = React.useState(false);
   const [checkEmail, setCheckEmail] = React.useState(false);
 
+  // A guest SpaceFit preview follows the visitor into their new account.
   React.useEffect(() => {
     if (loading || !session || !profile) return;
-    void navigate({ to: profile.current_mode === "host" ? "/host" : "/renter", replace: true });
-  }, [loading, session, profile, navigate]);
+    let cancelled = false;
+    void (async () => {
+      const claimed = await claimGuestScan();
+      if (cancelled) return;
+      void navigate({
+        to: claimed ?? (profile.current_mode === "host" ? "/host" : "/renter"),
+        replace: true,
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, session, profile, navigate, claimGuestScan]);
+
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();

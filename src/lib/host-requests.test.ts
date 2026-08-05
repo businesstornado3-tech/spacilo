@@ -14,6 +14,8 @@ import {
 const base: StorageRequest = {
   policy_version_snapshot: null,
   policy_version_id_snapshot: null,
+  price_reviewed_amount_pence: null,
+  price_reviewed_at: null,
   policy_screening_snapshot: null,
   compatibility_snapshot: null,
   renter_declaration_snapshot: null,

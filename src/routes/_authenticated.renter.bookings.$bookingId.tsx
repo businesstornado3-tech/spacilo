@@ -21,6 +21,7 @@ import { PaymentHistory } from "@/components/payments/PaymentHistory";
 import { CancellationPanel } from "@/components/payments/CancellationPanel";
 import { EarlyTerminationPanel } from "@/components/bookings/EarlyTerminationPanel";
 import { SupportSection } from "@/components/bookings/SupportSection";
+import { BookingReviewSection } from "@/components/reviews/BookingReviewSection";
 import { useBooking, useBookingChangeRequests } from "@/hooks/useBookings";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookingCancellation, useBookingRefunds } from "@/hooks/useCancellation";

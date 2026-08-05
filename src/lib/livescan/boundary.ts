@@ -229,9 +229,9 @@ export function removePoint(boundary: Boundary, index: number): Boundary {
 
 export function handlePoints(boundary: Boundary, frame: FrameSize): Point[] {
   if (!isCircle(boundary)) return boundary.points;
-  const aspect = frame.height > 0 ? frame.width / frame.height : 1;
-  return [boundary.centre, { x: boundary.centre.x + boundary.radius, y: boundary.centre.y }].map(
-    clampPoint,
-  ) as Point[];
-  void aspect;
+  void frame;
+  return [
+    clampPoint(boundary.centre),
+    clampPoint({ x: boundary.centre.x + boundary.radius, y: boundary.centre.y }),
+  ];
 }

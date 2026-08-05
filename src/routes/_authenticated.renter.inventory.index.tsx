@@ -115,6 +115,10 @@ function MyStuffPage() {
           <PendingSuggestionsBanner inventoryId={inventory?.id} />
           <InventorySummary totals={totals} largest={largest} readiness={readiness} />
 
+          <RequirementCard items={list} />
+
+
+
 
           <div className="space-y-6">
             {grouped.map((group) => (

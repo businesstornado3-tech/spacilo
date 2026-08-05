@@ -33,7 +33,9 @@ export const PERFORMANCE_PROFILES: Record<LivePerformanceMode, PerformanceProfil
   full: {
     preview: { width: 960, height: 540, frameRate: 30 },
     inferenceEdge: 256,
-    intervalMs: 350,
+    // ~0.6s between passes: labels still feel live, and the preview keeps the
+    // GPU to itself between passes. Preview smoothness always wins.
+    intervalMs: 600,
   },
   reduced: {
     preview: { width: 640, height: 360, frameRate: 24 },
@@ -63,9 +65,11 @@ export interface PerformanceGovernorOptions {
 }
 
 export const DEFAULT_GOVERNOR_OPTIONS: PerformanceGovernorOptions = {
-  slowPassMs: 400,
-  criticalPassMs: 1200,
-  slowPassesBeforeDowngrade: 3,
+  // Step down earlier than before: a phone that needs 250ms per pass is
+  // already stealing frames from the preview.
+  slowPassMs: 250,
+  criticalPassMs: 900,
+  slowPassesBeforeDowngrade: 2,
 };
 
 /**

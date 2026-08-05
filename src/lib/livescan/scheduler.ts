@@ -21,8 +21,8 @@ export interface InferenceSchedulerOptions {
 }
 
 export const DEFAULT_INFERENCE_OPTIONS: InferenceSchedulerOptions = {
-  baseIntervalMs: 350,
-  minIntervalMs: 200,
+  baseIntervalMs: 600,
+  minIntervalMs: 300,
   maxIntervalMs: 2000,
 };
 

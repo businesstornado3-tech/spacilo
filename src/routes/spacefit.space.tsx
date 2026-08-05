@@ -24,9 +24,12 @@ import {
 import { useGuestSpaceFit } from "@/hooks/useGuestSpaceFit";
 import {
   GUEST_HOST_VERIFICATION_NOTE,
+  GUEST_SPACE_OUTCOME_COPY,
   guestSpacePreview,
+  spaceMeasurementOutcome,
   type GuestSpaceProposal,
 } from "@/lib/spacefit-guest/preview";
+
 import { formatPrice } from "@/lib/format";
 
 const title = "Scan your space — " + brand.name;

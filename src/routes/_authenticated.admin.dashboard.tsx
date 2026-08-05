@@ -86,6 +86,10 @@ function metric(source: MetricRecord | null | undefined, key: string): number | 
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function optionalCount(value: number | null): string {
+  return value === null ? "—" : formatCount(value);
+}
+
 function KpiCard({
   label,
   value,
@@ -325,13 +329,13 @@ function AdminDashboardRoute() {
             {countCard("new_accounts", "New accounts (period)")}
             {countCard("new_renter_accounts", "New renter-first accounts")}
             {countCard("new_host_accounts", "New host-first accounts")}
-            <KpiCard label="Total accounts (live)" value={formatCount(metric(live, "total_accounts_now"))} />
-            <KpiCard label="Renter-enabled (live)" value={formatCount(metric(live, "renter_accounts_now"))} />
-            <KpiCard label="Host-enabled (live)" value={formatCount(metric(live, "host_accounts_now"))} />
-            <KpiCard label="Both renter and host (live)" value={formatCount(metric(live, "both_accounts_now"))} />
+            <KpiCard label="Total accounts (live)" value={optionalCount(metric(live, "total_accounts_now"))} />
+            <KpiCard label="Renter-enabled (live)" value={optionalCount(metric(live, "renter_accounts_now"))} />
+            <KpiCard label="Host-enabled (live)" value={optionalCount(metric(live, "host_accounts_now"))} />
+            <KpiCard label="Both renter and host (live)" value={optionalCount(metric(live, "both_accounts_now"))} />
             <KpiCard
               label="Hosts with a published space"
-              value={formatCount(metric(live, "hosts_with_published_space_now"))}
+              value={optionalCount(metric(live, "hosts_with_published_space_now"))}
             />
           </div>
         </AdminSectionBlock>
@@ -373,7 +377,7 @@ function AdminDashboardRoute() {
             {countCard("lapsed_requests", "Requests lapsed or withdrawn")}
             {countCard("paid_bookings", "Paid bookings")}
             {countCard("completed_bookings", "Completed bookings")}
-            <KpiCard label="Published spaces (live)" value={formatCount(metric(live, "published_spaces_now"))} />
+            <KpiCard label="Published spaces (live)" value={optionalCount(metric(live, "published_spaces_now"))} />
           </div>
 
           <h3 className="mt-6 type-label">Marketplace funnel</h3>

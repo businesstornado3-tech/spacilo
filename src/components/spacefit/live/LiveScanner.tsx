@@ -178,9 +178,30 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
             ) : null}
 
             {cameraReady ? (
-              <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 type-body-sm">
+              <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 type-body-sm">
                 <span className="size-2 rounded-full bg-destructive" aria-hidden="true" />
-                Camera on
+                SpaceFit AI
+                <span className="font-medium">
+                  {scan.status === "preparing"
+                    ? "Preparing…"
+                    : CAPTURE_READINESS_LABEL[scan.guidance.readiness]}
+                </span>
+              </div>
+            ) : null}
+
+            {/* Guidance sits ON the viewport so it is visible on a phone without
+                scrolling, but stays a thin strip so the camera is unobscured. */}
+            {cameraReady ? (
+              <div
+                aria-live="polite"
+                className="pointer-events-none absolute inset-x-3 bottom-3 rounded-2xl bg-background/90 px-3 py-2"
+              >
+                <p className="type-body-sm font-medium">{scan.guidance.message}</p>
+                <p className="mt-0.5 type-body-sm text-muted-foreground">
+                  {scan.guidance.checks
+                    .map((check) => `${check.met ? "✓" : "•"} ${check.label}`)
+                    .join("   ")}
+                </p>
               </div>
             ) : null}
 

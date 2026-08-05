@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { PriceDisplay } from "@/components/marketplace/PriceDisplay";
 import { PhotoManager } from "@/components/host/listing/PhotoManager";
 import { SpaceScanner } from "@/components/host/spacefit/SpaceScanner";
+import { PricingAssistant } from "@/components/host/spacefit/PricingAssistant";
+
 import { ChipToggle, Fieldset, OptionRow, SelectableCard, StepHeading } from "@/components/host/listing/wizard-ui";
 import type { SpacePatch, SpacePhoto } from "@/lib/spaces-api";
 import {

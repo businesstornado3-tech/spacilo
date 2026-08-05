@@ -3792,6 +3792,7 @@ export type Database = {
       }
       create_storage_request: {
         Args: {
+          p_declaration?: Json
           p_end_date: string
           p_inventory_id: string
           p_renter_note?: string

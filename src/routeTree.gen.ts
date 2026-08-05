@@ -22,6 +22,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StoragePolicyRouteImport } from './routes/storage-policy'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated.host'
@@ -133,6 +134,11 @@ const SearchRoute = SearchRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoragePolicyRoute = StoragePolicyRouteImport.update({
@@ -425,6 +431,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/storage-policy': typeof StoragePolicyRoute
   '/trust': typeof TrustRoute
   '/host': typeof AuthenticatedHostRouteWithChildren
@@ -487,6 +494,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/storage-policy': typeof StoragePolicyRoute
   '/trust': typeof TrustRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -548,6 +556,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/storage-policy': typeof StoragePolicyRoute
   '/trust': typeof TrustRoute
   '/_authenticated/host': typeof AuthenticatedHostRouteWithChildren
@@ -612,6 +621,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/signup'
+    | '/sitemap.xml'
     | '/storage-policy'
     | '/trust'
     | '/host'
@@ -674,6 +684,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/signup'
+    | '/sitemap.xml'
     | '/storage-policy'
     | '/trust'
     | '/notifications'
@@ -734,6 +745,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/signup'
+    | '/sitemap.xml'
     | '/storage-policy'
     | '/trust'
     | '/_authenticated/host'
@@ -798,6 +810,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   SignupRoute: typeof SignupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StoragePolicyRoute: typeof StoragePolicyRoute
   TrustRoute: typeof TrustRoute
   SpacefitSpaceRoute: typeof SpacefitSpaceRoute
@@ -898,6 +911,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/storage-policy': {
@@ -1389,6 +1409,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   SignupRoute: SignupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   StoragePolicyRoute: StoragePolicyRoute,
   TrustRoute: TrustRoute,
   SpacefitSpaceRoute: SpacefitSpaceRoute,

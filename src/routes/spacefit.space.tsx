@@ -90,6 +90,8 @@ function GuestSpacePage() {
     () => (proposal ? guestSpacePreview({ ...proposal, spaceType }) : null),
     [proposal, spaceType],
   );
+  const outcome = spaceMeasurementOutcome(proposal);
+
 
   return (
     <MarketingLayout>

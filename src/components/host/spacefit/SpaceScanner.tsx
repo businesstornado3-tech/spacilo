@@ -14,8 +14,10 @@ import { Alert } from "@/components/common/Alert";
 import { Field, TextInput } from "@/components/form/Field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { BoundaryEditor } from "@/components/spacefit/live/BoundaryEditor";
 import { LiveScanner } from "@/components/spacefit/live/LiveScanner";
 import { toast } from "@/components/overlay/toast";
+import type { BoundaryMeasurement } from "@/lib/livescan/boundary-scale";
 import {
   applySpaceMeasurementProposal,
   CONFIDENCE_LABEL,
@@ -66,6 +68,18 @@ export function SpaceScanner({
   const [busy, setBusy] = React.useState(false);
   const [scanning, setScanning] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  /** Object URL of the frame just captured, shown frozen in the editor. */
+  const [frozen, setFrozen] = React.useState<string | null>(null);
+
+  const clearFrozen = React.useCallback(() => {
+    setFrozen((previous) => {
+      if (previous) URL.revokeObjectURL(previous);
+      return null;
+    });
+  }, []);
+
+  // Never leak the frozen frame's blob when the scanner unmounts.
+  React.useEffect(() => clearFrozen, [clearFrozen]);
 
   const refresh = React.useCallback(async () => {
     const [list, current] = await Promise.all([listScanPhotos(spaceId), latestProposal(spaceId)]);
@@ -204,8 +218,29 @@ export function SpaceScanner({
       ) : null}
 
       {/* Live Scan helps frame the shot; the captured photo enters the
-          existing secure host analysis pipeline unchanged. */}
-      {photos.length < MAX_SPACE_SCAN_PHOTOS ? (
+          existing secure host analysis pipeline unchanged. The frozen frame
+          then powers the boundary editor, with the camera already released. */}
+      {frozen ? (
+        <BoundaryEditor
+          className="mt-4"
+          imageUrl={frozen}
+          onCancel={clearFrozen}
+          onConfirm={(measurement: BoundaryMeasurement) => {
+            onApplied?.({
+              lengthM: measurement.depthM,
+              widthM: measurement.widthM,
+              heightM: measurement.volumeM3 && measurement.usableM2
+                ? Math.round((measurement.volumeM3 / measurement.usableM2) * 100) / 100
+                : null,
+            });
+            clearFrozen();
+            toast.success(
+              "Outline saved",
+              "We've used your outline as an estimate — check it against the real space.",
+            );
+          }}
+        />
+      ) : photos.length < MAX_SPACE_SCAN_PHOTOS ? (
         <LiveScanner
           mode="host"
           className="mt-4"
@@ -214,6 +249,11 @@ export function SpaceScanner({
             try {
               await uploadScanPhoto(spaceId, file);
               await refresh();
+              // Freeze the captured frame locally so the host can outline it.
+              setFrozen((previous: string | null) => {
+                if (previous) URL.revokeObjectURL(previous);
+                return URL.createObjectURL(file);
+              });
             } catch {
               toast.error("Couldn't add that photo");
             } finally {
@@ -222,6 +262,7 @@ export function SpaceScanner({
           }}
         />
       ) : null}
+
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button

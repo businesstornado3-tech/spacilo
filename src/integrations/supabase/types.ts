@@ -2494,6 +2494,68 @@ export type Database = {
           },
         ]
       }
+      user_notifications: {
+        Row: {
+          action_path: string | null
+          archived_at: string | null
+          body: string
+          booking_id: string | null
+          created_at: string
+          dedupe_key: string | null
+          entity_id: string | null
+          entity_type: string | null
+          event_type: string
+          id: string
+          metadata: Json
+          priority: Database["public"]["Enums"]["notification_priority"]
+          read_at: string | null
+          recipient_user_id: string
+          title: string
+        }
+        Insert: {
+          action_path?: string | null
+          archived_at?: string | null
+          body: string
+          booking_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json
+          priority?: Database["public"]["Enums"]["notification_priority"]
+          read_at?: string | null
+          recipient_user_id: string
+          title: string
+        }
+        Update: {
+          action_path?: string | null
+          archived_at?: string | null
+          body?: string
+          booking_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json
+          priority?: Database["public"]["Enums"]["notification_priority"]
+          read_at?: string | null
+          recipient_user_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notifications_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2604,6 +2666,10 @@ export type Database = {
           p_refunded_storage_pence: number
         }
         Returns: Json
+      }
+      archive_notification: {
+        Args: { p_notification_id: string }
+        Returns: undefined
       }
       begin_booking_checkout: {
         Args: { p_booking_id: string }
@@ -3082,6 +3148,22 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_user_notification: {
+        Args: {
+          p_action_path?: string
+          p_body: string
+          p_booking_id?: string
+          p_collapse?: boolean
+          p_dedupe_key?: string
+          p_entity_id?: string
+          p_entity_type?: string
+          p_event_type: string
+          p_priority?: Database["public"]["Enums"]["notification_priority"]
+          p_recipient: string
+          p_title: string
+        }
+        Returns: string
+      }
       expire_stale_storage_requests: { Args: never; Returns: number }
       fail_host_earning_transfer: {
         Args: { p_block?: boolean; p_earning_id: string; p_reason: string }
@@ -3254,7 +3336,12 @@ export type Database = {
       }
       is_support_staff: { Args: { _user_id?: string }; Returns: boolean }
       list_reported_reviews: { Args: { p_limit?: number }; Returns: Json }
+      mark_all_notifications_read: { Args: never; Returns: number }
       mark_host_earnings_eligible: { Args: never; Returns: number }
+      mark_notification_read: {
+        Args: { p_notification_id: string; p_read?: boolean }
+        Returns: undefined
+      }
       mark_refund_submitted: {
         Args: {
           p_charge_id?: string
@@ -3293,6 +3380,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      notification_booking_path: {
+        Args: { p_audience: string; p_booking_id: string }
+        Returns: string
       }
       open_support_case: {
         Args: {
@@ -3927,6 +4018,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      unread_notification_count: { Args: never; Returns: number }
       upsert_host_payout_account: {
         Args: {
           p_charges_enabled: boolean
@@ -4054,6 +4146,7 @@ export type Database = {
       item_tri_state: "yes" | "no" | "unknown"
       listing_status: "draft" | "published" | "paused" | "archived"
       moisture_condition: "dry" | "some_humidity" | "unknown"
+      notification_priority: "informational" | "action_required" | "important"
       payment_refund_state:
         | "none"
         | "pending"
@@ -4384,6 +4477,7 @@ export const Constants = {
       item_tri_state: ["yes", "no", "unknown"],
       listing_status: ["draft", "published", "paused", "archived"],
       moisture_condition: ["dry", "some_humidity", "unknown"],
+      notification_priority: ["informational", "action_required", "important"],
       payment_refund_state: [
         "none",
         "pending",

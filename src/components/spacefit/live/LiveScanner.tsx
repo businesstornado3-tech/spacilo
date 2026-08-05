@@ -324,7 +324,7 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
                 ) : (
                   <Camera className="size-5" aria-hidden="true" />
                 )}
-                Capture
+                {mode === "host" ? "Capture space" : "Capture"}
               </Button>
               {scan.canSwitchCamera ? (
                 <Button

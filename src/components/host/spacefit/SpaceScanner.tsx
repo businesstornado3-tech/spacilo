@@ -220,48 +220,38 @@ export function SpaceScanner({
       {/* Live Scan helps frame the shot; the captured photo enters the
           existing secure host analysis pipeline unchanged. The frozen frame
           then powers the boundary editor, with the camera already released. */}
-      {frozen ? (
-        <BoundaryEditor
+      {photos.length < MAX_SPACE_SCAN_PHOTOS ? (
+        <HostSpaceCapture
           className="mt-4"
-          imageUrl={frozen}
-          onCancel={clearFrozen}
-          onConfirm={(measurement: BoundaryMeasurement) => {
-            onApplied?.({
-              lengthM: measurement.depthM,
-              widthM: measurement.widthM,
-              heightM: measurement.volumeM3 && measurement.usableM2
-                ? Math.round((measurement.volumeM3 / measurement.usableM2) * 100) / 100
-                : null,
-            });
-            clearFrozen();
-            toast.success(
-              "Outline saved",
-              "We've used your outline as an estimate — check it against the real space.",
-            );
-          }}
-        />
-      ) : photos.length < MAX_SPACE_SCAN_PHOTOS ? (
-        <LiveScanner
-          mode="host"
-          className="mt-4"
-          onCapture={async (file: File) => {
+          onManualEntry={() => manualRef.current?.scrollIntoView({ block: "center" })}
+          onCaptured={async (file: File) => {
             setBusy(true);
             try {
               await uploadScanPhoto(spaceId, file);
               await refresh();
-              // Freeze the captured frame locally so the host can outline it.
-              setFrozen((previous: string | null) => {
-                if (previous) URL.revokeObjectURL(previous);
-                return URL.createObjectURL(file);
-              });
             } catch {
               toast.error("Couldn't add that photo");
             } finally {
               setBusy(false);
             }
           }}
+          onMeasured={(measurement: BoundaryMeasurement) => {
+            onApplied?.({
+              lengthM: measurement.depthM,
+              widthM: measurement.widthM,
+              heightM:
+                measurement.volumeM3 && measurement.usableM2
+                  ? Math.round((measurement.volumeM3 / measurement.usableM2) * 100) / 100
+                  : null,
+            });
+            toast.success(
+              "Outline saved",
+              "We've used your outline as an estimate — check it against the real space.",
+            );
+          }}
         />
       ) : null}
+
 
 
       <div className="mt-4 flex flex-wrap gap-2">

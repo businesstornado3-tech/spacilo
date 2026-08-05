@@ -4,6 +4,7 @@ import { Camera, ImagePlus, X, ArrowLeft, ArrowRight, Loader2 } from "lucide-rea
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { LiveScanner } from "@/components/spacefit/live/LiveScanner";
 import { Badge } from "@/components/ui/badge";
 import {
   deleteInventoryPhoto,

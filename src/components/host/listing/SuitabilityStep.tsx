@@ -9,12 +9,15 @@ import {
   draftFromProfile,
   type SuitabilityDraft,
 } from "@/components/policy/SpaceSuitabilityForm";
-import { useSaveSuitability, useSuitabilityProfile } from "@/hooks/usePolicy";
+import { useActivePolicy, useSaveSuitability, useSuitabilityProfile } from "@/hooks/usePolicy";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/overlay/toast";
 
 export function SuitabilityStep({ spaceId }: { spaceId: string }) {
   const { data: profile } = useSuitabilityProfile(spaceId);
   const save = useSaveSuitability(spaceId);
+  const { data: policy } = useActivePolicy();
+  const { user } = useAuth();
   const [draft, setDraft] = React.useState<SuitabilityDraft>(() => draftFromProfile(null));
   const [saved, setSaved] = React.useState(false);
   const loaded = React.useRef(false);
@@ -37,7 +40,18 @@ export function SuitabilityStep({ spaceId }: { spaceId: string }) {
       saved={saved}
       onSave={async () => {
         try {
-          await save.mutateAsync(draft);
+          await save.mutateAsync({
+            spaceId,
+            hostId: user?.id ?? "",
+            attributes: draft.attributes,
+            notes: draft.notes,
+            declarations: {
+              authority: draft.authority,
+              compliance: draft.compliance,
+              accuracy: draft.accuracy,
+            },
+            policyVersionId: policy?.id ?? null,
+          });
           setSaved(true);
         } catch {
           toast.error("Couldn't save", "Please try again.");

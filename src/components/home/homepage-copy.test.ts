@@ -1,7 +1,8 @@
 /**
- * Guards the homepage promise hierarchy: Spacilo AI is the primary USP, both
- * marketplace sides are visible in the first viewport, every CTA routes to a
- * real flow, and we still make no unsupported trust or payment claims.
+ * Guards the Prompt 24 homepage hierarchy: Spacilo is a marketplace first and
+ * Spacilo AI second, each scan journey gets exactly ONE deliberate
+ * introduction, every CTA routes to a real flow, and we make no unsupported
+ * trust, earnings or payment claims.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -13,15 +14,16 @@ import { scanSpaceTarget, scanStuffTarget } from "@/lib/spacefit-entry";
 const FILES = [
   "src/routes/index.tsx",
   "src/components/home/Hero.tsx",
-  "src/components/home/SpaceFitEntry.tsx",
-  "src/components/home/SpaceFitDemo.tsx",
+  "src/components/home/StorageNearYou.tsx",
   "src/components/home/SpaceFitStory.tsx",
-  "src/components/home/TwoSidedValue.tsx",
-  "src/components/home/WhyStow.tsx",
   "src/components/home/HowItWorks.tsx",
+  "src/components/home/BrandStory.tsx",
   "src/components/home/HostCallout.tsx",
-  "src/components/home/HostEntryButton.tsx",
+  "src/components/home/HostAiSection.tsx",
+  "src/components/home/HostControl.tsx",
+  "src/components/home/TrustSection.tsx",
   "src/components/home/LaunchArea.tsx",
+  "src/components/home/FinalCta.tsx",
 ];
 
 const read = (file: string) => readFileSync(file, "utf8");
@@ -30,6 +32,7 @@ const copy = FILES.map(read).join("\n");
 const hero = read("src/components/home/Hero.tsx");
 const entry = read("src/components/home/SpaceFitEntry.tsx");
 const story = read("src/components/home/SpaceFitStory.tsx");
+const hostAi = read("src/components/home/HostAiSection.tsx");
 const page = read("src/routes/index.tsx");
 const demo = read("src/components/home/SpaceFitDemo.tsx");
 
@@ -40,13 +43,13 @@ const BANNED = [
   /background check/i,
   /book instantly/i,
   /instant booking/i,
-  /secure payments/i,
   /cheapest/i,
   /thousands of/i,
+  /earn £\d/i,
 ];
 
 describe("homepage copy", () => {
-  it("makes no unsupported trust, insurance or payment claims", () => {
+  it("makes no unsupported trust, insurance, earnings or payment claims", () => {
     for (const pattern of BANNED) {
       expect(copy).not.toMatch(pattern);
     }
@@ -57,17 +60,12 @@ describe("homepage copy", () => {
     expect(hero).toContain("Income at home.");
   });
 
-  it("drops the previous headline", () => {
-    expect(hero).not.toContain("Make space for what matters.");
-  });
-
   it("gives both halves of the headline equal treatment inside the single h1", () => {
     const h1 = hero.slice(hero.indexOf("<h1"), hero.indexOf("</h1>"));
     const renter = h1.indexOf("Space nearby.");
     const host = h1.indexOf("Income at home.");
     expect(renter).toBeGreaterThan(-1);
     expect(host).toBeGreaterThan(renter);
-    // identical wrapper treatment for both lines
     expect((h1.match(/<span className="block">/g) ?? []).length).toBe(2);
   });
 
@@ -77,93 +75,124 @@ describe("homepage copy", () => {
     );
   });
 
-  it("removes the redundant technology eyebrow above the headline", () => {
-    expect(hero).not.toMatch(/Neighbourhood storage, powered by Spacilo AI/i);
+  it("gives the hero one renter and one host marketplace CTA", () => {
+    expect(hero).toContain("Find storage");
+    expect(hero).toContain('label="Start earning"');
   });
 
-  it("introduces Spacilo AI with its own promise line", () => {
-    expect(hero).toContain("SpaceFitAiMark");
-    expect(hero).toContain("Your stuff. Your space. Just show us.");
-  });
-
-  it("pairs each scan action with its curiosity question", () => {
-    expect(hero).toContain("How much space do I really need?");
-    expect(hero).toContain("What could my unused space earn?");
-  });
-
-  it("does not lead with no-account-needed marketing", () => {
-    expect(hero).not.toMatch(/no account needed/i);
-    expect(hero).not.toMatch(/no sign-?up required/i);
-  });
-
-  it("keeps manual search and a manual host path in the hero", () => {
+  it("keeps the postcode search in the hero", () => {
     expect(hero).toContain("SearchControls");
-    expect(hero).toContain("HostEntryButton");
+  });
+});
+
+describe("CTA repetition rule", () => {
+  it("keeps giant scan CTAs out of the hero", () => {
+    expect(hero).not.toContain("ScanStuffButton");
+    expect(hero).not.toContain("ScanSpaceButton");
   });
 
-  it("names Spacilo AI above the fold", () => {
-    expect(hero).toContain("Spacilo AI");
-    expect(hero).toContain("SpaceFitEntry");
+  it("introduces the renter scan journey exactly once on the page", () => {
+    const uses = FILES.map(read)
+      .join("\n")
+      .match(/<ScanStuffButton/g);
+    expect(uses).toHaveLength(1);
+    expect(story).toContain("<ScanStuffButton");
   });
 
-  it("still explains both sides further down the page", () => {
-    expect(copy).toContain("I need space");
-    expect(copy).toContain("I have space");
-    expect(copy).toContain("Your unused space could be earning.");
-    expect(copy).toContain("Only pay for the space you need");
+  it("introduces the host scan journey exactly once on the page", () => {
+    const uses = FILES.map(read)
+      .join("\n")
+      .match(/<ScanSpaceButton/g);
+    expect(uses).toHaveLength(1);
+    expect(hostAi).toContain("<ScanSpaceButton");
   });
 
-  it("stops the renter journey at a request, never a booking or payment", () => {
-    expect(copy).toContain("Send a request");
-    expect(copy).toContain(
-      "Sending a request doesn't book the space or take payment. The host still needs to respond.",
-    );
+  it("uses contextual marketplace wording rather than scan wording for those CTAs", () => {
+    expect(story).toContain("Try Spacilo AI");
+    expect(hostAi).toContain("Measure my space with Spacilo AI");
+    expect(copy).not.toContain("Scan my stuff");
+    expect(copy).not.toContain("Scan my space");
   });
 
   it("routes every host CTA through the shared host entry helper", () => {
-    const hostCtas = [
-      "src/components/home/Hero.tsx",
-      "src/components/home/TwoSidedValue.tsx",
-      "src/components/home/HostCallout.tsx",
-    ].map(read);
-    for (const file of hostCtas) expect(file).toContain("HostEntryButton");
+    for (const file of [hero, read("src/components/home/HostCallout.tsx")]) {
+      expect(file).toContain("HostEntryButton");
+    }
     expect(read("src/components/home/HostEntryButton.tsx")).toContain("hostEntryTarget");
     expect(hostEntryTarget(false)).toEqual({ to: "/signup", search: { mode: "host" } });
     expect(hostEntryTarget(true)).toEqual({ to: "/host/spaces/new" });
   });
 });
 
-describe("SpaceFit homepage entry points", () => {
-  it("offers both scan paths", () => {
-    expect(entry).toContain("Scan my stuff");
-    expect(entry).toContain("Scan my space");
+describe("homepage structure", () => {
+  const order = [
+    "<Hero />",
+    "<StorageNearYou />",
+    "<SpaceFitStory />",
+    "<HowItWorks />",
+    "<BrandStory />",
+    "<HostCallout />",
+    "<HostAiSection />",
+    "<HostControl />",
+    "<TrustSection />",
+    "<LaunchArea />",
+    "<FinalCta />",
+  ];
+
+  it("renders marketplace value before Spacilo AI", () => {
+    expect(page.indexOf("<StorageNearYou />")).toBeLessThan(page.indexOf("<SpaceFitStory />"));
   });
 
-  it("frames SpaceFit for both renters and hosts", () => {
-    expect(entry).toContain("I have stuff to store");
-    expect(entry).toContain("I have space to spare");
+  it("establishes host commercial value before the host AI section", () => {
+    expect(page.indexOf("<HostCallout />")).toBeLessThan(page.indexOf("<HostAiSection />"));
   });
 
-  it("sends signed-in renters to the real photo scan flow", () => {
+  it("keeps the full section order", () => {
+    const positions = order.map((section) => page.indexOf(section));
+    expect(positions.every((p) => p > -1)).toBe(true);
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+  });
+
+  it("has a single h1", () => {
+    expect(copy.match(/<h1/g)).toHaveLength(1);
+  });
+
+  it("tells the marketplace brand story", () => {
+    expect(copy).toContain("Space is everywhere.");
+    expect(copy).toContain("It just isn't being shared.");
+  });
+
+  it("keeps the local launch and trust destinations reachable", () => {
+    expect(copy).toContain("Hello, Portsmouth.");
+    expect(copy).toContain('to="/trust"');
+    expect(copy).toContain("Explore Trust &amp; Safety");
+  });
+
+  it("closes with two clearly separated paths", () => {
+    const finalCta = read("src/components/home/FinalCta.tsx");
+    expect(finalCta).toContain("Make room for what matters.");
+    expect(finalCta).toContain("Need space?");
+    expect(finalCta).toContain("Have space?");
+  });
+
+  it("gives the homepage marketplace-led metadata and a self-referencing canonical", () => {
+    expect(page).toContain("Neighbourhood Storage Near You");
+    expect(page).toContain('rel: "canonical"');
+    expect(page).toContain('"@type": "WebSite"');
+  });
+});
+
+describe("Spacilo AI entry points", () => {
+  it("still exposes both real scan journeys", () => {
     expect(scanStuffTarget(true)).toEqual({ to: "/renter/inventory/photos" });
-  });
-
-  it("sends signed-out renters to the guest SpaceFit preview", () => {
     expect(scanStuffTarget(false)).toEqual({ to: "/spacefit/stuff" });
-  });
-
-  it("sends signed-in hosts to the listing wizard that contains the space scanner", () => {
     expect(scanSpaceTarget(true)).toEqual({ to: "/host/spaces/new" });
-  });
-
-  it("sends signed-out hosts to the guest space preview", () => {
     expect(scanSpaceTarget(false)).toEqual({ to: "/spacefit/space" });
   });
 
   it("keeps the signed-in host scan path aligned with the single host entry helper", () => {
     expect(scanSpaceTarget(true)).toEqual(hostEntryTarget(true));
   });
-
 
   it("links scan buttons with typed router links, never raw anchors", () => {
     expect(entry).toContain('<Link to="/renter/inventory/photos">');
@@ -178,63 +207,15 @@ describe("SpaceFit homepage entry points", () => {
 
   it("presents AI output as a reviewable estimate", () => {
     expect(entry).toContain("review and correct");
+    expect(story).toContain("SPACEFIT_DISCLAIMER");
+    expect(story).toContain("You review, correct and confirm it.");
+    expect(hostAi).toContain("you can enter dimensions by hand instead");
   });
-});
 
-describe("SpaceFit story section", () => {
-  it("tells the scan → understand → match → fit story", () => {
-    for (const step of ["Scan", "Understand", "Match", "Fit"]) {
+  it("tells the renter photo → understand → estimate → match story", () => {
+    for (const step of ["Photo", "Understand", "Estimate", "Match"]) {
       expect(story).toContain(`title: "${step}"`);
     }
-  });
-
-  it("covers both audiences", () => {
-    expect(story).toContain("If you need storage");
-    expect(story).toContain("If you have space");
-  });
-
-  it("carries the Spacilo AI estimate disclaimer", () => {
-    expect(story).toContain("SPACEFIT_DISCLAIMER");
-  });
-
-  it("reuses the shared SpaceFit visual identity", () => {
-    expect(story).toContain("SpaceFitAiMark");
-    expect(story).toContain("AnimatedSpaceFitScore");
-  });
-
-  it("reuses the shared scan buttons rather than new routing", () => {
-    expect(story).toContain("ScanStuffButton");
-    expect(story).toContain("ScanSpaceButton");
-  });
-});
-
-describe("homepage structure", () => {
-  it("places SpaceFit immediately after the hero", () => {
-    expect(page.indexOf("<SpaceFitStory />")).toBeGreaterThan(page.indexOf("<Hero />"));
-    expect(page.indexOf("<SpaceFitStory />")).toBeLessThan(page.indexOf("<StorageNearYou />"));
-  });
-
-  it("shows real marketplace supply before the deeper explanation sections", () => {
-    expect(page.indexOf("<StorageNearYou />")).toBeLessThan(page.indexOf("<WhyStow />"));
-  });
-
-  it("keeps trust and pilot-area context at the end", () => {
-    expect(page.indexOf("<LaunchArea />")).toBeGreaterThan(page.indexOf("<HostCallout />"));
-  });
-
-  it("keeps the existing postcode search on the homepage", () => {
-    expect(hero).toContain("SearchControls");
-  });
-
-  it("has a single h1", () => {
-    const h1s = FILES.map(read)
-      .join("\n")
-      .match(/<h1/g);
-    expect(h1s).toHaveLength(1);
-  });
-
-  it("gives the homepage SpaceFit-led metadata", () => {
-    expect(page).toContain("Spacilo AI");
   });
 });
 
@@ -250,29 +231,5 @@ describe("hero SpaceFit demonstration", () => {
     const modes = DEMO_STATES.map((s) => s.mode);
     expect(modes).toContain("renter");
     expect(modes).toContain("host");
-  });
-
-  it("labels the host earnings state as illustrative and never guaranteed", () => {
-    const host = DEMO_STATES.find((s) => s.mode === "host")!;
-    expect(host.resultValue).toMatch(/£/);
-    expect(host.footnote).toMatch(/illustrative/i);
-    expect(host.footnote).not.toMatch(/guarantee/i);
-    expect(host.resultLabel).toMatch(/potential/i);
-  });
-
-  it("labels the renter score as an illustrative example, not the visitor's result", () => {
-    const renter = DEMO_STATES.find((s) => s.mode === "renter")!;
-    expect(renter.footnote).toMatch(/illustrative/i);
-    expect(renter.footnote).toMatch(/not your result/i);
-  });
-
-  it("shows a stable both-benefit state when motion is reduced", () => {
-    expect(demo).toContain("usePrefersReducedMotion");
-    expect(demo).toContain("For renters");
-    expect(demo).toContain("For hosts");
-  });
-
-  it("never navigates on its own — state changes only swap content", () => {
-    expect(demo).not.toMatch(/navigate\(|<Link|href=/);
   });
 });

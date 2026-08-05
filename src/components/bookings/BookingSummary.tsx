@@ -9,6 +9,8 @@ import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import { formatPrice } from "@/lib/format";
 import { lifecycleMeta, lifecycleState } from "@/lib/bookings-lifecycle";
 import type { StorageRefundSummary } from "@/lib/payments/history";
+import { SnapshotPackPlan } from "@/components/spacefit/SnapshotPackPlan";
+
 import {
   bookingItems,
   bookingStatusMeta,

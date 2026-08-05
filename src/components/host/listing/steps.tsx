@@ -728,9 +728,20 @@ export function StepPrice({ form, patch }: StepProps) {
       ? ""
       : String(form.monthly_price_pence / 100);
 
+  // Guidance is derived from the host's own space, never from AI.
+  const dims = {
+    length_m: form.length_m ?? null,
+    width_m: form.width_m ?? null,
+    height_m: form.height_m ?? null,
+  };
+  const usableVolumeM3 = form.dimensions_unknown
+    ? null
+    : availableVolume(dims, form.storage_mode ?? null, form.host_available_percentage ?? null);
+
   return (
     <div>
       <StepHeading title="What would you like to earn?" description="You can change your price later." />
+
 
       <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
         <Field label="Monthly price" htmlFor="price" required>

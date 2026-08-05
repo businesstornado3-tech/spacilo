@@ -60,20 +60,17 @@ function EditSpacePage() {
 
       {state.kind === "ready" ? (
         <div className="mx-auto max-w-3xl">
-        <>
           <div className="mb-6">
-            <ListingQualityCard
-              space={{
-                ...state.space,
-                photo_paths: state.photos.map((photo) => photo.storage_path),
-              }}
+            <QualityPanel
+              spaceId={spaceId}
+              space={state.space}
+              photoPaths={state.photos.map((photo) => photo.storage_path)}
             />
           </div>
           <SpaceWizard space={state.space} initialPhotos={state.photos} />
-        </>
-
         </div>
       ) : null}
+
     </AppLayout>
   );
 }

@@ -136,7 +136,7 @@ export function StepSpace({ form, patch }: StepProps) {
 
 /* -------------------------------------------------- 2. Size and location */
 
-export function StepSize({ form, patch }: StepProps) {
+export function StepSize({ form, patch, spaceId }: StepProps) {
   const dims = {
     length_m: form.length_m ?? null,
     width_m: form.width_m ?? null,
@@ -207,16 +207,31 @@ export function StepSize({ form, patch }: StepProps) {
         These figures are estimates. Cubic volume alone doesn't confirm that a particular item will fit.
       </p>
 
-      <div className="mt-5 flex items-center gap-3 rounded-xl border border-dashed border-border-strong bg-card p-4 opacity-70">
-        <Sparkles className="size-5 shrink-0 text-primary" aria-hidden="true" />
-        <div>
-          <p className="type-label">Scan my space with SpaceFit AI</p>
-          <p className="type-body-sm text-muted-foreground">Coming later.</p>
+      {spaceId ? (
+        <div className="mt-5">
+          <SpaceScanner
+            spaceId={spaceId}
+            onApplied={(values) =>
+              patch({
+                length_m: values.lengthM,
+                width_m: values.widthM,
+                height_m: values.heightM,
+                dimensions_unknown: values.lengthM === null || values.widthM === null || values.heightM === null,
+              })
+            }
+          />
         </div>
-        <Badge variant="neutral" className="ml-auto">
-          Soon
-        </Badge>
-      </div>
+      ) : (
+        <div className="mt-5 flex items-center gap-3 rounded-xl border border-dashed border-border-strong bg-card p-4">
+          <Sparkles className="size-5 shrink-0 text-primary" aria-hidden="true" />
+          <div>
+            <p className="type-label">Scan my space with SpaceFit AI</p>
+            <p className="type-body-sm text-muted-foreground">
+              Available as soon as your draft listing is saved.
+            </p>
+          </div>
+        </div>
+      )}
 
       <Fieldset legend="Where is your space?" hint="Your exact address won't be shown publicly.">
         <div className="space-y-4">

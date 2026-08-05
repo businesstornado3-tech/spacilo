@@ -92,7 +92,7 @@ export function InventoryPhotoManager({
   return (
     <div className="space-y-4">
       {/* Live Scan sits in FRONT of this existing upload pipeline. */}
-      <LiveScanner mode="renter" onCapture={(file) => handleFiles([file])} />
+      <LiveScanner mode="renter" onCapture={(file: File) => handleFiles([file])} />
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => cameraRef.current?.click()} disabled={busy}>

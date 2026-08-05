@@ -405,6 +405,194 @@ export type Database = {
           },
         ]
       }
+      booking_review_moderation_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          from_status:
+            | Database["public"]["Enums"]["review_moderation_status"]
+            | null
+          id: string
+          reason: string | null
+          review_id: string
+          to_status:
+            | Database["public"]["Enums"]["review_moderation_status"]
+            | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["review_moderation_status"]
+            | null
+          id?: string
+          reason?: string | null
+          review_id: string
+          to_status?:
+            | Database["public"]["Enums"]["review_moderation_status"]
+            | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["review_moderation_status"]
+            | null
+          id?: string
+          reason?: string | null
+          review_id?: string
+          to_status?:
+            | Database["public"]["Enums"]["review_moderation_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_review_moderation_events_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "booking_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_review_reports: {
+        Row: {
+          booking_id: string
+          created_at: string
+          details: string | null
+          id: string
+          reason: Database["public"]["Enums"]["review_report_reason"]
+          reported_by: string
+          resolved_at: string | null
+          review_id: string
+          status: Database["public"]["Enums"]["review_report_status"]
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: Database["public"]["Enums"]["review_report_reason"]
+          reported_by: string
+          resolved_at?: string | null
+          review_id: string
+          status?: Database["public"]["Enums"]["review_report_status"]
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: Database["public"]["Enums"]["review_report_reason"]
+          reported_by?: string
+          resolved_at?: string | null
+          review_id?: string
+          status?: Database["public"]["Enums"]["review_report_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_review_reports_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_review_reports_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "booking_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_reviews: {
+        Row: {
+          booking_id: string
+          created_at: string
+          id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_reason: string | null
+          moderation_status: Database["public"]["Enums"]["review_moderation_status"]
+          published_at: string | null
+          rating: number
+          rating_access: number | null
+          rating_accuracy: number | null
+          rating_communication: number | null
+          rating_condition: number | null
+          review_text: string | null
+          review_window_closes_at: string
+          reviewee_id: string
+          reviewer_id: string
+          reviewer_role: string
+          space_id: string
+          submitted_at: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          moderation_status?: Database["public"]["Enums"]["review_moderation_status"]
+          published_at?: string | null
+          rating: number
+          rating_access?: number | null
+          rating_accuracy?: number | null
+          rating_communication?: number | null
+          rating_condition?: number | null
+          review_text?: string | null
+          review_window_closes_at: string
+          reviewee_id: string
+          reviewer_id: string
+          reviewer_role: string
+          space_id: string
+          submitted_at?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_reason?: string | null
+          moderation_status?: Database["public"]["Enums"]["review_moderation_status"]
+          published_at?: string | null
+          rating?: number
+          rating_access?: number | null
+          rating_accuracy?: number | null
+          rating_communication?: number | null
+          rating_condition?: number | null
+          review_text?: string | null
+          review_window_closes_at?: string
+          reviewee_id?: string
+          reviewer_id?: string
+          reviewer_role?: string
+          space_id?: string
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_reviews_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_support_case_events: {
         Row: {
           actor_role: string
@@ -2917,6 +3105,11 @@ export type Database = {
           town: string
         }[]
       }
+      get_booking_review_state: {
+        Args: { p_booking_id: string }
+        Returns: Json
+      }
+      get_host_reputation: { Args: { p_host_id: string }; Returns: Json }
       get_or_create_booking_conversation: {
         Args: { p_booking_id: string }
         Returns: {
@@ -3023,6 +3216,22 @@ export type Database = {
           vehicle_access_close: boolean
         }[]
       }
+      get_renter_reputation: { Args: { p_renter_id: string }; Returns: Json }
+      get_space_review_summary: { Args: { p_space_id: string }; Returns: Json }
+      get_space_reviews: {
+        Args: { p_limit?: number; p_offset?: number; p_space_id: string }
+        Returns: {
+          author_name: string
+          id: string
+          rating: number
+          rating_access: number
+          rating_accuracy: number
+          rating_communication: number
+          rating_condition: number
+          review_text: string
+          submitted_at: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3044,6 +3253,7 @@ export type Database = {
         Returns: boolean
       }
       is_support_staff: { Args: { _user_id?: string }; Returns: boolean }
+      list_reported_reviews: { Args: { p_limit?: number }; Returns: Json }
       mark_host_earnings_eligible: { Args: never; Returns: number }
       mark_refund_submitted: {
         Args: {
@@ -3052,6 +3262,37 @@ export type Database = {
           p_stripe_refund_id: string
         }
         Returns: Json
+      }
+      moderate_booking_review: {
+        Args: { p_action: string; p_reason?: string; p_review_id: string }
+        Returns: {
+          booking_id: string
+          created_at: string
+          id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_reason: string | null
+          moderation_status: Database["public"]["Enums"]["review_moderation_status"]
+          published_at: string | null
+          rating: number
+          rating_access: number | null
+          rating_accuracy: number | null
+          rating_communication: number | null
+          rating_condition: number | null
+          review_text: string | null
+          review_window_closes_at: string
+          reviewee_id: string
+          reviewer_id: string
+          reviewer_role: string
+          space_id: string
+          submitted_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       open_support_case: {
         Args: {
@@ -3138,6 +3379,30 @@ export type Database = {
           p_status: string
         }
         Returns: Json
+      }
+      report_booking_review: {
+        Args: {
+          p_details?: string
+          p_reason: Database["public"]["Enums"]["review_report_reason"]
+          p_review_id: string
+        }
+        Returns: {
+          booking_id: string
+          created_at: string
+          details: string | null
+          id: string
+          reason: Database["public"]["Enums"]["review_report_reason"]
+          reported_by: string
+          resolved_at: string | null
+          review_id: string
+          status: Database["public"]["Enums"]["review_report_status"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_review_reports"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       request_booking_extension: {
         Args: { p_booking_id: string; p_new_end_date: string; p_note?: string }
@@ -3350,6 +3615,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      review_publication_ready: {
+        Args: {
+          _booking_id: string
+          _reviewer_id: string
+          _window_closes_at: string
+        }
+        Returns: boolean
+      }
       search_published_spaces: {
         Args: {
           limit_count?: number
@@ -3438,6 +3711,7 @@ export type Database = {
         Args: { p_earning_id: string }
         Returns: Database["public"]["Enums"]["host_earning_status"]
       }
+      stow_review_window_days: { Args: never; Returns: number }
       stow_service_fee_pence: {
         Args: {
           p_minimum_pence?: number
@@ -3455,6 +3729,45 @@ export type Database = {
           p_weekly: number
         }
         Returns: number
+      }
+      submit_booking_review: {
+        Args: {
+          p_access?: number
+          p_accuracy?: number
+          p_booking_id: string
+          p_communication?: number
+          p_condition?: number
+          p_rating: number
+          p_review_text?: string
+        }
+        Returns: {
+          booking_id: string
+          created_at: string
+          id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_reason: string | null
+          moderation_status: Database["public"]["Enums"]["review_moderation_status"]
+          published_at: string | null
+          rating: number
+          rating_access: number | null
+          rating_accuracy: number | null
+          rating_communication: number | null
+          rating_condition: number | null
+          review_text: string | null
+          review_window_closes_at: string
+          reviewee_id: string
+          reviewer_id: string
+          reviewer_role: string
+          space_id: string
+          submitted_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       support_add_note: {
         Args: { p_case_id: string; p_note: string }
@@ -3760,6 +4073,15 @@ export type Database = {
         | "stripe_dispute"
         | "system"
       refund_status: "pending" | "succeeded" | "failed" | "cancelled"
+      review_moderation_status: "visible" | "under_review" | "hidden"
+      review_report_reason:
+        | "personal_information"
+        | "abusive"
+        | "discriminatory"
+        | "unrelated"
+        | "spam"
+        | "other"
+      review_report_status: "open" | "actioned" | "dismissed"
       space_access_frequency:
         | "occasional"
         | "monthly"
@@ -4078,6 +4400,16 @@ export const Constants = {
       ],
       refund_initiator: ["renter", "host", "admin", "stripe_dispute", "system"],
       refund_status: ["pending", "succeeded", "failed", "cancelled"],
+      review_moderation_status: ["visible", "under_review", "hidden"],
+      review_report_reason: [
+        "personal_information",
+        "abusive",
+        "discriminatory",
+        "unrelated",
+        "spam",
+        "other",
+      ],
+      review_report_status: ["open", "actioned", "dismissed"],
       space_access_frequency: [
         "occasional",
         "monthly",

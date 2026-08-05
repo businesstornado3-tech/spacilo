@@ -5,6 +5,7 @@
  * new account's own records. Claiming is best-effort by design: a failure must
  * never block someone from getting into their account.
  */
+import { track } from "@/lib/analytics/tracker";
 import * as React from "react";
 import { useServerFn } from "@tanstack/react-start";
 
@@ -35,6 +36,7 @@ export function useGuestClaim() {
       const response = await claim({ data: { token: ref.token } });
       clearGuestRef();
       if (!response.ok) return null;
+      track("guest_scan_claimed", { props: { kind: response.result.kind } });
       if (response.result.kind === "host") {
         storeClaimedProposal(response.result.proposal);
         return GUEST_CLAIM_DESTINATION.host;

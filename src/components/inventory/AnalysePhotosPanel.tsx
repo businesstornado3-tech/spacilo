@@ -1,4 +1,5 @@
 import * as React from "react";
+import { track } from "@/lib/analytics/tracker";
 import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ export function AnalysePhotosPanel({
 
   const start = async () => {
     setFailure(null);
+    track("spacefit_stuff_started", { props: { photo_count: selectable.length } });
     const result = await analyse.mutateAsync(selectable.map((photo) => photo.id));
     if (!result.ok) {
       setFailure(result.message ?? VISION_ERROR_MESSAGES.unknown);
@@ -44,6 +46,9 @@ export function AnalysePhotosPanel({
       );
       return;
     }
+    track("spacefit_stuff_completed", {
+      props: { detection_count: result.detectionCount ?? 0 },
+    });
     onReviewReady();
   };
 

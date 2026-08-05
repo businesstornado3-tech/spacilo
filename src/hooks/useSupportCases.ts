@@ -17,6 +17,14 @@ import {
   uploadCaseEvidence,
   type CaseQueueFilters,
 } from "@/lib/support-cases-api";
+import type {
+  SupportAssignInput,
+  SupportNoteInput,
+  SupportRefundInput,
+  SupportResolutionInput,
+  SupportStatusInput,
+  SupportUpdateInput,
+} from "@/lib/support.functions";
 import {
   supportAddNote,
   supportAssignCase,
@@ -155,7 +163,7 @@ export function useSupportSetStatus(caseId: string) {
   const call = useServerFn(supportSetStatus);
   const refresh = useCaseRefresh(caseId);
   return useMutation({
-    mutationFn: (data: Parameters<typeof call>[0]["data"]) => call({ data }),
+    mutationFn: (data: SupportStatusInput) => call({ data }),
     onSuccess: refresh,
   });
 }
@@ -164,7 +172,7 @@ export function useSupportPostUpdate(caseId: string) {
   const call = useServerFn(supportPostUpdate);
   const refresh = useCaseRefresh(caseId);
   return useMutation({
-    mutationFn: (data: Parameters<typeof call>[0]["data"]) => call({ data }),
+    mutationFn: (data: SupportUpdateInput) => call({ data }),
     onSuccess: refresh,
   });
 }
@@ -173,7 +181,7 @@ export function useSupportAddNote(caseId: string) {
   const call = useServerFn(supportAddNote);
   const refresh = useCaseRefresh(caseId);
   return useMutation({
-    mutationFn: (data: Parameters<typeof call>[0]["data"]) => call({ data }),
+    mutationFn: (data: SupportNoteInput) => call({ data }),
     onSuccess: refresh,
   });
 }
@@ -182,7 +190,7 @@ export function useSupportAssignCase(caseId: string) {
   const call = useServerFn(supportAssignCase);
   const refresh = useCaseRefresh(caseId);
   return useMutation({
-    mutationFn: (data: Parameters<typeof call>[0]["data"]) => call({ data }),
+    mutationFn: (data: SupportAssignInput) => call({ data }),
     onSuccess: refresh,
   });
 }
@@ -191,7 +199,7 @@ export function useSupportRecordResolution(caseId: string) {
   const call = useServerFn(supportRecordResolution);
   const refresh = useCaseRefresh(caseId);
   return useMutation({
-    mutationFn: (data: Parameters<typeof call>[0]["data"]) => call({ data }),
+    mutationFn: (data: SupportResolutionInput) => call({ data }),
     onSuccess: refresh,
   });
 }
@@ -200,7 +208,7 @@ export function useSupportResolveWithRefund(caseId: string) {
   const call = useServerFn(supportResolveWithRefund);
   const refresh = useCaseRefresh(caseId);
   return useMutation({
-    mutationFn: (data: Parameters<typeof call>[0]["data"]) => call({ data }),
+    mutationFn: (data: SupportRefundInput) => call({ data }),
     onSuccess: refresh,
   });
 }

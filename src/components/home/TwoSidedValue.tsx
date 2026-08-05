@@ -10,6 +10,7 @@ import { brand } from "@/config/brand";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/common/Reveal";
 import { HostEntryButton } from "@/components/home/HostEntryButton";
+import { ScanSpaceButton, ScanStuffButton } from "@/components/home/SpaceFitEntry";
 
 const renterPoints = [
   "Only pay for the space you need",
@@ -54,12 +55,15 @@ export function TwoSidedValue() {
                 </li>
               ))}
             </ul>
-            <Button asChild size="lg" className="mt-6 self-start">
-              <Link to="/search" search={{ location: "", radius: 5, sort: "recommended" }}>
-                Find my space
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
-            </Button>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Button asChild size="lg">
+                <Link to="/search" search={{ location: "", radius: 5, sort: "recommended" }}>
+                  Find my space
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </Link>
+              </Button>
+              <ScanStuffButton from="homepage_two_sided" block={false} />
+            </div>
           </article>
         </Reveal>
 
@@ -84,8 +88,9 @@ export function TwoSidedValue() {
                 </li>
               ))}
             </ul>
-            <div className="mt-6 self-start">
+            <div className="mt-6 flex flex-wrap items-center gap-3">
               <HostEntryButton label="Start earning" from="homepage_two_sided" />
+              <ScanSpaceButton from="homepage_two_sided" block={false} />
             </div>
           </article>
         </Reveal>

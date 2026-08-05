@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/common/Reveal";
 import { HostEntryButton } from "@/components/home/HostEntryButton";
+import { ScanSpaceButton } from "@/components/home/SpaceFitEntry";
 
 export function HostCallout() {
   return (
@@ -21,6 +22,7 @@ export function HostCallout() {
             <Link to="/how-it-works">See how hosting works</Link>
           </Button>
           <HostEntryButton label="Start earning" from="homepage_host_callout" />
+          <ScanSpaceButton from="homepage_host_callout" block={false} />
         </div>
       </Reveal>
     </section>

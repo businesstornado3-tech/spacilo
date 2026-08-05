@@ -1,57 +1,66 @@
+import * as React from "react";
+
 import { brand } from "@/config/brand";
 import { cn } from "@/lib/utils";
 
 /**
- * The approved Spacilo symbol.
+ * The approved Spacilo symbol — production SVG of the brand-board master mark.
  *
- * One compact geometric mark that carries both halves of the proposition:
- *  - the hexagon is the SPACE / ROOM — a contained, protected volume,
- *  - the S inside is the Spacilo initial drawn as an open route through it,
- *  - the three rising bars at the base read as VALUE / INCOME.
+ * Geometry traced from the approved reference:
+ *  - a pointy-top hexagon drawn as a heavy open ring (the SPACE / room),
+ *  - the ring breaks with a step at mid-right and mid-left and crosses the
+ *    centre on a shallow diagonal, so the single continuous arm reads as an S,
+ *  - a centred value token — a coin pierced by a vertical stroke — knocked out
+ *    of the arm exactly as the reference knocks its currency motif out.
  *
- * The hexagon takes `currentColor`, so the mark inherits any semantic token.
- * Everything inside is drawn in `innerClassName` (the knock-out colour),
- * which defaults to the primary foreground token.
+ * The literal dollar denomination of the reference is abstracted into a
+ * currency-neutral value token so the identity works internationally.
+ *
+ * The whole mark is drawn in `currentColor`, so it inherits any semantic
+ * token: emerald on light, reversed on dark, single-ink in monochrome.
  */
-export function SpaciloSymbol({
-  className,
-  innerClassName = "fill-[var(--color-primary-foreground)] stroke-[var(--color-primary-foreground)]",
-}: {
-  className?: string;
-  innerClassName?: string;
-}) {
+export function SpaciloSymbol({ className }: { className?: string }) {
+  const maskId = React.useId();
+
   return (
     <svg
-      viewBox="0 0 32 32"
+      viewBox="0 0 64 64"
       fill="none"
       aria-hidden="true"
       className={cn("size-8", className)}
     >
-      {/* SPACE — the contained hexagonal volume */}
-      <path
-        d="M16 2.2 27.9 9v14L16 29.8 4.1 23V9Z"
-        fill="currentColor"
+      <defs>
+        {/* Knock the value token out of the hexagonal arm. */}
+        <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+          <rect x="0" y="0" width="64" height="64" fill="white" />
+          <g stroke="black" fill="none" strokeLinecap="round">
+            <path d="M32 19V45" strokeWidth="11" />
+            <circle cx="32" cy="32" r="7.2" strokeWidth="8.5" />
+          </g>
+        </mask>
+      </defs>
+
+      {/* SPACE — the open hexagonal ring stepped and crossed into an S */}
+      <g
+        mask={`url(#${maskId})`}
         stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinejoin="round"
-      />
-      {/* The Spacilo S, drawn as an open path through the space */}
-      <path
-        d="M20.4 11.9c-1-1.3-2.5-2-4.4-2-2.6 0-4.3 1.2-4.3 3 0 3.9 8.7 1.8 8.7 5.9 0 1.9-1.8 3.1-4.4 3.1-1.9 0-3.4-.6-4.4-1.9"
-        className={innerClassName}
-        fill="none"
-        strokeWidth="2.3"
+        strokeWidth="5.4"
         strokeLinecap="round"
-      />
-      {/* VALUE — quiet rising bars at the base */}
-      <g className={innerClassName} stroke="none">
-        <rect x="11.3" y="24.1" width="2.2" height="2.2" rx="1.1" opacity="0.5" />
-        <rect x="14.9" y="23" width="2.2" height="3.3" rx="1.1" opacity="0.75" />
-        <rect x="18.5" y="21.6" width="2.2" height="4.7" rx="1.1" />
+        strokeLinejoin="round"
+        fill="none"
+      >
+        <path d="M58 22.5V17.5L32 3.2 6 17.5v16.9l52-4v16.1L32 60.8 6 46.5v-4.2" />
+      </g>
+
+      {/* VALUE — a currency-neutral token: a coin pierced by a value stroke */}
+      <g stroke="currentColor" strokeLinecap="round" fill="none">
+        <path d="M32 21.5V42.5" strokeWidth="3.6" />
+        <circle cx="32" cy="32" r="7.2" strokeWidth="4" />
       </g>
     </svg>
   );
 }
+
 
 /** Symbol + wordmark lock-up. */
 export function SpaciloLockup({

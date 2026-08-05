@@ -11,6 +11,8 @@ import { Camera, ImagePlus, Lock, Trash2 } from "lucide-react";
 import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/ui/button";
 import { LiveScanner } from "@/components/spacefit/live/LiveScanner";
+import { HostSpaceCapture } from "@/components/spacefit/live/HostSpaceCapture";
+import type { BoundaryMeasurement } from "@/lib/livescan/boundary-scale";
 import { SpaceFitAiMark, SpaceFitScanning } from "@/components/trust/SpaceFitAI";
 import {
   GUEST_ALLOWED_MIME_TYPES,

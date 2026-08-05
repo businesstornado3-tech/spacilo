@@ -33,10 +33,10 @@ export function LaunchArea() {
             <h3 className="type-h3 text-foreground">Be one of the first.</h3>
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg" block>
-                <Link to="/find-storage">I need storage</Link>
+                <Link to="/find-storage">Find space near me</Link>
               </Button>
               <Button asChild size="lg" variant="secondary" block>
-                <Link to="/list-space">I have space</Link>
+                <Link to="/list-space">Put my space to work</Link>
               </Button>
             </div>
           </div>

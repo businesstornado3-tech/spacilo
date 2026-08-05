@@ -11,6 +11,14 @@
  * It performs NO network calls of any kind. Captured images are handed back to
  * the caller, which feeds them to the existing secure server pipelines.
  *
+ * CAMERA LIFECYCLE CONTRACT: there is exactly ONE activation path
+ * (`activateCamera`). Initial start and camera switching go through it, so the
+ * rear camera can never take a weaker route than the switch button. A resolved
+ * getUserMedia() is never treated as a working camera: the stream is attached
+ * to the stable <video> element and a genuine first frame must arrive before
+ * the camera is called ready. Inference and capture readiness start only after
+ * that point, so a black viewport can never be labelled "Not ready".
+ *
  * PERFORMANCE CONTRACT: the camera preview outranks every AI effect. Inference
  * runs on a small downscaled tile, never on the full preview frame; only one
  * pass is ever in flight; and the governor steps the experience down to
@@ -18,7 +26,12 @@
  */
 import * as React from "react";
 
-import { CameraController, hasMultipleCameras, type MediaDevicesLike } from "@/lib/livescan/camera";
+import {
+  CameraController,
+  hasMultipleCameras,
+  type CameraFacing,
+  type MediaDevicesLike,
+} from "@/lib/livescan/camera";
 import { captureFrame } from "@/lib/livescan/capture";
 import {
   detectBrowserLiveScanCapability,
@@ -35,7 +48,12 @@ import {
 } from "@/lib/livescan/performance";
 import { InferenceScheduler } from "@/lib/livescan/scheduler";
 import { DetectionStabiliser } from "@/lib/livescan/stabiliser";
+import {
+  attachStreamAndAwaitFirstFrame,
+  type VideoElementLike,
+} from "@/lib/livescan/video-ready";
 import type {
+  CameraLifecycleState,
   LiveDetector,
   LiveScanErrorCode,
   LiveScanMode,
@@ -53,6 +71,12 @@ const IDLE_GUIDANCE: LiveGuidance = {
 /** Cheap quality-only tile used in reduced mode and before the model loads. */
 const QUALITY_EDGE = 128;
 
+/** How long we wait for a genuine first frame before recovering. */
+const FIRST_FRAME_TIMEOUT_MS = 4000;
+
+/** The rear camera gets exactly one simplified retry. Bounded, never a loop. */
+const MAX_ACTIVATION_ATTEMPTS = 2;
+
 export interface UseLiveScanOptions {
   mode: LiveScanMode;
   /** Called with the single captured frame. Owns all server interaction. */
@@ -63,10 +87,16 @@ export interface UseLiveScanOptions {
   detectorLoader?: DetectorLoader;
   /** Injected in tests; lets a caller pin the starting performance mode. */
   initialPerformanceMode?: LivePerformanceMode;
+  /** Injected in tests to keep first-frame waits short. */
+  firstFrameTimeoutMs?: number;
 }
 
 export interface LiveScanState {
   status: LiveScanStatus;
+  /** Camera lifecycle, deliberately separate from capture readiness. */
+  cameraState: CameraLifecycleState;
+  /** True only once a real frame has been painted by the video element. */
+  cameraReady: boolean;
   capability: LiveScanCapability;
   error: LiveScanErrorCode | null;
   detections: StableDetection[];
@@ -82,6 +112,8 @@ export interface LiveScanState {
   start: () => Promise<void>;
   stop: () => void;
   switchCamera: () => Promise<void>;
+  /** Re-runs the same unified activation for the current facing. */
+  retry: () => Promise<void>;
   capture: () => Promise<void>;
 }
 
@@ -115,6 +147,7 @@ export function useLiveScan(options: UseLiveScanOptions): LiveScanState {
     capability: injected,
     detectorLoader,
     initialPerformanceMode = "full",
+    firstFrameTimeoutMs = FIRST_FRAME_TIMEOUT_MS,
   } = options;
 
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
@@ -127,6 +160,7 @@ export function useLiveScan(options: UseLiveScanOptions): LiveScanState {
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const workCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const activeRef = React.useRef(false);
+  const facingRef = React.useRef<CameraFacing>("environment");
   const detectionsRef = React.useRef<StableDetection[]>([]);
   const guidanceRef = React.useRef<LiveGuidance>(IDLE_GUIDANCE);
   const frameSizeRef = React.useRef({ width: 0, height: 0 });
@@ -135,6 +169,7 @@ export function useLiveScan(options: UseLiveScanOptions): LiveScanState {
     () => injected ?? detectBrowserLiveScanCapability(),
   );
   const [status, setStatus] = React.useState<LiveScanStatus>("idle");
+  const [cameraState, setCameraState] = React.useState<CameraLifecycleState>("idle");
   const [error, setError] = React.useState<LiveScanErrorCode | null>(null);
   const [detections, setDetections] = React.useState<StableDetection[]>([]);
   const [frameSize, setFrameSize] = React.useState({ width: 0, height: 0 });
@@ -177,11 +212,13 @@ export function useLiveScan(options: UseLiveScanOptions): LiveScanState {
     detectionsRef.current = [];
     guidanceRef.current = IDLE_GUIDANCE;
     frameSizeRef.current = { width: 0, height: 0 };
+    facingRef.current = "environment";
     setDetections([]);
     setFrameSize({ width: 0, height: 0 });
     setGuidance(IDLE_GUIDANCE);
     setLiveVisionActive(false);
     setPerformanceMode(initialPerformanceMode);
+    setCameraState("idle");
     setStatus("idle");
   }, [initialPerformanceMode, releaseDetector]);
 
@@ -291,39 +328,10 @@ export function useLiveScan(options: UseLiveScanOptions): LiveScanState {
     timerRef.current = setTimeout(tick, scheduler.intervalMs);
   }, [releaseDetector, runPass]);
 
-  const start = React.useCallback(async () => {
-    if (activeRef.current) return;
-    setError(null);
-    setStatus("starting");
-
+  /** Loads the detector, but never blocks the visible camera preview on it. */
+  const startVision = React.useCallback(async () => {
     const governor = governorRef.current;
-    governor.reset(initialPerformanceMode);
-    setPerformanceMode(governor.mode);
-
-    const controller = new CameraController({
-      mediaDevices: devices,
-      preview: PERFORMANCE_PROFILES[governor.mode].preview,
-    });
-    cameraRef.current = controller;
-    const result = await controller.start("environment");
-    if (!result.ok) {
-      cameraRef.current = null;
-      setError(result.code);
-      setStatus("error");
-      return;
-    }
-
-    activeRef.current = true;
-    if (videoRef.current) {
-      videoRef.current.srcObject = result.stream;
-      void videoRef.current.play?.().catch(() => undefined);
-    }
-    void hasMultipleCameras(devices).then((multiple) => {
-      if (activeRef.current) setCanSwitchCamera(multiple);
-    });
-
     if (!capability.liveVision || governor.mode !== "full") {
-      // Camera-only: still a real live viewport, just without local detection.
       if (!capability.liveVision) {
         governor.forceMode("reduced");
         setPerformanceMode(governor.mode);
@@ -334,6 +342,7 @@ export function useLiveScan(options: UseLiveScanOptions): LiveScanState {
       return;
     }
 
+    // Camera is already visible here; this only upgrades it with guidance.
     setStatus("preparing");
     try {
       detectorRef.current = await loadLiveDetector(detectorLoader);
@@ -352,25 +361,125 @@ export function useLiveScan(options: UseLiveScanOptions): LiveScanState {
     }
     setStatus("live");
     tick();
-  }, [
-    capability.liveVision,
-    detectorLoader,
-    devices,
-    initialPerformanceMode,
-    releaseDetector,
-    tick,
-  ]);
+  }, [capability.liveVision, detectorLoader, releaseDetector, tick]);
 
-  const switchCamera = React.useCallback(async () => {
-    const controller = cameraRef.current;
-    if (!controller) return;
-    const result = await controller.switchCamera();
-    if (!result.ok) {
-      setError(result.code);
+  /** Waits for the stable <video> element to exist after the first render. */
+  const waitForVideoElement = React.useCallback(async (): Promise<HTMLVideoElement | null> => {
+    for (let attempt = 0; attempt < 60; attempt += 1) {
+      if (videoRef.current) return videoRef.current;
+      await new Promise<void>((resolve) => setTimeout(resolve, 16));
+    }
+    return videoRef.current;
+  }, []);
+
+  /**
+   * THE single camera activation path. Initial start, switch camera and retry
+   * all call this, so no route can be weaker than another.
+   */
+  const activateCamera = React.useCallback(
+    async (facing: CameraFacing): Promise<boolean> => {
+      facingRef.current = facing;
+      activeRef.current = true;
+
+      // Live loop and overlays never survive a camera transition.
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = null;
+      stabiliserRef.current.reset();
+      samplerRef.current.reset();
+      schedulerRef.current.reset();
+      detectionsRef.current = [];
+      guidanceRef.current = IDLE_GUIDANCE;
+      setDetections([]);
+      setGuidance(IDLE_GUIDANCE);
+      setError(null);
+      setStatus("starting");
+      setCameraState("requesting_permission");
+
+      const video = await waitForVideoElement();
+      const controller = (cameraRef.current ??= new CameraController({
+        mediaDevices: devices,
+        preview: PERFORMANCE_PROFILES[governorRef.current.mode].preview,
+      }));
+
+      for (let attempt = 1; attempt <= MAX_ACTIVATION_ATTEMPTS; attempt += 1) {
+        setCameraState("opening_camera");
+        // start() stops any previous stream first: never two live streams.
+        const result = await controller.start(facing, { simple: attempt > 1 });
+        if (!result.ok) {
+          if (attempt === MAX_ACTIVATION_ATTEMPTS) {
+            setError(result.code);
+            setCameraState("failed");
+            setStatus("error");
+            return false;
+          }
+          continue;
+        }
+
+        if (!video) {
+          controller.stop();
+          setError("camera_unavailable");
+          setCameraState("failed");
+          setStatus("error");
+          return false;
+        }
+
+        setCameraState("waiting_for_first_frame");
+        const frame = await attachStreamAndAwaitFirstFrame(
+          video as unknown as VideoElementLike,
+          result.stream,
+          { timeoutMs: firstFrameTimeoutMs },
+        );
+        if (frame.ok) {
+          setCameraState("ready");
+          return true;
+        }
+
+        // Bounded recovery: release the dead stream, clear the element, retry
+        // the SAME (normally rear) camera with the simplest constraints.
+        controller.stop();
+        video.srcObject = null;
+      }
+
+      setError("camera_no_frame");
+      setCameraState("failed");
+      setStatus("error");
+      return false;
+    },
+    [devices, firstFrameTimeoutMs, waitForVideoElement],
+  );
+
+  const start = React.useCallback(async () => {
+    if (cameraRef.current?.active) return;
+    const governor = governorRef.current;
+    governor.reset(initialPerformanceMode);
+    setPerformanceMode(governor.mode);
+
+    const ok = await activateCamera("environment");
+    if (!ok) {
+      activeRef.current = false;
       return;
     }
-    if (videoRef.current) videoRef.current.srcObject = result.stream;
-  }, []);
+
+    void hasMultipleCameras(devices).then((multiple) => {
+      if (activeRef.current) setCanSwitchCamera(multiple);
+    });
+
+    // Camera first, AI second — always.
+    await startVision();
+  }, [activateCamera, devices, initialPerformanceMode, startVision]);
+
+  const switchCamera = React.useCallback(async () => {
+    const next: CameraFacing = facingRef.current === "environment" ? "user" : "environment";
+    const ok = await activateCamera(next);
+    if (!ok) return;
+    await startVision();
+  }, [activateCamera, startVision]);
+
+  const retry = React.useCallback(async () => {
+    const ok = await activateCamera(facingRef.current);
+    if (!ok) return;
+    await startVision();
+  }, [activateCamera, startVision]);
 
   const capture = React.useCallback(async () => {
     const video = videoRef.current;
@@ -403,6 +512,8 @@ export function useLiveScan(options: UseLiveScanOptions): LiveScanState {
 
   return {
     status,
+    cameraState,
+    cameraReady: cameraState === "ready",
     capability,
     error,
     detections,
@@ -416,6 +527,7 @@ export function useLiveScan(options: UseLiveScanOptions): LiveScanState {
     start,
     stop,
     switchCamera,
+    retry,
     capture,
   };
 }

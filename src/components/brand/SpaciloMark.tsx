@@ -31,12 +31,7 @@ export function SpaciloSymbol({ className }: { className?: string }) {
   const maskId = React.useId();
 
   return (
-    <svg
-      viewBox="0 0 64 64"
-      fill="none"
-      aria-hidden="true"
-      className={cn("size-8", className)}
-    >
+    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true" className={cn("size-8", className)}>
       <defs>
         {/* Knock the value symbol out of the hexagonal arms. */}
         <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
@@ -62,12 +57,7 @@ export function SpaciloSymbol({ className }: { className?: string }) {
       </g>
 
       {/* VALUE — the stylised $: earning from unused space */}
-      <g
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      >
+      <g stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" fill="none">
         <path d={DOLLAR_SPINE} strokeWidth="4.4" />
         <path d={DOLLAR_STEM} strokeWidth="3.4" />
       </g>
@@ -84,12 +74,7 @@ export function SpaciloSymbolCompact({ className }: { className?: string }) {
   const maskId = React.useId();
 
   return (
-    <svg
-      viewBox="0 0 64 64"
-      fill="none"
-      aria-hidden="true"
-      className={cn("size-8", className)}
-    >
+    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true" className={cn("size-8", className)}>
       <defs>
         <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
           <rect x="0" y="0" width="64" height="64" fill="white" />

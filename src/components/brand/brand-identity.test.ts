@@ -88,12 +88,10 @@ describe("favicon", () => {
     expect(favicon).toContain('d="M32 17.4V47.6"');
   });
 
-
   it("is referenced from the root route", () => {
     expect(read("src/routes/__root.tsx")).toContain("/favicon.svg");
   });
 });
-
 
 describe("customer-facing brand purity", () => {
   it("never shows SpaceFit in product copy", () => {

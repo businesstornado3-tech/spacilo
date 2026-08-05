@@ -172,7 +172,8 @@ describe("SpaceFit homepage entry points", () => {
   });
 
   it("tracks scan intent for both sides", () => {
-    expect(entry).toContain("get_spacefit_selected");
+    expect(entry).toContain('cta: "scan_stuff"');
+    expect(entry).toContain('cta: "scan_space"');
   });
 
   it("presents AI output as a reviewable estimate", () => {

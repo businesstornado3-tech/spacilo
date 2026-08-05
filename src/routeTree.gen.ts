@@ -23,6 +23,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated.host'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedRenterRouteImport } from './routes/_authenticated.renter'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
@@ -130,6 +131,12 @@ const AuthenticatedHostRoute = AuthenticatedHostRouteImport.update({
   path: '/host',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -361,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/trust': typeof TrustRoute
   '/host': typeof AuthenticatedHostRouteWithChildren
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/renter': typeof AuthenticatedRenterRouteWithChildren
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -412,6 +420,7 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
   '/trust': typeof TrustRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
@@ -464,6 +473,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/trust': typeof TrustRoute
   '/_authenticated/host': typeof AuthenticatedHostRouteWithChildren
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/renter': typeof AuthenticatedRenterRouteWithChildren
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -518,6 +528,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/trust'
     | '/host'
+    | '/notifications'
     | '/profile'
     | '/renter'
     | '/spaces/$spaceId'
@@ -569,6 +580,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/signup'
     | '/trust'
+    | '/notifications'
     | '/profile'
     | '/spaces/$spaceId'
     | '/host/bookings'
@@ -620,6 +632,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/trust'
     | '/_authenticated/host'
+    | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/renter'
     | '/spaces/$spaceId'
@@ -776,6 +789,13 @@ declare module '@tanstack/react-router' {
       path: '/host'
       fullPath: '/host'
       preLoaderRoute: typeof AuthenticatedHostRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/profile': {
@@ -1140,6 +1160,7 @@ const AuthenticatedRenterRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedHostRoute: typeof AuthenticatedHostRouteWithChildren
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRenterRoute: typeof AuthenticatedRenterRouteWithChildren
   AuthenticatedAdminSupportCaseIdRoute: typeof AuthenticatedAdminSupportCaseIdRoute
@@ -1150,6 +1171,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedHostRoute: AuthenticatedHostRouteWithChildren,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRenterRoute: AuthenticatedRenterRouteWithChildren,
   AuthenticatedAdminSupportCaseIdRoute: AuthenticatedAdminSupportCaseIdRoute,

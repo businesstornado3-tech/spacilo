@@ -95,16 +95,19 @@ describe("first-frame readiness", () => {
 
   it("uses requestVideoFrameCallback when the browser provides it", async () => {
     const video = new FakeVideo() as FakeVideo & VideoElementLike;
-    let fire: (() => void) | null = null;
-    (video as VideoElementLike).requestVideoFrameCallback = (callback) => {
+    let fire: null | (() => void) = null;
+    const setFire = (callback: () => void) => {
       fire = callback;
+    };
+    (video as VideoElementLike).requestVideoFrameCallback = (callback) => {
+      setFire(callback);
       return 1;
     };
     const pending = attachStreamAndAwaitFirstFrame(video, fakeStream(), { timeoutMs: 500 });
     video.videoWidth = 640;
     video.videoHeight = 480;
     video.readyState = 2;
-    fire?.();
+    (fire as null | (() => void))?.();
     await expect(pending).resolves.toEqual({ ok: true });
   });
 
@@ -144,14 +147,17 @@ describe("no duplicate media streams", () => {
     const makeStream = (id: string) =>
       ({ getTracks: () => [{ stop: () => stopped.push(id) }] }) as unknown as MediaStream;
     let index = 0;
-    const getUserMedia = vi.fn(async () => makeStream(`s${(index += 1)}`));
+    const getUserMedia = vi.fn(
+      async (_constraints: MediaStreamConstraints) => makeStream(`s${(index += 1)}`),
+    );
     const controller = new CameraController({ mediaDevices: { getUserMedia } });
 
     await controller.start("environment");
     await controller.start("environment", { simple: true });
     expect(stopped).toEqual(["s1"]);
     expect(getUserMedia).toHaveBeenCalledTimes(2);
-    expect((getUserMedia.mock.calls[1]![0].video as MediaTrackConstraints).width).toBeUndefined();
+    const retryConstraints = getUserMedia.mock.calls[1]?.[0] as MediaStreamConstraints;
+    expect((retryConstraints.video as MediaTrackConstraints).width).toBeUndefined();
 
     controller.stop();
     expect(stopped).toEqual(["s1", "s2"]);

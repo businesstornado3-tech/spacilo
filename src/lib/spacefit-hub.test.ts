@@ -24,7 +24,7 @@ function item(overrides: Partial<InventoryItem> = {}): InventoryItem {
     inventory_id: "inv-1",
     user_id: "user-1",
     catalogue_key: null,
-    label: "Cardboard box",
+    item_name: "Cardboard box",
     category: "boxes",
     quantity: 2,
     length_cm: 50,
@@ -34,7 +34,6 @@ function item(overrides: Partial<InventoryItem> = {}): InventoryItem {
     fragile: false,
     orientation_flexible: "yes",
     notes: null,
-    source: "manual",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     ...overrides,
@@ -69,7 +68,7 @@ describe("renterSpaceFitState", () => {
   });
 
   it("always recommends at least the raw volume of the belongings", () => {
-    const state = renterSpaceFitState([item(), item({ id: "item-2", label: "Sofa", quantity: 1 })]);
+    const state = renterSpaceFitState([item(), item({ id: "item-2", item_name: "Sofa", quantity: 1 })]);
     if (state.state !== "ready") throw new Error("expected ready");
     expect(state.requirementM3).toBeGreaterThanOrEqual(state.itemVolumeM3);
   });
@@ -142,7 +141,7 @@ describe("hostSpaceFitState", () => {
 
   it("gives pricing guidance from the shared deterministic engine", () => {
     const summary = summariseHostSpace(space());
-    expect(summary.price.monthlyPricePence).toBeGreaterThan(0);
+    expect(summary.price.suggestedMonthlyPence ?? 0).toBeGreaterThan(0);
     expect(summariseHostSpace(space())).toEqual(summary);
   });
 

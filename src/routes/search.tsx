@@ -10,6 +10,8 @@ import {
   type SearchUrlState,
 } from "@/lib/search-params";
 import type { StorageSearchParams } from "@/hooks/useStorageSearch";
+import { track } from "@/lib/analytics/tracker";
+import * as React from "react";
 
 const title = "Search storage near you — " + brand.name;
 const description =
@@ -33,6 +35,12 @@ export const Route = createFileRoute("/search")({
 function SearchPage() {
   const state = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
+
+  // Fires once per distinct location search — a calm proxy for "a search happened".
+  React.useEffect(() => {
+    if (state.location) track("storage_search_started", { has_location: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.location]);
 
   const params: StorageSearchParams = {
     location: state.location,

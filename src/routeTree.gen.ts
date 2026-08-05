@@ -18,6 +18,7 @@ import { Route as GetStartedRouteImport } from './routes/get-started'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ListSpaceRouteImport } from './routes/list-space'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SignupRouteImport } from './routes/signup'
@@ -31,6 +32,7 @@ import { Route as AuthenticatedSpacefitRouteImport } from './routes/_authenticat
 import { Route as SpacefitSpaceRouteImport } from './routes/spacefit.space'
 import { Route as SpacefitStuffRouteImport } from './routes/spacefit.stuff'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
+import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated.admin.dashboard'
 import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated.host.index'
 import { Route as AuthenticatedHostBookingsRouteImport } from './routes/_authenticated.host.bookings'
 import { Route as AuthenticatedHostEarningsRouteImport } from './routes/_authenticated.host.earnings'
@@ -113,6 +115,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -179,6 +186,12 @@ const SpacesSpaceIdRoute = SpacesSpaceIdRouteImport.update({
   path: '/spaces/$spaceId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminDashboardRoute =
+  AuthenticatedAdminDashboardRouteImport.update({
+    id: '/admin/dashboard',
+    path: '/admin/dashboard',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedHostIndexRoute = AuthenticatedHostIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -408,6 +421,7 @@ export interface FileRoutesByFullPath {
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
@@ -421,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
@@ -468,6 +483,7 @@ export interface FileRoutesByTo {
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
@@ -479,6 +495,7 @@ export interface FileRoutesByTo {
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
@@ -527,6 +544,7 @@ export interface FileRoutesById {
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
@@ -540,6 +558,7 @@ export interface FileRoutesById {
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/_authenticated/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/_authenticated/renter/matches': typeof AuthenticatedRenterMatchesRoute
@@ -589,6 +608,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/list-space'
     | '/login'
+    | '/privacy'
     | '/reset-password'
     | '/search'
     | '/signup'
@@ -602,6 +622,7 @@ export interface FileRouteTypes {
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
+    | '/admin/dashboard'
     | '/host/bookings'
     | '/host/earnings'
     | '/renter/matches'
@@ -649,6 +670,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/list-space'
     | '/login'
+    | '/privacy'
     | '/reset-password'
     | '/search'
     | '/signup'
@@ -660,6 +682,7 @@ export interface FileRouteTypes {
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
+    | '/admin/dashboard'
     | '/host/bookings'
     | '/host/earnings'
     | '/renter/matches'
@@ -707,6 +730,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/list-space'
     | '/login'
+    | '/privacy'
     | '/reset-password'
     | '/search'
     | '/signup'
@@ -720,6 +744,7 @@ export interface FileRouteTypes {
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
+    | '/_authenticated/admin/dashboard'
     | '/_authenticated/host/bookings'
     | '/_authenticated/host/earnings'
     | '/_authenticated/renter/matches'
@@ -769,6 +794,7 @@ export interface RootRouteChildren {
   HowItWorksRoute: typeof HowItWorksRoute
   ListSpaceRoute: typeof ListSpaceRoute
   LoginRoute: typeof LoginRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   SignupRoute: typeof SignupRoute
@@ -844,6 +870,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -936,6 +969,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/spaces/$spaceId'
       preLoaderRoute: typeof SpacesSpaceIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/dashboard': {
+      id: '/_authenticated/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/host/': {
       id: '/_authenticated/host/'
@@ -1309,6 +1349,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRenterRoute: typeof AuthenticatedRenterRouteWithChildren
   AuthenticatedSpacefitRoute: typeof AuthenticatedSpacefitRoute
+  AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
   AuthenticatedAdminSupportCaseIdRoute: typeof AuthenticatedAdminSupportCaseIdRoute
   AuthenticatedSupportCasesCaseIdRoute: typeof AuthenticatedSupportCasesCaseIdRoute
   AuthenticatedAdminPolicyIndexRoute: typeof AuthenticatedAdminPolicyIndexRoute
@@ -1322,6 +1363,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRenterRoute: AuthenticatedRenterRouteWithChildren,
   AuthenticatedSpacefitRoute: AuthenticatedSpacefitRoute,
+  AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
   AuthenticatedAdminSupportCaseIdRoute: AuthenticatedAdminSupportCaseIdRoute,
   AuthenticatedSupportCasesCaseIdRoute: AuthenticatedSupportCasesCaseIdRoute,
   AuthenticatedAdminPolicyIndexRoute: AuthenticatedAdminPolicyIndexRoute,
@@ -1343,6 +1385,7 @@ const rootRouteChildren: RootRouteChildren = {
   HowItWorksRoute: HowItWorksRoute,
   ListSpaceRoute: ListSpaceRoute,
   LoginRoute: LoginRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   SignupRoute: SignupRoute,
@@ -1357,13 +1400,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

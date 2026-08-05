@@ -19,6 +19,7 @@ export const Route = createFileRoute("/reset-password")({
   ssr: false,
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title },
       { name: "description", content: description },
       { property: "og:title", content: title },

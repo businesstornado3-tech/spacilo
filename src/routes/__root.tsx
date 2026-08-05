@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { brand } from "@/config/brand";
 import { AuthProvider } from "@/hooks/useAuth";
+import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 
 function NotFoundComponent() {
   return (
@@ -90,6 +91,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:title", content: `${brand.name} — ${brand.tagline}` },
       { property: "og:description", content: `Find affordable storage in garages, lofts and spare rooms near you, or earn from space you're not using. ${brand.ai} helps both sides see what actually fits.` },
       { name: "twitter:description", content: `Find affordable storage in garages, lofts and spare rooms near you, or earn from space you're not using. ${brand.ai} helps both sides see what actually fits.` },
+      { property: "og:image", content: "https://home-stash-link.lovable.app/og-image.png" },
+      { name: "twitter:image", content: "https://home-stash-link.lovable.app/og-image.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -100,6 +103,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap",
       },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "icon", href: "/favicon.ico", sizes: "any" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "canonical", href: "https://home-stash-link.lovable.app/" },
     ],
   }),
   shellComponent: RootShell,
@@ -136,6 +142,7 @@ function RootComponent() {
         </a>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
+        <AnalyticsTracker />
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>

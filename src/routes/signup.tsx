@@ -24,6 +24,7 @@ export const Route = createFileRoute("/signup")({
   }),
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex, nofollow" },
       { title },
       { name: "description", content: description },
       { property: "og:title", content: title },

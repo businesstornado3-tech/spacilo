@@ -1,0 +1,70 @@
+/**
+ * Single source of truth for which routes are search-indexable and which
+ * must never be indexed.
+ *
+ * PUBLIC_ROUTES: real, reachable, genuinely useful pages that get a
+ * canonical URL, a unique title/description, and are listed in the sitemap.
+ *
+ * PRIVATE_ROUTE_PREFIXES: authenticated/transactional areas. These get a
+ * `noindex, nofollow` robots meta tag via `privateRouteMeta()`. Robots
+ * directives are NOT a security control — every one of these routes must
+ * also be protected server-side by real authorization.
+ */
+
+export type PublicRouteEntry = {
+  /** Path as it appears in the URL, e.g. "/" or "/how-it-works". */
+  path: string;
+  /** Human label, used only for internal tooling/tests. */
+  label: string;
+};
+
+/** Every public, indexable, static route in the app. */
+export const PUBLIC_ROUTES: readonly PublicRouteEntry[] = [
+  { path: "/", label: "Homepage" },
+  { path: "/how-it-works", label: "How It Works" },
+  { path: "/trust", label: "Trust & Safety" },
+  { path: "/find-storage", label: "Find Storage" },
+  { path: "/search", label: "Search Results" },
+  { path: "/list-space", label: "List Your Space" },
+  { path: "/get-started", label: "Get Started" },
+  { path: "/storage-policy", label: "Storage Policy" },
+  { path: "/privacy", label: "Privacy & Data" },
+  { path: "/spacefit/stuff", label: "Scan My Stuff" },
+  { path: "/spacefit/space", label: "Scan My Space" },
+] as const;
+
+/**
+ * Dynamic public route pattern for individual published listings.
+ * Actual indexable URLs are generated per-listing in the sitemap builder.
+ */
+export const PUBLIC_LISTING_ROUTE_PREFIX = "/spaces/";
+
+/**
+ * Path prefixes that must never be indexed: authenticated dashboards,
+ * account/profile, messaging, booking/request workflows, private
+ * Spacilo AI results, admin, auth callbacks, and other transactional flows.
+ */
+export const PRIVATE_ROUTE_PREFIXES: readonly string[] = [
+  "/renter",
+  "/host",
+  "/admin",
+  "/profile",
+  "/notifications",
+  "/support",
+  "/_authenticated/spacefit", // authenticated Spacilo AI hub — distinct from the public /spacefit/stuff and /spacefit/space marketing demos
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/api",
+] as const;
+
+/** True if a given path is one of the always-public static routes. */
+export function isPublicStaticRoute(path: string): boolean {
+  return PUBLIC_ROUTES.some((r) => r.path === path);
+}
+
+/** True if a given path falls under a private/noindex prefix. */
+export function isPrivateRoute(path: string): boolean {
+  return PRIVATE_ROUTE_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+}

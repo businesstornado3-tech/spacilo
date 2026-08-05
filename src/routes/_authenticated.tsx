@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 import { supabase } from "@/integrations/supabase/client";
+import { privateRouteMeta } from "@/lib/seo/meta";
 
 /**
  * Gate for every signed-in area. Client-only because the session lives in
@@ -8,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
+  head: () => privateRouteMeta(),
   beforeLoad: async ({ location }) => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) {

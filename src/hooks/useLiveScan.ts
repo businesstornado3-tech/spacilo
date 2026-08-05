@@ -93,7 +93,7 @@ function sameDetections(a: StableDetection[], b: StableDetection[]): boolean {
     if (left.id !== right.id || left.confirmed !== right.confirmed) return false;
     for (let axis = 0; axis < 4; axis += 1) {
       // Sub-pixel jitter must not cost a React render.
-      if (Math.abs(left.bbox[axis] - right.bbox[axis]) > 1) return false;
+      if (Math.abs((left.bbox[axis] ?? 0) - (right.bbox[axis] ?? 0)) > 1) return false;
     }
   }
   return true;

@@ -867,6 +867,7 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           cancelled_by_role: string | null
+          compatibility_snapshot: Json | null
           completed_at: string | null
           confirmed_at: string | null
           created_at: string
@@ -886,9 +887,13 @@ export type Database = {
           minimum_stay_days_snapshot: number | null
           monthly_price_snapshot: number | null
           paid_at: string | null
+          policy_screening_snapshot: Json | null
+          policy_version_id_snapshot: string | null
+          policy_version_snapshot: string | null
           pricing_breakdown_snapshot: Json | null
           pricing_version_snapshot: string | null
           renter_collection_confirmed_at: string | null
+          renter_declaration_snapshot: Json | null
           renter_first_name_snapshot: string | null
           renter_handover_confirmed_at: string | null
           renter_id: string
@@ -900,6 +905,7 @@ export type Database = {
           space_area_snapshot: string | null
           space_id: string
           space_postcode_district_snapshot: string | null
+          space_suitability_snapshot: Json | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
           spacefit_algorithm_snapshot: string | null
@@ -920,6 +926,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           cancelled_by_role?: string | null
+          compatibility_snapshot?: Json | null
           completed_at?: string | null
           confirmed_at?: string | null
           created_at?: string
@@ -939,9 +946,13 @@ export type Database = {
           minimum_stay_days_snapshot?: number | null
           monthly_price_snapshot?: number | null
           paid_at?: string | null
+          policy_screening_snapshot?: Json | null
+          policy_version_id_snapshot?: string | null
+          policy_version_snapshot?: string | null
           pricing_breakdown_snapshot?: Json | null
           pricing_version_snapshot?: string | null
           renter_collection_confirmed_at?: string | null
+          renter_declaration_snapshot?: Json | null
           renter_first_name_snapshot?: string | null
           renter_handover_confirmed_at?: string | null
           renter_id: string
@@ -953,6 +964,7 @@ export type Database = {
           space_area_snapshot?: string | null
           space_id: string
           space_postcode_district_snapshot?: string | null
+          space_suitability_snapshot?: Json | null
           space_title_snapshot?: string | null
           space_type_snapshot?: string | null
           spacefit_algorithm_snapshot?: string | null
@@ -973,6 +985,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           cancelled_by_role?: string | null
+          compatibility_snapshot?: Json | null
           completed_at?: string | null
           confirmed_at?: string | null
           created_at?: string
@@ -992,9 +1005,13 @@ export type Database = {
           minimum_stay_days_snapshot?: number | null
           monthly_price_snapshot?: number | null
           paid_at?: string | null
+          policy_screening_snapshot?: Json | null
+          policy_version_id_snapshot?: string | null
+          policy_version_snapshot?: string | null
           pricing_breakdown_snapshot?: Json | null
           pricing_version_snapshot?: string | null
           renter_collection_confirmed_at?: string | null
+          renter_declaration_snapshot?: Json | null
           renter_first_name_snapshot?: string | null
           renter_handover_confirmed_at?: string | null
           renter_id?: string
@@ -1006,6 +1023,7 @@ export type Database = {
           space_area_snapshot?: string | null
           space_id?: string
           space_postcode_district_snapshot?: string | null
+          space_suitability_snapshot?: Json | null
           space_title_snapshot?: string | null
           space_type_snapshot?: string | null
           spacefit_algorithm_snapshot?: string | null
@@ -1701,6 +1719,10 @@ export type Database = {
           length_cm: number | null
           notes: string | null
           orientation_flexible: Database["public"]["Enums"]["item_tri_state"]
+          policy_category: string | null
+          policy_confirmed_at: string | null
+          policy_note: string | null
+          policy_provenance: string
           quantity: number
           size_source: Database["public"]["Enums"]["item_size_source"]
           source_photo_id: string | null
@@ -1727,6 +1749,10 @@ export type Database = {
           length_cm?: number | null
           notes?: string | null
           orientation_flexible?: Database["public"]["Enums"]["item_tri_state"]
+          policy_category?: string | null
+          policy_confirmed_at?: string | null
+          policy_note?: string | null
+          policy_provenance?: string
           quantity?: number
           size_source?: Database["public"]["Enums"]["item_size_source"]
           source_photo_id?: string | null
@@ -1753,6 +1779,10 @@ export type Database = {
           length_cm?: number | null
           notes?: string | null
           orientation_flexible?: Database["public"]["Enums"]["item_tri_state"]
+          policy_category?: string | null
+          policy_confirmed_at?: string | null
+          policy_note?: string | null
+          policy_provenance?: string
           quantity?: number
           size_source?: Database["public"]["Enums"]["item_size_source"]
           source_photo_id?: string | null
@@ -2014,6 +2044,71 @@ export type Database = {
           },
         ]
       }
+      policy_acceptances: {
+        Row: {
+          accepted_at: string
+          context: Json
+          id: string
+          policy_version_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          context?: Json
+          id?: string
+          policy_version_id: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          context?: Json
+          id?: string
+          policy_version_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_acceptances_policy_version_id_fkey"
+            columns: ["policy_version_id"]
+            isOneToOne: false
+            referencedRelation: "storage_policy_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_audit_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          detail: Json
+          event_type: string
+          id: string
+          subject_id: string | null
+          subject_type: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event_type: string
+          id?: string
+          subject_id?: string | null
+          subject_type: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          detail?: Json
+          event_type?: string
+          id?: string
+          subject_id?: string | null
+          subject_type?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -2103,6 +2198,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      space_ai_observations: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          host_id: string
+          id: string
+          observation: string
+          observation_key: string
+          resolved_at: string | null
+          source: string
+          space_id: string
+          verification_state: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          host_id: string
+          id?: string
+          observation: string
+          observation_key: string
+          resolved_at?: string | null
+          source?: string
+          space_id: string
+          verification_state?: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          host_id?: string
+          id?: string
+          observation?: string
+          observation_key?: string
+          resolved_at?: string | null
+          source?: string
+          space_id?: string
+          verification_state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "space_ai_observations_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       space_measurement_proposals: {
         Row: {
@@ -2324,6 +2466,66 @@ export type Database = {
           },
         ]
       }
+      space_suitability_profiles: {
+        Row: {
+          attributes: Json
+          created_at: string
+          declaration_accuracy: boolean
+          declaration_authority: boolean
+          declaration_compliance: boolean
+          declared_at: string | null
+          declared_policy_version_id: string | null
+          host_confirmed_at: string | null
+          host_id: string
+          host_notes: string | null
+          space_id: string
+          updated_at: string
+        }
+        Insert: {
+          attributes?: Json
+          created_at?: string
+          declaration_accuracy?: boolean
+          declaration_authority?: boolean
+          declaration_compliance?: boolean
+          declared_at?: string | null
+          declared_policy_version_id?: string | null
+          host_confirmed_at?: string | null
+          host_id: string
+          host_notes?: string | null
+          space_id: string
+          updated_at?: string
+        }
+        Update: {
+          attributes?: Json
+          created_at?: string
+          declaration_accuracy?: boolean
+          declaration_authority?: boolean
+          declaration_compliance?: boolean
+          declared_at?: string | null
+          declared_policy_version_id?: string | null
+          host_confirmed_at?: string | null
+          host_id?: string
+          host_notes?: string | null
+          space_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "space_suitability_profiles_declared_policy_version_id_fkey"
+            columns: ["declared_policy_version_id"]
+            isOneToOne: false
+            referencedRelation: "storage_policy_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "space_suitability_profiles_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: true
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spaces: {
         Row: {
           accepted_categories: string[]
@@ -2531,9 +2733,126 @@ export type Database = {
         }
         Relationships: []
       }
+      storage_policy_rules: {
+        Row: {
+          category: string
+          created_at: string
+          decision: Database["public"]["Enums"]["policy_decision"]
+          host_message: string | null
+          id: string
+          internal_reason_code: string
+          is_active: boolean
+          policy_version_id: string
+          renter_message: string
+          required_space_attributes: Json
+          requires_staff_review: boolean
+          requires_user_confirmation: boolean
+          rule_key: string
+          severity: number
+          sort_order: number
+          subcategory: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          decision: Database["public"]["Enums"]["policy_decision"]
+          host_message?: string | null
+          id?: string
+          internal_reason_code: string
+          is_active?: boolean
+          policy_version_id: string
+          renter_message: string
+          required_space_attributes?: Json
+          requires_staff_review?: boolean
+          requires_user_confirmation?: boolean
+          rule_key: string
+          severity?: number
+          sort_order?: number
+          subcategory?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          decision?: Database["public"]["Enums"]["policy_decision"]
+          host_message?: string | null
+          id?: string
+          internal_reason_code?: string
+          is_active?: boolean
+          policy_version_id?: string
+          renter_message?: string
+          required_space_attributes?: Json
+          requires_staff_review?: boolean
+          requires_user_confirmation?: boolean
+          rule_key?: string
+          severity?: number
+          sort_order?: number
+          subcategory?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storage_policy_rules_policy_version_id_fkey"
+            columns: ["policy_version_id"]
+            isOneToOne: false
+            referencedRelation: "storage_policy_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storage_policy_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_at: string | null
+          id: string
+          legal_review_required: boolean
+          published_at: string | null
+          retired_at: string | null
+          sections: Json
+          status: Database["public"]["Enums"]["policy_version_status"]
+          summary: string
+          title: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_at?: string | null
+          id?: string
+          legal_review_required?: boolean
+          published_at?: string | null
+          retired_at?: string | null
+          sections?: Json
+          status?: Database["public"]["Enums"]["policy_version_status"]
+          summary?: string
+          title: string
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_at?: string | null
+          id?: string
+          legal_review_required?: boolean
+          published_at?: string | null
+          retired_at?: string | null
+          sections?: Json
+          status?: Database["public"]["Enums"]["policy_version_status"]
+          summary?: string
+          title?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
       storage_requests: {
         Row: {
           booking_action_expires_at: string | null
+          compatibility_snapshot: Json | null
           created_at: string
           currency_snapshot: string
           daily_rate_snapshot: number | null
@@ -2551,8 +2870,12 @@ export type Database = {
           largest_item_snapshot: Json | null
           minimum_stay_days_snapshot: number | null
           monthly_price_snapshot: number | null
+          policy_screening_snapshot: Json | null
+          policy_version_id_snapshot: string | null
+          policy_version_snapshot: string | null
           pricing_breakdown_snapshot: Json | null
           pricing_version_snapshot: string | null
+          renter_declaration_snapshot: Json | null
           renter_first_name_snapshot: string | null
           renter_id: string
           renter_note: string | null
@@ -2565,6 +2888,7 @@ export type Database = {
           space_available_capacity_m3_snapshot: number | null
           space_id: string
           space_postcode_district_snapshot: string | null
+          space_suitability_snapshot: Json | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
           spacefit_algorithm_snapshot: string | null
@@ -2581,6 +2905,7 @@ export type Database = {
         }
         Insert: {
           booking_action_expires_at?: string | null
+          compatibility_snapshot?: Json | null
           created_at?: string
           currency_snapshot?: string
           daily_rate_snapshot?: number | null
@@ -2598,8 +2923,12 @@ export type Database = {
           largest_item_snapshot?: Json | null
           minimum_stay_days_snapshot?: number | null
           monthly_price_snapshot?: number | null
+          policy_screening_snapshot?: Json | null
+          policy_version_id_snapshot?: string | null
+          policy_version_snapshot?: string | null
           pricing_breakdown_snapshot?: Json | null
           pricing_version_snapshot?: string | null
+          renter_declaration_snapshot?: Json | null
           renter_first_name_snapshot?: string | null
           renter_id: string
           renter_note?: string | null
@@ -2612,6 +2941,7 @@ export type Database = {
           space_available_capacity_m3_snapshot?: number | null
           space_id: string
           space_postcode_district_snapshot?: string | null
+          space_suitability_snapshot?: Json | null
           space_title_snapshot?: string | null
           space_type_snapshot?: string | null
           spacefit_algorithm_snapshot?: string | null
@@ -2628,6 +2958,7 @@ export type Database = {
         }
         Update: {
           booking_action_expires_at?: string | null
+          compatibility_snapshot?: Json | null
           created_at?: string
           currency_snapshot?: string
           daily_rate_snapshot?: number | null
@@ -2645,8 +2976,12 @@ export type Database = {
           largest_item_snapshot?: Json | null
           minimum_stay_days_snapshot?: number | null
           monthly_price_snapshot?: number | null
+          policy_screening_snapshot?: Json | null
+          policy_version_id_snapshot?: string | null
+          policy_version_snapshot?: string | null
           pricing_breakdown_snapshot?: Json | null
           pricing_version_snapshot?: string | null
+          renter_declaration_snapshot?: Json | null
           renter_first_name_snapshot?: string | null
           renter_id?: string
           renter_note?: string | null
@@ -2659,6 +2994,7 @@ export type Database = {
           space_available_capacity_m3_snapshot?: number | null
           space_id?: string
           space_postcode_district_snapshot?: string | null
+          space_suitability_snapshot?: Json | null
           space_title_snapshot?: string | null
           space_type_snapshot?: string | null
           spacefit_algorithm_snapshot?: string | null
@@ -2906,6 +3242,7 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           cancelled_by_role: string | null
+          compatibility_snapshot: Json | null
           completed_at: string | null
           confirmed_at: string | null
           created_at: string
@@ -2925,9 +3262,13 @@ export type Database = {
           minimum_stay_days_snapshot: number | null
           monthly_price_snapshot: number | null
           paid_at: string | null
+          policy_screening_snapshot: Json | null
+          policy_version_id_snapshot: string | null
+          policy_version_snapshot: string | null
           pricing_breakdown_snapshot: Json | null
           pricing_version_snapshot: string | null
           renter_collection_confirmed_at: string | null
+          renter_declaration_snapshot: Json | null
           renter_first_name_snapshot: string | null
           renter_handover_confirmed_at: string | null
           renter_id: string
@@ -2939,6 +3280,7 @@ export type Database = {
           space_area_snapshot: string | null
           space_id: string
           space_postcode_district_snapshot: string | null
+          space_suitability_snapshot: Json | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
           spacefit_algorithm_snapshot: string | null
@@ -3163,6 +3505,7 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           cancelled_by_role: string | null
+          compatibility_snapshot: Json | null
           completed_at: string | null
           confirmed_at: string | null
           created_at: string
@@ -3182,9 +3525,13 @@ export type Database = {
           minimum_stay_days_snapshot: number | null
           monthly_price_snapshot: number | null
           paid_at: string | null
+          policy_screening_snapshot: Json | null
+          policy_version_id_snapshot: string | null
+          policy_version_snapshot: string | null
           pricing_breakdown_snapshot: Json | null
           pricing_version_snapshot: string | null
           renter_collection_confirmed_at: string | null
+          renter_declaration_snapshot: Json | null
           renter_first_name_snapshot: string | null
           renter_handover_confirmed_at: string | null
           renter_id: string
@@ -3196,6 +3543,7 @@ export type Database = {
           space_area_snapshot: string | null
           space_id: string
           space_postcode_district_snapshot: string | null
+          space_suitability_snapshot: Json | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
           spacefit_algorithm_snapshot: string | null
@@ -3233,6 +3581,7 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           cancelled_by_role: string | null
+          compatibility_snapshot: Json | null
           completed_at: string | null
           confirmed_at: string | null
           created_at: string
@@ -3252,9 +3601,13 @@ export type Database = {
           minimum_stay_days_snapshot: number | null
           monthly_price_snapshot: number | null
           paid_at: string | null
+          policy_screening_snapshot: Json | null
+          policy_version_id_snapshot: string | null
+          policy_version_snapshot: string | null
           pricing_breakdown_snapshot: Json | null
           pricing_version_snapshot: string | null
           renter_collection_confirmed_at: string | null
+          renter_declaration_snapshot: Json | null
           renter_first_name_snapshot: string | null
           renter_handover_confirmed_at: string | null
           renter_id: string
@@ -3266,6 +3619,7 @@ export type Database = {
           space_area_snapshot: string | null
           space_id: string
           space_postcode_district_snapshot: string | null
+          space_suitability_snapshot: Json | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
           spacefit_algorithm_snapshot: string | null
@@ -3295,6 +3649,7 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           cancelled_by_role: string | null
+          compatibility_snapshot: Json | null
           completed_at: string | null
           confirmed_at: string | null
           created_at: string
@@ -3314,9 +3669,13 @@ export type Database = {
           minimum_stay_days_snapshot: number | null
           monthly_price_snapshot: number | null
           paid_at: string | null
+          policy_screening_snapshot: Json | null
+          policy_version_id_snapshot: string | null
+          policy_version_snapshot: string | null
           pricing_breakdown_snapshot: Json | null
           pricing_version_snapshot: string | null
           renter_collection_confirmed_at: string | null
+          renter_declaration_snapshot: Json | null
           renter_first_name_snapshot: string | null
           renter_handover_confirmed_at: string | null
           renter_id: string
@@ -3328,6 +3687,7 @@ export type Database = {
           space_area_snapshot: string | null
           space_id: string
           space_postcode_district_snapshot: string | null
+          space_suitability_snapshot: Json | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
           spacefit_algorithm_snapshot: string | null
@@ -3370,6 +3730,7 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           cancelled_by_role: string | null
+          compatibility_snapshot: Json | null
           completed_at: string | null
           confirmed_at: string | null
           created_at: string
@@ -3389,9 +3750,13 @@ export type Database = {
           minimum_stay_days_snapshot: number | null
           monthly_price_snapshot: number | null
           paid_at: string | null
+          policy_screening_snapshot: Json | null
+          policy_version_id_snapshot: string | null
+          policy_version_snapshot: string | null
           pricing_breakdown_snapshot: Json | null
           pricing_version_snapshot: string | null
           renter_collection_confirmed_at: string | null
+          renter_declaration_snapshot: Json | null
           renter_first_name_snapshot: string | null
           renter_handover_confirmed_at: string | null
           renter_id: string
@@ -3403,6 +3768,7 @@ export type Database = {
           space_area_snapshot: string | null
           space_id: string
           space_postcode_district_snapshot: string | null
+          space_suitability_snapshot: Json | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
           spacefit_algorithm_snapshot: string | null
@@ -3426,6 +3792,7 @@ export type Database = {
       }
       create_storage_request: {
         Args: {
+          p_declaration?: Json
           p_end_date: string
           p_inventory_id: string
           p_renter_note?: string
@@ -3435,6 +3802,7 @@ export type Database = {
         }
         Returns: {
           booking_action_expires_at: string | null
+          compatibility_snapshot: Json | null
           created_at: string
           currency_snapshot: string
           daily_rate_snapshot: number | null
@@ -3452,8 +3820,12 @@ export type Database = {
           largest_item_snapshot: Json | null
           minimum_stay_days_snapshot: number | null
           monthly_price_snapshot: number | null
+          policy_screening_snapshot: Json | null
+          policy_version_id_snapshot: string | null
+          policy_version_snapshot: string | null
           pricing_breakdown_snapshot: Json | null
           pricing_version_snapshot: string | null
+          renter_declaration_snapshot: Json | null
           renter_first_name_snapshot: string | null
           renter_id: string
           renter_note: string | null
@@ -3466,6 +3838,7 @@ export type Database = {
           space_available_capacity_m3_snapshot: number | null
           space_id: string
           space_postcode_district_snapshot: string | null
+          space_suitability_snapshot: Json | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
           spacefit_algorithm_snapshot: string | null
@@ -3995,6 +4368,7 @@ export type Database = {
         }
         Returns: {
           booking_action_expires_at: string | null
+          compatibility_snapshot: Json | null
           created_at: string
           currency_snapshot: string
           daily_rate_snapshot: number | null
@@ -4012,8 +4386,12 @@ export type Database = {
           largest_item_snapshot: Json | null
           minimum_stay_days_snapshot: number | null
           monthly_price_snapshot: number | null
+          policy_screening_snapshot: Json | null
+          policy_version_id_snapshot: string | null
+          policy_version_snapshot: string | null
           pricing_breakdown_snapshot: Json | null
           pricing_version_snapshot: string | null
+          renter_declaration_snapshot: Json | null
           renter_first_name_snapshot: string | null
           renter_id: string
           renter_note: string | null
@@ -4026,6 +4404,7 @@ export type Database = {
           space_available_capacity_m3_snapshot: number | null
           space_id: string
           space_postcode_district_snapshot: string | null
+          space_suitability_snapshot: Json | null
           space_title_snapshot: string | null
           space_type_snapshot: string | null
           spacefit_algorithm_snapshot: string | null
@@ -4055,6 +4434,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      screen_my_inventory: { Args: { p_inventory_id: string }; Returns: Json }
       search_published_spaces: {
         Args: {
           limit_count?: number
@@ -4110,6 +4490,30 @@ export type Database = {
         }
         Returns: number
       }
+      stow_active_policy_version: {
+        Args: never
+        Returns: {
+          created_at: string
+          created_by: string | null
+          effective_at: string | null
+          id: string
+          legal_review_required: boolean
+          published_at: string | null
+          retired_at: string | null
+          sections: Json
+          status: Database["public"]["Enums"]["policy_version_status"]
+          summary: string
+          title: string
+          updated_at: string
+          version: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "storage_policy_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       stow_assert_within_availability: {
         Args: { p_end: string; p_space_id: string; p_start: string }
         Returns: undefined
@@ -4128,6 +4532,14 @@ export type Database = {
         Returns: string
       }
       stow_payout_release_delay_hours: { Args: never; Returns: number }
+      stow_policy_category: {
+        Args: {
+          p_catalogue_key?: string
+          p_category: string
+          p_item_name: string
+        }
+        Returns: string
+      }
       stow_pricing_breakdown: {
         Args: {
           p_daily: number
@@ -4144,6 +4556,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["host_earning_status"]
       }
       stow_review_window_days: { Args: never; Returns: number }
+      stow_screen_inventory: {
+        Args: { p_inventory_id: string; p_user_id: string }
+        Returns: Json
+      }
       stow_service_fee_pence: {
         Args: {
           p_minimum_pence?: number
@@ -4500,6 +4916,14 @@ export type Database = {
         | "failed"
         | "cancelled"
         | "expired"
+      policy_decision:
+        | "allowed"
+        | "allowed_with_confirmation"
+        | "restricted"
+        | "prohibited"
+        | "needs_identification"
+        | "needs_review"
+      policy_version_status: "draft" | "published" | "retired"
       refund_initiator:
         | "renter"
         | "host"
@@ -4833,6 +5257,15 @@ export const Constants = {
         "cancelled",
         "expired",
       ],
+      policy_decision: [
+        "allowed",
+        "allowed_with_confirmation",
+        "restricted",
+        "prohibited",
+        "needs_identification",
+        "needs_review",
+      ],
+      policy_version_status: ["draft", "published", "retired"],
       refund_initiator: ["renter", "host", "admin", "stripe_dispute", "system"],
       refund_status: ["pending", "succeeded", "failed", "cancelled"],
       review_moderation_status: ["visible", "under_review", "hidden"],

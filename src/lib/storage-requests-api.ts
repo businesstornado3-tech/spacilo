@@ -12,6 +12,7 @@ import type { Json } from "@/integrations/supabase/types";
 import type { StorageRequest } from "@/lib/storage-requests";
 import type { SpaceFitResult } from "@/lib/spacefit/types";
 import type { SpaceFitPlanSnapshot } from "@/lib/spacefit/plan";
+import type { RenterDeclaration } from "@/lib/policy/types";
 
 /**
  * Snapshot payload for the SpaceFit result shown at the moment of request.
@@ -47,6 +48,11 @@ export interface CreateRequestInput {
   spaceFit?: SpaceFitResult | null;
   /** Frozen requirement + packing plan, built from confirmed inventory only. */
   plan?: SpaceFitPlanSnapshot | null;
+  /**
+   * The renter's storage declarations. The server re-checks the policy version
+   * and every item, and refuses the request if anything is missing.
+   */
+  declaration: RenterDeclaration;
 }
 
 export async function createStorageRequest(input: CreateRequestInput): Promise<StorageRequest> {
@@ -58,6 +64,7 @@ export async function createStorageRequest(input: CreateRequestInput): Promise<S
     p_end_date: input.endDate,
     ...(input.note ? { p_renter_note: input.note } : {}),
     ...(spacefit ? { p_spacefit: spacefit } : {}),
+    p_declaration: input.declaration as unknown as Json,
   });
 
   if (error) throw error;

@@ -35,6 +35,7 @@ import {
   StepSpace,
 } from "@/components/host/listing/steps";
 import { ListingPreview, type ListingView } from "@/components/host/listing/ListingPreview";
+import { SuitabilityStep } from "@/components/host/listing/SuitabilityStep";
 import { geocodeMySpace } from "@/lib/location.functions";
 
 /** Address fields that invalidate a previously geocoded position. */
@@ -215,7 +216,12 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
       ) : null}
       {step === 3 ? <StepFeatures form={form} patch={patch} /> : null}
       {step === 4 ? <StepAccess form={form} patch={patch} /> : null}
-      {step === 5 ? <StepRules form={form} patch={patch} /> : null}
+      {step === 5 ? (
+        <div className="space-y-6">
+          <StepRules form={form} patch={patch} />
+          <SuitabilityStep spaceId={space.id} />
+        </div>
+      ) : null}
       {step === 6 ? <StepPrice form={form} patch={patch} /> : null}
       {step === 7 ? (
         <div>

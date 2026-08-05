@@ -22,6 +22,16 @@ import { getPublishedSpace } from "@/lib/spaces-api";
 import { toMatchSpace } from "@/lib/spacefit/adapters";
 import { buildSpaceFitPlanSnapshot, packSpaceFromListing } from "@/lib/spacefit/plan";
 import { PackPlanView } from "@/components/spacefit/PackPlanView";
+import { CompatibilityCard } from "@/components/policy/CompatibilityCard";
+import { SuitabilitySummary } from "@/components/policy/SuitabilitySummary";
+import { RenterDeclarations, emptyDeclaration } from "@/components/policy/RenterDeclarations";
+import {
+  useActivePolicy,
+  useInventoryScreening,
+  usePolicyRules,
+  useSuitabilityProfile,
+} from "@/hooks/usePolicy";
+import { evaluateCompatibility, summariseScreening } from "@/lib/policy/engine";
 
 import { publicLocation, spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import { track } from "@/lib/analytics";
@@ -80,6 +90,40 @@ function NewRequestPage() {
   const { result } = useSpaceFitForSpace(matchSpace);
   const create = useCreateRequest();
 
+  // Safety layer: the same rules the server will apply, shown before sending.
+  const { data: policy } = useActivePolicy();
+  const { data: rules } = usePolicyRules(policy?.id);
+  const { data: screening } = useInventoryScreening(inventory?.id);
+  const { data: suitability } = useSuitabilityProfile(spaceId);
+  const screeningSummary = summariseScreening(screening);
+  const [declaration, setDeclaration] = React.useState(() => emptyDeclaration(null));
+
+  React.useEffect(() => {
+    if (policy?.version) {
+      setDeclaration((current) =>
+        current.policy_version === policy.version
+          ? current
+          : { ...current, policy_version: policy.version },
+      );
+    }
+  }, [policy?.version]);
+
+  const declarationComplete =
+    declaration.accurate && declaration.no_prohibited_items && declaration.accepts_policy;
+
+  const compatibility = React.useMemo(
+    () =>
+      evaluateCompatibility({
+        screening: screening ?? null,
+        rules: rules ?? [],
+        suitability: suitability?.attributes ?? null,
+        spaceFit: result
+          ? { score: result.score, compatible: result.compatible, label: result.label }
+          : null,
+      }),
+    [screening, rules, suitability, result],
+  );
+
   const load = React.useCallback(async () => {
     if (!spaceId) return setLoadState("missing");
     setLoadState("loading");
@@ -133,6 +177,14 @@ function NewRequestPage() {
     event.preventDefault();
     setSubmitted(true);
     if (hasDateErrors(dateErrors) || belowMinimum || !space || !inventory) return;
+    if (screeningSummary.blocked || screeningSummary.actionRequired) {
+      toast.error(
+        "Check My Stuff first",
+        "Some items still need reviewing against our storage policy.",
+      );
+      return;
+    }
+    if (!declarationComplete) return;
     try {
       const request = await create.mutateAsync({
         spaceId: space.id,
@@ -142,6 +194,7 @@ function NewRequestPage() {
         ...(note.trim() ? { note: note.trim() } : {}),
         spaceFit: result,
         plan: planSnapshot,
+        declaration,
       });
 
       track("storage_request_submitted", { space_id: space.id });
@@ -311,12 +364,42 @@ function NewRequestPage() {
               </p>
             </section>
 
+            <CompatibilityCard report={compatibility} />
+
+            <SuitabilitySummary profile={suitability ?? null} />
+
+            {screeningSummary.blocked || screeningSummary.actionRequired ? (
+              <section className="rounded-2xl border border-warning/30 bg-warning-soft p-5 text-warning-soft-foreground">
+                <h2 className="type-h3">{screeningSummary.headline}</h2>
+                <p className="mt-1 type-body-sm">
+                  Review these in My Stuff before you send your request.
+                </p>
+                <Button asChild variant="secondary" className="mt-4">
+                  <Link to="/renter/inventory">Review My Stuff</Link>
+                </Button>
+              </section>
+            ) : null}
+
+            <RenterDeclarations
+              policyVersion={policy?.version ?? null}
+              value={declaration}
+              onChange={setDeclaration}
+              showError={showErrors}
+            />
+
             <p className="type-body-sm text-muted-foreground">{REQUEST_DISCLAIMER}</p>
 
             <div className="flex flex-wrap gap-3">
               <Button
                 type="submit"
-                disabled={!hasItems || belowMinimum || create.isPending}
+                disabled={
+                  !hasItems ||
+                  belowMinimum ||
+                  create.isPending ||
+                  !declarationComplete ||
+                  screeningSummary.blocked ||
+                  screeningSummary.actionRequired
+                }
                 className="w-full sm:w-auto"
               >
                 {create.isPending ? "Sending…" : "Send request"}

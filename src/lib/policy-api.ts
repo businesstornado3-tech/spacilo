@@ -1,0 +1,118 @@
+/**
+ * Data access for the storage safety layer.
+ *
+ * Screening always comes back from the server routine so the browser can
+ * never invent a friendlier answer than the policy gives.
+ */
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
+import type {
+  PolicyRule,
+  PolicyVersion,
+  ScreeningResult,
+  SuitabilityAttributes,
+  SuitabilityProfile,
+} from "@/lib/policy/types";
+import { sanitiseSuitability } from "@/lib/policy/suitability";
+
+export async function getActivePolicy(): Promise<PolicyVersion | null> {
+  const { data, error } = await supabase
+    .from("storage_policy_versions")
+    .select("*")
+    .eq("status", "published")
+    .order("effective_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? (data as unknown as PolicyVersion) : null;
+}
+
+export async function listPolicyVersions(): Promise<PolicyVersion[]> {
+  const { data, error } = await supabase
+    .from("storage_policy_versions")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as PolicyVersion[];
+}
+
+export async function listPolicyRules(policyVersionId: string): Promise<PolicyRule[]> {
+  const { data, error } = await supabase
+    .from("storage_policy_rules")
+    .select("*")
+    .eq("policy_version_id", policyVersionId)
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as PolicyRule[];
+}
+
+export async function screenInventory(inventoryId: string): Promise<ScreeningResult> {
+  const { data, error } = await supabase.rpc("screen_my_inventory", {
+    p_inventory_id: inventoryId,
+  });
+  if (error) throw error;
+  return data as unknown as ScreeningResult;
+}
+
+/**
+ * The renter confirming or correcting what an item actually is. This is the
+ * only way an item's policy category can change — AI never writes it.
+ */
+export async function confirmItemPolicy(input: {
+  itemId: string;
+  policyCategory: string;
+  corrected: boolean;
+  note?: string;
+}): Promise<void> {
+  const { error } = await supabase
+    .from("inventory_items")
+    .update({
+      policy_category: input.policyCategory,
+      policy_provenance: input.corrected ? "renter_corrected" : "renter_confirmed",
+      policy_confirmed_at: new Date().toISOString(),
+      policy_note: input.note ?? null,
+    })
+    .eq("id", input.itemId);
+  if (error) throw error;
+}
+
+export async function getSuitabilityProfile(spaceId: string): Promise<SuitabilityProfile | null> {
+  const { data, error } = await supabase
+    .from("space_suitability_profiles")
+    .select("*")
+    .eq("space_id", spaceId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? (data as unknown as SuitabilityProfile) : null;
+}
+
+export async function saveSuitabilityProfile(input: {
+  spaceId: string;
+  hostId: string;
+  attributes: SuitabilityAttributes;
+  notes?: string | null;
+  declarations: { authority: boolean; compliance: boolean; accuracy: boolean };
+  policyVersionId: string | null;
+}): Promise<void> {
+  const now = new Date().toISOString();
+  const declared =
+    input.declarations.authority && input.declarations.compliance && input.declarations.accuracy;
+  const { error } = await supabase.from("space_suitability_profiles").upsert(
+    {
+      space_id: input.spaceId,
+      host_id: input.hostId,
+      attributes: sanitiseSuitability(input.attributes) as unknown as Json,
+      host_notes: input.notes ?? null,
+      host_confirmed_at: now,
+      declaration_authority: input.declarations.authority,
+      declaration_compliance: input.declarations.compliance,
+      declaration_accuracy: input.declarations.accuracy,
+      declared_at: declared ? now : null,
+      declared_policy_version_id: input.policyVersionId,
+      updated_at: now,
+    },
+    { onConflict: "space_id" },
+  );
+  if (error) throw error;
+}

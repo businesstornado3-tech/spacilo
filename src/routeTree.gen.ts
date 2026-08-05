@@ -21,6 +21,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as StoragePolicyRouteImport } from './routes/storage-policy'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated.host'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
@@ -36,6 +37,7 @@ import { Route as AuthenticatedHostEarningsRouteImport } from './routes/_authent
 import { Route as AuthenticatedRenterIndexRouteImport } from './routes/_authenticated.renter.index'
 import { Route as AuthenticatedRenterMatchesRouteImport } from './routes/_authenticated.renter.matches'
 import { Route as AuthenticatedRenterSearchRouteImport } from './routes/_authenticated.renter.search'
+import { Route as AuthenticatedAdminPolicyIndexRouteImport } from './routes/_authenticated.admin.policy.index'
 import { Route as AuthenticatedAdminReviewsIndexRouteImport } from './routes/_authenticated.admin.reviews.index'
 import { Route as AuthenticatedAdminSupportIndexRouteImport } from './routes/_authenticated.admin.support.index'
 import { Route as AuthenticatedAdminSupportCaseIdRouteImport } from './routes/_authenticated.admin.support.$caseId'
@@ -124,6 +126,11 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StoragePolicyRoute = StoragePolicyRouteImport.update({
+  id: '/storage-policy',
+  path: '/storage-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrustRoute = TrustRouteImport.update({
   id: '/trust',
   path: '/trust',
@@ -204,6 +211,12 @@ const AuthenticatedRenterSearchRoute =
     id: '/search',
     path: '/search',
     getParentRoute: () => AuthenticatedRenterRoute,
+  } as any)
+const AuthenticatedAdminPolicyIndexRoute =
+  AuthenticatedAdminPolicyIndexRouteImport.update({
+    id: '/admin/policy/',
+    path: '/admin/policy/',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAdminReviewsIndexRoute =
   AuthenticatedAdminReviewsIndexRouteImport.update({
@@ -384,6 +397,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
+  '/storage-policy': typeof StoragePolicyRoute
   '/trust': typeof TrustRoute
   '/host': typeof AuthenticatedHostRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -416,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/admin/policy/': typeof AuthenticatedAdminPolicyIndexRoute
   '/admin/reviews/': typeof AuthenticatedAdminReviewsIndexRoute
   '/admin/support/': typeof AuthenticatedAdminSupportIndexRoute
   '/host/messages/': typeof AuthenticatedHostMessagesIndexRoute
@@ -440,6 +455,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
+  '/storage-policy': typeof StoragePolicyRoute
   '/trust': typeof TrustRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -469,6 +485,7 @@ export interface FileRoutesByTo {
   '/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/admin/policy': typeof AuthenticatedAdminPolicyIndexRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsIndexRoute
   '/admin/support': typeof AuthenticatedAdminSupportIndexRoute
   '/host/messages': typeof AuthenticatedHostMessagesIndexRoute
@@ -495,6 +512,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
+  '/storage-policy': typeof StoragePolicyRoute
   '/trust': typeof TrustRoute
   '/_authenticated/host': typeof AuthenticatedHostRouteWithChildren
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -527,6 +545,7 @@ export interface FileRoutesById {
   '/_authenticated/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/_authenticated/admin/policy/': typeof AuthenticatedAdminPolicyIndexRoute
   '/_authenticated/admin/reviews/': typeof AuthenticatedAdminReviewsIndexRoute
   '/_authenticated/admin/support/': typeof AuthenticatedAdminSupportIndexRoute
   '/_authenticated/host/messages/': typeof AuthenticatedHostMessagesIndexRoute
@@ -553,6 +572,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/signup'
+    | '/storage-policy'
     | '/trust'
     | '/host'
     | '/notifications'
@@ -585,6 +605,7 @@ export interface FileRouteTypes {
     | '/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/admin/policy/'
     | '/admin/reviews/'
     | '/admin/support/'
     | '/host/messages/'
@@ -609,6 +630,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/signup'
+    | '/storage-policy'
     | '/trust'
     | '/notifications'
     | '/profile'
@@ -638,6 +660,7 @@ export interface FileRouteTypes {
     | '/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/admin/policy'
     | '/admin/reviews'
     | '/admin/support'
     | '/host/messages'
@@ -663,6 +686,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/signup'
+    | '/storage-policy'
     | '/trust'
     | '/_authenticated/host'
     | '/_authenticated/notifications'
@@ -695,6 +719,7 @@ export interface FileRouteTypes {
     | '/_authenticated/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/_authenticated/admin/policy/'
     | '/_authenticated/admin/reviews/'
     | '/_authenticated/admin/support/'
     | '/_authenticated/host/messages/'
@@ -721,6 +746,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   SignupRoute: typeof SignupRoute
+  StoragePolicyRoute: typeof StoragePolicyRoute
   TrustRoute: typeof TrustRoute
   SpacefitSpaceRoute: typeof SpacefitSpaceRoute
   SpacefitStuffRoute: typeof SpacefitStuffRoute
@@ -813,6 +839,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/storage-policy': {
+      id: '/storage-policy'
+      path: '/storage-policy'
+      fullPath: '/storage-policy'
+      preLoaderRoute: typeof StoragePolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trust': {
@@ -919,6 +952,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/renter/search'
       preLoaderRoute: typeof AuthenticatedRenterSearchRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
+    }
+    '/_authenticated/admin/policy/': {
+      id: '/_authenticated/admin/policy/'
+      path: '/admin/policy'
+      fullPath: '/admin/policy/'
+      preLoaderRoute: typeof AuthenticatedAdminPolicyIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/admin/reviews/': {
       id: '/_authenticated/admin/reviews/'
@@ -1225,6 +1265,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSpacefitRoute: typeof AuthenticatedSpacefitRoute
   AuthenticatedAdminSupportCaseIdRoute: typeof AuthenticatedAdminSupportCaseIdRoute
   AuthenticatedSupportCasesCaseIdRoute: typeof AuthenticatedSupportCasesCaseIdRoute
+  AuthenticatedAdminPolicyIndexRoute: typeof AuthenticatedAdminPolicyIndexRoute
   AuthenticatedAdminReviewsIndexRoute: typeof AuthenticatedAdminReviewsIndexRoute
   AuthenticatedAdminSupportIndexRoute: typeof AuthenticatedAdminSupportIndexRoute
 }
@@ -1237,6 +1278,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSpacefitRoute: AuthenticatedSpacefitRoute,
   AuthenticatedAdminSupportCaseIdRoute: AuthenticatedAdminSupportCaseIdRoute,
   AuthenticatedSupportCasesCaseIdRoute: AuthenticatedSupportCasesCaseIdRoute,
+  AuthenticatedAdminPolicyIndexRoute: AuthenticatedAdminPolicyIndexRoute,
   AuthenticatedAdminReviewsIndexRoute: AuthenticatedAdminReviewsIndexRoute,
   AuthenticatedAdminSupportIndexRoute: AuthenticatedAdminSupportIndexRoute,
 }
@@ -1258,6 +1300,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   SignupRoute: SignupRoute,
+  StoragePolicyRoute: StoragePolicyRoute,
   TrustRoute: TrustRoute,
   SpacefitSpaceRoute: SpacefitSpaceRoute,
   SpacefitStuffRoute: SpacefitStuffRoute,
@@ -1268,13 +1311,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

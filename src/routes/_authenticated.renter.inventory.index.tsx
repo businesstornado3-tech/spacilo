@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { InventorySummary } from "@/components/inventory/InventorySummary";
 import { RequirementCard } from "@/components/spacefit/RequirementCard";
+import { ItemScreeningPanel } from "@/components/policy/ItemScreeningPanel";
 
 import { ItemRow } from "@/components/inventory/ItemRow";
 import { ItemDialog } from "@/components/inventory/ItemDialog";
@@ -118,6 +119,8 @@ function MyStuffPage() {
           <InventorySummary totals={totals} largest={largest} readiness={readiness} />
 
           <RequirementCard items={list} />
+
+          <ItemScreeningPanel inventoryId={inventory?.id} />
 
 
 

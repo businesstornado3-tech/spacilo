@@ -102,6 +102,9 @@ function BookingReviewPage() {
 
           <RequestSummary request={request} />
 
+          <BookingJourney stage={existing ? stageFromStatus(existing.status) : "accepted"} />
+
+
           {state.kind === "started" ? (
             <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
               <h2 className="type-h3">Booking started</h2>

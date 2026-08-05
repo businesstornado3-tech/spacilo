@@ -5,7 +5,7 @@
  */
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Boxes, CalendarRange, Loader2, MapPin, Ruler } from "lucide-react";
+import { CalendarRange, Loader2, MapPin } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Field, TextArea } from "@/components/form/Field";
 import { Modal } from "@/components/overlay/Modal";
 import { toast } from "@/components/overlay/toast";
+import { HostRequestConfidence } from "@/components/requests/HostRequestConfidence";
 import { useHostRequest, useRespondToRequest } from "@/hooks/useStorageRequests";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import {
@@ -23,9 +24,7 @@ import {
   formatApproximateDuration,
   hostStatusDetail,
   isRespondable,
-  largestItemSnapshot,
   requestSnapshotView,
-  snapshotItems,
   statusMeta,
 } from "@/lib/storage-requests";
 import { formatDate } from "@/lib/format";
@@ -53,8 +52,6 @@ function HostRequestDetailPage() {
   const [reason, setReason] = React.useState("");
 
   const view = request ? requestSnapshotView(request) : null;
-  const items = request ? snapshotItems(request) : [];
-  const largest = request ? largestItemSnapshot(request) : null;
 
   const onRespond = async (decision: "accepted" | "declined") => {
     if (!request) return;

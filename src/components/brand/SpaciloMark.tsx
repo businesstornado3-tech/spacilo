@@ -6,12 +6,12 @@ import { cn } from "@/lib/utils";
 /**
  * The approved Spacilo symbol — production SVG of the brand-board master mark.
  *
- * Geometry taken from the approved reference:
+ * Geometry traced from the approved reference:
  *  - a pointy-top hexagon drawn as a heavy open ring (the SPACE / room),
- *  - the ring is broken at mid-left and mid-right, each half turning inward
- *    so the two interlocking arms read as an S,
+ *  - the ring breaks with a step at mid-right and mid-left and crosses the
+ *    centre on a shallow diagonal, so the single continuous arm reads as an S,
  *  - a centred value token — a coin pierced by a vertical stroke — knocked out
- *    of the arms exactly as the reference knocks its currency motif out.
+ *    of the arm exactly as the reference knocks its currency motif out.
  *
  * The literal dollar denomination of the reference is abstracted into a
  * currency-neutral value token so the identity works internationally.
@@ -30,42 +30,37 @@ export function SpaciloSymbol({ className }: { className?: string }) {
       className={cn("size-8", className)}
     >
       <defs>
-        {/* Knock the value token out of the interlocking arms. */}
+        {/* Knock the value token out of the hexagonal arm. */}
         <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
           <rect x="0" y="0" width="64" height="64" fill="white" />
           <g stroke="black" fill="none" strokeLinecap="round">
-            <path d="M32 15.5V48.5" strokeWidth="10.5" />
-            <circle cx="32" cy="32" r="8.6" strokeWidth="8" />
+            <path d="M32 19V45" strokeWidth="11" />
+            <circle cx="32" cy="32" r="7.2" strokeWidth="8.5" />
           </g>
         </mask>
       </defs>
 
-      {/* SPACE — the open hexagonal ring, split into two interlocking arms */}
+      {/* SPACE — the open hexagonal ring stepped and crossed into an S */}
       <g
         mask={`url(#${maskId})`}
         stroke="currentColor"
-        strokeWidth="6.2"
+        strokeWidth="5.4"
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
       >
-        <path d="M7 31.2V17.3L32 3.2l25 14.1v13.9H25.6" />
-        <path d="M57 32.8v13.9L32 60.8 7 46.7V32.8h31.4" />
+        <path d="M58 22.5V17.5L32 3.2 6 17.5v16.9l52-4v16.1L32 60.8 6 46.5v-4.2" />
       </g>
 
       {/* VALUE — a currency-neutral token: a coin pierced by a value stroke */}
-      <g
-        stroke="currentColor"
-        strokeWidth="4.2"
-        strokeLinecap="round"
-        fill="none"
-      >
-        <path d="M32 19.5V44.5" />
-        <circle cx="32" cy="32" r="6.6" />
+      <g stroke="currentColor" strokeLinecap="round" fill="none">
+        <path d="M32 21.5V42.5" strokeWidth="3.6" />
+        <circle cx="32" cy="32" r="7.2" strokeWidth="4" />
       </g>
     </svg>
   );
 }
+
 
 /** Symbol + wordmark lock-up. */
 export function SpaciloLockup({

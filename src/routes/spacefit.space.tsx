@@ -5,6 +5,7 @@
  * the shared deterministic capacity and pricing engines decide the numbers.
  * Nothing is saved, nothing is published, and nothing becomes verified.
  */
+import { track } from "@/lib/analytics/tracker";
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Sparkles } from "lucide-react";
@@ -91,6 +92,13 @@ function GuestSpacePage() {
     [proposal, spaceType],
   );
   const outcome = spaceMeasurementOutcome(proposal);
+
+  const viewed = React.useRef(false);
+  React.useEffect(() => {
+    if (!preview || viewed.current) return;
+    viewed.current = true;
+    track("guest_scan_result_viewed", { props: { kind: "space" } });
+  }, [preview]);
 
   return (
     <MarketingLayout>

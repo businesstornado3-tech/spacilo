@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Boxes, MapPin, Ruler } from "lucide-react";
 
+import { brand } from "@/config/brand";
 import { cn } from "@/lib/utils";
 import { useCountUp } from "@/hooks/use-motion";
 import { spaceFitBand, SPACEFIT_DISCLAIMER } from "@/lib/spacefit";
@@ -38,7 +39,7 @@ export function SpaceFitAiMark({
         className,
       )}
     >
-      Spacilo AI
+      {brand.ai}
       <SpaceFitSpark />
     </span>
   );

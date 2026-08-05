@@ -19,6 +19,10 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 -top-40 h-[28rem] bg-[radial-gradient(60%_60%_at_50%_40%,var(--color-signal-soft),transparent_70%)] opacity-80"
+      />
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 pb-10 pt-6 sm:px-6 sm:pb-14 sm:pt-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start lg:gap-12 lg:pb-16 lg:pt-10">
         <div className="animate-fade min-w-0">
           <h1 className="max-w-[14ch] type-hero">
@@ -30,7 +34,7 @@ export function Hero() {
             Find trusted neighbourhood storage — or earn from the space you're not using.
           </p>
 
-          <div className="mt-6 rounded-3xl border border-signal/25 bg-signal-soft/45 p-4 shadow-card sm:p-5">
+          <div className="mt-6 rounded-3xl border border-signal/30 bg-signal-soft/60 p-4 shadow-raised sm:p-5">
             <SpaceFitAiMark size="sm" />
             <p className="mt-3 type-h3">Your stuff. Your space. Just show us.</p>
 

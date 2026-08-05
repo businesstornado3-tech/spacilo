@@ -12,6 +12,7 @@ import { getPublishedSpace, signedPhotoUrls } from "@/lib/spaces-api";
 import { RequestSpaceCta } from "@/components/requests/RequestSpaceCta";
 import { ListingSpaceFitPanel } from "@/components/spacefit/ListingSpaceFitPanel";
 import { toMatchSpace } from "@/lib/spacefit/adapters";
+import { SpaceReviews } from "@/components/reviews/SpaceReviews";
 
 export const Route = createFileRoute("/spaces/$spaceId")({
   head: () => ({
@@ -109,6 +110,9 @@ function PublicSpacePage() {
             <div className="mx-auto max-w-3xl">
               <ListingPreview view={state.view} />
               {state.matchSpace ? <ListingSpaceFitPanel space={state.matchSpace} /> : null}
+              <div className="mt-6">
+                <SpaceReviews spaceId={spaceId} />
+              </div>
               <RequestSpaceCta spaceId={spaceId} />
             </div>
           </>

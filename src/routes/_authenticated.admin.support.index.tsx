@@ -75,6 +75,12 @@ function SupportQueueRoute() {
       title="Support queue"
       description="Booking issues reported by renters and hosts."
     >
+      <p className="type-body-sm text-muted-foreground">
+        <Link to="/admin/reviews" className="underline">
+          Review moderation queue
+        </Link>
+      </p>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Status" htmlFor="queue-status">
           <NativeSelect id="queue-status" value={status} onChange={(e) => setStatus(e.target.value)}>

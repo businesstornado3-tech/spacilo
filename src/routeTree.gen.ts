@@ -21,6 +21,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as StoragePolicyRouteImport } from './routes/storage-policy'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated.host'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
@@ -122,6 +123,11 @@ const SearchRoute = SearchRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoragePolicyRoute = StoragePolicyRouteImport.update({
+  id: '/storage-policy',
+  path: '/storage-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrustRoute = TrustRouteImport.update({
@@ -384,6 +390,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
+  '/storage-policy': typeof StoragePolicyRoute
   '/trust': typeof TrustRoute
   '/host': typeof AuthenticatedHostRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -440,6 +447,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
+  '/storage-policy': typeof StoragePolicyRoute
   '/trust': typeof TrustRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -495,6 +503,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
   '/signup': typeof SignupRoute
+  '/storage-policy': typeof StoragePolicyRoute
   '/trust': typeof TrustRoute
   '/_authenticated/host': typeof AuthenticatedHostRouteWithChildren
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -553,6 +562,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/signup'
+    | '/storage-policy'
     | '/trust'
     | '/host'
     | '/notifications'
@@ -609,6 +619,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/signup'
+    | '/storage-policy'
     | '/trust'
     | '/notifications'
     | '/profile'
@@ -663,6 +674,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/search'
     | '/signup'
+    | '/storage-policy'
     | '/trust'
     | '/_authenticated/host'
     | '/_authenticated/notifications'
@@ -721,6 +733,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   SignupRoute: typeof SignupRoute
+  StoragePolicyRoute: typeof StoragePolicyRoute
   TrustRoute: typeof TrustRoute
   SpacefitSpaceRoute: typeof SpacefitSpaceRoute
   SpacefitStuffRoute: typeof SpacefitStuffRoute
@@ -813,6 +826,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/storage-policy': {
+      id: '/storage-policy'
+      path: '/storage-policy'
+      fullPath: '/storage-policy'
+      preLoaderRoute: typeof StoragePolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trust': {
@@ -1258,6 +1278,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   SignupRoute: SignupRoute,
+  StoragePolicyRoute: StoragePolicyRoute,
   TrustRoute: TrustRoute,
   SpacefitSpaceRoute: SpacefitSpaceRoute,
   SpacefitStuffRoute: SpacefitStuffRoute,
@@ -1268,13 +1289,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

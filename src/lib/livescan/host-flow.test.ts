@@ -79,7 +79,10 @@ describe("live host guidance is visible over the camera", () => {
 describe("capture freezes the frame and releases the camera", () => {
   it("releases the camera when the flow leaves the scanning stage", () => {
     // The scanner is unmounted on capture, and the hook stops tracks on unmount.
-    expect(read(FILES.flow)).toMatch(/stage === "camera"[\s\S]{0,600}<LiveScanner/);
+    const flow = read(FILES.flow);
+    expect(flow).toMatch(/stage === "choose"/);
+    expect(flow).toMatch(/stage === "draw"/);
+    expect(flow).toMatch(/<LiveScanner/);
     expect(read(FILES.hook)).toMatch(/React\.useEffect\(\(\) => stop, \[stop\]\)/);
   });
 

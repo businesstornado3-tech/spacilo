@@ -17,6 +17,7 @@ import { SpaceReviews } from "@/components/reviews/SpaceReviews";
 import { TrustSignals } from "@/components/trust/TrustSignals";
 import { buildTrustSummary } from "@/lib/trust/signals";
 import { useSpaceReviewSummary } from "@/hooks/useReviews";
+import { track } from "@/lib/analytics/tracker";
 
 /** Facts about a listing, sourced only from the published row and finished bookings. */
 function SpaceTrustPanel({
@@ -113,6 +114,11 @@ function PublicSpacePage() {
   React.useEffect(() => {
     void load();
   }, [load]);
+
+  React.useEffect(() => {
+    if (state.kind === "ready") track("listing_viewed", { space_id: spaceId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.kind, spaceId]);
 
   return (
     <MarketingLayout>

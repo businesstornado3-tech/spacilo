@@ -3,15 +3,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { brand } from "@/config/brand";
 import { MarketingLayout } from "@/components/layout/MarketingLayout";
 import { Hero } from "@/components/home/Hero";
+import { SpaceFitStory } from "@/components/home/SpaceFitStory";
+import { StorageNearYou } from "@/components/home/StorageNearYou";
 import { TwoSidedValue } from "@/components/home/TwoSidedValue";
 import { WhyStow } from "@/components/home/WhyStow";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { HostCallout } from "@/components/home/HostCallout";
 import { LaunchArea } from "@/components/home/LaunchArea";
 
-const title = `${brand.name} | Neighbourhood Storage Space Near You`;
+const title = `${brand.name} | SpaceFit AI Storage Near You`;
 const description =
-  "Find storage in unused garages, lofts and spare rooms around your neighbourhood — or list space you're not using and set your own monthly price. Starting in Portsmouth.";
+  "Scan your stuff or your spare space with SpaceFit AI. Find neighbourhood storage that actually fits, or earn from an unused garage, loft or spare room. Starting in Portsmouth.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -31,9 +33,11 @@ function HomePage() {
   return (
     <MarketingLayout>
       <Hero />
+      <SpaceFitStory />
+      <StorageNearYou />
+      <HowItWorks />
       <TwoSidedValue />
       <WhyStow />
-      <HowItWorks />
       <HostCallout />
       <LaunchArea />
     </MarketingLayout>

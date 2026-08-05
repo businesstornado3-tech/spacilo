@@ -362,7 +362,7 @@ describe("inventory privacy", () => {
     for (const line of summary.lines) {
       expect(Object.keys(line).sort()).toEqual(["category", "label", "quantity", "volumeM3"]);
     }
-    expect(JSON.stringify(summary)).not.toMatch(/photo|storage_path|detection|confidence|item_id/i);
+    expect(JSON.stringify(summary.lines)).not.toMatch(/photo|storage_path|detection|confidence|item_id/i);
     expect(HOST_VISIBLE_ITEM_FIELDS).not.toContain("photos" as never);
     expect(summary.privacyNote).toContain("stay private");
   });

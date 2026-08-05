@@ -231,6 +231,8 @@ function BookingDetailPage() {
           />
 
 
+          <BookingReviewSection bookingId={booking.id} audience="renter" />
+
           <SupportSection bookingId={booking.id} role="renter" viewerId={user?.id ?? null} />
 
           <div className="flex flex-wrap gap-3">

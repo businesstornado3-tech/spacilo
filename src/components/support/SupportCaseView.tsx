@@ -101,7 +101,7 @@ export function SupportCaseView({
             <p className="type-label text-muted-foreground">Support case</p>
             <h2 className="type-h4">{kase.reference}</h2>
           </div>
-          <Badge variant="secondary">{statusLabel(kase.status, reporter)}</Badge>
+          <Badge variant="neutral">{statusLabel(kase.status, reporter)}</Badge>
         </div>
         <p className="mt-3 type-body-sm text-muted-foreground">
           {statusHelpText(kase, viewerId)}

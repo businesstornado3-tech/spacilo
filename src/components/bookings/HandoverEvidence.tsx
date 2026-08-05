@@ -63,6 +63,7 @@ export function HandoverEvidence({
   const [showIssue, setShowIssue] = React.useState(false);
   const [category, setCategory] = React.useState<HandoverIssueCategory>("items_differ");
   const [issueText, setIssueText] = React.useState("");
+  const [escalating, setEscalating] = React.useState<string | null>(null);
   const [urls, setUrls] = React.useState<Record<string, string>>({});
   const uid = React.useId();
 
@@ -278,6 +279,32 @@ export function HandoverEvidence({
                 <p className="mt-1 type-body-sm text-muted-foreground">
                   {attribution(row.reporter_role)} · {formatDate(row.created_at)}
                 </p>
+                {role ? (
+                  escalating === row.id ? (
+                    <div className="mt-3 rounded-xl border border-border bg-card p-3">
+                      <ReportProblemForm
+                        bookingId={bookingId}
+                        role={role}
+                        defaultCategory={caseCategoryForIssue(row.category)}
+                        defaultStage={stageForHandoverStage(stage)}
+                        handoverIssueId={row.id}
+                        relatedIssueText={row.description}
+                        onCreated={() => setEscalating(null)}
+                        onCancel={() => setEscalating(null)}
+                      />
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-2"
+                      onClick={() => setEscalating(row.id)}
+                    >
+                      Escalate to support
+                    </Button>
+                  )
+                ) : null}
               </li>
             ))}
           </ul>

@@ -324,6 +324,7 @@ export type Database = {
           stripe_charge_id: string | null
           stripe_payment_intent_id: string | null
           stripe_refund_id: string | null
+          support_case_id: string | null
           total_refund_pence: number
           updated_at: string
         }
@@ -346,6 +347,7 @@ export type Database = {
           stripe_charge_id?: string | null
           stripe_payment_intent_id?: string | null
           stripe_refund_id?: string | null
+          support_case_id?: string | null
           total_refund_pence: number
           updated_at?: string
         }
@@ -368,6 +370,7 @@ export type Database = {
           stripe_charge_id?: string | null
           stripe_payment_intent_id?: string | null
           stripe_refund_id?: string | null
+          support_case_id?: string | null
           total_refund_pence?: number
           updated_at?: string
         }
@@ -391,6 +394,280 @@ export type Database = {
             columns: ["payment_id"]
             isOneToOne: false
             referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_refunds_support_case_id_fkey"
+            columns: ["support_case_id"]
+            isOneToOne: false
+            referencedRelation: "booking_support_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_support_case_events: {
+        Row: {
+          actor_role: string
+          actor_user_id: string | null
+          booking_id: string
+          case_id: string
+          created_at: string
+          event_type: string
+          id: string
+          internal_note: string | null
+          metadata: Json
+          public_message: string | null
+          visibility: string
+        }
+        Insert: {
+          actor_role: string
+          actor_user_id?: string | null
+          booking_id: string
+          case_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          internal_note?: string | null
+          metadata?: Json
+          public_message?: string | null
+          visibility?: string
+        }
+        Update: {
+          actor_role?: string
+          actor_user_id?: string | null
+          booking_id?: string
+          case_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          internal_note?: string | null
+          metadata?: Json
+          public_message?: string | null
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_support_case_events_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_support_case_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "booking_support_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_support_case_evidence: {
+        Row: {
+          booking_id: string
+          caption: string | null
+          case_id: string
+          created_at: string
+          file_size: number
+          id: string
+          mime_type: string
+          storage_path: string
+          uploaded_by_role: string
+          uploaded_by_user_id: string
+        }
+        Insert: {
+          booking_id: string
+          caption?: string | null
+          case_id: string
+          created_at?: string
+          file_size: number
+          id?: string
+          mime_type: string
+          storage_path: string
+          uploaded_by_role: string
+          uploaded_by_user_id: string
+        }
+        Update: {
+          booking_id?: string
+          caption?: string | null
+          case_id?: string
+          created_at?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          storage_path?: string
+          uploaded_by_role?: string
+          uploaded_by_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_support_case_evidence_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_support_case_evidence_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "booking_support_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_support_case_messages: {
+        Row: {
+          author_role: string
+          author_user_id: string
+          body: string
+          booking_id: string
+          case_id: string
+          created_at: string
+          id: string
+          visibility: string
+        }
+        Insert: {
+          author_role: string
+          author_user_id: string
+          body: string
+          booking_id: string
+          case_id: string
+          created_at?: string
+          id?: string
+          visibility?: string
+        }
+        Update: {
+          author_role?: string
+          author_user_id?: string
+          body?: string
+          booking_id?: string
+          case_id?: string
+          created_at?: string
+          id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_support_case_messages_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_support_case_messages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "booking_support_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_support_cases: {
+        Row: {
+          assigned_to_user_id: string | null
+          booking_id: string
+          category: Database["public"]["Enums"]["support_case_category"]
+          closed_at: string | null
+          created_at: string
+          description: string
+          financially_resolved: boolean
+          host_id: string
+          id: string
+          last_activity_at: string
+          linked_handover_issue_id: string | null
+          opened_by_role: string
+          opened_by_user_id: string
+          reference: string
+          refund_currency: string | null
+          refund_total_pence: number
+          renter_id: string
+          resolution_code:
+            | Database["public"]["Enums"]["support_resolution_code"]
+            | null
+          resolution_summary: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          stage: Database["public"]["Enums"]["support_case_stage"]
+          status: Database["public"]["Enums"]["support_case_status"]
+          submitted_at: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to_user_id?: string | null
+          booking_id: string
+          category: Database["public"]["Enums"]["support_case_category"]
+          closed_at?: string | null
+          created_at?: string
+          description: string
+          financially_resolved?: boolean
+          host_id: string
+          id?: string
+          last_activity_at?: string
+          linked_handover_issue_id?: string | null
+          opened_by_role: string
+          opened_by_user_id: string
+          reference: string
+          refund_currency?: string | null
+          refund_total_pence?: number
+          renter_id: string
+          resolution_code?:
+            | Database["public"]["Enums"]["support_resolution_code"]
+            | null
+          resolution_summary?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          stage: Database["public"]["Enums"]["support_case_stage"]
+          status?: Database["public"]["Enums"]["support_case_status"]
+          submitted_at?: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to_user_id?: string | null
+          booking_id?: string
+          category?: Database["public"]["Enums"]["support_case_category"]
+          closed_at?: string | null
+          created_at?: string
+          description?: string
+          financially_resolved?: boolean
+          host_id?: string
+          id?: string
+          last_activity_at?: string
+          linked_handover_issue_id?: string | null
+          opened_by_role?: string
+          opened_by_user_id?: string
+          reference?: string
+          refund_currency?: string | null
+          refund_total_pence?: number
+          renter_id?: string
+          resolution_code?:
+            | Database["public"]["Enums"]["support_resolution_code"]
+            | null
+          resolution_summary?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          stage?: Database["public"]["Enums"]["support_case_stage"]
+          status?: Database["public"]["Enums"]["support_case_status"]
+          submitted_at?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_support_cases_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_support_cases_linked_handover_issue_id_fkey"
+            columns: ["linked_handover_issue_id"]
+            isOneToOne: false
+            referencedRelation: "booking_handover_issues"
             referencedColumns: ["id"]
           },
         ]
@@ -2029,6 +2306,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -2088,6 +2386,25 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      add_support_case_message: {
+        Args: { p_body: string; p_case_id: string }
+        Returns: {
+          author_role: string
+          author_user_id: string
+          body: string
+          booking_id: string
+          case_id: string
+          created_at: string
+          id: string
+          visibility: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_support_case_messages"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -2706,6 +3023,13 @@ export type Database = {
           vehicle_access_close: boolean
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       haversine_miles: {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: number
@@ -2719,6 +3043,7 @@ export type Database = {
         Args: { _booking_id: string; _user_id: string }
         Returns: boolean
       }
+      is_support_staff: { Args: { _user_id?: string }; Returns: boolean }
       mark_host_earnings_eligible: { Args: never; Returns: number }
       mark_refund_submitted: {
         Args: {
@@ -2727,6 +3052,52 @@ export type Database = {
           p_stripe_refund_id: string
         }
         Returns: Json
+      }
+      open_support_case: {
+        Args: {
+          p_booking_id: string
+          p_category: Database["public"]["Enums"]["support_case_category"]
+          p_description: string
+          p_handover_issue_id?: string
+          p_stage: Database["public"]["Enums"]["support_case_stage"]
+          p_summary: string
+        }
+        Returns: {
+          assigned_to_user_id: string | null
+          booking_id: string
+          category: Database["public"]["Enums"]["support_case_category"]
+          closed_at: string | null
+          created_at: string
+          description: string
+          financially_resolved: boolean
+          host_id: string
+          id: string
+          last_activity_at: string
+          linked_handover_issue_id: string | null
+          opened_by_role: string
+          opened_by_user_id: string
+          reference: string
+          refund_currency: string | null
+          refund_total_pence: number
+          renter_id: string
+          resolution_code:
+            | Database["public"]["Enums"]["support_resolution_code"]
+            | null
+          resolution_summary: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          stage: Database["public"]["Enums"]["support_case_stage"]
+          status: Database["public"]["Enums"]["support_case_status"]
+          submitted_at: string
+          summary: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_support_cases"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       reconcile_charge_refund: {
         Args: {
@@ -3085,6 +3456,164 @@ export type Database = {
         }
         Returns: number
       }
+      support_add_note: {
+        Args: { p_case_id: string; p_note: string }
+        Returns: undefined
+      }
+      support_assign_case: {
+        Args: { p_assignee: string; p_case_id: string }
+        Returns: {
+          assigned_to_user_id: string | null
+          booking_id: string
+          category: Database["public"]["Enums"]["support_case_category"]
+          closed_at: string | null
+          created_at: string
+          description: string
+          financially_resolved: boolean
+          host_id: string
+          id: string
+          last_activity_at: string
+          linked_handover_issue_id: string | null
+          opened_by_role: string
+          opened_by_user_id: string
+          reference: string
+          refund_currency: string | null
+          refund_total_pence: number
+          renter_id: string
+          resolution_code:
+            | Database["public"]["Enums"]["support_resolution_code"]
+            | null
+          resolution_summary: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          stage: Database["public"]["Enums"]["support_case_stage"]
+          status: Database["public"]["Enums"]["support_case_status"]
+          submitted_at: string
+          summary: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_support_cases"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      support_case_refundable: {
+        Args: { p_case_id: string }
+        Returns: {
+          currency: string
+          is_extension: boolean
+          paid_pence: number
+          payment_id: string
+          period_index: number
+          period_label: string
+          refunded_pence: number
+          remaining_pence: number
+        }[]
+      }
+      support_post_update: {
+        Args: { p_case_id: string; p_message: string }
+        Returns: undefined
+      }
+      support_record_resolution: {
+        Args: {
+          p_case_id: string
+          p_close?: boolean
+          p_internal_note?: string
+          p_resolution_code: Database["public"]["Enums"]["support_resolution_code"]
+          p_resolution_summary: string
+        }
+        Returns: {
+          assigned_to_user_id: string | null
+          booking_id: string
+          category: Database["public"]["Enums"]["support_case_category"]
+          closed_at: string | null
+          created_at: string
+          description: string
+          financially_resolved: boolean
+          host_id: string
+          id: string
+          last_activity_at: string
+          linked_handover_issue_id: string | null
+          opened_by_role: string
+          opened_by_user_id: string
+          reference: string
+          refund_currency: string | null
+          refund_total_pence: number
+          renter_id: string
+          resolution_code:
+            | Database["public"]["Enums"]["support_resolution_code"]
+            | null
+          resolution_summary: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          stage: Database["public"]["Enums"]["support_case_stage"]
+          status: Database["public"]["Enums"]["support_case_status"]
+          submitted_at: string
+          summary: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_support_cases"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      support_resolve_case_with_refund: {
+        Args: {
+          p_amount_pence: number
+          p_case_id: string
+          p_internal_note?: string
+          p_payment_id: string
+          p_resolution_summary: string
+        }
+        Returns: Json
+      }
+      support_set_status: {
+        Args: {
+          p_case_id: string
+          p_message?: string
+          p_status: Database["public"]["Enums"]["support_case_status"]
+        }
+        Returns: {
+          assigned_to_user_id: string | null
+          booking_id: string
+          category: Database["public"]["Enums"]["support_case_category"]
+          closed_at: string | null
+          created_at: string
+          description: string
+          financially_resolved: boolean
+          host_id: string
+          id: string
+          last_activity_at: string
+          linked_handover_issue_id: string | null
+          opened_by_role: string
+          opened_by_user_id: string
+          reference: string
+          refund_currency: string | null
+          refund_total_pence: number
+          renter_id: string
+          resolution_code:
+            | Database["public"]["Enums"]["support_resolution_code"]
+            | null
+          resolution_summary: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          stage: Database["public"]["Enums"]["support_case_stage"]
+          status: Database["public"]["Enums"]["support_case_status"]
+          submitted_at: string
+          summary: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_support_cases"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       upsert_host_payout_account: {
         Args: {
           p_charges_enabled: boolean
@@ -3135,6 +3664,7 @@ export type Database = {
         | "completed"
         | "partial"
         | "failed"
+      app_role: "support" | "admin"
       booking_change_status:
         | "pending"
         | "accepted_awaiting_payment"
@@ -3265,6 +3795,49 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "disputed"
+      support_case_category:
+        | "inventory_mismatch"
+        | "quantity_mismatch"
+        | "belongings_damage"
+        | "space_damage"
+        | "condition_concern"
+        | "access_problem"
+        | "handover_problem"
+        | "collection_problem"
+        | "prohibited_item"
+        | "missing_belongings"
+        | "cancellation_problem"
+        | "extension_problem"
+        | "payment_problem"
+        | "refund_problem"
+        | "other"
+      support_case_stage:
+        | "before_storage"
+        | "checkin"
+        | "during_storage"
+        | "checkout"
+        | "after_storage"
+        | "cancellation"
+        | "extension"
+        | "payment"
+        | "other"
+      support_case_status:
+        | "open"
+        | "waiting_for_other_party"
+        | "waiting_for_reporter"
+        | "under_review"
+        | "resolved"
+        | "closed"
+      support_resolution_code:
+        | "no_action"
+        | "information_only"
+        | "agreement_reached"
+        | "refund_full"
+        | "refund_partial"
+        | "host_adjustment"
+        | "renter_adjustment"
+        | "booking_cancelled"
+        | "other"
       temperature_condition: "normal_indoor" | "unheated" | "unknown"
       tri_state: "yes" | "no" | "not_applicable"
       user_mode: "renter" | "host"
@@ -3402,6 +3975,7 @@ export const Constants = {
         "partial",
         "failed",
       ],
+      app_role: ["support", "admin"],
       booking_change_status: [
         "pending",
         "accepted_awaiting_payment",
@@ -3542,6 +4116,53 @@ export const Constants = {
         "completed",
         "cancelled",
         "disputed",
+      ],
+      support_case_category: [
+        "inventory_mismatch",
+        "quantity_mismatch",
+        "belongings_damage",
+        "space_damage",
+        "condition_concern",
+        "access_problem",
+        "handover_problem",
+        "collection_problem",
+        "prohibited_item",
+        "missing_belongings",
+        "cancellation_problem",
+        "extension_problem",
+        "payment_problem",
+        "refund_problem",
+        "other",
+      ],
+      support_case_stage: [
+        "before_storage",
+        "checkin",
+        "during_storage",
+        "checkout",
+        "after_storage",
+        "cancellation",
+        "extension",
+        "payment",
+        "other",
+      ],
+      support_case_status: [
+        "open",
+        "waiting_for_other_party",
+        "waiting_for_reporter",
+        "under_review",
+        "resolved",
+        "closed",
+      ],
+      support_resolution_code: [
+        "no_action",
+        "information_only",
+        "agreement_reached",
+        "refund_full",
+        "refund_partial",
+        "host_adjustment",
+        "renter_adjustment",
+        "booking_cancelled",
+        "other",
       ],
       temperature_condition: ["normal_indoor", "unheated", "unknown"],
       tri_state: ["yes", "no", "not_applicable"],

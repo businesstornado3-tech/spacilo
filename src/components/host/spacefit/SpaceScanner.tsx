@@ -14,8 +14,7 @@ import { Alert } from "@/components/common/Alert";
 import { Field, TextInput } from "@/components/form/Field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BoundaryEditor } from "@/components/spacefit/live/BoundaryEditor";
-import { LiveScanner } from "@/components/spacefit/live/LiveScanner";
+import { HostSpaceCapture } from "@/components/spacefit/live/HostSpaceCapture";
 import { toast } from "@/components/overlay/toast";
 import type { BoundaryMeasurement } from "@/lib/livescan/boundary-scale";
 import {
@@ -68,18 +67,9 @@ export function SpaceScanner({
   const [busy, setBusy] = React.useState(false);
   const [scanning, setScanning] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  /** Object URL of the frame just captured, shown frozen in the editor. */
-  const [frozen, setFrozen] = React.useState<string | null>(null);
+  /** Manual measurement entry — the host must never be trapped in drawing. */
+  const [manualOpen, setManualOpen] = React.useState(false);
 
-  const clearFrozen = React.useCallback(() => {
-    setFrozen((previous) => {
-      if (previous) URL.revokeObjectURL(previous);
-      return null;
-    });
-  }, []);
-
-  // Never leak the frozen frame's blob when the scanner unmounts.
-  React.useEffect(() => clearFrozen, [clearFrozen]);
 
   const refresh = React.useCallback(async () => {
     const [list, current] = await Promise.all([listScanPhotos(spaceId), latestProposal(spaceId)]);
@@ -223,7 +213,7 @@ export function SpaceScanner({
       {photos.length < MAX_SPACE_SCAN_PHOTOS ? (
         <HostSpaceCapture
           className="mt-4"
-          onManualEntry={() => manualRef.current?.scrollIntoView({ block: "center" })}
+          onManualEntry={() => setManualOpen(true)}
           onCaptured={async (file: File) => {
             setBusy(true);
             try {

@@ -68,10 +68,12 @@ export class CameraController {
   private mediaDevices: MediaDevicesLike | null;
   private stream: MediaStream | null = null;
   private currentFacing: CameraFacing;
+  private readonly preview: CameraPreviewProfile;
 
   constructor(options: CameraControllerOptions = {}) {
     this.mediaDevices = options.mediaDevices ?? null;
     this.currentFacing = options.facing ?? "environment";
+    this.preview = options.preview ?? DEFAULT_PREVIEW_PROFILE;
   }
 
   get active(): boolean {
@@ -93,7 +95,7 @@ export class CameraController {
     // Never run two streams at once.
     this.stop();
     try {
-      const stream = await this.mediaDevices.getUserMedia(cameraConstraints(facing));
+      const stream = await this.mediaDevices.getUserMedia(cameraConstraints(facing, this.preview));
       this.stream = stream;
       this.currentFacing = facing;
       return { ok: true, stream };

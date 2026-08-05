@@ -7,118 +7,165 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { captureReadiness, guidanceFor } from "@/lib/livescan/guidance";
+import {
+  HOST_RESHOOT_TIPS,
+  hostGuidance,
+  hostPossibleObstructions,
+  objectCoverage,
+  renterGuidance,
+} from "@/lib/livescan/guidance";
 import type { FrameQuality, StableDetection } from "@/lib/livescan/types";
 
 const good: FrameQuality = { brightness: 0.5, sharpness: 0.7, motion: 0.05 };
-const dark: FrameQuality = { brightness: 0.05, sharpness: 0.7, motion: 0.05 };
-const blurry: FrameQuality = { brightness: 0.5, sharpness: 0.1, motion: 0.05 };
-const moving: FrameQuality = { brightness: 0.5, sharpness: 0.7, motion: 0.6 };
+const dark: FrameQuality = { brightness: 0.02, sharpness: 0.7, motion: 0.05 };
+const blown: FrameQuality = { brightness: 0.99, sharpness: 0.7, motion: 0.05 };
+const blurry: FrameQuality = { brightness: 0.5, sharpness: 0.02, motion: 0.05 };
+const moving: FrameQuality = { brightness: 0.5, sharpness: 0.7, motion: 0.9 };
 
-const detection = (label: string): StableDetection => ({
-  id: label,
-  label,
-  category: "other",
-  catalogueKey: null,
-  score: 0.9,
-  bbox: [0, 0, 10, 10],
-  confirmed: true,
-});
-
-describe("captureReadiness", () => {
-  it("is ready on a good frame", () => {
-    expect(captureReadiness(good).state).toBe("ready");
-  });
-
-  it("is not ready in the dark", () => {
-    const readiness = captureReadiness(dark);
-    expect(readiness.state).toBe("improving");
-    expect(readiness.issues).toContain("too_dark");
-  });
-
-  it("is not ready when blurry", () => {
-    expect(captureReadiness(blurry).issues).toContain("blurry");
-  });
-
-  it("is not ready while the phone is moving", () => {
-    expect(captureReadiness(moving).issues).toContain("moving");
-  });
-
-  it("reports a glare-bright frame", () => {
-    expect(captureReadiness({ ...good, brightness: 0.99 }).issues).toContain("too_bright");
-  });
-
-  it("collects several issues at once", () => {
-    const readiness = captureReadiness({ brightness: 0.03, sharpness: 0.05, motion: 0.8 });
-    expect(readiness.issues.length).toBeGreaterThanOrEqual(3);
-    expect(readiness.state).toBe("improving");
-  });
-});
+function detection(rawClass: string, confirmed = true, size = 10): StableDetection {
+  return {
+    id: `${rawClass}-${size}`,
+    rawClass,
+    label: rawClass,
+    category: "other",
+    catalogueKey: null,
+    score: 0.9,
+    bbox: [0, 0, size, size],
+    frames: 5,
+    firstSeenAt: 0,
+    lastSeenAt: 500,
+    confirmed,
+  };
+}
 
 describe("renter guidance", () => {
-  it("asks the user to pan when nothing is found", () => {
-    const guidance = guidanceFor("renter", { quality: good, detections: [] });
-    expect(guidance.headline).toMatch(/slowly/i);
-    expect(guidance.tone).toBe("neutral");
+  it("asks for more light in the dark", () => {
+    const guidance = renterGuidance([], dark);
+    expect(guidance.readiness).toBe("not_ready");
+    expect(guidance.message).toMatch(/light/i);
   });
 
-  it("acknowledges found items", () => {
-    const guidance = guidanceFor("renter", {
-      quality: good,
-      detections: [detection("Bicycle"), detection("Suitcase")],
-    });
-    expect(guidance.headline).toMatch(/2 items/);
-    expect(guidance.tone).toBe("positive");
+  it("asks the user to slow down when moving", () => {
+    expect(renterGuidance([], moving).message).toMatch(/slowly/i);
   });
 
-  it("uses the singular for one item", () => {
-    const guidance = guidanceFor("renter", { quality: good, detections: [detection("Bicycle")] });
-    expect(guidance.headline).toMatch(/1 item/);
+  it("asks the user to hold still when blurry", () => {
+    expect(renterGuidance([], blurry).message).toMatch(/blurry/i);
   });
 
-  it("prioritises a quality problem over detections", () => {
-    const guidance = guidanceFor("renter", { quality: dark, detections: [detection("Bicycle")] });
-    expect(guidance.headline).toMatch(/light/i);
-    expect(guidance.tone).toBe("warning");
+  it("asks the user to point at their belongings when nothing is found", () => {
+    const guidance = renterGuidance([], good);
+    expect(guidance.readiness).toBe("improving");
+    expect(guidance.message).toMatch(/point at/i);
+  });
+
+  it("waits for a confirmed detection before declaring readiness", () => {
+    expect(renterGuidance([detection("bicycle", false)], good).readiness).toBe("improving");
+  });
+
+  it("is ready once something is confirmed on a good frame", () => {
+    const guidance = renterGuidance([detection("bicycle")], good);
+    expect(guidance.readiness).toBe("ready");
+    expect(guidance.message).toMatch(/ready to capture/i);
+  });
+
+  it("always exposes textual checks, not just colour", () => {
+    const guidance = renterGuidance([detection("bicycle")], good);
+    expect(guidance.checks).toHaveLength(3);
+    expect(guidance.checks.every((check) => typeof check.label === "string")).toBe(true);
+  });
+
+  it("marks the light check as failed in the dark", () => {
+    const guidance = renterGuidance([], dark);
+    expect(guidance.checks.find((check) => check.label === "Enough light")?.met).toBe(false);
+  });
+
+  it("is deterministic", () => {
+    expect(renterGuidance([detection("bicycle")], good)).toEqual(
+      renterGuidance([detection("bicycle")], good),
+    );
   });
 
   it("never promises accuracy", () => {
-    const guidance = guidanceFor("renter", { quality: good, detections: [detection("Bicycle")] });
-    expect(`${guidance.headline} ${guidance.detail}`).not.toMatch(
-      /guarantee|exact|100%|accurate|precise/i,
-    );
+    const guidance = renterGuidance([detection("bicycle")], good);
+    expect(guidance.message).not.toMatch(/guarantee|exact|100%|precise/i);
   });
 });
 
 describe("host guidance", () => {
-  it("asks for a doorway framing", () => {
-    const guidance = guidanceFor("host", { quality: good, detections: [] });
-    expect(guidance.detail).toMatch(/doorway|corner|floor/i);
+  const clear = { quality: good, detections: [], objectCoverage: 0 };
+
+  it("blocks capture in poor light", () => {
+    expect(hostGuidance({ ...clear, quality: dark }).readiness).toBe("not_ready");
   });
 
-  it("flags a dark space", () => {
-    expect(guidanceFor("host", { quality: dark, detections: [] }).headline).toMatch(/light/i);
+  it("warns about glare", () => {
+    expect(hostGuidance({ ...clear, quality: blown }).message).toMatch(/bright/i);
   });
 
-  it("flags camera movement", () => {
-    expect(guidanceFor("host", { quality: moving, detections: [] }).headline).toMatch(/still/i);
+  it("warns about movement", () => {
+    expect(hostGuidance({ ...clear, quality: moving }).message).toMatch(/slowly/i);
   });
 
-  it("confirms when the frame is worth capturing", () => {
-    const guidance = guidanceFor("host", { quality: good, detections: [] });
-    expect(guidance.tone).toBe("positive");
+  it("warns about blur", () => {
+    expect(hostGuidance({ ...clear, quality: blurry }).message).toMatch(/still|blurry/i);
+  });
+
+  it("asks for more floor when the frame is crowded", () => {
+    const guidance = hostGuidance({ ...clear, objectCoverage: 0.8 });
+    expect(guidance.readiness).toBe("improving");
+    expect(guidance.message).toMatch(/floor/i);
+  });
+
+  it("is ready on a clear, well-lit, steady frame", () => {
+    expect(hostGuidance(clear).readiness).toBe("ready");
   });
 
   it("never states a measurement live", () => {
-    for (const quality of [good, dark, blurry, moving]) {
-      const guidance = guidanceFor("host", { quality, detections: [] });
-      const text = `${guidance.headline} ${guidance.detail}`;
+    for (const quality of [good, dark, blown, blurry, moving]) {
+      const guidance = hostGuidance({ ...clear, quality });
+      const text = `${guidance.message} ${guidance.checks.map((c) => c.label).join(" ")}`;
       expect(text).not.toMatch(/\d+(\.\d+)?\s*(m|metre|metres|m²|m³|cm|ft)\b/i);
     }
   });
 
-  it("never claims the space is measured or verified", () => {
-    const guidance = guidanceFor("host", { quality: good, detections: [] });
-    expect(`${guidance.headline} ${guidance.detail}`).not.toMatch(/measured|verified|guaranteed/i);
+  it("never claims the space is measured, verified or guaranteed", () => {
+    const text = `${hostGuidance(clear).message} ${HOST_RESHOOT_TIPS.join(" ")}`;
+    expect(text).not.toMatch(/measured|verified|guaranteed|100%/i);
+  });
+
+  it("offers deterministic re-shoot tips", () => {
+    expect(HOST_RESHOOT_TIPS.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe("host scene signals", () => {
+  it("names likely permanent obstructions", () => {
+    expect(hostPossibleObstructions([detection("refrigerator"), detection("couch")])).toEqual(
+      expect.arrayContaining(["Large appliance", "Furniture"]),
+    );
+  });
+
+  it("ignores unconfirmed detections", () => {
+    expect(hostPossibleObstructions([detection("refrigerator", false)])).toEqual([]);
+  });
+
+  it("de-duplicates obstruction labels", () => {
+    expect(hostPossibleObstructions([detection("couch", true, 10), detection("bed", true, 20)])).toEqual(
+      ["Furniture"],
+    );
+  });
+
+  it("computes coverage as a 0–1 share of the frame", () => {
+    expect(objectCoverage([detection("couch", true, 100)], 200, 200)).toBeCloseTo(0.25);
+  });
+
+  it("clamps coverage at 1", () => {
+    expect(objectCoverage([detection("couch", true, 500)], 100, 100)).toBe(1);
+  });
+
+  it("is 0 for an empty frame", () => {
+    expect(objectCoverage([], 100, 100)).toBe(0);
+    expect(objectCoverage([detection("couch")], 0, 0)).toBe(0);
   });
 });

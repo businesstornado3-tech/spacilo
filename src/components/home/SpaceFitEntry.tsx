@@ -58,10 +58,9 @@ function ScanSpaceButton({ from, block = true }: { from: string; block?: boolean
       {target.to === "/host/spaces/new" ? (
         <Link to="/host/spaces/new">{label}</Link>
       ) : (
-        <Link to="/signup" search={{ mode: "host" }}>
-          {label}
-        </Link>
+        <Link to="/spacefit/space">{label}</Link>
       )}
+
     </Button>
   );
 }

@@ -6,6 +6,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
+import { DEMO_STATES } from "@/components/home/SpaceFitDemo";
 import { hostEntryTarget } from "@/lib/host-entry";
 import { scanSpaceTarget, scanStuffTarget } from "@/lib/spacefit-entry";
 
@@ -13,6 +14,7 @@ const FILES = [
   "src/routes/index.tsx",
   "src/components/home/Hero.tsx",
   "src/components/home/SpaceFitEntry.tsx",
+  "src/components/home/SpaceFitDemo.tsx",
   "src/components/home/SpaceFitStory.tsx",
   "src/components/home/TwoSidedValue.tsx",
   "src/components/home/WhyStow.tsx",
@@ -29,6 +31,7 @@ const hero = read("src/components/home/Hero.tsx");
 const entry = read("src/components/home/SpaceFitEntry.tsx");
 const story = read("src/components/home/SpaceFitStory.tsx");
 const page = read("src/routes/index.tsx");
+const demo = read("src/components/home/SpaceFitDemo.tsx");
 
 const BANNED = [
   /insured/i,
@@ -49,12 +52,53 @@ describe("homepage copy", () => {
     }
   });
 
-  it("leads with the required headline", () => {
-    expect(hero).toContain("Make space for what matters.");
+  it("leads with the required two-sided headline", () => {
+    expect(hero).toContain("Space nearby.");
+    expect(hero).toContain("Income at home.");
   });
 
-  it("states both sides of the marketplace in the hero", () => {
-    expect(hero).toContain("Storage that fits. Space that earns.");
+  it("drops the previous headline", () => {
+    expect(hero).not.toContain("Make space for what matters.");
+  });
+
+  it("gives both halves of the headline equal treatment inside the single h1", () => {
+    const h1 = hero.slice(hero.indexOf("<h1"), hero.indexOf("</h1>"));
+    const renter = h1.indexOf("Space nearby.");
+    const host = h1.indexOf("Income at home.");
+    expect(renter).toBeGreaterThan(-1);
+    expect(host).toBeGreaterThan(renter);
+    // identical wrapper treatment for both lines
+    expect((h1.match(/<span className="block">/g) ?? []).length).toBe(2);
+  });
+
+  it("explains the marketplace directly under the headline", () => {
+    expect(hero).toContain(
+      "Find trusted neighbourhood storage — or earn from the space you're not using.",
+    );
+  });
+
+  it("removes the redundant technology eyebrow above the headline", () => {
+    expect(hero).not.toMatch(/Neighbourhood storage, powered by SpaceFit AI/i);
+  });
+
+  it("introduces SpaceFit AI with its own promise line", () => {
+    expect(hero).toContain("SpaceFitAiMark");
+    expect(hero).toContain("Your stuff. Your space. Just show us.");
+  });
+
+  it("pairs each scan action with its curiosity question", () => {
+    expect(hero).toContain("How much space do I really need?");
+    expect(hero).toContain("What could my unused space earn?");
+  });
+
+  it("does not lead with no-account-needed marketing", () => {
+    expect(hero).not.toMatch(/no account needed/i);
+    expect(hero).not.toMatch(/no sign-?up required/i);
+  });
+
+  it("keeps manual search and a manual host path in the hero", () => {
+    expect(hero).toContain("SearchControls");
+    expect(hero).toContain("HostEntryButton");
   });
 
   it("names SpaceFit AI above the fold", () => {
@@ -190,5 +234,44 @@ describe("homepage structure", () => {
 
   it("gives the homepage SpaceFit-led metadata", () => {
     expect(page).toContain("SpaceFit AI");
+  });
+});
+
+describe("hero SpaceFit demonstration", () => {
+  it("is presentation only — no AI, scan session, upload or user data on render", () => {
+    expect(demo).not.toMatch(/spacefit-vision|gemini|useSpaceFitVision|ai_gateway/i);
+    expect(demo).not.toMatch(/createServerFn|useServerFn|supabase/i);
+    expect(demo).not.toMatch(/fetch\(|scan_session|space_scan/i);
+    expect(demo).not.toMatch(/useAuth|inventory-api|space-scan-api/);
+  });
+
+  it("carries both a renter and a host demonstration state", () => {
+    const modes = DEMO_STATES.map((s) => s.mode);
+    expect(modes).toContain("renter");
+    expect(modes).toContain("host");
+  });
+
+  it("labels the host earnings state as illustrative and never guaranteed", () => {
+    const host = DEMO_STATES.find((s) => s.mode === "host")!;
+    expect(host.resultValue).toMatch(/£/);
+    expect(host.footnote).toMatch(/illustrative/i);
+    expect(host.footnote).not.toMatch(/guarantee/i);
+    expect(host.resultLabel).toMatch(/potential/i);
+  });
+
+  it("labels the renter score as an illustrative example, not the visitor's result", () => {
+    const renter = DEMO_STATES.find((s) => s.mode === "renter")!;
+    expect(renter.footnote).toMatch(/illustrative/i);
+    expect(renter.footnote).toMatch(/not your result/i);
+  });
+
+  it("shows a stable both-benefit state when motion is reduced", () => {
+    expect(demo).toContain("usePrefersReducedMotion");
+    expect(demo).toContain("For renters");
+    expect(demo).toContain("For hosts");
+  });
+
+  it("never navigates on its own — state changes only swap content", () => {
+    expect(demo).not.toMatch(/navigate\(|<Link|href=/);
   });
 });

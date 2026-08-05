@@ -10,6 +10,7 @@ import { brand } from "@/config/brand";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/common/Reveal";
 import { HostEntryButton } from "@/components/home/HostEntryButton";
+import { ScanSpaceButton, ScanStuffButton } from "@/components/home/SpaceFitEntry";
 
 const renterPoints = [
   "Only pay for the space you need",

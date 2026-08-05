@@ -9,6 +9,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { FakeSupabase } from "@/lib/spacefit-guest/fake-supabase";
+import { hashGuestToken } from "@/lib/spacefit-guest/token.server";
 import {
   GUEST_IP_WINDOW_MINUTES,
   MAX_GUEST_PHOTOS,
@@ -94,13 +95,8 @@ const spaceScan = {
 };
 
 function sessionRow(token: string) {
-  return db.rows("guest_spacefit_sessions").find((row) => row["kind"] && row["token_hash"] && matchesToken(row, token));
-}
-
-function matchesToken(row: Record<string, any>, token: string) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { hashGuestToken } = require("@/lib/spacefit-guest/token.server");
-  return row["token_hash"] === hashGuestToken(token);
+  const hash = hashGuestToken(token);
+  return db.rows("guest_spacefit_sessions").find((row) => row["token_hash"] === hash);
 }
 
 async function expectCategory(promise: Promise<unknown>, category: string) {

@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest";
 import { normalizeAdminBreakdowns } from "./response";
 import { filterTopPublicPages } from "./traffic";
 import { buildAttention, isAllClear } from "./attention";
-import { aiSectionIsEmpty, guestAiOutcomes, hostAiFunnel, aiReliability, renterAiFunnel } from "./ai-funnels";
+import {
+  aiSectionIsEmpty,
+  guestAiOutcomes,
+  hostAiFunnel,
+  aiReliability,
+  renterAiFunnel,
+} from "./ai-funnels";
 import { rangeSupportsComparison, resolveDateRange } from "./dashboard";
 
 describe("founder dashboard RPC response integration", () => {
@@ -31,7 +37,12 @@ describe("founder dashboard RPC response integration", () => {
   });
 
   it("accepts zero and empty production data without fabricating activity", () => {
-    const data = normalizeAdminBreakdowns({ devices: {}, top_pages: [], event_counts: {}, attention: {} });
+    const data = normalizeAdminBreakdowns({
+      devices: {},
+      top_pages: [],
+      event_counts: {},
+      attention: {},
+    });
     expect(data.devices).toEqual([]);
     expect(filterTopPublicPages(data.topPages)).toEqual([]);
     expect(isAllClear(buildAttention(data.attentionCounts))).toBe(true);
@@ -53,7 +64,10 @@ describe("founder dashboard RPC response integration", () => {
   it("handles absent optional fields and malformed rows without throwing", () => {
     expect(() => normalizeAdminBreakdowns(null)).not.toThrow();
     expect(normalizeAdminBreakdowns({ devices: null, top_pages: [null, {}] })).toEqual({
-      eventCounts: {}, attentionCounts: {}, devices: [], topPages: [],
+      eventCounts: {},
+      attentionCounts: {},
+      devices: [],
+      topPages: [],
     });
   });
 

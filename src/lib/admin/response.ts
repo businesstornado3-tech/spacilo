@@ -72,9 +72,10 @@ function pageRows(value: unknown): PublicPageRow[] {
 }
 
 export function normalizeAdminBreakdowns(value: unknown): AdminBreakdowns {
-  const payload = value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
+  const payload =
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {};
 
   return {
     eventCounts: numberRecord(payload["event_counts"]),

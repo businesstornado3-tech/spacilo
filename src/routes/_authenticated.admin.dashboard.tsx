@@ -194,10 +194,7 @@ function AdminDashboardRoute() {
   const prior = comparable ? (kpis.data?.previous ?? null) : null;
   const live = kpis.data?.live ?? null;
 
-  const normalizedBreakdowns = React.useMemo(
-    () => normalizeAdminBreakdowns(breakdowns.data),
-    [breakdowns.data],
-  );
+  const normalizedBreakdowns = normalizeAdminBreakdowns(breakdowns.data);
   const { eventCounts, attentionCounts, devices } = normalizedBreakdowns;
   const topPages = filterTopPublicPages(normalizedBreakdowns.topPages);
 

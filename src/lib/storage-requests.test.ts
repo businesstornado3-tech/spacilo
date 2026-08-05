@@ -58,6 +58,8 @@ const base: StorageRequest = {
   space_title_snapshot: "Dry lock-up garage",
   space_type_snapshot: "garage",
   spacefit_algorithm_snapshot: "spacefit_v1",
+  spacefit_plan_snapshot: null,
+  spacefit_space_dimensions_snapshot: null,
   spacefit_breakdown_snapshot: null,
   spacefit_label_snapshot: "Excellent fit",
   spacefit_score_snapshot: 94,

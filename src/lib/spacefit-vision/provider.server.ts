@@ -7,6 +7,7 @@
  * in the renter experience.
  */
 import type { VisionErrorCategory, VisionResult } from "@/lib/spacefit-vision/schema";
+import type { SpaceScanResult } from "@/lib/spacefit-vision/space-schema";
 
 export interface VisionImage {
   /** Stable id used only to map detections back to photos. Not sent verbatim. */
@@ -41,10 +42,27 @@ export class VisionProviderError extends Error {
   }
 }
 
+/** Host-side space scan. Carries no catalogue — a room isn't an item list. */
+export interface AnalyseSpaceRequest {
+  images: VisionImage[];
+  /** Optional host-declared space type, used only as context for the model. */
+  spaceType?: string | null;
+}
+
+export interface AnalyseSpaceResponse {
+  result: SpaceScanResult;
+  model: string;
+  provider: string;
+  promptVersion: string;
+  schemaVersion: string;
+}
+
 export interface SpaceFitVisionProvider {
   readonly id: string;
   readonly model: string;
   analyseInventoryPhotos(request: AnalyseRequest): Promise<AnalyseResponse>;
+  /** Estimates room geometry and obstacles. Results are proposals only. */
+  analyseSpacePhotos(request: AnalyseSpaceRequest): Promise<AnalyseSpaceResponse>;
 }
 
 /**

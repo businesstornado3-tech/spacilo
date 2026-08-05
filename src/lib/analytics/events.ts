@@ -41,12 +41,16 @@ export const ANALYTICS_EVENTS = [
 
   // ---- marketplace
   "storage_search_started",
+  "search_refined",
+  "search_result_selected",
   "listing_viewed",
   "enquiry_started",
   "enquiry_sent",
   "storage_request_started",
   "storage_request_created",
+  "storage_request_withdrawn",
   "booking_created",
+  "checkout_started",
 
   // ---- supply
   "host_listing_started",

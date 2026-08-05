@@ -22,18 +22,37 @@ export type CameraStartResult =
   | { ok: true; stream: MediaStream }
   | { ok: false; code: LiveScanErrorCode };
 
+export interface CameraPreviewProfile {
+  width: number;
+  height: number;
+  frameRate: number;
+}
+
 export interface CameraControllerOptions {
   mediaDevices?: MediaDevicesLike | null;
   facing?: CameraFacing;
+  /** Requested preview resolution. Smaller previews keep phones responsive. */
+  preview?: CameraPreviewProfile;
 }
 
-export function cameraConstraints(facing: CameraFacing): MediaStreamConstraints {
+/** Default preview: deliberately modest, because 1080p previews cause lag. */
+export const DEFAULT_PREVIEW_PROFILE: CameraPreviewProfile = {
+  width: 960,
+  height: 540,
+  frameRate: 30,
+};
+
+export function cameraConstraints(
+  facing: CameraFacing,
+  preview: CameraPreviewProfile = DEFAULT_PREVIEW_PROFILE,
+): MediaStreamConstraints {
   return {
     audio: false,
     video: {
       facingMode: { ideal: facing },
-      width: { ideal: 1280 },
-      height: { ideal: 720 },
+      width: { ideal: preview.width, max: 1280 },
+      height: { ideal: preview.height, max: 720 },
+      frameRate: { ideal: preview.frameRate, max: 30 },
     },
   };
 }

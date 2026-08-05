@@ -44,7 +44,10 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
   const search = useStorageSearch(params);
-  const { centre, results, hasInventory, geocodeError, nearbyCount, incompatibleCount, isLoading } = search;
+  const { centre, results, hasInventory, items, geocodeError, nearbyCount, incompatibleCount, isLoading } =
+    search;
+  // Deterministic requirement, so the renter can size spaces themselves too.
+  const requirement = hasInventory ? estimateRequiredSpace(items) : null;
 
   const mapSpaces: MapSpace[] = React.useMemo(
     () =>
@@ -194,6 +197,18 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
             </Button>
           </div>
         </div>
+      ) : null}
+
+      {requirement ? (
+        <p className="type-body-sm text-muted-foreground">
+          Your confirmed stuff needs roughly{" "}
+          <strong className="text-foreground">{formatVolume(requirement.requiredVolumeM3)}</strong> of usable
+          storage
+          {requirement.requiredFloorAreaM2 > 0
+            ? ` and about ${requirement.requiredFloorAreaM2.toFixed(1)} m² of floor space`
+            : ""}
+          . Spaces smaller than that are flagged below.
+        </p>
       ) : null}
 
       {hasInventory && incompatibleCount > 0 ? (

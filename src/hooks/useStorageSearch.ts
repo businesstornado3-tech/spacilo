@@ -215,6 +215,8 @@ export function useStorageSearch(params: StorageSearchParams) {
     radius,
     geocodeError,
     hasInventory,
+    /** Confirmed items behind the fit results, for the requirement summary. */
+    items: confirmed,
     results,
     nearbyCount: evaluated.length,
     filteredOutCount: evaluated.length - filtered.length,

@@ -159,25 +159,62 @@ export interface GuestSpaceProposal {
 }
 
 export function guestProposalFromScan(
-  result: SpaceScanResult,
+  result: Partial<SpaceScanResult> | null | undefined,
   spaceType: string | null,
 ): GuestSpaceProposal {
+  const positive = (value: unknown): number | null =>
+    typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+
   return {
-    widthM: result.estimated_width_m,
-    depthM: result.estimated_depth_m,
-    usableHeightM: result.estimated_usable_height_m,
-    confidence: result.measurement_confidence,
-    referenceUsed: result.reference_used,
-    obstacles: result.obstacles.map((obstacle) => ({
+    widthM: positive(result?.estimated_width_m),
+    depthM: positive(result?.estimated_depth_m),
+    usableHeightM: positive(result?.estimated_usable_height_m),
+    confidence: result?.measurement_confidence ?? "low",
+    referenceUsed: result?.reference_used ?? null,
+    obstacles: (result?.obstacles ?? []).map((obstacle) => ({
       kind: obstacle.kind,
       label: obstacle.label,
       estimatedVolumeM3: obstacle.estimated_volume_m3,
     })),
-    limitations: [...result.limitations],
-    notes: result.notes,
+    limitations: [...(result?.limitations ?? [])],
+    notes: result?.notes ?? null,
     spaceType,
   };
 }
+
+/**
+ * Explicit outcome of a host scan. A scan that produced no usable dimensions is
+ * a first-class, non-failing state — never a silent blank screen.
+ */
+export type GuestSpaceOutcome = "measured" | "partial" | "insufficient_information";
+
+export function spaceMeasurementOutcome(
+  proposal: GuestSpaceProposal | null | undefined,
+): GuestSpaceOutcome {
+  if (!proposal) return "insufficient_information";
+  const present = [proposal.widthM, proposal.depthM, proposal.usableHeightM].filter(
+    (value): value is number => typeof value === "number" && value > 0,
+  ).length;
+  if (present === 3) return "measured";
+  if (present === 0) return "insufficient_information";
+  return "partial";
+}
+
+export const GUEST_SPACE_OUTCOME_COPY: Record<GuestSpaceOutcome, { title: string; body: string }> = {
+  measured: {
+    title: "SpaceFit AI estimated your space",
+    body: "Check each figure against the real space and correct anything that looks wrong.",
+  },
+  partial: {
+    title: "SpaceFit AI could only estimate part of your space",
+    body: "Fill in the missing measurements below — a tape measure beats a photo every time.",
+  },
+  insufficient_information: {
+    title: "SpaceFit AI couldn't measure this space",
+    body: "The photos didn't show enough of the room, or nothing in them gave a sense of scale. Add a wider photo with a door or person in shot, or enter the measurements yourself below.",
+  },
+};
+
 
 /** Back to the shared schema shape so `deriveSpaceFigures` stays the authority. */
 function toScanResult(proposal: GuestSpaceProposal): SpaceScanResult {

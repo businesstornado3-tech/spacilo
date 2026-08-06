@@ -100,7 +100,7 @@
   --popover-foreground: oklch(0.22 0.021 240);
 
   /* Spacilo emerald — the action colour from the approved identity */
-  --primary: oklch(0.58 0.125 162);
+  --primary: oklch(0.53 0.125 162);
   --primary-foreground: oklch(0.995 0.004 160);
   --primary-soft: oklch(0.952 0.048 158);
   --primary-soft-foreground: oklch(0.42 0.1 160);

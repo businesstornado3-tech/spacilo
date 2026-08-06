@@ -82,7 +82,7 @@ function GetStartedPage() {
 
         <p className="mt-8 type-body-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link to="/login" className="text-primary underline-offset-4 hover:underline">
+          <Link to="/login" className="text-primary underline underline-offset-4">
             Log in
           </Link>
         </p>

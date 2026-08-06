@@ -106,10 +106,10 @@ export function SpaceFitEntry({
     >
       <SpaceFitAiMark size="sm" />
       <h2 id="spacefit-entry-heading" className="mt-3 type-h3">
-        Show us what you've got.
+        Your stuff. Your space. Just show us.
       </h2>
       <p className="mt-1.5 type-body-sm text-muted-foreground">
-        We'll help work out what fits — whether that's your belongings or your spare space.
+        Spacilo AI helps work out what fits — whether that's your belongings or your spare space.
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -119,7 +119,7 @@ export function SpaceFitEntry({
             to store
           </span>
           <p className="mt-1.5 mb-4 type-body-sm text-muted-foreground">
-            Scan your belongings and see how much storage you need.
+            How much space do I really need?
           </p>
           <div className="mt-auto">
             <ScanStuffButton from={from} />
@@ -132,7 +132,7 @@ export function SpaceFitEntry({
             to spare
           </span>
           <p className="mt-1.5 mb-4 type-body-sm text-muted-foreground">
-            Scan your unused space and see what it could hold and what it could earn.
+            What could my unused space earn?
           </p>
           <div className="mt-auto">
             <ScanSpaceButton from={from} />

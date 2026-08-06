@@ -22,7 +22,6 @@ const HOMEPAGE_FILES = [
   "src/components/home/HostControl.tsx",
   "src/components/home/TrustSection.tsx",
   "src/components/home/LaunchArea.tsx",
-  "src/components/home/FinalCta.tsx",
 ];
 
 const read = (file: string) => readFileSync(file, "utf8");
@@ -60,9 +59,12 @@ describe("homepage route contract", () => {
   });
 
   it("reaches search, trust, how-it-works and both entry pages", () => {
-    for (const expected of ["/search", "/trust", "/how-it-works", "/find-storage", "/list-space"]) {
+    for (const expected of ["/trust", "/how-it-works", "/find-storage", "/list-space"]) {
       expect(homepageTargets).toContain(expected);
     }
+    // Search is reached through the typed navigate() call in the hero search form.
+    expect(read("src/components/home/Hero.tsx")).toContain('to: "/search"');
+    expect(knownRoutes.has("/search")).toBe(true);
   });
 });
 

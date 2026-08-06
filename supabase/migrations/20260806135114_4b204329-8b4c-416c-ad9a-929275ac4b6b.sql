@@ -1,0 +1,1 @@
+GRANT SELECT ON public.storage_policy_versions TO anon;

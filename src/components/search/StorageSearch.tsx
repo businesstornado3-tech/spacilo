@@ -248,12 +248,16 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,47fr)_minmax(0,53fr)]">
         <div className={cn("space-y-4", view === "map" && "hidden lg:block")}>
+          {/* Card titles are h3, so the list needs an h2 above them even when
+              the visible results heading is not rendered. */}
+          <h2 className="sr-only">Search results</h2>
           {isLoading ? (
             <p className="flex items-center gap-2 type-body-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Finding storage near
               you…
             </p>
           ) : null}
+
           {results.map((entry) => (
             <SearchResultCard
               key={entry.row.id}

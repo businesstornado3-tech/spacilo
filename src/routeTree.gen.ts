@@ -30,6 +30,7 @@ import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedRenterRouteImport } from './routes/_authenticated.renter'
 import { Route as AuthenticatedSpacefitRouteImport } from './routes/_authenticated.spacefit'
+import { Route as LegalIndexRouteImport } from './routes/legal.index'
 import { Route as SpacefitSpaceRouteImport } from './routes/spacefit.space'
 import { Route as SpacefitStuffRouteImport } from './routes/spacefit.stuff'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
@@ -177,6 +178,11 @@ const AuthenticatedSpacefitRoute = AuthenticatedSpacefitRouteImport.update({
   id: '/spacefit',
   path: '/spacefit',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const LegalIndexRoute = LegalIndexRouteImport.update({
+  id: '/legal/',
+  path: '/legal/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const SpacefitSpaceRoute = SpacefitSpaceRouteImport.update({
   id: '/spacefit/space',
@@ -448,6 +454,7 @@ export interface FileRoutesByFullPath {
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/legal/': typeof LegalIndexRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
@@ -510,6 +517,7 @@ export interface FileRoutesByTo {
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/legal': typeof LegalIndexRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
@@ -575,6 +583,7 @@ export interface FileRoutesById {
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/legal/': typeof LegalIndexRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/_authenticated/host/earnings': typeof AuthenticatedHostEarningsRoute
@@ -641,6 +650,7 @@ export interface FileRouteTypes {
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
+    | '/legal/'
     | '/admin/dashboard'
     | '/host/bookings'
     | '/host/earnings'
@@ -703,6 +713,7 @@ export interface FileRouteTypes {
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
+    | '/legal'
     | '/admin/dashboard'
     | '/host/bookings'
     | '/host/earnings'
@@ -767,6 +778,7 @@ export interface FileRouteTypes {
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
+    | '/legal/'
     | '/_authenticated/admin/dashboard'
     | '/_authenticated/host/bookings'
     | '/_authenticated/host/earnings'
@@ -828,6 +840,7 @@ export interface RootRouteChildren {
   SpacefitSpaceRoute: typeof SpacefitSpaceRoute
   SpacefitStuffRoute: typeof SpacefitStuffRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
+  LegalIndexRoute: typeof LegalIndexRoute
   ApiPublicPayoutsReleaseRoute: typeof ApiPublicPayoutsReleaseRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
@@ -980,6 +993,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/spacefit'
       preLoaderRoute: typeof AuthenticatedSpacefitRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/legal/': {
+      id: '/legal/'
+      path: '/legal'
+      fullPath: '/legal/'
+      preLoaderRoute: typeof LegalIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/spacefit/space': {
       id: '/spacefit/space'
@@ -1436,6 +1456,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpacefitSpaceRoute: SpacefitSpaceRoute,
   SpacefitStuffRoute: SpacefitStuffRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,
+  LegalIndexRoute: LegalIndexRoute,
   ApiPublicPayoutsReleaseRoute: ApiPublicPayoutsReleaseRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }

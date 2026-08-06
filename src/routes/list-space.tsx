@@ -5,15 +5,23 @@ import { MarketingLayout, PageSection } from "@/components/layout/MarketingLayou
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { hostEntryTarget } from "@/lib/host-entry";
+import { publicRouteMeta } from "@/lib/seo/meta";
+import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
+const title = "List your space — " + brand.name;
+const description =
+  "Earn from a garage, loft, shed or spare room you're not using. Set your own monthly price, choose what you accept, and pause any time.";
 
 export const Route = createFileRoute("/list-space")({
   head: () => ({
-    meta: [
-      { title: "List Your Space — " + brand.name },
-      { name: "description", content: "Tell us about your garage, loft, shed or spare room and set your own monthly price." },
-      { property: "og:title", content: "List Your Space — " + brand.name },
-      { property: "og:description", content: "Tell us about your garage, loft, shed or spare room and set your own monthly price." },
+    ...publicRouteMeta({ title, description, path: "/list-space" }),
+    scripts: [
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "List your space", path: "/list-space" },
+        ]),
+      ),
     ],
   }),
   component: ListSpacePage,

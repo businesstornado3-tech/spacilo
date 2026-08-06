@@ -55,6 +55,18 @@ export const ANALYTICS_EVENTS = [
   // ---- supply
   "host_listing_started",
   "host_listing_published",
+
+  // ---- communication layer (Prompt 26B): counts and ids only, never content
+  "conversation_started",
+  "conversation_opened",
+  "message_sent",
+  "conversation_reported",
+  "notification_opened",
+  "notification_read",
+  "notification_preferences_saved",
+  "host_profile_viewed",
+  "review_submitted",
+  "availability_calendar_viewed",
 ] as const;
 
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];

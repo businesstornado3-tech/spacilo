@@ -1109,34 +1109,87 @@ export type Database = {
           },
         ]
       }
+      conversation_reports: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_reports_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           booking_id: string | null
           created_at: string
+          host_archived_at: string | null
           host_id: string
+          host_last_read_at: string | null
           id: string
           last_message_at: string | null
+          moderation_status: string
+          renter_archived_at: string | null
           renter_id: string
+          renter_last_read_at: string | null
           space_id: string
           updated_at: string
         }
         Insert: {
           booking_id?: string | null
           created_at?: string
+          host_archived_at?: string | null
           host_id: string
+          host_last_read_at?: string | null
           id?: string
           last_message_at?: string | null
+          moderation_status?: string
+          renter_archived_at?: string | null
           renter_id: string
+          renter_last_read_at?: string | null
           space_id: string
           updated_at?: string
         }
         Update: {
           booking_id?: string | null
           created_at?: string
+          host_archived_at?: string | null
           host_id?: string
+          host_last_read_at?: string | null
           id?: string
           last_message_at?: string | null
+          moderation_status?: string
+          renter_archived_at?: string | null
           renter_id?: string
+          renter_last_read_at?: string | null
           space_id?: string
           updated_at?: string
         }
@@ -1956,6 +2009,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_preferences: {
+        Row: {
+          email_announcements: boolean
+          email_bookings: boolean
+          email_messages: boolean
+          email_payments: boolean
+          email_reviews: boolean
+          inapp_announcements: boolean
+          inapp_bookings: boolean
+          inapp_messages: boolean
+          inapp_payments: boolean
+          inapp_reviews: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          email_announcements?: boolean
+          email_bookings?: boolean
+          email_messages?: boolean
+          email_payments?: boolean
+          email_reviews?: boolean
+          inapp_announcements?: boolean
+          inapp_bookings?: boolean
+          inapp_messages?: boolean
+          inapp_payments?: boolean
+          inapp_reviews?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          email_announcements?: boolean
+          email_bookings?: boolean
+          email_messages?: boolean
+          email_payments?: boolean
+          email_reviews?: boolean
+          inapp_announcements?: boolean
+          inapp_bookings?: boolean
+          inapp_messages?: boolean
+          inapp_payments?: boolean
+          inapp_reviews?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       payments: {
         Row: {
@@ -4020,10 +4118,15 @@ export type Database = {
         Returns: {
           booking_id: string | null
           created_at: string
+          host_archived_at: string | null
           host_id: string
+          host_last_read_at: string | null
           id: string
           last_message_at: string | null
+          moderation_status: string
+          renter_archived_at: string | null
           renter_id: string
+          renter_last_read_at: string | null
           space_id: string
           updated_at: string
         }
@@ -4039,10 +4142,15 @@ export type Database = {
         Returns: {
           booking_id: string | null
           created_at: string
+          host_archived_at: string | null
           host_id: string
+          host_last_read_at: string | null
           id: string
           last_message_at: string | null
+          moderation_status: string
+          renter_archived_at: string | null
           renter_id: string
+          renter_last_read_at: string | null
           space_id: string
           updated_at: string
         }
@@ -4053,6 +4161,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_public_host_profile: { Args: { p_space_id: string }; Returns: Json }
       get_public_policy_rules: {
         Args: { p_version_id: string }
         Returns: {
@@ -4180,6 +4289,14 @@ export type Database = {
         Args: { p_space_id: string }
         Returns: Json
       }
+      get_space_unavailable_dates: {
+        Args: { p_space_id: string }
+        Returns: {
+          end_date: string
+          reason: string
+          start_date: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4202,8 +4319,30 @@ export type Database = {
       }
       is_platform_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_support_staff: { Args: { _user_id?: string }; Returns: boolean }
+      list_my_conversations: {
+        Args: { p_archived?: boolean }
+        Returns: {
+          archived: boolean
+          booking_id: string
+          booking_status: string
+          counterpart_name: string
+          counterpart_role: string
+          cover_path: string
+          id: string
+          last_message_at: string
+          last_message_preview: string
+          moderation_status: string
+          space_id: string
+          space_title: string
+          unread_count: number
+        }[]
+      }
       list_reported_reviews: { Args: { p_limit?: number }; Returns: Json }
       mark_all_notifications_read: { Args: never; Returns: number }
+      mark_conversation_read: {
+        Args: { p_conversation_id: string }
+        Returns: undefined
+      }
       mark_host_earnings_eligible: { Args: never; Returns: number }
       mark_notification_read: {
         Args: { p_notification_id: string; p_read?: boolean }
@@ -4247,6 +4386,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      moderate_conversation: {
+        Args: { p_conversation_id: string; p_status: string }
+        Returns: undefined
       }
       notification_booking_path: {
         Args: { p_audience: string; p_booking_id: string }
@@ -4385,6 +4528,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      report_conversation: {
+        Args: {
+          p_conversation_id: string
+          p_details?: string
+          p_reason: string
+        }
+        Returns: string
       }
       request_booking_extension: {
         Args: { p_booking_id: string; p_new_end_date: string; p_note?: string }
@@ -4661,6 +4812,10 @@ export type Database = {
           total_volume_m3: number
           vehicle_access_close: boolean
         }[]
+      }
+      set_conversation_archived: {
+        Args: { p_archived: boolean; p_conversation_id: string }
+        Returns: undefined
       }
       space_available_volume_m3: {
         Args: {

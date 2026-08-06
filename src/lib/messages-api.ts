@@ -7,6 +7,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import type { ConversationSummary } from "@/lib/messages";
 
 export type Conversation = Tables<"conversations">;
 export type Message = Tables<"messages">;
@@ -92,3 +93,46 @@ export async function getConversation(conversationId: string): Promise<Conversat
 
 /** True for a thread that exists before any booking. */
 export const isEnquiry = (conversation: Conversation): boolean => conversation.booking_id === null;
+
+/* ------------------------------------------------ inbox (Prompt 26B) */
+
+/** Inbox rows: unread counts, previews and listing context, computed server-side. */
+export async function listConversationSummaries(archived = false): Promise<ConversationSummary[]> {
+  const { data, error } = await supabase.rpc("list_my_conversations", { p_archived: archived });
+  if (error) throw error;
+  return (data ?? []) as ConversationSummary[];
+}
+
+export async function markConversationRead(conversationId: string): Promise<void> {
+  const { error } = await supabase.rpc("mark_conversation_read", {
+    p_conversation_id: conversationId,
+  });
+  if (error) throw error;
+}
+
+export async function setConversationArchived(
+  conversationId: string,
+  archived: boolean,
+): Promise<void> {
+  const { error } = await supabase.rpc("set_conversation_archived", {
+    p_conversation_id: conversationId,
+    p_archived: archived,
+  });
+  if (error) throw error;
+}
+
+/** Sends a thread to the Spacilo moderation queue. Never resolves it here. */
+export async function reportConversation(input: {
+  conversationId: string;
+  reason: string;
+  details?: string;
+}): Promise<string> {
+  const details = input.details?.trim();
+  const { data, error } = await supabase.rpc("report_conversation", {
+    p_conversation_id: input.conversationId,
+    p_reason: input.reason,
+    ...(details ? { p_details: details } : {}),
+  });
+  if (error) throw error;
+  return data as string;
+}

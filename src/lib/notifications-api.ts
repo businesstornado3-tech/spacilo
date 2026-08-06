@@ -5,7 +5,12 @@
  * triggers.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { NOTIFICATION_PAGE_SIZE, pageRange, type Notification } from "@/lib/notifications";
+import {
+  NOTIFICATION_PAGE_SIZE,
+  pageRange,
+  type Notification,
+  type NotificationPreferences,
+} from "@/lib/notifications";
 
 export async function listNotifications(page = 0): Promise<Notification[]> {
   const { from, to } = pageRange(page, NOTIFICATION_PAGE_SIZE);
@@ -43,4 +48,29 @@ export async function markAllNotificationsRead(): Promise<number> {
 export async function archiveNotification(id: string): Promise<void> {
   const { error } = await supabase.rpc("archive_notification", { p_notification_id: id });
   if (error) throw error;
+}
+
+/* -------------------------------------------------- preferences (26B) */
+
+export async function fetchNotificationPreferences(): Promise<NotificationPreferences | null> {
+  const { data, error } = await supabase
+    .from("notification_preferences")
+    .select("*")
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+/** Delivery preferences only — never a way to suppress a recorded event. */
+export async function saveNotificationPreferences(
+  userId: string,
+  patch: Partial<NotificationPreferences>,
+): Promise<NotificationPreferences> {
+  const { data, error } = await supabase
+    .from("notification_preferences")
+    .upsert({ ...patch, user_id: userId, updated_at: new Date().toISOString() })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data;
 }

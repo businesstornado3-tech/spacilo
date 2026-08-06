@@ -1,13 +1,12 @@
 /**
- * Guards the Prompt 24 homepage hierarchy: Spacilo is a marketplace first and
- * Spacilo AI second, each scan journey gets exactly ONE deliberate
- * introduction, every CTA routes to a real flow, and we make no unsupported
- * trust, earnings or payment claims.
+ * Guards the Prompt 24–26 homepage hierarchy: the marketplace proposition
+ * leads, the REAL Spacilo AI launcher is the signature hero interaction, the
+ * postcode search follows it, later sections educate rather than repeat, and
+ * we make no unsupported trust, earnings or payment claims.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { DEMO_STATES } from "@/components/home/SpaceFitDemo";
 import { hostEntryTarget } from "@/lib/host-entry";
 import { scanSpaceTarget, scanStuffTarget } from "@/lib/spacefit-entry";
 
@@ -23,7 +22,6 @@ const FILES = [
   "src/components/home/HostControl.tsx",
   "src/components/home/TrustSection.tsx",
   "src/components/home/LaunchArea.tsx",
-  "src/components/home/FinalCta.tsx",
 ];
 
 const read = (file: string) => readFileSync(file, "utf8");
@@ -34,7 +32,6 @@ const entry = read("src/components/home/SpaceFitEntry.tsx");
 const story = read("src/components/home/SpaceFitStory.tsx");
 const hostAi = read("src/components/home/HostAiSection.tsx");
 const page = read("src/routes/index.tsx");
-const demo = read("src/components/home/SpaceFitDemo.tsx");
 
 const BANNED = [
   /insured/i,
@@ -75,49 +72,72 @@ describe("homepage copy", () => {
     );
   });
 
-  it("gives the hero one renter and one host marketplace CTA", () => {
-    expect(hero).toContain("Find storage");
-    expect(hero).toContain('label="Start earning"');
-  });
-
   it("keeps the postcode search in the hero", () => {
     expect(hero).toContain("SearchControls");
   });
 });
 
-describe("CTA repetition rule", () => {
-  it("keeps giant scan CTAs out of the hero", () => {
-    expect(hero).not.toContain("ScanStuffButton");
-    expect(hero).not.toContain("ScanSpaceButton");
+describe("hero Spacilo AI launcher", () => {
+  it("drops the generic hero Find storage / Start earning buttons", () => {
+    expect(hero).not.toContain('<Link to="/find-storage">');
+    expect(hero).not.toContain("HostEntryButton");
+    expect(hero).not.toContain('label="Start earning"');
+    // "Find storage" survives only as the search submit label.
+    expect(hero.match(/Find storage/g)).toHaveLength(1);
+    expect(hero).toContain('submitLabel="Find storage"');
   });
 
-  it("introduces the renter scan journey exactly once on the page", () => {
-    const uses = FILES.map(read)
-      .join("\n")
-      .match(/<ScanStuffButton/g);
-    expect(uses).toHaveLength(1);
+  it("puts the real Spacilo AI launcher between the proposition and the search", () => {
+    const proposition = hero.indexOf("Find trusted neighbourhood storage");
+    const launcher = hero.indexOf("<SpaceFitEntry");
+    const search = hero.indexOf("<SearchControls");
+    expect(proposition).toBeGreaterThan(-1);
+    expect(launcher).toBeGreaterThan(proposition);
+    expect(search).toBeGreaterThan(launcher);
+  });
+
+  it("offers both scan actions with their founder-approved framing", () => {
+    expect(entry).toContain("Your stuff. Your space. Just show us.");
+    expect(entry).toContain("Scan my stuff");
+    expect(entry).toContain("Scan my space");
+    expect(entry).toContain("How much space do I really need?");
+    expect(entry).toContain("What could my unused space earn?");
+  });
+
+  it("never simulates Spacilo AI on the homepage", () => {
+    expect(copy + entry).not.toMatch(/DEMO_STATES|Illustrative Spacilo AI example/);
+    expect(copy + entry).not.toMatch(/getUserMedia|LiveScanner|useLiveScan|<video/);
+  });
+
+  it("loads no AI, camera or admin internals into the homepage bundle", () => {
+    expect(copy + entry).not.toMatch(/spacefit-vision|gemini|useSpaceFitVision/i);
+    expect(copy + entry).not.toMatch(/@\/components\/admin|@\/lib\/admin/);
+  });
+});
+
+describe("CTA repetition rule", () => {
+  it("introduces the renter scan journey once at the top, with one secondary echo", () => {
+    const uses = copy.match(/<ScanStuffButton/g) ?? [];
+    expect(uses).toHaveLength(2);
+    expect(hero).toContain("<SpaceFitEntry");
     expect(story).toContain("<ScanStuffButton");
   });
 
-  it("introduces the host scan journey exactly once on the page", () => {
-    const uses = FILES.map(read)
-      .join("\n")
-      .match(/<ScanSpaceButton/g);
+  it("introduces the host scan journey once at the top, with one secondary echo", () => {
+    const uses = copy.match(/<ScanSpaceButton/g) ?? [];
     expect(uses).toHaveLength(1);
     expect(hostAi).toContain("<ScanSpaceButton");
   });
 
-  it("uses contextual marketplace wording rather than scan wording for those CTAs", () => {
-    expect(story).toContain("Try Spacilo AI");
-    expect(hostAi).toContain("Measure my space with Spacilo AI");
+  it("keeps literal scan wording to the launcher only", () => {
     expect(copy).not.toContain("Scan my stuff");
     expect(copy).not.toContain("Scan my space");
+    expect(story).toContain("Try Spacilo AI");
+    expect(hostAi).toContain("Measure my space with Spacilo AI");
   });
 
-  it("routes every host CTA through the shared host entry helper", () => {
-    for (const file of [hero, read("src/components/home/HostCallout.tsx")]) {
-      expect(file).toContain("HostEntryButton");
-    }
+  it("routes host CTAs through the shared host entry helper", () => {
+    expect(read("src/components/home/HostCallout.tsx")).toContain("HostEntryButton");
     expect(read("src/components/home/HostEntryButton.tsx")).toContain("hostEntryTarget");
     expect(hostEntryTarget(false)).toEqual({ to: "/signup", search: { mode: "host" } });
     expect(hostEntryTarget(true)).toEqual({ to: "/host/spaces/new" });
@@ -136,10 +156,9 @@ describe("homepage structure", () => {
     "<HostControl />",
     "<TrustSection />",
     "<LaunchArea />",
-    "<FinalCta />",
   ];
 
-  it("renders marketplace value before Spacilo AI", () => {
+  it("renders marketplace value before Spacilo AI education", () => {
     expect(page.indexOf("<StorageNearYou />")).toBeLessThan(page.indexOf("<SpaceFitStory />"));
   });
 
@@ -160,6 +179,8 @@ describe("homepage structure", () => {
   it("tells the marketplace brand story", () => {
     expect(copy).toContain("Space is everywhere.");
     expect(copy).toContain("It just isn't being shared.");
+    expect(copy).toContain("Make it pay.");
+    expect(copy).toContain("No tape measure required.");
   });
 
   it("keeps the local launch and trust destinations reachable", () => {
@@ -168,11 +189,15 @@ describe("homepage structure", () => {
     expect(copy).toContain("Explore Trust &amp; Safety");
   });
 
-  it("closes with two clearly separated paths", () => {
-    const finalCta = read("src/components/home/FinalCta.tsx");
-    expect(finalCta).toContain("Make room for what matters.");
-    expect(finalCta).toContain("Need space?");
-    expect(finalCta).toContain("Have space?");
+  it("ends on Portsmouth — the final green CTA banner is gone", () => {
+    expect(copy).not.toContain("Make room for what matters.");
+    expect(() => read("src/components/home/FinalCta.tsx")).toThrow();
+    expect(page.trim().endsWith("}")).toBe(true);
+    const sections = page.slice(page.indexOf("<MarketingLayout>"));
+    expect(sections.lastIndexOf("<LaunchArea />")).toBeGreaterThan(
+      sections.lastIndexOf("<TrustSection />"),
+    );
+    expect(sections).not.toMatch(/<LaunchArea \/>[\s\S]*<[A-Z]\w+ \/>/);
   });
 
   it("gives the homepage marketplace-led metadata and a self-referencing canonical", () => {
@@ -190,6 +215,11 @@ describe("Spacilo AI entry points", () => {
     expect(scanSpaceTarget(false)).toEqual({ to: "/spacefit/space" });
   });
 
+  it("lets signed-out visitors reach Spacilo AI without a login wall", () => {
+    expect(scanStuffTarget(false).to).toBe("/spacefit/stuff");
+    expect(scanSpaceTarget(false).to).toBe("/spacefit/space");
+  });
+
   it("keeps the signed-in host scan path aligned with the single host entry helper", () => {
     expect(scanSpaceTarget(true)).toEqual(hostEntryTarget(true));
   });
@@ -200,9 +230,11 @@ describe("Spacilo AI entry points", () => {
     expect(entry).not.toMatch(/<a href=/);
   });
 
-  it("tracks scan intent for both sides", () => {
+  it("tracks scan intent for both sides with canonical events only", () => {
     expect(entry).toContain('cta: "scan_stuff"');
     expect(entry).toContain('cta: "scan_space"');
+    expect(entry).toContain('from "@/lib/analytics/tracker"');
+    expect(entry).not.toMatch(/base64|photo|image|dataUrl/i);
   });
 
   it("presents AI output as a reviewable estimate", () => {
@@ -216,20 +248,5 @@ describe("Spacilo AI entry points", () => {
     for (const step of ["Photo", "Understand", "Estimate", "Match"]) {
       expect(story).toContain(`title: "${step}"`);
     }
-  });
-});
-
-describe("hero SpaceFit demonstration", () => {
-  it("is presentation only — no AI, scan session, upload or user data on render", () => {
-    expect(demo).not.toMatch(/spacefit-vision|gemini|useSpaceFitVision|ai_gateway/i);
-    expect(demo).not.toMatch(/createServerFn|useServerFn|supabase/i);
-    expect(demo).not.toMatch(/fetch\(|scan_session|space_scan/i);
-    expect(demo).not.toMatch(/useAuth|inventory-api|space-scan-api/);
-  });
-
-  it("carries both a renter and a host demonstration state", () => {
-    const modes = DEMO_STATES.map((s) => s.mode);
-    expect(modes).toContain("renter");
-    expect(modes).toContain("host");
   });
 });

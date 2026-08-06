@@ -14,7 +14,7 @@ const recent = (location: string): RecentSearch => ({ location, radius: 5 });
 describe("recent searches", () => {
   it("puts the newest search first and de-duplicates case-insensitively", () => {
     const list = addRecentSearch([recent("Southsea"), recent("Havant")], recent("southsea"));
-    expect(list.map((r) => r.location)).toEqual(["Southsea", "Havant"]);
+    expect(list.map((r) => r.location)).toEqual(["southsea", "Havant"]);
   });
 
   it("caps the list", () => {

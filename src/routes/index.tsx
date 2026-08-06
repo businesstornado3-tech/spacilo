@@ -13,7 +13,6 @@ import { HostAiSection } from "@/components/home/HostAiSection";
 import { HostControl } from "@/components/home/HostControl";
 import { TrustSection } from "@/components/home/TrustSection";
 import { LaunchArea } from "@/components/home/LaunchArea";
-import { FinalCta } from "@/components/home/FinalCta";
 
 const title = `${brand.name} | Neighbourhood Storage Near You`;
 const description =
@@ -64,7 +63,6 @@ function HomePage() {
       <HostControl />
       <TrustSection />
       <LaunchArea />
-      <FinalCta />
     </MarketingLayout>
   );
 }

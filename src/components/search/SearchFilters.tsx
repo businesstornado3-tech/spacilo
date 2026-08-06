@@ -40,7 +40,7 @@ function toggle(list: string[] | undefined, value: string): string[] | undefined
   return set.size ? [...set] : undefined;
 }
 
-export function countActiveFilters(filters: SearchFilters): number {
+function countActiveFilters(filters: SearchFilters): number {
   return (
     (filters.maxPricePence ? 1 : 0) +
     (filters.spaceTypes?.length ?? 0) +

@@ -13,6 +13,7 @@ import { isPrivateRoute } from "@/lib/seo/routes";
 const HOMEPAGE_FILES = [
   "src/routes/index.tsx",
   "src/components/home/Hero.tsx",
+  "src/components/home/SpaceFitEntry.tsx",
   "src/components/home/StorageNearYou.tsx",
   "src/components/home/SpaceFitStory.tsx",
   "src/components/home/HowItWorks.tsx",
@@ -22,7 +23,6 @@ const HOMEPAGE_FILES = [
   "src/components/home/HostControl.tsx",
   "src/components/home/TrustSection.tsx",
   "src/components/home/LaunchArea.tsx",
-  "src/components/home/FinalCta.tsx",
 ];
 
 const read = (file: string) => readFileSync(file, "utf8");

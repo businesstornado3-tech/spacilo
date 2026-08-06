@@ -82,7 +82,7 @@ export function SearchResultCard({
       </button>
 
       <div className="space-y-3 p-4">
-        <div className="flex items-start justify-between gap-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
             <h3 className="type-h3 truncate">{row.title ?? "Storage space"}</h3>
             <p className="type-body-sm text-muted-foreground">
@@ -97,6 +97,8 @@ export function SearchResultCard({
           </div>
           <PriceDisplay amount={row.monthly_price_pence ?? 0} size="sm" className="shrink-0" />
         </div>
+
+        {row.host_phone_verified ? <VerificationBadge type="phone" size="sm" /> : null}
 
         {result ? (
           <>
@@ -124,6 +126,20 @@ export function SearchResultCard({
             ) : null}
           </>
         )}
+
+        {chips.length > 0 ? (
+          <ul className="flex flex-wrap gap-1.5" aria-label="Space details">
+            {chips.map((chip) => (
+              <li
+                key={chip}
+                className="rounded-md bg-surface px-2 py-1 type-badge text-muted-foreground"
+              >
+                {chip}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
 
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <Button asChild size="sm">

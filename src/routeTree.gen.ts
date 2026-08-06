@@ -31,6 +31,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedRenterRouteImport } from './routes/_authenticated.renter'
 import { Route as AuthenticatedSpacefitRouteImport } from './routes/_authenticated.spacefit'
 import { Route as LegalIndexRouteImport } from './routes/legal.index'
+import { Route as LegalDocRouteImport } from './routes/legal.$doc'
 import { Route as SpacefitSpaceRouteImport } from './routes/spacefit.space'
 import { Route as SpacefitStuffRouteImport } from './routes/spacefit.stuff'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
@@ -182,6 +183,11 @@ const AuthenticatedSpacefitRoute = AuthenticatedSpacefitRouteImport.update({
 const LegalIndexRoute = LegalIndexRouteImport.update({
   id: '/legal/',
   path: '/legal/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalDocRoute = LegalDocRouteImport.update({
+  id: '/legal/$doc',
+  path: '/legal/$doc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SpacefitSpaceRoute = SpacefitSpaceRouteImport.update({
@@ -451,6 +457,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/renter': typeof AuthenticatedRenterRouteWithChildren
   '/spacefit': typeof AuthenticatedSpacefitRoute
+  '/legal/$doc': typeof LegalDocRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -514,6 +521,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/spacefit': typeof AuthenticatedSpacefitRoute
+  '/legal/$doc': typeof LegalDocRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -580,6 +588,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/renter': typeof AuthenticatedRenterRouteWithChildren
   '/_authenticated/spacefit': typeof AuthenticatedSpacefitRoute
+  '/legal/$doc': typeof LegalDocRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -647,6 +656,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/renter'
     | '/spacefit'
+    | '/legal/$doc'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
@@ -710,6 +720,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/spacefit'
+    | '/legal/$doc'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
@@ -775,6 +786,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/renter'
     | '/_authenticated/spacefit'
+    | '/legal/$doc'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
@@ -837,6 +849,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StoragePolicyRoute: typeof StoragePolicyRoute
   TrustRoute: typeof TrustRoute
+  LegalDocRoute: typeof LegalDocRoute
   SpacefitSpaceRoute: typeof SpacefitSpaceRoute
   SpacefitStuffRoute: typeof SpacefitStuffRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
@@ -999,6 +1012,13 @@ declare module '@tanstack/react-router' {
       path: '/legal'
       fullPath: '/legal/'
       preLoaderRoute: typeof LegalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/$doc': {
+      id: '/legal/$doc'
+      path: '/legal/$doc'
+      fullPath: '/legal/$doc'
+      preLoaderRoute: typeof LegalDocRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/spacefit/space': {
@@ -1453,6 +1473,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StoragePolicyRoute: StoragePolicyRoute,
   TrustRoute: TrustRoute,
+  LegalDocRoute: LegalDocRoute,
   SpacefitSpaceRoute: SpacefitSpaceRoute,
   SpacefitStuffRoute: SpacefitStuffRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,

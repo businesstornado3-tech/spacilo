@@ -7,7 +7,7 @@ import { Scale } from "lucide-react";
 import { brand } from "@/config/brand";
 import { MarketingLayout, PageSection } from "@/components/layout/MarketingLayout";
 import { Alert } from "@/components/common/Alert";
-import { findLegalDocument, LEGAL_REVIEW_NOTICE } from "@/data/legal";
+import { findLegalDocument, LEGAL_REVIEW_NOTICE, type LegalSection } from "@/data/legal";
 import { publicRouteMeta } from "@/lib/seo/meta";
 import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
@@ -58,7 +58,7 @@ function LegalDocPage() {
         </div>
 
         <div className="mt-8 grid max-w-3xl gap-6">
-          {doc.sections.map((section) => (
+          {doc.sections.map((section: LegalSection) => (
             <article key={section.heading} className="rounded-xl border border-border bg-card p-5">
               <h2 className="type-h3 text-foreground">{section.heading}</h2>
               <p className="mt-2 type-body-sm text-muted-foreground">{section.body}</p>

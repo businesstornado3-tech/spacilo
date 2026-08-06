@@ -20,13 +20,7 @@ import { useActiveInventory, useInventoryItems } from "@/hooks/useInventory";
 import { normaliseRadius, type SearchCentre } from "@/lib/location/schema";
 
 export type SortKey =
-  | "recommended"
-  | "spacefit"
-  | "distance"
-  | "price_asc"
-  | "price_desc"
-  | "largest"
-  | "newest";
+  "recommended" | "spacefit" | "distance" | "price_asc" | "price_desc" | "largest" | "newest";
 
 export interface SearchFilters {
   maxPricePence?: number | undefined;
@@ -131,7 +125,11 @@ const published = (r: SearchResult) => {
  *   5. cheaper
  * Without inventory it degrades to: nearer, then cheaper.
  */
-function sortResults(results: SearchResult[], sort: SortKey, hasInventory: boolean): SearchResult[] {
+function sortResults(
+  results: SearchResult[],
+  sort: SortKey,
+  hasInventory: boolean,
+): SearchResult[] {
   const rows = results.slice();
   switch (sort) {
     case "price_asc":
@@ -174,7 +172,11 @@ export function useStorageSearch(params: StorageSearchParams) {
   const centre: SearchCentre | null =
     geocoded && geocoded.ok ? (geocoded.centre as SearchCentre) : null;
   const geocodeError =
-    geocoded && !geocoded.ok ? geocoded.message : centreQuery.error ? "Location lookup failed." : null;
+    geocoded && !geocoded.ok
+      ? geocoded.message
+      : centreQuery.error
+        ? "Location lookup failed."
+        : null;
 
   const hasLocation = params.location.trim().length >= 2;
 

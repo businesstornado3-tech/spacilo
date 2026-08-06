@@ -48,7 +48,10 @@ function list(value: unknown): string[] | undefined {
   if (Array.isArray(value)) return value.map(String).filter(Boolean);
   const raw = str(value);
   if (!raw) return undefined;
-  const parts = raw.split(",").map((v) => v.trim()).filter(Boolean);
+  const parts = raw
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
   return parts.length ? parts : undefined;
 }
 
@@ -72,17 +75,20 @@ export function validateSearchParams(
   const sortRaw = str(search["sort"]) as SortKey | undefined;
   return {
     location: str(search["location"])?.slice(0, 120) ?? "",
-    radius: search["radius"] === undefined ? DEFAULT_RADIUS_MILES : normaliseRadius(search["radius"]),
+    radius:
+      search["radius"] === undefined ? DEFAULT_RADIUS_MILES : normaliseRadius(search["radius"]),
     sort: sortRaw && SORTS.includes(sortRaw) ? sortRaw : "recommended",
-    ...(num(search["maxPrice"]) !== undefined ? { maxPrice: num(search["maxPrice"]) as number } : {}),
+    ...(num(search["maxPrice"]) !== undefined
+      ? { maxPrice: num(search["maxPrice"]) as number }
+      : {}),
     ...(list(search["types"]) ? { types: list(search["types"]) as string[] } : {}),
     ...(list(search["features"]) ? { features: list(search["features"]) as string[] } : {}),
     ...(list(search["access"]) ? { access: list(search["access"]) as string[] } : {}),
     ...(list(search["categories"]) ? { categories: list(search["categories"]) as string[] } : {}),
-    ...(num(search["minVolume"]) !== undefined ? { minVolume: num(search["minVolume"]) as number } : {}),
-    ...Object.fromEntries(
-      BOOL_KEYS.filter((key) => bool(search[key])).map((key) => [key, true]),
-    ),
+    ...(num(search["minVolume"]) !== undefined
+      ? { minVolume: num(search["minVolume"]) as number }
+      : {}),
+    ...Object.fromEntries(BOOL_KEYS.filter((key) => bool(search[key])).map((key) => [key, true])),
   };
 }
 
@@ -100,7 +106,9 @@ export function filtersFromUrl(state: SearchUrlState): SearchFilters {
 
 export function filtersToUrl(filters: SearchFilters): Record<string, unknown> {
   return {
-    ...(filters.maxPricePence !== undefined ? { maxPrice: filters.maxPricePence / 100 } : { maxPrice: undefined }),
+    ...(filters.maxPricePence !== undefined
+      ? { maxPrice: filters.maxPricePence / 100 }
+      : { maxPrice: undefined }),
     types: filters.spaceTypes,
     features: filters.features,
     access: filters.accessTypes,

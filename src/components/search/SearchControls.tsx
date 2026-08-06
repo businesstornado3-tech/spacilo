@@ -8,7 +8,11 @@ import { MapPin, Loader2, LocateFixed } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { controlBase } from "@/components/form/Field";
-import { DEFAULT_RADIUS_MILES, RADIUS_OPTIONS_MILES, normaliseLocationInput } from "@/lib/location/schema";
+import {
+  DEFAULT_RADIUS_MILES,
+  RADIUS_OPTIONS_MILES,
+  normaliseLocationInput,
+} from "@/lib/location/schema";
 import { track } from "@/lib/analytics/tracker";
 import {
   POPULAR_SEARCHES,
@@ -49,10 +53,7 @@ export function SearchControls({
   // Recents live on this device only; read after mount so SSR output matches.
   React.useEffect(() => setRecents(readRecentSearches()), []);
 
-  const suggestions = React.useMemo(
-    () => suggestLocations(recents, location),
-    [recents, location],
-  );
+  const suggestions = React.useMemo(() => suggestLocations(recents, location), [recents, location]);
   const quickPicks = React.useMemo(() => {
     const seen = new Set<string>();
     return [...recents.map((r) => r.location), ...POPULAR_SEARCHES]
@@ -117,7 +118,12 @@ export function SearchControls({
       className={cn("space-y-3", className)}
       aria-label="Search storage by location"
     >
-      <div className={cn("gap-3", layout === "inline" ? "flex flex-col sm:flex-row sm:items-end" : "grid")}>
+      <div
+        className={cn(
+          "gap-3",
+          layout === "inline" ? "flex flex-col sm:flex-row sm:items-end" : "grid",
+        )}
+      >
         <div className={cn("min-w-0 space-y-1.5", layout === "inline" && "flex-1")}>
           <label htmlFor={`${id}-location`} className="block type-label">
             Where do you need storage?
@@ -140,7 +146,11 @@ export function SearchControls({
               aria-invalid={message ? true : undefined}
               aria-describedby={message ? `${id}-error` : undefined}
               list={`${id}-suggestions`}
-              className={cn(controlBase, "pl-10", message && "border-destructive focus-visible:ring-destructive")}
+              className={cn(
+                controlBase,
+                "pl-10",
+                message && "border-destructive focus-visible:ring-destructive",
+              )}
             />
             <datalist id={`${id}-suggestions`}>
               {suggestions.map((value) => (
@@ -173,7 +183,12 @@ export function SearchControls({
           </select>
         </div>
 
-        <Button type="submit" size="lg" disabled={busy} className={cn(layout === "inline" && "sm:w-auto")}>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={busy}
+          className={cn(layout === "inline" && "sm:w-auto")}
+        >
           {busy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
           {submitLabel}
         </Button>

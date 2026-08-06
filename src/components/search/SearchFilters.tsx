@@ -18,7 +18,10 @@ import type { SearchFilters } from "@/hooks/useStorageSearch";
 
 const FILTERABLE_FEATURES = ["indoor", "dry", "lockable"];
 
-const FACT_FILTERS: { key: "groundFloor" | "vehicleAccess" | "liftAvailable" | "verifiedHost"; label: string }[] = [
+const FACT_FILTERS: {
+  key: "groundFloor" | "vehicleAccess" | "liftAvailable" | "verifiedHost";
+  label: string;
+}[] = [
   { key: "groundFloor", label: "Ground floor access" },
   { key: "vehicleAccess", label: "Vehicle can park close" },
   { key: "liftAvailable", label: "Lift available" },
@@ -110,7 +113,10 @@ export function SearchFiltersPanel({ filters, onChange }: SearchFiltersPanelProp
             onChange={(e) => {
               const value = Number(e.target.value);
               apply(
-                { ...filters, minVolumeM3: Number.isFinite(value) && value > 0 ? value : undefined },
+                {
+                  ...filters,
+                  minVolumeM3: Number.isFinite(value) && value > 0 ? value : undefined,
+                },
                 "min_volume",
               );
             }}
@@ -128,7 +134,10 @@ export function SearchFiltersPanel({ filters, onChange }: SearchFiltersPanelProp
               label={type.label}
               checked={filters.spaceTypes?.includes(type.value) ?? false}
               onChange={() =>
-                apply({ ...filters, spaceTypes: toggle(filters.spaceTypes, type.value) }, "space_type")
+                apply(
+                  { ...filters, spaceTypes: toggle(filters.spaceTypes, type.value) },
+                  "space_type",
+                )
               }
             />
           ))}
@@ -162,7 +171,10 @@ export function SearchFiltersPanel({ filters, onChange }: SearchFiltersPanelProp
               label={access.label}
               checked={filters.accessTypes?.includes(access.value) ?? false}
               onChange={() =>
-                apply({ ...filters, accessTypes: toggle(filters.accessTypes, access.value) }, "access")
+                apply(
+                  { ...filters, accessTypes: toggle(filters.accessTypes, access.value) },
+                  "access",
+                )
               }
             />
           ))}
@@ -179,7 +191,10 @@ export function SearchFiltersPanel({ filters, onChange }: SearchFiltersPanelProp
               label={fact.label}
               checked={filters[fact.key] === true}
               onChange={() =>
-                apply({ ...filters, [fact.key]: filters[fact.key] === true ? undefined : true }, fact.key)
+                apply(
+                  { ...filters, [fact.key]: filters[fact.key] === true ? undefined : true },
+                  fact.key,
+                )
               }
             />
           ))}
@@ -196,7 +211,10 @@ export function SearchFiltersPanel({ filters, onChange }: SearchFiltersPanelProp
               label={category.label}
               checked={filters.categories?.includes(category.value) ?? false}
               onChange={() =>
-                apply({ ...filters, categories: toggle(filters.categories, category.value) }, "category")
+                apply(
+                  { ...filters, categories: toggle(filters.categories, category.value) },
+                  "category",
+                )
               }
             />
           ))}

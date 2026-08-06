@@ -76,10 +76,14 @@ describe("public marketing routes", () => {
 
     const routeExistsFor = (link: string) => {
       if (link === "/") return routeFiles.includes("index.tsx");
-      // /a/b -> a.b.tsx or a/b.tsx style file naming used by TanStack Router
-      const dotted = link.slice(1).split("/").join(".") + ".tsx";
+      // /a/b -> a.b.tsx, a/b.tsx, or the index-route form a.index.tsx
+      const base = link.slice(1).split("/").join(".");
+      const dotted = base + ".tsx";
+      const indexed = base + ".index.tsx";
       const nested = link.slice(1) + ".tsx";
-      return routeFiles.includes(dotted) || routeFiles.includes(nested);
+      return (
+        routeFiles.includes(dotted) || routeFiles.includes(indexed) || routeFiles.includes(nested)
+      );
     };
 
     for (const link of linkMatches) {

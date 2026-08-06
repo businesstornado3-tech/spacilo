@@ -30,6 +30,8 @@ import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedRenterRouteImport } from './routes/_authenticated.renter'
 import { Route as AuthenticatedSpacefitRouteImport } from './routes/_authenticated.spacefit'
+import { Route as LegalIndexRouteImport } from './routes/legal.index'
+import { Route as LegalDocRouteImport } from './routes/legal.$doc'
 import { Route as SpacefitSpaceRouteImport } from './routes/spacefit.space'
 import { Route as SpacefitStuffRouteImport } from './routes/spacefit.stuff'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
@@ -41,6 +43,7 @@ import { Route as AuthenticatedHostEarningsRouteImport } from './routes/_authent
 import { Route as AuthenticatedRenterIndexRouteImport } from './routes/_authenticated.renter.index'
 import { Route as AuthenticatedRenterMatchesRouteImport } from './routes/_authenticated.renter.matches'
 import { Route as AuthenticatedRenterSearchRouteImport } from './routes/_authenticated.renter.search'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedAdminPolicyIndexRouteImport } from './routes/_authenticated.admin.policy.index'
 import { Route as AuthenticatedAdminReviewsIndexRouteImport } from './routes/_authenticated.admin.reviews.index'
 import { Route as AuthenticatedAdminSupportIndexRouteImport } from './routes/_authenticated.admin.support.index'
@@ -178,6 +181,16 @@ const AuthenticatedSpacefitRoute = AuthenticatedSpacefitRouteImport.update({
   path: '/spacefit',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const LegalIndexRoute = LegalIndexRouteImport.update({
+  id: '/legal/',
+  path: '/legal/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalDocRoute = LegalDocRouteImport.update({
+  id: '/legal/$doc',
+  path: '/legal/$doc',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SpacefitSpaceRoute = SpacefitSpaceRouteImport.update({
   id: '/spacefit/space',
   path: '/spacefit/space',
@@ -239,6 +252,11 @@ const AuthenticatedRenterSearchRoute =
     path: '/search',
     getParentRoute: () => AuthenticatedRenterRoute,
   } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminPolicyIndexRoute =
   AuthenticatedAdminPolicyIndexRouteImport.update({
     id: '/admin/policy/',
@@ -445,14 +463,17 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/renter': typeof AuthenticatedRenterRouteWithChildren
   '/spacefit': typeof AuthenticatedSpacefitRoute
+  '/legal/$doc': typeof LegalDocRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/legal/': typeof LegalIndexRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
   '/renter/search': typeof AuthenticatedRenterSearchRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/host/': typeof AuthenticatedHostIndexRoute
   '/renter/': typeof AuthenticatedRenterIndexRoute
@@ -507,14 +528,17 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/spacefit': typeof AuthenticatedSpacefitRoute
+  '/legal/$doc': typeof LegalDocRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/legal': typeof LegalIndexRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
   '/renter/search': typeof AuthenticatedRenterSearchRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/host': typeof AuthenticatedHostIndexRoute
   '/renter': typeof AuthenticatedRenterIndexRoute
@@ -572,14 +596,17 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/renter': typeof AuthenticatedRenterRouteWithChildren
   '/_authenticated/spacefit': typeof AuthenticatedSpacefitRoute
+  '/legal/$doc': typeof LegalDocRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/legal/': typeof LegalIndexRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/_authenticated/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/_authenticated/renter/matches': typeof AuthenticatedRenterMatchesRoute
   '/_authenticated/renter/search': typeof AuthenticatedRenterSearchRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
   '/_authenticated/renter/': typeof AuthenticatedRenterIndexRoute
@@ -638,14 +665,17 @@ export interface FileRouteTypes {
     | '/profile'
     | '/renter'
     | '/spacefit'
+    | '/legal/$doc'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
+    | '/legal/'
     | '/admin/dashboard'
     | '/host/bookings'
     | '/host/earnings'
     | '/renter/matches'
     | '/renter/search'
+    | '/api/public/health'
     | '/admin/'
     | '/host/'
     | '/renter/'
@@ -700,14 +730,17 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/spacefit'
+    | '/legal/$doc'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
+    | '/legal'
     | '/admin/dashboard'
     | '/host/bookings'
     | '/host/earnings'
     | '/renter/matches'
     | '/renter/search'
+    | '/api/public/health'
     | '/admin'
     | '/host'
     | '/renter'
@@ -764,14 +797,17 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/renter'
     | '/_authenticated/spacefit'
+    | '/legal/$doc'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
+    | '/legal/'
     | '/_authenticated/admin/dashboard'
     | '/_authenticated/host/bookings'
     | '/_authenticated/host/earnings'
     | '/_authenticated/renter/matches'
     | '/_authenticated/renter/search'
+    | '/api/public/health'
     | '/_authenticated/admin/'
     | '/_authenticated/host/'
     | '/_authenticated/renter/'
@@ -825,9 +861,12 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StoragePolicyRoute: typeof StoragePolicyRoute
   TrustRoute: typeof TrustRoute
+  LegalDocRoute: typeof LegalDocRoute
   SpacefitSpaceRoute: typeof SpacefitSpaceRoute
   SpacefitStuffRoute: typeof SpacefitStuffRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
+  LegalIndexRoute: typeof LegalIndexRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPayoutsReleaseRoute: typeof ApiPublicPayoutsReleaseRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
@@ -981,6 +1020,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSpacefitRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/legal/': {
+      id: '/legal/'
+      path: '/legal'
+      fullPath: '/legal/'
+      preLoaderRoute: typeof LegalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/$doc': {
+      id: '/legal/$doc'
+      path: '/legal/$doc'
+      fullPath: '/legal/$doc'
+      preLoaderRoute: typeof LegalDocRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/spacefit/space': {
       id: '/spacefit/space'
       path: '/spacefit/space'
@@ -1057,6 +1110,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/renter/search'
       preLoaderRoute: typeof AuthenticatedRenterSearchRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
+    }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/policy/': {
       id: '/_authenticated/admin/policy/'
@@ -1433,9 +1493,12 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StoragePolicyRoute: StoragePolicyRoute,
   TrustRoute: TrustRoute,
+  LegalDocRoute: LegalDocRoute,
   SpacefitSpaceRoute: SpacefitSpaceRoute,
   SpacefitStuffRoute: SpacefitStuffRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,
+  LegalIndexRoute: LegalIndexRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPayoutsReleaseRoute: ApiPublicPayoutsReleaseRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }

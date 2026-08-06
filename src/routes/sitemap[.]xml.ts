@@ -2,24 +2,36 @@
  * /sitemap.xml — dynamic sitemap of every indexable public page plus every
  * published listing that has a usable approximate location.
  *
- * Only already-public data is read, and a database failure degrades to the
- * static routes rather than returning an error to crawlers.
+ * Listings are read through the `get_published_spaces` security-definer RPC,
+ * not through a direct table read: the `spaces` table is deliberately
+ * fail-closed to anonymous callers, so a table read here silently returned an
+ * empty listing set. The RPC is the same public projection the marketplace
+ * itself uses, and it exposes only approximate location fields.
+ *
+ * A database failure degrades to the static routes rather than returning an
+ * error to crawlers.
  */
 import { createFileRoute } from "@tanstack/react-router";
 
 import { supabase } from "@/integrations/supabase/client";
 import { buildSitemapXml, type SitemapListing } from "@/lib/seo/sitemap";
 
+/** Upper bound of the RPC itself; keeps the document a sane size. */
+const MAX_LISTINGS = 200;
+
 async function publishedListings(): Promise<SitemapListing[]> {
   try {
-    const { data, error } = await supabase
-      .from("spaces")
-      .select("id, updated_at, approximate_area, postcode_district")
-      .eq("listing_status", "published")
-      .order("updated_at", { ascending: false })
-      .limit(5000);
+    const { data, error } = await supabase.rpc("get_published_spaces", {
+      limit_count: MAX_LISTINGS,
+    });
     if (error) return [];
-    return (data ?? []) as SitemapListing[];
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      // The public projection carries no row mtime, so no lastmod is claimed.
+      updated_at: null,
+      approximate_area: row.approximate_area,
+      postcode_district: row.postcode_district,
+    }));
   } catch {
     return [];
   }

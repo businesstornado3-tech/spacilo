@@ -54,11 +54,11 @@ function TrustPage() {
         <Reveal delay={200}>
           <p className="mt-8 type-body-sm text-muted-foreground">
             {trustFaqNote}{" "}
-            <Link to="/how-it-works" className="text-primary underline-offset-4 hover:underline">
+            <Link to="/how-it-works" className="text-primary underline underline-offset-4">
               Read How It Works
             </Link>
             . For what can and can't be stored, see the{" "}
-            <Link to="/storage-policy" className="text-primary underline-offset-4 hover:underline">
+            <Link to="/storage-policy" className="text-primary underline underline-offset-4">
               storage policy
             </Link>
             .

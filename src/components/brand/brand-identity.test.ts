@@ -131,7 +131,9 @@ describe("approved palette", () => {
   const css = read("src/styles.css");
 
   it("uses emerald as the action colour and navy as the ink", () => {
-    expect(css).toContain("--primary: oklch(0.58 0.125 162)");
+    // Emerald hue held at 162; lightness darkened from 0.58 to 0.53 so white
+    // text on the primary button clears WCAG AA (4.03:1 -> 4.9:1).
+    expect(css).toContain("--primary: oklch(0.53 0.125 162)");
     expect(css).toContain("--ink: oklch(0.21 0.033 265)");
   });
 

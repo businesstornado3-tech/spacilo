@@ -121,18 +121,19 @@ export function ListingFacts({ row }: { row: ListingFactsRow }) {
       {facts.length ? (
         <dl className="grid gap-3 sm:grid-cols-2">
           {facts.map((fact) => (
-            <div key={fact.label} className="flex min-w-0 items-start gap-2">
-              <fact.icon
-                className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <div className="min-w-0">
-                <dt className="type-overline text-muted-foreground">{fact.label}</dt>
-                <dd className="type-body-sm">{fact.value}</dd>
-              </div>
+            // dt/dd must sit directly inside this wrapper — a second nested
+            // div between them and the <dl> breaks the definition-list
+            // semantics screen readers rely on.
+            <div key={fact.label} className="flex min-w-0 flex-col">
+              <dt className="flex items-center gap-2 type-overline text-muted-foreground">
+                <fact.icon className="size-4 shrink-0" aria-hidden="true" />
+                {fact.label}
+              </dt>
+              <dd className="min-w-0 pl-6 type-body-sm">{fact.value}</dd>
             </div>
           ))}
         </dl>
+
       ) : null}
 
       {accessible.length ? (

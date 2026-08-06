@@ -45,6 +45,7 @@ export function SearchResultCard({
   const [imageFailed, setImageFailed] = React.useState(false);
   React.useEffect(() => setImageFailed(false), [coverUrl]);
   const distance = formatMilesAway(distanceMiles);
+  const chips = cardChips(row);
 
   return (
     <article

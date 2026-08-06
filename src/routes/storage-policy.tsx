@@ -28,7 +28,12 @@ export const Route = createFileRoute("/storage-policy")({
   head: () => ({
     ...publicRouteMeta({ title: title, description: description, path: "/storage-policy" }),
     scripts: [
-      jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: title, path: "/storage-policy" }])),
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: title, path: "/storage-policy" },
+        ]),
+      ),
     ],
   }),
   component: StoragePolicyPage,
@@ -54,9 +59,7 @@ function StoragePolicyPage() {
           Trust &amp; safety
         </Badge>
         <h1 className="mt-4 type-h1">{policy?.title ?? "Storage policy"}</h1>
-        <p className="mt-3 type-body-lg text-muted-foreground">
-          {policy?.summary ?? description}
-        </p>
+        <p className="mt-3 type-body-lg text-muted-foreground">{policy?.summary ?? description}</p>
         {policy ? (
           <p className="mt-2 type-body-sm text-muted-foreground">
             Version {policy.version}

@@ -43,7 +43,12 @@ export const Route = createFileRoute("/spacefit/space")({
   head: () => ({
     ...publicRouteMeta({ title: title, description: description, path: "/spacefit/space" }),
     scripts: [
-      jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: title, path: "/spacefit/space" }])),
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: title, path: "/spacefit/space" },
+        ]),
+      ),
     ],
   }),
   component: GuestSpacePage,
@@ -149,7 +154,6 @@ function GuestSpacePage() {
               }}
             />
           </div>
-
 
           {scan.analysing ? (
             <GuestScanningState label="Measuring your space…" />

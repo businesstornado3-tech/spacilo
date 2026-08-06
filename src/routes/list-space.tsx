@@ -29,8 +29,14 @@ export const Route = createFileRoute("/list-space")({
 
 const steps = [
   { title: "Tell us about the space", body: "Type, size and how much of it you're offering." },
-  { title: "Add photos and details", body: "A few clear photos, what it's good for and how renters get in." },
-  { title: "Set your price and publish", body: "You choose the monthly price, and can pause anytime." },
+  {
+    title: "Add photos and details",
+    body: "A few clear photos, what it's good for and how renters get in.",
+  },
+  {
+    title: "Set your price and publish",
+    body: "You choose the monthly price, and can pause anytime.",
+  },
 ];
 
 function ListSpacePage() {
@@ -41,8 +47,8 @@ function ListSpacePage() {
       <PageSection>
         <h1 className="type-h1">Earn from space you're not using</h1>
         <p className="mt-3 max-w-prose type-body text-muted-foreground">
-          Tell us about your garage, loft, shed or spare room and set your own monthly price. It takes
-          about five minutes, and we save your progress as you go.
+          Tell us about your garage, loft, shed or spare room and set your own monthly price. It
+          takes about five minutes, and we save your progress as you go.
         </p>
 
         <div className="mt-7">
@@ -57,10 +63,12 @@ function ListSpacePage() {
           </Button>
         </div>
 
-
         <ol className="mt-12 grid gap-4 sm:grid-cols-3">
           {steps.map((step, index) => (
-            <li key={step.title} className="rounded-2xl border border-border bg-card p-5 shadow-card">
+            <li
+              key={step.title}
+              className="rounded-2xl border border-border bg-card p-5 shadow-card"
+            >
               <span className="type-body-sm text-muted-foreground">Step {index + 1}</span>
               <h2 className="mt-1 type-h3">{step.title}</h2>
               <p className="mt-2 type-body-sm text-muted-foreground">{step.body}</p>

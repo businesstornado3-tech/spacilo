@@ -43,7 +43,6 @@ function SpaceTrustPanel({
   );
 }
 
-
 export const Route = createFileRoute("/spaces/$spaceId")({
   /**
    * Meta-only loader: crawlers and social scrapers need a real title,
@@ -110,7 +109,10 @@ export const Route = createFileRoute("/spaces/$spaceId")({
 function PublicSpacePage() {
   const { spaceId } = Route.useParams();
   const [state, setState] = React.useState<
-    { kind: "loading" } | { kind: "missing" } | { kind: "error" } | {
+    | { kind: "loading" }
+    | { kind: "missing" }
+    | { kind: "error" }
+    | {
         kind: "ready";
         view: ListingView;
         matchSpace: ReturnType<typeof toMatchSpace>;
@@ -145,7 +147,9 @@ function PublicSpacePage() {
           floorAreaM2: row.floor_area_m2 === null ? null : Number(row.floor_area_m2),
           totalVolumeM3: row.total_volume_m3 === null ? null : Number(row.total_volume_m3),
           availableVolumeM3:
-            row.estimated_available_volume_m3 === null ? null : Number(row.estimated_available_volume_m3),
+            row.estimated_available_volume_m3 === null
+              ? null
+              : Number(row.estimated_available_volume_m3),
           features: row.features ?? [],
           acceptedCategories: row.accepted_categories ?? [],
           restrictions: row.host_restrictions ?? [],
@@ -218,7 +222,6 @@ function PublicSpacePage() {
             </div>
           </>
         ) : null}
-
       </PageSection>
     </MarketingLayout>
   );

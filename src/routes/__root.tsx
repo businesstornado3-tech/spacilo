@@ -89,8 +89,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:title", content: `${brand.name} — ${brand.tagline}` },
       { name: "twitter:title", content: `${brand.name} — ${brand.tagline}` },
-      { property: "og:description", content: `Find affordable storage in garages, lofts and spare rooms near you, or earn from space you're not using. ${brand.ai} helps both sides see what actually fits.` },
-      { name: "twitter:description", content: `Find affordable storage in garages, lofts and spare rooms near you, or earn from space you're not using. ${brand.ai} helps both sides see what actually fits.` },
+      {
+        property: "og:description",
+        content: `Find affordable storage in garages, lofts and spare rooms near you, or earn from space you're not using. ${brand.ai} helps both sides see what actually fits.`,
+      },
+      {
+        name: "twitter:description",
+        content: `Find affordable storage in garages, lofts and spare rooms near you, or earn from space you're not using. ${brand.ai} helps both sides see what actually fits.`,
+      },
       { property: "og:image", content: "https://home-stash-link.lovable.app/og-image.png" },
       { name: "twitter:image", content: "https://home-stash-link.lovable.app/og-image.png" },
     ],

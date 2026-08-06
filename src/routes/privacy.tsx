@@ -4,11 +4,7 @@ import { ShieldCheck } from "lucide-react";
 import { brand } from "@/config/brand";
 import { MarketingLayout, PageSection } from "@/components/layout/MarketingLayout";
 import { Alert } from "@/components/common/Alert";
-import {
-  legalReviewNotice,
-  measurementSections,
-  privacyIntro,
-} from "@/data/privacy";
+import { legalReviewNotice, measurementSections, privacyIntro } from "@/data/privacy";
 import { publicRouteMeta } from "@/lib/seo/meta";
 import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
@@ -20,7 +16,12 @@ export const Route = createFileRoute("/privacy")({
   head: () => ({
     ...publicRouteMeta({ title: title, description: description, path: "/privacy" }),
     scripts: [
-      jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: title, path: "/privacy" }])),
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: title, path: "/privacy" },
+        ]),
+      ),
     ],
   }),
   component: PrivacyPage,

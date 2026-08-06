@@ -17,7 +17,12 @@ export const Route = createFileRoute("/trust")({
   head: () => ({
     ...publicRouteMeta({ title: title, description: description, path: "/trust" }),
     scripts: [
-      jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: title, path: "/trust" }])),
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: title, path: "/trust" },
+        ]),
+      ),
     ],
   }),
   component: TrustPage,

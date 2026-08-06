@@ -14,7 +14,12 @@ export const Route = createFileRoute("/get-started")({
   head: () => ({
     ...publicRouteMeta({ title: title, description: description, path: "/get-started" }),
     scripts: [
-      jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: title, path: "/get-started" }])),
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: title, path: "/get-started" },
+        ]),
+      ),
     ],
   }),
   component: GetStartedPage,

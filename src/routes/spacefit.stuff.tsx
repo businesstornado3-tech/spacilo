@@ -40,7 +40,12 @@ export const Route = createFileRoute("/spacefit/stuff")({
   head: () => ({
     ...publicRouteMeta({ title: title, description: description, path: "/spacefit/stuff" }),
     scripts: [
-      jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: title, path: "/spacefit/stuff" }])),
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: title, path: "/spacefit/stuff" },
+        ]),
+      ),
     ],
   }),
   component: GuestStuffPage,

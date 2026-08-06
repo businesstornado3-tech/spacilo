@@ -24,7 +24,12 @@ export const Route = createFileRoute("/search")({
   head: () => ({
     ...publicRouteMeta({ title: title, description: description, path: "/search" }),
     scripts: [
-      jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: title, path: "/search" }])),
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: title, path: "/search" },
+        ]),
+      ),
     ],
   }),
   component: SearchPage,
@@ -65,7 +70,8 @@ function SearchPage() {
       <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
         <h1 className="type-h1">Storage near you</h1>
         <p className="mt-2 max-w-prose type-body text-muted-foreground">
-          Enter a UK postcode or area to see published spaces nearby, with approximate distance and price.
+          Enter a UK postcode or area to see published spaces nearby, with approximate distance and
+          price.
         </p>
         <div className="mt-6">
           <StorageSearch params={params} onParamsChange={handleChange} />

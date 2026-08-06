@@ -59,13 +59,8 @@ export function Hero() {
             fetchPriority="high"
             className="aspect-[4/3] w-full object-cover"
           />
-          <div className="p-4 sm:p-5">
-            <p className="type-label">A neighbourhood storage marketplace.</p>
-            <p className="mt-1.5 type-body-sm text-muted-foreground">
-              Real garages, spare rooms and lofts near you — with Spacilo AI helping estimate what
-              fits before you commit.
-            </p>
-          </div>
+          <HeroAiPreview />
+
         </div>
       </div>
     </section>

@@ -46,6 +46,8 @@ export type ListingJsonLdInput = {
   monthlyPricePence: number | null;
   currency?: string | null;
   imageUrls?: string[];
+  averageRating?: number | null;
+  reviewCount?: number;
 };
 
 /**
@@ -74,6 +76,9 @@ export function listingJsonLd(input: ListingJsonLdInput) {
       : {}),
   };
 
+  const rating = aggregateRatingJsonLd(input.averageRating ?? null, input.reviewCount ?? 0);
+  if (rating) json["aggregateRating"] = rating;
+
   if (typeof input.monthlyPricePence === "number") {
     json["offers"] = {
       "@type": "Offer",
@@ -87,10 +92,52 @@ export function listingJsonLd(input: ListingJsonLdInput) {
   return json;
 }
 
+/** Breadcrumb trail for a public page. Paths must be real, indexable routes. */
+export function breadcrumbJsonLd(trail: readonly { name: string; path: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: trail.map((crumb, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: crumb.name,
+      item: `${siteOrigin()}${crumb.path === "/" ? "" : crumb.path}`,
+    })),
+  };
+}
+
+/** FAQPage schema built only from question/answer copy already on the page. */
+export function faqJsonLd(entries: readonly { question: string; answer: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: entries.map((entry) => ({
+      "@type": "Question",
+      name: entry.question,
+      acceptedAnswer: { "@type": "Answer", text: entry.answer },
+    })),
+  };
+}
+
+/**
+ * AggregateRating for a listing. Only emitted when real reviews exist —
+ * never fabricate a rating or a review count.
+ */
+export function aggregateRatingJsonLd(averageRating: number | null, reviewCount: number) {
+  if (!averageRating || reviewCount < 1) return null;
+  return {
+    "@type": "AggregateRating",
+    ratingValue: Number(averageRating.toFixed(1)),
+    reviewCount,
+    bestRating: 5,
+    worstRating: 1,
+  };
+}
+
 /** Renders a JSON-LD object as a router `scripts` entry. */
 export function jsonLdScript(data: unknown) {
   return {
-    attrs: { type: "application/ld+json" },
+    type: "application/ld+json",
     children: JSON.stringify(data),
   };
 }

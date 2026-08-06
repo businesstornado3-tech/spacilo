@@ -3,6 +3,8 @@ import { useNavigate } from "@tanstack/react-router";
 import heroPhoto from "@/assets/hero-storage.jpg";
 import { SearchControls } from "@/components/search/SearchControls";
 import { SpaceFitEntry } from "@/components/home/SpaceFitEntry";
+import { HeroAiPreview } from "@/components/home/HeroAiPreview";
+
 import { track } from "@/lib/analytics/tracker";
 
 /**

@@ -1,16 +1,17 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 
+import heroPhoto from "@/assets/hero-storage.jpg";
 import { SearchControls } from "@/components/search/SearchControls";
-import { SpaceFitDemo } from "@/components/home/SpaceFitDemo";
-import { HostEntryButton } from "@/components/home/HostEntryButton";
-import { Button } from "@/components/ui/button";
+import { SpaceFitEntry } from "@/components/home/SpaceFitEntry";
 import { track } from "@/lib/analytics/tracker";
 
 /**
- * First viewport. The marketplace proposition leads: space nearby for renters,
- * income at home for hosts. Spacilo AI is introduced only as a supporting
- * capability here — its dedicated entry points live further down the page.
+ * First viewport. The marketplace proposition leads, then the real Spacilo AI
+ * launcher (the signature interaction), then the postcode search for visitors
+ * who already know where they need storage.
+ *
+ * No camera, no AI code and no analysis runs here — the launcher only routes
+ * into the existing renter and host Spacilo AI experiences.
  */
 export function Hero() {
   const navigate = useNavigate();
@@ -32,27 +33,7 @@ export function Hero() {
             Find trusted neighbourhood storage — or earn from the space you're not using.
           </p>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Button asChild size="lg">
-              <Link
-                to="/search"
-                search={{ location: "", radius: 5, sort: "recommended" }}
-                onClick={() =>
-                  track("storage_search_started", { props: { from: "homepage_hero_find_storage" } })
-                }
-              >
-                Find storage
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
-            </Button>
-            <HostEntryButton
-              label="Start earning"
-              from="homepage_hero"
-              size="lg"
-              variant="secondary"
-              withArrow={false}
-            />
-          </div>
+          <SpaceFitEntry from="homepage_hero" className="mt-6" />
 
           <div className="mt-6 rounded-2xl bg-card p-4 shadow-card sm:p-5">
             <p className="type-label">Know your area already?</p>
@@ -67,14 +48,25 @@ export function Hero() {
               }}
             />
           </div>
-
-          <p className="mt-4 max-w-md type-body-sm text-muted-foreground">
-            Not sure how much space you need? Spacilo AI can estimate it from a photo — more on that
-            below.
-          </p>
         </div>
 
-        <SpaceFitDemo className="lg:sticky lg:top-24" />
+        <div className="overflow-hidden rounded-3xl bg-card shadow-raised lg:sticky lg:top-24">
+          <img
+            src={heroPhoto}
+            alt="Household boxes, a bicycle and suitcases stored neatly in a British home garage"
+            width={1600}
+            height={1200}
+            fetchPriority="high"
+            className="aspect-[4/3] w-full object-cover"
+          />
+          <div className="p-4 sm:p-5">
+            <p className="type-label">A neighbourhood storage marketplace.</p>
+            <p className="mt-1.5 type-body-sm text-muted-foreground">
+              Real garages, spare rooms and lofts near you — with Spacilo AI helping estimate what
+              fits before you commit.
+            </p>
+          </div>
+        </div>
       </div>
     </section>
   );

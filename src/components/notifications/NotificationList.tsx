@@ -115,11 +115,11 @@ export function NotificationList() {
                 key={notification.id}
                 notification={notification}
                 onOpen={(n) => {
-                  track("notification_opened", { props: { kind: n.kind } });
+                  track("notification_opened", { props: { event_type: n.event_type } });
                   if (n.read_at === null) markRead.mutate(n.id);
                 }}
                 onMarkRead={(n) => {
-                  track("notification_read", { props: { kind: n.kind } });
+                  track("notification_read", { props: { event_type: n.event_type } });
                   markRead.mutate(n.id);
                 }}
               />

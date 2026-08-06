@@ -43,6 +43,7 @@ import { Route as AuthenticatedHostEarningsRouteImport } from './routes/_authent
 import { Route as AuthenticatedRenterIndexRouteImport } from './routes/_authenticated.renter.index'
 import { Route as AuthenticatedRenterMatchesRouteImport } from './routes/_authenticated.renter.matches'
 import { Route as AuthenticatedRenterSearchRouteImport } from './routes/_authenticated.renter.search'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedAdminPolicyIndexRouteImport } from './routes/_authenticated.admin.policy.index'
 import { Route as AuthenticatedAdminReviewsIndexRouteImport } from './routes/_authenticated.admin.reviews.index'
 import { Route as AuthenticatedAdminSupportIndexRouteImport } from './routes/_authenticated.admin.support.index'
@@ -251,6 +252,11 @@ const AuthenticatedRenterSearchRoute =
     path: '/search',
     getParentRoute: () => AuthenticatedRenterRoute,
   } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminPolicyIndexRoute =
   AuthenticatedAdminPolicyIndexRouteImport.update({
     id: '/admin/policy/',
@@ -467,6 +473,7 @@ export interface FileRoutesByFullPath {
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
   '/renter/search': typeof AuthenticatedRenterSearchRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/host/': typeof AuthenticatedHostIndexRoute
   '/renter/': typeof AuthenticatedRenterIndexRoute
@@ -531,6 +538,7 @@ export interface FileRoutesByTo {
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
   '/renter/search': typeof AuthenticatedRenterSearchRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/host': typeof AuthenticatedHostIndexRoute
   '/renter': typeof AuthenticatedRenterIndexRoute
@@ -598,6 +606,7 @@ export interface FileRoutesById {
   '/_authenticated/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/_authenticated/renter/matches': typeof AuthenticatedRenterMatchesRoute
   '/_authenticated/renter/search': typeof AuthenticatedRenterSearchRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
   '/_authenticated/renter/': typeof AuthenticatedRenterIndexRoute
@@ -666,6 +675,7 @@ export interface FileRouteTypes {
     | '/host/earnings'
     | '/renter/matches'
     | '/renter/search'
+    | '/api/public/health'
     | '/admin/'
     | '/host/'
     | '/renter/'
@@ -730,6 +740,7 @@ export interface FileRouteTypes {
     | '/host/earnings'
     | '/renter/matches'
     | '/renter/search'
+    | '/api/public/health'
     | '/admin'
     | '/host'
     | '/renter'
@@ -796,6 +807,7 @@ export interface FileRouteTypes {
     | '/_authenticated/host/earnings'
     | '/_authenticated/renter/matches'
     | '/_authenticated/renter/search'
+    | '/api/public/health'
     | '/_authenticated/admin/'
     | '/_authenticated/host/'
     | '/_authenticated/renter/'
@@ -854,6 +866,7 @@ export interface RootRouteChildren {
   SpacefitStuffRoute: typeof SpacefitStuffRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
   LegalIndexRoute: typeof LegalIndexRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPayoutsReleaseRoute: typeof ApiPublicPayoutsReleaseRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
@@ -1097,6 +1110,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/renter/search'
       preLoaderRoute: typeof AuthenticatedRenterSearchRouteImport
       parentRoute: typeof AuthenticatedRenterRoute
+    }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/policy/': {
       id: '/_authenticated/admin/policy/'
@@ -1478,6 +1498,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpacefitStuffRoute: SpacefitStuffRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,
   LegalIndexRoute: LegalIndexRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPayoutsReleaseRoute: ApiPublicPayoutsReleaseRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }

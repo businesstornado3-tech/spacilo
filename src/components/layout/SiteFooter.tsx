@@ -35,6 +35,7 @@ const columns: { heading: string; links: FooterLink[] }[] = [
     links: [
       { label: "Storage Policy", to: "/storage-policy" },
       { label: "Privacy & Data", to: "/privacy" },
+      { label: "Legal", to: "/legal" },
     ],
   },
 ];

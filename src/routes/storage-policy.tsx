@@ -12,7 +12,7 @@ import { MarketingLayout } from "@/components/layout/MarketingLayout";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/common/Skeletons";
 import { Alert } from "@/components/common/Alert";
-import { useActivePolicy, usePolicyRules } from "@/hooks/usePolicy";
+import { useActivePolicy, usePublicPolicyRules } from "@/hooks/usePolicy";
 import { DECISION_LABEL } from "@/lib/policy/engine";
 import { policyCategoryLabel } from "@/lib/policy/categories";
 import { publicRouteMeta } from "@/lib/seo/meta";
@@ -41,7 +41,7 @@ export const Route = createFileRoute("/storage-policy")({
 
 function StoragePolicyPage() {
   const { data: policy, isLoading } = useActivePolicy();
-  const { data: rules } = usePolicyRules(policy?.id);
+  const { data: rules } = usePublicPolicyRules(policy?.id);
 
   const groups = [
     { decision: "prohibited", heading: "Never allowed" },

@@ -111,3 +111,16 @@ export interface CompatibilityReport {
   policy: CompatibilityDimension;
   suitability: CompatibilityDimension;
 }
+
+/**
+ * What an anonymous visitor is allowed to see of a rule. No internal reason
+ * codes, no host-only messaging, no staff-review flags.
+ */
+export interface PublicPolicyRule {
+  id: string;
+  rule_key: string;
+  category: string;
+  decision: PolicyDecision;
+  renter_message: string;
+  sort_order: number;
+}

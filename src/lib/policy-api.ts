@@ -10,6 +10,7 @@ import type {
   PolicySection,
   PolicyRule,
   PolicyVersion,
+  PublicPolicyRule,
   ScreeningResult,
   SuitabilityAttributes,
   SuitabilityProfile,

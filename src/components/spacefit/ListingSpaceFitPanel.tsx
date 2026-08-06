@@ -49,9 +49,9 @@ export function ListingSpaceFitPanel({
   // Safety layer — the same authoritative results used at request time.
   const { data: inventory } = useActiveInventory();
   const { data: screening } = useInventoryScreening(user ? inventory?.id : undefined);
-  const { data: policy } = useActivePolicy();
-  const { data: rules } = usePolicyRules(policy?.id);
-  const { data: suitability } = useSuitabilityProfile(space.id);
+  const { data: policy } = useActivePolicy(Boolean(user));
+  const { data: rules } = usePolicyRules(user ? policy?.id : undefined);
+  const { data: suitability } = useSuitabilityProfile(user ? space.id : undefined);
 
   if (!user || !hasInventory || !result) {
     return (

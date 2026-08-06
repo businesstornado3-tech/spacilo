@@ -42,16 +42,65 @@ function SpaceTrustPanel({
 
 
 export const Route = createFileRoute("/spaces/$spaceId")({
-  head: () => ({
-    meta: [
-      { title: "Storage space — " + brand.name },
-      { name: "description", content: "See photos, capacity, access and monthly price for this local storage space." },
-      { property: "og:title", content: "Storage space — " + brand.name },
-      { property: "og:description", content: "See photos, capacity, access and monthly price for this local storage space." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  /**
+   * Meta-only loader: crawlers and social scrapers need a real title,
+   * description and canonical for each listing. Failures are swallowed so a
+   * transient backend error never blocks the page — the component owns the
+   * real data fetch and its own error state.
+   */
+  loader: async ({ params }) => {
+    try {
+      return { row: await getPublishedSpace(params.spaceId) };
+    } catch {
+      return { row: null };
+    }
+  },
+  head: ({ params, loaderData }) => {
+    const row = loaderData?.row ?? null;
+    const path = `/spaces/${params.spaceId}`;
+    if (!row) {
+      return publicRouteMeta({
+        title: "Storage space — " + brand.name,
+        description:
+          "See photos, capacity, access and the monthly price for this local storage space.",
+        path,
+      });
+    }
+    const area = publicLocation(row.approximate_area, row.postcode_district);
+    const type = spaceTypeLabel(row.space_type as SpaceTypeValue);
+    const title = `${row.title ?? type} in ${area} — ${brand.name}`;
+    const price =
+      typeof row.monthly_price_pence === "number"
+        ? ` from ${formatPrice(row.monthly_price_pence)} a month`
+        : "";
+    const description =
+      `${type} storage in ${area}${price}. See photos, capacity, access and what this host accepts.`.slice(
+        0,
+        158,
+      );
+    return {
+      ...publicRouteMeta({ title: title.slice(0, 70), description, path, ogType: "product" }),
+      scripts: [
+        jsonLdScript(
+          listingJsonLd({
+            id: row.id,
+            title: row.title ?? `${type} in ${area}`,
+            description: row.description ?? null,
+            approximateArea: row.approximate_area ?? null,
+            postcodeDistrict: row.postcode_district ?? null,
+            monthlyPricePence: row.monthly_price_pence ?? null,
+          }),
+        ),
+        jsonLdScript(
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Search storage", path: "/search" },
+            { name: row.title ?? type, path },
+          ]),
+        ),
+      ],
+    };
+  },
   component: PublicSpacePage,
 });
 

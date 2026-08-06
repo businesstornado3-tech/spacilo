@@ -62,7 +62,6 @@ export function Hero() {
             className="aspect-[4/3] w-full object-cover"
           />
           <HeroAiPreview />
-
         </div>
       </div>
     </section>

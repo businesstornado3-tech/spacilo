@@ -65,7 +65,12 @@ describe("inbox presentation", () => {
   });
 
   it("searches names, listings and message text", () => {
-    const rows = [row(), row({ id: "c2", counterpart_name: "Tom", space_title: "Loft, Fratton" })];
+    const rows = [row(), row({
+      id: "c2",
+      counterpart_name: "Tom",
+      space_title: "Loft, Fratton",
+      last_message_preview: "Is Sunday any good?",
+    })];
     expect(searchConversations(rows, "fratton").map((r) => r.id)).toEqual(["c2"]);
     expect(searchConversations(rows, "saturday").map((r) => r.id)).toEqual(["c1"]);
     expect(searchConversations(rows, "  ")).toHaveLength(2);

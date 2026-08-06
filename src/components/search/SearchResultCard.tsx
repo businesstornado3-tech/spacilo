@@ -16,6 +16,8 @@ import type { SpaceTypeValue } from "@/lib/spaces";
 import { ReasonList, SpaceFitResultBadge, WhyThisMatches } from "@/components/spacefit/SpaceFitResult";
 import { SpaceFitSpark } from "@/components/trust/SpaceFitAI";
 import { formatMilesAway } from "@/lib/location/distance";
+import { VerificationBadge } from "@/components/trust/VerificationBadge";
+import { cardChips } from "@/lib/marketplace/listing-facts";
 import { track } from "@/lib/analytics/tracker";
 import type { SearchResult } from "@/hooks/useStorageSearch";
 

@@ -50,13 +50,13 @@ describe("location suggestions", () => {
 
 describe("search url state", () => {
   it("accepts the new sorts", () => {
-    expect(validateSearchParams({ sort: "largest" }).sort).toBe("largest");
-    expect(validateSearchParams({ sort: "newest" }).sort).toBe("newest");
-    expect(validateSearchParams({ sort: "nonsense" }).sort).toBe("recommended");
+    expect(validateSearchParams({ sort: "largest" } as never).sort).toBe("largest");
+    expect(validateSearchParams({ sort: "newest" } as never).sort).toBe("newest");
+    expect(validateSearchParams({ sort: "nonsense" } as never).sort).toBe("recommended");
   });
 
   it("round-trips the host-confirmed access filters", () => {
-    const state = validateSearchParams({ groundFloor: "true", verifiedHost: true });
+    const state = validateSearchParams({ groundFloor: "true", verifiedHost: true } as never);
     const filters = filtersFromUrl(state);
     expect(filters.groundFloor).toBe(true);
     expect(filters.verifiedHost).toBe(true);
@@ -65,6 +65,6 @@ describe("search url state", () => {
   });
 
   it("clears removed filters from the url", () => {
-    expect(filtersToUrl({}).groundFloor).toBeUndefined();
+    expect(filtersToUrl({})["groundFloor"]).toBeUndefined();
   });
 });

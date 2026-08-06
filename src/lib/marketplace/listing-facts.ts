@@ -9,14 +9,26 @@
 import { accessTypeLabel, featureLabel, formatM3, formatStay } from "@/lib/spaces";
 import type { AccessTypeValue } from "@/lib/spaces";
 
+/**
+ * Some access fields are tri-state in the database ("yes" / "no" /
+ * "not_applicable") and some are plain booleans, so both are accepted and
+ * only an explicit yes counts as confirmed.
+ */
+export type Confirmable = boolean | "yes" | "no" | "not_applicable" | null | undefined;
+
+/** True only when the host explicitly confirmed the fact. */
+export function isConfirmed(value: Confirmable): boolean {
+  return value === true || value === "yes";
+}
+
 /** The subset of a published listing row these helpers read. */
 export type ListingFactsRow = {
-  features?: string[] | null;
+  features?: readonly string[] | null;
   access_type?: string | null;
-  ground_floor_access?: boolean | null;
-  stairs_required?: boolean | null;
-  lift_available?: boolean | null;
-  vehicle_access_close?: boolean | null;
+  ground_floor_access?: Confirmable;
+  stairs_required?: Confirmable;
+  lift_available?: Confirmable;
+  vehicle_access_close?: Confirmable;
   estimated_available_volume_m3?: number | string | null;
   door_width_cm?: number | null;
   door_height_cm?: number | null;
@@ -40,10 +52,10 @@ export function securityChips(row: ListingFactsRow): string[] {
  */
 export function accessChips(row: ListingFactsRow): string[] {
   const chips: string[] = [];
-  if (row.ground_floor_access) chips.push("Ground floor");
-  if (row.lift_available) chips.push("Lift available");
-  if (row.vehicle_access_close) chips.push("Vehicle access");
-  if (row.stairs_required) chips.push("Stairs involved");
+  if (isConfirmed(row.ground_floor_access)) chips.push("Ground floor");
+  if (isConfirmed(row.lift_available)) chips.push("Lift available");
+  if (isConfirmed(row.vehicle_access_close)) chips.push("Vehicle access");
+  if (isConfirmed(row.stairs_required)) chips.push("Stairs involved");
   return chips;
 }
 

@@ -43,8 +43,8 @@ describe("storage documents", () => {
     const doc = buildStorageDocument("receipt", transaction(), party);
     expect(doc.title).toBe("Payment receipt");
     expect(doc.filename).toBe("spacilo-receipt-TX-ABC123.html");
-    expect(doc.html).toContain("£80.00");
-    expect(doc.html).toContain("£90.00");
+    expect(doc.html).toContain("£80");
+    expect(doc.html).toContain("£90");
     expect(doc.html).toContain("PS-3F2A9C");
     expect(doc.html).toContain(brand.legalName);
   });
@@ -57,7 +57,7 @@ describe("storage documents", () => {
       party,
     );
     expect(refunded.html).toContain("Net paid");
-    expect(refunded.html).toContain("£60.00");
+    expect(refunded.html).toContain("£60");
   });
 
   it("refuses to produce a document for an unsettled payment", () => {

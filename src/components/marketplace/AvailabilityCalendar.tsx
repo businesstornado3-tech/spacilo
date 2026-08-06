@@ -69,21 +69,26 @@ export function AvailabilityCalendar({
         </Button>
       </div>
 
-      <div className="mt-3 grid grid-cols-7 gap-1" role="grid" aria-label="Availability calendar">
+      {/*
+        Deliberately NOT role="grid": an ARIA grid requires row containers and
+        keyboard cell navigation, neither of which a read-only month view has.
+        A labelled group of plain cells conveys the same information without
+        promising interaction that does not exist.
+      */}
+      <div className="mt-3 grid grid-cols-7 gap-1" role="group" aria-label="Availability calendar">
         {WEEKDAYS.map((day) => (
-          <div key={day} className="py-1 text-center type-body-sm text-muted-foreground">
+          <div key={day} aria-hidden="true" className="py-1 text-center type-body-sm text-muted-foreground">
             {day}
           </div>
         ))}
         {cells.map((cell, index) => (
           <div
             key={cell.date ?? `pad-${index}`}
-            role="gridcell"
-            aria-label={
-              cell.date
-                ? `${cell.date}${cell.unavailable ? ` — ${reasonLabel(cell.reason ?? "")}` : " — available"}`
-                : undefined
-            }
+            {...(cell.date
+              ? {
+                  "aria-label": `${cell.date}${cell.unavailable ? ` — ${reasonLabel(cell.reason ?? "")}` : " — available"}`,
+                }
+              : { "aria-hidden": true })}
             className={cn(
               "grid aspect-square place-items-center rounded-lg type-body-sm",
               !cell.date && "opacity-0",
@@ -96,6 +101,7 @@ export function AvailabilityCalendar({
           </div>
         ))}
       </div>
+
 
       <ul className="mt-4 flex flex-wrap gap-4 type-body-sm text-muted-foreground">
         <li className="flex items-center gap-2">

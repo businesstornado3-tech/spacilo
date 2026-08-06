@@ -7,7 +7,10 @@ import { MarketingLayout, PageSection } from "@/components/layout/MarketingLayou
 import { ErrorState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { ListingPreview, type ListingView } from "@/components/host/listing/ListingPreview";
-import { publicLocation } from "@/lib/spaces";
+import { publicLocation, spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
+import { formatPrice } from "@/lib/format";
+import { publicRouteMeta } from "@/lib/seo/meta";
+import { breadcrumbJsonLd, jsonLdScript, listingJsonLd } from "@/lib/seo/structured-data";
 import { getPublishedSpace, signedPhotoUrls } from "@/lib/spaces-api";
 import { RequestSpaceCta } from "@/components/requests/RequestSpaceCta";
 import { AskHostPanel } from "@/components/messages/AskHostPanel";

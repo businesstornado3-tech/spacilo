@@ -4,12 +4,19 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { useAuth } from "@/hooks/useAuth";
 import {
   archiveNotification,
+  fetchNotificationPreferences,
   fetchUnreadCount,
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  saveNotificationPreferences,
 } from "@/lib/notifications-api";
-import { hasMorePages, NOTIFICATION_PAGE_SIZE, type Notification } from "@/lib/notifications";
+import {
+  hasMorePages,
+  NOTIFICATION_PAGE_SIZE,
+  type Notification,
+  type NotificationPreferences,
+} from "@/lib/notifications";
 
 export const notificationKeys = {
   all: ["notifications"] as const,
@@ -73,5 +80,29 @@ export function useArchiveNotification() {
   return useMutation({
     mutationFn: (id: string) => archiveNotification(id),
     onSuccess: invalidate,
+  });
+}
+
+/** Delivery preferences. Recorded notifications are unaffected by these. */
+export function useNotificationPreferences() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["notification-preferences", user?.id ?? "none"] as const,
+    queryFn: fetchNotificationPreferences,
+    enabled: Boolean(user),
+  });
+}
+
+export function useSaveNotificationPreferences() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: Partial<NotificationPreferences>) => {
+      if (!user) throw new Error("Sign in to change your notification settings.");
+      return saveNotificationPreferences(user.id, patch);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["notification-preferences"] });
+    },
   });
 }

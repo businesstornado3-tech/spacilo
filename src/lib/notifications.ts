@@ -244,3 +244,93 @@ export function pageRange(page: number, size: number = NOTIFICATION_PAGE_SIZE): 
 
 export const hasMorePages = (received: number, size: number = NOTIFICATION_PAGE_SIZE): boolean =>
   received === size;
+
+/* ------------------------------------------------------------- day grouping */
+
+export type FeedGroupKey = "today" | "yesterday" | "earlier";
+
+export interface FeedGroup<T> {
+  key: FeedGroupKey;
+  label: string;
+  items: T[];
+}
+
+const GROUP_LABEL: Record<FeedGroupKey, string> = {
+  today: "Today",
+  yesterday: "Yesterday",
+  earlier: "Earlier",
+};
+
+const startOfDay = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+
+export function groupKeyFor(created: string, now: Date = new Date()): FeedGroupKey {
+  const day = startOfDay(new Date(created));
+  const today = startOfDay(now);
+  if (day >= today) return "today";
+  if (day >= today - 86_400_000) return "yesterday";
+  return "earlier";
+}
+
+/**
+ * Today / Yesterday / Earlier, in that order, with empty groups omitted.
+ * Ordering inside a group is preserved — the feed is already newest first.
+ */
+export function groupByDay<T extends { created_at: string }>(
+  list: T[],
+  now: Date = new Date(),
+): FeedGroup<T>[] {
+  const buckets: Record<FeedGroupKey, T[]> = { today: [], yesterday: [], earlier: [] };
+  for (const item of list) buckets[groupKeyFor(item.created_at, now)].push(item);
+  return (["today", "yesterday", "earlier"] as FeedGroupKey[])
+    .filter((key) => buckets[key].length > 0)
+    .map((key) => ({ key, label: GROUP_LABEL[key], items: buckets[key] }));
+}
+
+/* ------------------------------------------------------------- preferences */
+
+export const NOTIFICATION_CATEGORIES = [
+  { value: "bookings", label: "Bookings", description: "Requests, acceptances, handovers and cancellations." },
+  { value: "messages", label: "Messages", description: "New messages from a host or renter." },
+  { value: "payments", label: "Payments", description: "Payments, payouts and refunds." },
+  { value: "reviews", label: "Reviews", description: "Review invitations and published reviews." },
+  { value: "announcements", label: "Announcements", description: "Occasional Spacilo service updates." },
+] as const;
+
+export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number]["value"];
+export type NotificationChannel = "inapp" | "email";
+
+export type NotificationPreferences = Tables<"notification_preferences">;
+
+export const preferenceKey = (
+  channel: NotificationChannel,
+  category: NotificationCategory,
+): keyof NotificationPreferences => `${channel}_${category}` as keyof NotificationPreferences;
+
+export const DEFAULT_PREFERENCES: Record<string, boolean> = {
+  inapp_bookings: true,
+  inapp_messages: true,
+  inapp_payments: true,
+  inapp_reviews: true,
+  inapp_announcements: true,
+  email_bookings: true,
+  email_messages: true,
+  email_payments: true,
+  email_reviews: false,
+  email_announcements: false,
+};
+
+/**
+ * Preferences shape delivery only. Anything that requires action — a payment,
+ * a handover, a cancellation — is still recorded and still appears in the
+ * notification centre and in "Needs your attention", whatever is switched off.
+ */
+export function preferenceValue(
+  prefs: Partial<NotificationPreferences> | null | undefined,
+  channel: NotificationChannel,
+  category: NotificationCategory,
+): boolean {
+  const key = preferenceKey(channel, category) as string;
+  const value = prefs ? (prefs as Record<string, unknown>)[key] : undefined;
+  return typeof value === "boolean" ? value : (DEFAULT_PREFERENCES[key] ?? true);
+}

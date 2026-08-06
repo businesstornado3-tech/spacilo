@@ -2,11 +2,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useAuth } from "@/hooks/useAuth";
+import { totalUnread } from "@/lib/messages";
 import {
   getConversation,
   getOrCreateBookingConversation,
   getOrCreateSpaceConversation,
+  listConversationSummaries,
   listMessages,
+  markConversationRead,
+  reportConversation,
+  setConversationArchived,
   listMyConversations,
   sendMessage,
   type Conversation,
@@ -80,5 +85,55 @@ export function useConversation(conversationId: string | undefined) {
     queryKey: ["conversation", conversationId ?? "none"] as const,
     queryFn: () => getConversation(conversationId as string),
     enabled: Boolean(user && conversationId),
+  });
+}
+
+/* ------------------------------------------------ inbox (Prompt 26B) */
+
+/** Professional inbox: unread counts and previews come from the server. */
+export function useConversationSummaries(archived = false) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: [...messageKeys.conversations, "summaries", archived] as const,
+    queryFn: () => listConversationSummaries(archived),
+    enabled: Boolean(user),
+    refetchInterval: 60_000,
+  });
+}
+
+export function useUnreadMessageCount() {
+  const { data } = useConversationSummaries(false);
+  return totalUnread(data ?? []);
+}
+
+export function useMarkConversationRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (conversationId: string) => markConversationRead(conversationId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: messageKeys.conversations });
+    },
+  });
+}
+
+export function useSetConversationArchived() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { conversationId: string; archived: boolean }) =>
+      setConversationArchived(input.conversationId, input.archived),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: messageKeys.conversations });
+    },
+  });
+}
+
+export function useReportConversation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { conversationId: string; reason: string; details?: string }) =>
+      reportConversation(input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: messageKeys.conversations });
+    },
   });
 }

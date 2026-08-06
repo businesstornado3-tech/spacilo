@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { NotificationList } from "@/components/notifications/NotificationList";
+import { NotificationPreferencesCard } from "@/components/notifications/NotificationPreferences";
 import { useAuth } from "@/hooks/useAuth";
 
 const description = "Updates about your bookings, messages and support cases.";
@@ -31,6 +32,9 @@ function NotificationsPage() {
       description="What happened, and where to go next. Anything still waiting on you also stays in “Needs your attention” on your dashboard."
     >
       <NotificationList />
+      <div className="mt-10 max-w-2xl">
+        <NotificationPreferencesCard />
+      </div>
     </AppLayout>
   );
 }

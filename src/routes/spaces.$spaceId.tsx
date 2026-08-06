@@ -26,6 +26,9 @@ import { buildTrustSummary } from "@/lib/trust/signals";
 import { useSpaceReviewSummary } from "@/hooks/useReviews";
 import { useSuitabilityProfile } from "@/hooks/usePolicy";
 import { SuitabilitySummary } from "@/components/policy/SuitabilitySummary";
+import { HostTrustProfile } from "@/components/trust/HostTrustProfile";
+import { AvailabilityCalendar } from "@/components/marketplace/AvailabilityCalendar";
+import { usePublicHostProfile, useSpaceAvailability } from "@/hooks/useListingPublic";
 import { track } from "@/lib/analytics/tracker";
 import { ListingGallery } from "@/components/listing/ListingGallery";
 import { BookingPanel } from "@/components/listing/BookingPanel";
@@ -301,6 +304,8 @@ function ListingDetail({
             approximateArea={listing.approximate_area ?? null}
             postcodeDistrict={listing.postcode_district ?? null}
           />
+          <HostProfilePanel spaceId={spaceId} />
+          <AvailabilityPanel spaceId={spaceId} />
           <SpaceReviews spaceId={spaceId} />
           <ListingFaq entries={buildListingFaq(listing)} />
           <div ref={askRef}>
@@ -322,4 +327,16 @@ function ListingDetail({
       </div>
     </div>
   );
+}
+
+/** Public host facts, read through the SECURITY DEFINER projection. */
+function HostProfilePanel({ spaceId }: { spaceId: string }) {
+  const { data, isLoading } = usePublicHostProfile(spaceId);
+  return <HostTrustProfile profile={data} isLoading={isLoading} />;
+}
+
+/** Booked and out-of-window dates. Open dates indicate, they don't reserve. */
+function AvailabilityPanel({ spaceId }: { spaceId: string }) {
+  const { data, isLoading } = useSpaceAvailability(spaceId);
+  return <AvailabilityCalendar ranges={data} isLoading={isLoading} />;
 }

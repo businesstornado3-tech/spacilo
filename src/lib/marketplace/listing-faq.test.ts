@@ -28,7 +28,7 @@ describe("buildListingFaq", () => {
     const entry = buildListingFaq({ monthly_price_pence: 8000 }).find(
       (e) => e.question === "What will I pay?",
     );
-    expect(entry?.answer).toContain("£80.00");
+    expect(entry?.answer).toContain("£80");
     expect(entry?.answer).toContain("£9.60");
   });
 

@@ -57,14 +57,18 @@ function urlXml({ loc, lastmod, changefreq, priority }: UrlEntry): string {
     .join("\n");
 }
 
-/** Builds the complete sitemap XML document. */
-export function buildSitemapXml(listings: readonly SitemapListing[] = [], now: Date = new Date()): string {
-  const today = now.toISOString().slice(0, 10);
-
+/**
+ * Builds the complete sitemap XML document.
+ *
+ * `lastmod` is only ever emitted when we hold a genuine, page-specific
+ * timestamp (a listing's `updated_at`). Static marketing routes have no such
+ * signal, and stamping them with the generation date would be a lie crawlers
+ * learn to ignore — so the element is omitted entirely for those.
+ */
+export function buildSitemapXml(listings: readonly SitemapListing[] = []): string {
   const staticEntries = PUBLIC_ROUTES.filter((route) => !isPrivateRoute(route.path)).map((route) =>
     urlXml({
       loc: canonicalUrl(route.path),
-      lastmod: today,
       changefreq: route.path === "/" ? "daily" : "weekly",
       priority: route.path === "/" ? "1.0" : "0.7",
     }),
@@ -73,7 +77,7 @@ export function buildSitemapXml(listings: readonly SitemapListing[] = [], now: D
   const listingEntries = listings.filter(hasUsableLocation).map((listing) =>
     urlXml({
       loc: canonicalUrl(`/spaces/${listing.id}`),
-      lastmod: isoDate(listing.updated_at) ?? today,
+      lastmod: isoDate(listing.updated_at) ?? undefined,
       changefreq: "weekly",
       priority: "0.6",
     }),

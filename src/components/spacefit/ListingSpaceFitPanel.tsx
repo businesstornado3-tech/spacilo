@@ -12,7 +12,12 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useSpaceFitForSpace } from "@/hooks/useSpaceFitMatches";
 import { useActiveInventory } from "@/hooks/useInventory";
-import { useActivePolicy, useInventoryScreening, usePolicyRules, useSuitabilityProfile } from "@/hooks/usePolicy";
+import {
+  useActivePolicy,
+  useInventoryScreening,
+  usePolicyRules,
+  useSuitabilityProfile,
+} from "@/hooks/usePolicy";
 import {
   ReasonList,
   SpaceFitResultBadge,

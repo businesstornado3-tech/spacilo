@@ -82,7 +82,8 @@ export const LEGAL_DOCUMENTS: readonly LegalDocument[] = [
     slug: "refunds",
     title: "Refund policy",
     description: "When money is returned, how much, and how long it takes.",
-    intro: "Refunds are handled through the original payment method by our payment provider, and are always tied to a booking reference.",
+    intro:
+      "Refunds are handled through the original payment method by our payment provider, and are always tied to a booking reference.",
     sections: [
       {
         heading: "Before storage starts",
@@ -106,7 +107,8 @@ export const LEGAL_DOCUMENTS: readonly LegalDocument[] = [
     slug: "cancellations",
     title: "Cancellation policy",
     description: "How renters and hosts end a booking, and what happens next.",
-    intro: "Both sides can cancel. What differs is the notice given, the effect on money, and the effect on reputation.",
+    intro:
+      "Both sides can cancel. What differs is the notice given, the effect on money, and the effect on reputation.",
     sections: [
       {
         heading: "Renter cancellation",
@@ -130,7 +132,8 @@ export const LEGAL_DOCUMENTS: readonly LegalDocument[] = [
     slug: "host-agreement",
     title: "Host agreement",
     description: "What you commit to when you list space on Spacilo.",
-    intro: "Listing a space is a commitment to a real person that their belongings will be somewhere safe, accessible as described, and treated with care.",
+    intro:
+      "Listing a space is a commitment to a real person that their belongings will be somewhere safe, accessible as described, and treated with care.",
     sections: [
       {
         heading: "You must be allowed to let the space",
@@ -154,7 +157,8 @@ export const LEGAL_DOCUMENTS: readonly LegalDocument[] = [
     slug: "renter-agreement",
     title: "Renter agreement",
     description: "What you commit to when you store belongings with a host.",
-    intro: "You are storing your belongings in someone's home or property, not a commercial facility.",
+    intro:
+      "You are storing your belongings in someone's home or property, not a commercial facility.",
     sections: [
       {
         heading: "Store only what the policy allows",

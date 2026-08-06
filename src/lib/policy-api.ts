@@ -151,3 +151,19 @@ export async function publishPolicyVersion(input: {
   if (error) throw error;
   return data as unknown as PolicyVersion;
 }
+
+/**
+ * Public projection of the rules for a published policy version.
+ *
+ * Signed-out visitors have no read grant on `storage_policy_rules` (rules
+ * carry internal reason codes and host-only messages), so the public storage
+ * policy page reads through the vetted `get_public_policy_rules` projection
+ * instead of the table. This avoids a guaranteed 401 without weakening RLS.
+ */
+export async function listPublicPolicyRules(policyVersionId: string): Promise<PublicPolicyRule[]> {
+  const { data, error } = await supabase.rpc("get_public_policy_rules", {
+    p_version_id: policyVersionId,
+  });
+  if (error) throw error;
+  return (data ?? []) as unknown as PublicPolicyRule[];
+}

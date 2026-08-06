@@ -19,7 +19,8 @@ import type { MatchSpace, SpaceFitResult } from "@/lib/spacefit/types";
 import { useActiveInventory, useInventoryItems } from "@/hooks/useInventory";
 import { normaliseRadius, type SearchCentre } from "@/lib/location/schema";
 
-export type SortKey = "recommended" | "spacefit" | "distance" | "price_asc" | "price_desc";
+export type SortKey =
+  "recommended" | "spacefit" | "distance" | "price_asc" | "price_desc" | "largest" | "newest";
 
 export interface SearchFilters {
   maxPricePence?: number | undefined;
@@ -28,6 +29,12 @@ export interface SearchFilters {
   accessTypes?: string[] | undefined;
   categories?: string[] | undefined;
   minVolumeM3?: number | undefined;
+  /** Host-confirmed access facts. Each maps to a real listing field. */
+  groundFloor?: boolean | undefined;
+  vehicleAccess?: boolean | undefined;
+  liftAvailable?: boolean | undefined;
+  /** Only hosts whose phone number has been verified. */
+  verifiedHost?: boolean | undefined;
 }
 
 export interface StorageSearchParams {
@@ -93,12 +100,21 @@ function matchesFilters(row: SearchSpaceRow, filters: SearchFilters): boolean {
     const available = Number(row.estimated_available_volume_m3 ?? 0);
     if (!(available >= filters.minVolumeM3)) return false;
   }
+  if (filters.groundFloor && row.ground_floor_access !== true) return false;
+  if (filters.vehicleAccess && row.vehicle_access_close !== true) return false;
+  if (filters.liftAvailable && row.lift_available !== "yes") return false;
+  if (filters.verifiedHost && row.host_phone_verified !== true) return false;
   return true;
 }
 
 const price = (r: SearchResult) => r.row.monthly_price_pence ?? Number.MAX_SAFE_INTEGER;
 const distance = (r: SearchResult) =>
   r.distanceMiles === null ? Number.MAX_SAFE_INTEGER : r.distanceMiles;
+const capacity = (r: SearchResult) => Number(r.row.estimated_available_volume_m3 ?? 0);
+const published = (r: SearchResult) => {
+  const value = r.row.published_at ? Date.parse(String(r.row.published_at)) : NaN;
+  return Number.isFinite(value) ? value : 0;
+};
 
 /**
  * "Recommended" is fully deterministic and explainable:
@@ -109,7 +125,11 @@ const distance = (r: SearchResult) =>
  *   5. cheaper
  * Without inventory it degrades to: nearer, then cheaper.
  */
-function sortResults(results: SearchResult[], sort: SortKey, hasInventory: boolean): SearchResult[] {
+function sortResults(
+  results: SearchResult[],
+  sort: SortKey,
+  hasInventory: boolean,
+): SearchResult[] {
   const rows = results.slice();
   switch (sort) {
     case "price_asc":
@@ -118,6 +138,10 @@ function sortResults(results: SearchResult[], sort: SortKey, hasInventory: boole
       return rows.sort((a, b) => price(b) - price(a) || distance(a) - distance(b));
     case "distance":
       return rows.sort((a, b) => distance(a) - distance(b) || price(a) - price(b));
+    case "largest":
+      return rows.sort((a, b) => capacity(b) - capacity(a) || distance(a) - distance(b));
+    case "newest":
+      return rows.sort((a, b) => published(b) - published(a) || distance(a) - distance(b));
     case "spacefit":
       return rows.sort(
         (a, b) =>
@@ -148,7 +172,11 @@ export function useStorageSearch(params: StorageSearchParams) {
   const centre: SearchCentre | null =
     geocoded && geocoded.ok ? (geocoded.centre as SearchCentre) : null;
   const geocodeError =
-    geocoded && !geocoded.ok ? geocoded.message : centreQuery.error ? "Location lookup failed." : null;
+    geocoded && !geocoded.ok
+      ? geocoded.message
+      : centreQuery.error
+        ? "Location lookup failed."
+        : null;
 
   const hasLocation = params.location.trim().length >= 2;
 

@@ -17,7 +17,12 @@ import { SearchControls } from "@/components/search/SearchControls";
 import { SearchFiltersPanel } from "@/components/search/SearchFilters";
 import { SearchResultCard } from "@/components/search/SearchResultCard";
 import type { MapSpace } from "@/components/search/StorageMap";
-import { useStorageSearch, type SearchFilters, type SortKey, type StorageSearchParams } from "@/hooks/useStorageSearch";
+import {
+  useStorageSearch,
+  type SearchFilters,
+  type SortKey,
+  type StorageSearchParams,
+} from "@/hooks/useStorageSearch";
 import { track } from "@/lib/analytics/tracker";
 import { estimateRequiredSpace } from "@/lib/spacefit/requirement";
 import { formatVolume } from "@/lib/inventory-model";
@@ -31,6 +36,8 @@ const SORTS_WITH_INVENTORY: { value: SortKey; label: string }[] = [
   { value: "distance", label: "Nearest" },
   { value: "price_asc", label: "Price: low to high" },
   { value: "price_desc", label: "Price: high to low" },
+  { value: "largest", label: "Largest capacity" },
+  { value: "newest", label: "Newest listings" },
 ];
 
 const SORTS_WITHOUT_INVENTORY = SORTS_WITH_INVENTORY.filter((s) => s.value !== "spacefit");
@@ -46,8 +53,16 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
   const search = useStorageSearch(params);
-  const { centre, results, hasInventory, items, geocodeError, nearbyCount, incompatibleCount, isLoading } =
-    search;
+  const {
+    centre,
+    results,
+    hasInventory,
+    items,
+    geocodeError,
+    nearbyCount,
+    incompatibleCount,
+    isLoading,
+  } = search;
   // Deterministic requirement, so the renter can size spaces themselves too.
   const requirement = hasInventory ? estimateRequiredSpace(items) : null;
 
@@ -75,7 +90,9 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
     setSelectedId(id);
     track("search_refined", { props: { control: "map_marker" } });
     if (view === "list") {
-      document.getElementById(`result-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      document
+        .getElementById(`result-${id}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }
 
@@ -101,7 +118,9 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
             {isLoading
               ? "Searching…"
               : `${results.length} ${results.length === 1 ? "space" : "spaces"}${
-                  centre ? ` within ${params.radius} ${params.radius === 1 ? "mile" : "miles"} of ${centre.label}` : ""
+                  centre
+                    ? ` within ${params.radius} ${params.radius === 1 ? "mile" : "miles"} of ${centre.label}`
+                    : ""
                 }`}
           </p>
         </div>
@@ -129,7 +148,11 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
               </option>
             ))}
           </select>
-          <div className="inline-flex rounded-xl border border-border p-0.5 lg:hidden" role="group" aria-label="Results view">
+          <div
+            className="inline-flex rounded-xl border border-border p-0.5 lg:hidden"
+            role="group"
+            aria-label="Results view"
+          >
             <button
               type="button"
               onClick={() => setView("list")}
@@ -162,14 +185,16 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
         <div className="rounded-2xl border border-signal/25 bg-signal-soft/40 p-4">
           <p className="type-label">Not sure how much space you need?</p>
           <p className="mt-1 type-body-sm text-signal-soft-foreground">
-            Spacilo AI compares your belongings with each space and shows how well they suit each other. It's an
-            estimate, not a guarantee.
+            Spacilo AI compares your belongings with each space and shows how well they suit each
+            other. It's an estimate, not a guarantee.
           </p>
           <Button asChild size="sm" className="mt-3">
             <Link
               to={spaceFitHref.to}
               search={spaceFitHref.search as never}
-              onClick={() => track("cta_clicked", { props: { cta: "scan_stuff", from: "search_banner" } })}
+              onClick={() =>
+                track("cta_clicked", { props: { cta: "scan_stuff", from: "search_banner" } })
+              }
             >
               Get your fit score
             </Link>
@@ -204,8 +229,8 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
       {requirement ? (
         <p className="type-body-sm text-muted-foreground">
           Your confirmed stuff needs roughly{" "}
-          <strong className="text-foreground">{formatVolume(requirement.requiredVolumeM3)}</strong> of usable
-          storage
+          <strong className="text-foreground">{formatVolume(requirement.requiredVolumeM3)}</strong>{" "}
+          of usable storage
           {requirement.requiredFloorAreaM2 > 0
             ? ` and about ${requirement.requiredFloorAreaM2.toFixed(1)} m² of floor space`
             : ""}
@@ -216,8 +241,8 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
       {hasInventory && incompatibleCount > 0 ? (
         <p className="type-body-sm text-muted-foreground">
           {incompatibleCount} nearby {incompatibleCount === 1 ? "space is" : "spaces are"} shown but{" "}
-          {incompatibleCount === 1 ? "does" : "do"} not currently match all of your confirmed storage needs — open
-          "Why this matches" on a card to see why.
+          {incompatibleCount === 1 ? "does" : "do"} not currently match all of your confirmed
+          storage needs — open "Why this matches" on a card to see why.
         </p>
       ) : null}
 
@@ -225,7 +250,8 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
         <div className={cn("space-y-4", view === "map" && "hidden lg:block")}>
           {isLoading ? (
             <p className="flex items-center gap-2 type-body-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Finding storage near you…
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Finding storage near
+              you…
             </p>
           ) : null}
           {results.map((entry) => (

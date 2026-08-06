@@ -4,6 +4,8 @@ import { brand } from "@/config/brand";
 import { MarketingLayout, PageSection } from "@/components/layout/MarketingLayout";
 import { Reveal } from "@/components/common/Reveal";
 import { trustCore, trustFaqNote, trustSections } from "@/data/trust";
+import { publicRouteMeta } from "@/lib/seo/meta";
+import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
 const title = "Trust & Safety — " + brand.name;
 const description =
@@ -13,11 +15,9 @@ const description =
 
 export const Route = createFileRoute("/trust")({
   head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
+    ...publicRouteMeta({ title: title, description: description, path: "/trust" }),
+    scripts: [
+      jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: title, path: "/trust" }])),
     ],
   }),
   component: TrustPage,

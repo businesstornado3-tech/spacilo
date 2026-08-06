@@ -23,7 +23,6 @@ export const PUBLIC_ROUTES: readonly PublicRouteEntry[] = [
   { path: "/", label: "Homepage" },
   { path: "/how-it-works", label: "How It Works" },
   { path: "/trust", label: "Trust & Safety" },
-  { path: "/find-storage", label: "Find Storage" },
   { path: "/search", label: "Search Results" },
   { path: "/list-space", label: "List Your Space" },
   { path: "/get-started", label: "Get Started" },

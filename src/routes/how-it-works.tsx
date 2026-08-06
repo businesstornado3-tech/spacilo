@@ -13,6 +13,8 @@ import {
   howItWorksFaq,
   renterJourney,
 } from "@/data/how-it-works";
+import { publicRouteMeta } from "@/lib/seo/meta";
+import { breadcrumbJsonLd, jsonLdScript, faqJsonLd } from "@/lib/seo/structured-data";
 
 const title = "How it works — " + brand.name;
 const description =
@@ -24,11 +26,10 @@ const description =
 
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
+    ...publicRouteMeta({ title: title, description: description, path: "/how-it-works" }),
+    scripts: [
+      jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: title, path: "/how-it-works" }])),
+      jsonLdScript(faqJsonLd(howItWorksFaq)),
     ],
   }),
   component: HowItWorksPage,

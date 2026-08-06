@@ -32,6 +32,8 @@ import {
 } from "@/lib/spacefit-guest/preview";
 
 import { formatPrice } from "@/lib/format";
+import { publicRouteMeta } from "@/lib/seo/meta";
+import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
 const title = "Scan your space — " + brand.name;
 const description =
@@ -39,13 +41,9 @@ const description =
 
 export const Route = createFileRoute("/spacefit/space")({
   head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+    ...publicRouteMeta({ title: title, description: description, path: "/spacefit/space" }),
+    scripts: [
+      jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: title, path: "/spacefit/space" }])),
     ],
   }),
   component: GuestSpacePage,

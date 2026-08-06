@@ -12,6 +12,8 @@ import {
 import type { StorageSearchParams } from "@/hooks/useStorageSearch";
 import { track } from "@/lib/analytics/tracker";
 import * as React from "react";
+import { publicRouteMeta } from "@/lib/seo/meta";
+import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
 const title = "Search storage near you — " + brand.name;
 const description =
@@ -20,13 +22,9 @@ const description =
 export const Route = createFileRoute("/search")({
   validateSearch: validateSearchParams,
   head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+    ...publicRouteMeta({ title: title, description: description, path: "/search" }),
+    scripts: [
+      jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: title, path: "/search" }])),
     ],
   }),
   component: SearchPage,

@@ -3,6 +3,8 @@ import { Boxes, Home, ArrowRight } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { MarketingLayout } from "@/components/layout/MarketingLayout";
+import { publicRouteMeta } from "@/lib/seo/meta";
+import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
 const title = "Get started — " + brand.name;
 const description =
@@ -10,11 +12,14 @@ const description =
 
 export const Route = createFileRoute("/get-started")({
   head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
+    ...publicRouteMeta({ title: title, description: description, path: "/get-started" }),
+    scripts: [
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: title, path: "/get-started" },
+        ]),
+      ),
     ],
   }),
   component: GetStartedPage,

@@ -15,6 +15,8 @@ import { Alert } from "@/components/common/Alert";
 import { useActivePolicy, usePolicyRules } from "@/hooks/usePolicy";
 import { DECISION_LABEL } from "@/lib/policy/engine";
 import { policyCategoryLabel } from "@/lib/policy/categories";
+import { publicRouteMeta } from "@/lib/seo/meta";
+import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
 const title = "Storage policy — " + brand.name;
 const description =
@@ -24,13 +26,14 @@ const description =
 
 export const Route = createFileRoute("/storage-policy")({
   head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "article" },
-      { name: "twitter:card", content: "summary" },
+    ...publicRouteMeta({ title: title, description: description, path: "/storage-policy" }),
+    scripts: [
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: title, path: "/storage-policy" },
+        ]),
+      ),
     ],
   }),
   component: StoragePolicyPage,
@@ -56,9 +59,7 @@ function StoragePolicyPage() {
           Trust &amp; safety
         </Badge>
         <h1 className="mt-4 type-h1">{policy?.title ?? "Storage policy"}</h1>
-        <p className="mt-3 type-body-lg text-muted-foreground">
-          {policy?.summary ?? description}
-        </p>
+        <p className="mt-3 type-body-lg text-muted-foreground">{policy?.summary ?? description}</p>
         {policy ? (
           <p className="mt-2 type-body-sm text-muted-foreground">
             Version {policy.version}

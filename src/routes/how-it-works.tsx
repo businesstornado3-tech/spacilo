@@ -7,12 +7,9 @@ import { Reveal } from "@/components/common/Reveal";
 import { Button } from "@/components/ui/button";
 import { JourneySteps } from "@/components/marketing/JourneySteps";
 import { FaqAccordion } from "@/components/marketing/FaqAccordion";
-import {
-  aiExplanation,
-  hostJourney,
-  howItWorksFaq,
-  renterJourney,
-} from "@/data/how-it-works";
+import { aiExplanation, hostJourney, howItWorksFaq, renterJourney } from "@/data/how-it-works";
+import { publicRouteMeta } from "@/lib/seo/meta";
+import { breadcrumbJsonLd, jsonLdScript, faqJsonLd } from "@/lib/seo/structured-data";
 
 const title = "How it works — " + brand.name;
 const description =
@@ -24,11 +21,15 @@ const description =
 
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
+    ...publicRouteMeta({ title: title, description: description, path: "/how-it-works" }),
+    scripts: [
+      jsonLdScript(
+        breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: title, path: "/how-it-works" },
+        ]),
+      ),
+      jsonLdScript(faqJsonLd(howItWorksFaq)),
     ],
   }),
   component: HowItWorksPage,
@@ -46,9 +47,9 @@ function HowItWorksPage() {
             Value from space you're not using.
           </h1>
           <p className="mt-4 max-w-prose type-body text-muted-foreground">
-            {brand.name} connects people who need storage with people who have useful space
-            nearby. {brand.ai} helps both sides understand belongings, available space and
-            possible fit — you always review and confirm the details yourself.
+            {brand.name} connects people who need storage with people who have useful space nearby.{" "}
+            {brand.ai} helps both sides understand belongings, available space and possible fit —
+            you always review and confirm the details yourself.
           </p>
         </Reveal>
       </PageSection>
@@ -73,7 +74,9 @@ function HowItWorksPage() {
         <Reveal>
           <div className="rounded-2xl border border-border bg-surface p-6 sm:p-8">
             <h2 className="type-h2">{aiExplanation.heading}</h2>
-            <p className="mt-2 max-w-prose type-body text-muted-foreground">{aiExplanation.intro}</p>
+            <p className="mt-2 max-w-prose type-body text-muted-foreground">
+              {aiExplanation.intro}
+            </p>
             <div className="mt-6 grid gap-6 sm:grid-cols-2">
               <div>
                 <h3 className="type-card-title">For renters, it may help propose</h3>

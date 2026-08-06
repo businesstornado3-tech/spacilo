@@ -138,4 +138,15 @@ describe("sitemap document", () => {
     for (const prefix of PRIVATE_ROUTE_PREFIXES) expect(xml).not.toContain(`<loc>${canonicalUrl(prefix)}<`);
     expect(xml).not.toMatch(/\b[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}\b/);
   });
+
+  it("emits lastmod only from a real page-specific timestamp", async () => {
+    const { buildSitemapXml } = await import("@/lib/seo/sitemap");
+    const xml = buildSitemapXml([
+      { id: "dated", updated_at: "2026-01-05T00:00:00Z", approximate_area: "Southsea", postcode_district: "PO4" },
+      { id: "undated", updated_at: null, approximate_area: "Fratton", postcode_district: "PO1" },
+    ]);
+    // Exactly one lastmod: the listing that actually has an updated_at.
+    expect(xml.match(/<lastmod>/g)).toHaveLength(1);
+    expect(xml).toContain("<lastmod>2026-01-05</lastmod>");
+  });
 });

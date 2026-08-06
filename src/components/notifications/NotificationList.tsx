@@ -2,6 +2,8 @@
 import * as React from "react";
 import { Bell } from "lucide-react";
 
+import { track } from "@/lib/analytics/tracker";
+
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/common/States";
 import { Skeleton } from "@/components/common/Skeletons";
@@ -17,6 +19,7 @@ import {
   applyFilter,
   FEED_COPY,
   feedState,
+  groupByDay,
   type FeedFilter,
   type Notification,
 } from "@/lib/notifications";
@@ -103,18 +106,27 @@ export function NotificationList() {
         />
       ) : null}
 
-      <ul className="mt-6 space-y-3">
-        {shown.map((notification) => (
-          <NotificationItem
-            key={notification.id}
-            notification={notification}
-            onOpen={(n) => {
-              if (n.read_at === null) markRead.mutate(n.id);
-            }}
-            onMarkRead={(n) => markRead.mutate(n.id)}
-          />
-        ))}
-      </ul>
+      {groupByDay(shown).map((group) => (
+        <section key={group.key} className="mt-6">
+          <h2 className="type-label text-muted-foreground">{group.label}</h2>
+          <ul className="mt-3 space-y-3">
+            {group.items.map((notification) => (
+              <NotificationItem
+                key={notification.id}
+                notification={notification}
+                onOpen={(n) => {
+                  track("notification_opened", { props: { category: n.category } });
+                  if (n.read_at === null) markRead.mutate(n.id);
+                }}
+                onMarkRead={(n) => {
+                  track("notification_read", { props: { category: n.category } });
+                  markRead.mutate(n.id);
+                }}
+              />
+            ))}
+          </ul>
+        </section>
+      ))}
 
       {hasNextPage ? (
         <div className="mt-6 flex justify-center">

@@ -77,7 +77,7 @@ export function NotificationPreferencesCard() {
                     id={`${channel.value}-${category.value}`}
                     label={channel.label}
                     checked={preferenceValue(merged, channel.value, category.value)}
-                    onChange={(checked) =>
+                    onCheckedChange={(checked) =>
                       setPatch((prev) => ({ ...prev, [key]: checked }) as Partial<NotificationPreferences>)
                     }
                   />

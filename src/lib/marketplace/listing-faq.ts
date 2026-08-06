@@ -33,7 +33,9 @@ export function buildListingFaq(row: ListingFaqRow): FaqEntry[] {
   const entries: FaqEntry[] = [];
 
   if (row.access_type) {
-    const frequencyLabel = accessFrequencyLabel(row.access_frequency as AccessFrequencyValue | null);
+    const frequencyLabel = accessFrequencyLabel(
+      row.access_frequency as AccessFrequencyValue | null,
+    );
     const frequency = frequencyLabel
       ? ` The host is comfortable with ${frequencyLabel.toLowerCase()} visits.`
       : "";

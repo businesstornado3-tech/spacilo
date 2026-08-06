@@ -26,10 +26,7 @@ export function ListingGallery({ photoUrls, title, onOpen }: ListingGalleryProps
   const count = photoUrls.length;
   const alt = (i: number) => `${title || "Storage space"} — photo ${i + 1} of ${count}`;
 
-  const show = React.useCallback(
-    (i: number) => setIndex(((i % count) + count) % count),
-    [count],
-  );
+  const show = React.useCallback((i: number) => setIndex(((i % count) + count) % count), [count]);
 
   const openAt = (i: number) => {
     setIndex(i);
@@ -160,17 +157,13 @@ export function ListingGallery({ photoUrls, title, onOpen }: ListingGalleryProps
           </div>
 
           <div className="flex min-h-0 flex-1 items-center gap-2">
-            {count > 1 ? (
-              <GalleryArrow direction="prev" onClick={() => show(index - 1)} />
-            ) : null}
+            {count > 1 ? <GalleryArrow direction="prev" onClick={() => show(index - 1)} /> : null}
             <img
               src={photoUrls[index]}
               alt={alt(index)}
               className="mx-auto max-h-full min-h-0 w-auto max-w-full rounded-xl object-contain transition-opacity duration-200"
             />
-            {count > 1 ? (
-              <GalleryArrow direction="next" onClick={() => show(index + 1)} />
-            ) : null}
+            {count > 1 ? <GalleryArrow direction="next" onClick={() => show(index + 1)} /> : null}
           </div>
 
           {count > 1 ? (

@@ -122,7 +122,10 @@ export function ListingFacts({ row }: { row: ListingFactsRow }) {
         <dl className="grid gap-3 sm:grid-cols-2">
           {facts.map((fact) => (
             <div key={fact.label} className="flex min-w-0 items-start gap-2">
-              <fact.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <fact.icon
+                className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                aria-hidden="true"
+              />
               <div className="min-w-0">
                 <dt className="type-overline text-muted-foreground">{fact.label}</dt>
                 <dd className="type-body-sm">{fact.value}</dd>
@@ -184,7 +187,8 @@ export function ListingHost({
           <p className="truncate type-card-title">{hostName}</p>
           {publishedAt ? (
             <p className="type-body-sm text-muted-foreground">
-              Listed since {new Date(publishedAt).toLocaleDateString("en-GB", {
+              Listed since{" "}
+              {new Date(publishedAt).toLocaleDateString("en-GB", {
                 month: "long",
                 year: "numeric",
               })}

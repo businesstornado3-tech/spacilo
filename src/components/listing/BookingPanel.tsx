@@ -132,8 +132,8 @@ export function BookingPanel({
             ) : null}
             <p className="flex items-start gap-1.5 type-body-xs text-muted-foreground">
               <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-              Estimate only. {brand.name} calculates your final total for the dates the host accepts,
-              and you see it before you pay. Sending a request never takes payment.
+              Estimate only. {brand.name} calculates your final total for the dates the host
+              accepts, and you see it before you pay. Sending a request never takes payment.
             </p>
           </div>
         ) : (

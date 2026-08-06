@@ -108,7 +108,7 @@ function matchesFilters(row: SearchSpaceRow, filters: SearchFilters): boolean {
   }
   if (filters.groundFloor && row.ground_floor_access !== true) return false;
   if (filters.vehicleAccess && row.vehicle_access_close !== true) return false;
-  if (filters.liftAvailable && row.lift_available !== true) return false;
+  if (filters.liftAvailable && row.lift_available !== "yes") return false;
   if (filters.verifiedHost && row.host_phone_verified !== true) return false;
   return true;
 }

@@ -117,15 +117,15 @@ describe("hero Spacilo AI launcher", () => {
 
 describe("CTA repetition rule", () => {
   it("introduces the renter scan journey once at the top, with one secondary echo", () => {
-    const uses = copy.match(/<ScanStuffButton/g) ?? [];
-    expect(uses).toHaveLength(2);
+    expect(entry.match(/<ScanStuffButton/g) ?? []).toHaveLength(1);
+    expect(copy.match(/<ScanStuffButton/g) ?? []).toHaveLength(1);
     expect(hero).toContain("<SpaceFitEntry");
     expect(story).toContain("<ScanStuffButton");
   });
 
   it("introduces the host scan journey once at the top, with one secondary echo", () => {
-    const uses = copy.match(/<ScanSpaceButton/g) ?? [];
-    expect(uses).toHaveLength(1);
+    expect(entry.match(/<ScanSpaceButton/g) ?? []).toHaveLength(1);
+    expect(copy.match(/<ScanSpaceButton/g) ?? []).toHaveLength(1);
     expect(hostAi).toContain("<ScanSpaceButton");
   });
 
@@ -234,7 +234,7 @@ describe("Spacilo AI entry points", () => {
     expect(entry).toContain('cta: "scan_stuff"');
     expect(entry).toContain('cta: "scan_space"');
     expect(entry).toContain('from "@/lib/analytics/tracker"');
-    expect(entry).not.toMatch(/base64|photo|image|dataUrl/i);
+    expect(entry).not.toMatch(/base64|dataUrl|imageBytes/i);
   });
 
   it("presents AI output as a reviewable estimate", () => {

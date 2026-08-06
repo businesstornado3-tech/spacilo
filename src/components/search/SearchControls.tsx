@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/button";
 import { controlBase } from "@/components/form/Field";
 import { DEFAULT_RADIUS_MILES, RADIUS_OPTIONS_MILES, normaliseLocationInput } from "@/lib/location/schema";
 import { track } from "@/lib/analytics/tracker";
+import {
+  POPULAR_SEARCHES,
+  readRecentSearches,
+  suggestLocations,
+  writeRecentSearch,
+  type RecentSearch,
+} from "@/lib/search/recent-searches";
 
 export interface SearchControlsProps {
   initialLocation?: string;
@@ -37,6 +44,34 @@ export function SearchControls({
   const [radius, setRadius] = React.useState(initialRadius);
   const [localError, setLocalError] = React.useState<string | null>(null);
   const [locating, setLocating] = React.useState(false);
+  const [recents, setRecents] = React.useState<RecentSearch[]>([]);
+
+  // Recents live on this device only; read after mount so SSR output matches.
+  React.useEffect(() => setRecents(readRecentSearches()), []);
+
+  const suggestions = React.useMemo(
+    () => suggestLocations(recents, location),
+    [recents, location],
+  );
+  const quickPicks = React.useMemo(() => {
+    const seen = new Set<string>();
+    return [...recents.map((r) => r.location), ...POPULAR_SEARCHES]
+      .filter((value) => {
+        const key = value.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 5);
+  }, [recents]);
+
+  function submit(value: string, nextRadius: number) {
+    setLocalError(null);
+    setLocation(value);
+    setRecents(writeRecentSearch({ location: value, radius: nextRadius }));
+    track("storage_search_started", { props: { radius: nextRadius, has_location: true } });
+    onSubmit({ location: value, radius: nextRadius });
+  }
 
   React.useEffect(() => setLocation(initialLocation), [initialLocation]);
   React.useEffect(() => setRadius(initialRadius), [initialRadius]);
@@ -50,10 +85,7 @@ export function SearchControls({
       setLocalError("Enter a UK postcode or area, for example PO4 8LB.");
       return;
     }
-    setLocalError(null);
-    setLocation(value);
-    track("storage_search_started", { props: { radius, has_location: true } });
-    onSubmit({ location: value, radius });
+    submit(value, radius);
   }
 
   function handleUseMyLocation() {
@@ -107,8 +139,14 @@ export function SearchControls({
               onChange={(e) => setLocation(e.target.value)}
               aria-invalid={message ? true : undefined}
               aria-describedby={message ? `${id}-error` : undefined}
+              list={`${id}-suggestions`}
               className={cn(controlBase, "pl-10", message && "border-destructive focus-visible:ring-destructive")}
             />
+            <datalist id={`${id}-suggestions`}>
+              {suggestions.map((value) => (
+                <option key={value} value={value} />
+              ))}
+            </datalist>
           </div>
         </div>
 
@@ -140,6 +178,24 @@ export function SearchControls({
           {submitLabel}
         </Button>
       </div>
+
+      {quickPicks.length ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="type-body-sm text-muted-foreground">
+            {recents.length ? "Recent and popular:" : "Popular:"}
+          </span>
+          {quickPicks.map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => submit(value, radius)}
+              className="inline-flex min-h-9 items-center rounded-full border border-border px-3 type-body-sm text-foreground hover:bg-muted/60"
+            >
+              {value}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <div className="flex items-center justify-between gap-3">
         <button

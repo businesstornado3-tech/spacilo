@@ -31,6 +31,8 @@ const SORTS_WITH_INVENTORY: { value: SortKey; label: string }[] = [
   { value: "distance", label: "Nearest" },
   { value: "price_asc", label: "Price: low to high" },
   { value: "price_desc", label: "Price: high to low" },
+  { value: "largest", label: "Largest capacity" },
+  { value: "newest", label: "Newest listings" },
 ];
 
 const SORTS_WITHOUT_INVENTORY = SORTS_WITH_INVENTORY.filter((s) => s.value !== "spacefit");

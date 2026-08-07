@@ -33,8 +33,10 @@ describe("homepage structure", () => {
   const sections = [
     "HeroSection",
     "SpaceFitEntry",
-    "SpacePlannerDemo",
     "MarketplaceEntry",
+    "SpacePlannerDemo",
+    "NearbySpaces",
+    "MeetSpaciloAI",
     "HostEarnings",
     "WhySpacePlanner",
     "FinalCta",

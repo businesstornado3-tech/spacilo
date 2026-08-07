@@ -86,6 +86,7 @@ export function LayoutSimulation({
               rx={10}
               className="fill-primary-soft opacity-80"
             />
+            {showLabels ? (
             <text
               x={(pack.walkway.x + pack.walkway.w / 2) * SCALE}
               y={(pack.walkway.y + pack.walkway.d / 2) * SCALE + 6}
@@ -95,6 +96,7 @@ export function LayoutSimulation({
             >
               Walkway
             </text>
+            ) : null}
           </g>
         ) : null}
 

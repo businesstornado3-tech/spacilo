@@ -23,6 +23,17 @@ export interface InventoryBuilderProps {
   onClear: () => void;
 }
 
+/** The belongings almost every visitor recognises — the compact default set. */
+const COMMON_ITEM_IDS = [
+  "medium-box",
+  "large-box",
+  "suitcase",
+  "bicycle",
+  "television",
+  "wardrobe",
+  "sports-kit",
+];
+
 export function InventoryBuilder({
   quantities,
   onChange,
@@ -30,7 +41,19 @@ export function InventoryBuilder({
   onClear,
 }: InventoryBuilderProps) {
   const [query, setQuery] = React.useState("");
-  const results = React.useMemo(() => searchCatalogue(query), [query]);
+  const [expanded, setExpanded] = React.useState(false);
+  const matches = React.useMemo(() => searchCatalogue(query), [query]);
+  const compact = !expanded && query.trim() === "";
+  const results = React.useMemo(
+    () =>
+      compact
+        ? matches.filter(
+            (item) => COMMON_ITEM_IDS.includes(item.id) || (quantities[item.id] ?? 0) > 0,
+          )
+        : matches,
+    [compact, matches, quantities],
+  );
+  const hidden = matches.length - results.length;
   const total = Object.values(quantities).reduce((sum, q) => sum + q, 0);
 
   return (
@@ -74,7 +97,7 @@ export function InventoryBuilder({
         />
       </div>
 
-      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <ul className="mt-3 grid grid-cols-2 gap-2.5">
         {results.map((item) => (
           <ItemCard
             key={item.id}
@@ -84,6 +107,17 @@ export function InventoryBuilder({
           />
         ))}
       </ul>
+
+      {hidden > 0 || (expanded && query.trim() === "") ? (
+        <button
+          type="button"
+          onClick={() => setExpanded((open) => !open)}
+          aria-expanded={expanded}
+          className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-border bg-card type-label transition-colors hover:border-primary hover:bg-primary-soft/40"
+        >
+          {expanded ? "Show fewer items" : `Show more items (${hidden})`}
+        </button>
+      ) : null}
 
       {results.length === 0 ? (
         <p className="mt-4 rounded-xl bg-surface p-4 type-body-sm text-muted-foreground">

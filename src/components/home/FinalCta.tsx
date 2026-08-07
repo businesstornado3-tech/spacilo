@@ -1,5 +1,5 @@
 /**
- * Closing call to action — both sides of the marketplace, one line each.
+ * Closing call to action — both journeys, one line each.
  */
 import { Link } from "@tanstack/react-router";
 
@@ -12,10 +12,11 @@ export function FinalCta() {
     <section aria-labelledby="final-cta-heading" className="py-10 sm:py-12">
       <div className="mx-auto w-full max-w-3xl px-4 text-center sm:px-6">
         <h2 id="final-cta-heading" className="type-h2">
-          Store nearby. Earn at home.
+          Ready to reclaim your space?
         </h2>
-        <p className="mx-auto mt-3 max-w-md type-body text-muted-foreground">
-          Find trusted storage near you, or turn your unused space into monthly income.
+        <p className="mx-auto mt-3 max-w-lg type-body text-muted-foreground">
+          Whether you're looking for storage or have unused space to earn from, Spacilo makes it
+          simple.
         </p>
 
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
@@ -26,7 +27,7 @@ export function FinalCta() {
               track("cta_clicked", { props: { cta: "browse_spaces", from: "homepage_final" } })
             }
           >
-            <Link to="/find-storage">Find storage</Link>
+            <Link to="/search">Find storage</Link>
           </Button>
           <HostEntryButton label="List your space" from="homepage_final" variant="secondary" />
         </div>

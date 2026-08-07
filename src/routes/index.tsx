@@ -5,8 +5,10 @@ import { canonicalUrl, publicRouteMeta } from "@/lib/seo/meta";
 import { MarketingLayout } from "@/components/layout/MarketingLayout";
 import { HeroSection } from "@/components/spaceplanner/HeroSection";
 import { SpaceFitEntry } from "@/components/home/SpaceFitEntry";
-import { SpacePlannerDemo } from "@/components/spaceplanner/SpacePlannerDemo";
 import { MarketplaceEntry } from "@/components/home/MarketplaceEntry";
+import { SpacePlannerDemo } from "@/components/spaceplanner/SpacePlannerDemo";
+import { NearbySpaces } from "@/components/home/NearbySpaces";
+import { MeetSpaciloAI } from "@/components/home/MeetSpaciloAI";
 
 import { HostEarnings } from "@/components/home/HostEarnings";
 import { WhySpacePlanner } from "@/components/home/WhySpacePlanner";
@@ -53,8 +55,10 @@ function HomePage() {
     <MarketingLayout>
       <HeroSection />
       <SpaceFitEntry />
-      <SpacePlannerDemo />
       <MarketplaceEntry />
+      <SpacePlannerDemo />
+      <NearbySpaces />
+      <MeetSpaciloAI />
       <HostEarnings />
       <WhySpacePlanner />
       <FinalCta />

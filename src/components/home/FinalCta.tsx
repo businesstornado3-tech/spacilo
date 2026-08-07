@@ -1,45 +1,34 @@
 /**
- * Chapter 6 — the final call to action.
- *
- * Both sides of the marketplace in one line each. Nothing more.
+ * Closing call to action — both sides of the marketplace, one line each.
  */
 import { Link } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
-import { startDemo } from "@/components/spaceplanner/demo-bus";
+import { HostEntryButton } from "@/components/home/HostEntryButton";
 import { track } from "@/lib/analytics/tracker";
 
 export function FinalCta() {
   return (
-    <section aria-labelledby="final-cta-heading" className="py-14 sm:py-20">
+    <section aria-labelledby="final-cta-heading" className="py-12 sm:py-16">
       <div className="mx-auto w-full max-w-3xl px-4 text-center sm:px-6">
         <h2 id="final-cta-heading" className="type-h1">
-          Make the space work harder.
+          Store nearby. Earn at home.
         </h2>
         <p className="mx-auto mt-3 max-w-md type-body text-muted-foreground">
-          Plan what you're storing, or earn from the space you're not using.
+          Find trusted storage near you, or turn your unused space into monthly income.
         </p>
 
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
           <Button
-            size="lg"
-            onClick={() => {
-              track("cta_clicked", { props: { cta: "try_spaceplanner", from: "homepage_final" } });
-              startDemo();
-            }}
-          >
-            Try SpacePlanner™
-          </Button>
-          <Button
             asChild
             size="lg"
-            variant="secondary"
             onClick={() =>
-              track("cta_clicked", { props: { cta: "list_space", from: "homepage_final" } })
+              track("cta_clicked", { props: { cta: "browse_spaces", from: "homepage_final" } })
             }
           >
-            <Link to="/list-space">List your space</Link>
+            <Link to="/find-storage">Find storage</Link>
           </Button>
+          <HostEntryButton label="List your space" from="homepage_final" variant="secondary" />
         </div>
       </div>
     </section>

@@ -111,14 +111,14 @@ function DemoBody() {
 
         <div className="mt-3 grid gap-3">
           <div className="order-2 grid min-w-0 items-stretch gap-3 sm:grid-cols-2">
-            <div className="h-full rounded-2xl border border-border bg-card p-3 shadow-card">
+            <div className="h-full min-w-0 rounded-2xl border border-border bg-card p-3 shadow-card">
               <h3 className="type-h4">What are you storing?</h3>
               <div className="mt-2">
                 <InventoryPanel />
               </div>
             </div>
 
-            <div className="h-full rounded-2xl border border-border bg-card p-3 shadow-card">
+            <div className="h-full min-w-0 rounded-2xl border border-border bg-card p-3 shadow-card">
               <h3 className="type-h4">Where might it go?</h3>
               <div className="mt-2">
                 <StoragePanel />

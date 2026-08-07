@@ -28,13 +28,14 @@ export function StorageSelector({
 
   return (
     <div>
-      <ul className="grid grid-cols-4 gap-1.5">
+      <ul className="mobile-rail gap-1.5 sm:grid sm:grid-cols-4">
         {visible.map((space, index) => {
           const selected = space.id === selectedId;
           return (
             <li
               key={space.id}
               className={cn(
+                "mobile-rail-item",
                 index >= COMMON_SPACE_IDS.length &&
                   "duration-300 animate-in fade-in slide-in-from-top-1",
               )}

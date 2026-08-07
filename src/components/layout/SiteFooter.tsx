@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Check } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { Logo } from "@/components/layout/Logo";
@@ -45,11 +45,51 @@ const columns: { heading: string; links: FooterLink[] }[] = [
 
 const TRUST = ["AI space planner", "Verified hosts", "Secure payments", "Community driven"];
 
+function FooterColumn({ col }: { col: (typeof columns)[number] }) {
+  const links = (
+    <ul className="mt-4 space-y-2.5">
+      {col.links.map((l) => (
+        <li key={`${col.heading}-${l.label}`}>
+          <Link
+            to={l.to}
+            {...(l.search ? { search: l.search } : {})}
+            className="inline-flex min-h-11 items-center type-body-sm text-muted-foreground transition-colors hover:text-foreground sm:min-h-0"
+          >
+            {l.label}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+
+  return (
+    <>
+      {/* Mobile: collapsible group. */}
+      <details className="group border-b border-border py-1 sm:hidden">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between type-overline text-foreground marker:hidden">
+          {col.heading}
+          <ChevronDown
+            className="size-4 text-muted-foreground transition-transform group-open:rotate-180"
+            aria-hidden="true"
+          />
+        </summary>
+        <div className="pb-3">{links}</div>
+      </details>
+
+      {/* Tablet and up: open column. */}
+      <div className="hidden sm:block">
+        <h2 className="type-overline text-foreground">{col.heading}</h2>
+        {links}
+      </div>
+    </>
+  );
+}
+
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-surface">
-      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)] lg:gap-16">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)] lg:gap-16">
           <div className="max-w-xs">
             <Logo />
             <p className="mt-4 type-card-title">
@@ -61,29 +101,14 @@ export function SiteFooter() {
             </p>
           </div>
 
-          <nav aria-label="Footer" className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+          <nav aria-label="Footer" className="grid gap-0 sm:grid-cols-3 sm:gap-8">
             {columns.map((col) => (
-              <div key={col.heading}>
-                <h2 className="type-overline text-foreground">{col.heading}</h2>
-                <ul className="mt-4 space-y-2.5">
-                  {col.links.map((l) => (
-                    <li key={`${col.heading}-${l.label}`}>
-                      <Link
-                        to={l.to}
-                        {...(l.search ? { search: l.search } : {})}
-                        className="type-body-sm text-muted-foreground transition-colors hover:text-foreground"
-                      >
-                        {l.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <FooterColumn key={col.heading} col={col} />
             ))}
           </nav>
         </div>
 
-        <ul className="mt-12 flex flex-wrap gap-x-8 gap-y-3 border-t border-border pt-8">
+        <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2.5 border-t border-border pt-6 sm:mt-12 sm:gap-x-8 sm:gap-y-3 sm:pt-8">
           {TRUST.map((item) => (
             <li key={item} className="inline-flex items-center gap-2 type-label">
               <Check className="size-4 text-primary" aria-hidden="true" />
@@ -91,6 +116,7 @@ export function SiteFooter() {
             </li>
           ))}
         </ul>
+
 
         <div className="mt-8 flex flex-wrap items-baseline justify-between gap-2">
           <p className="type-body-sm text-muted-foreground">

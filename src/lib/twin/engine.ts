@@ -164,30 +164,30 @@ export class DigitalTwinEngine {
     this.seek(0);
   }
 
-  /** Objects as they stand after `cursor` steps, computed from the base pack. */
+  /**
+   * Objects as they stand after `cursor` steps.
+   *
+   * Derived from the optimised layout by rewinding the steps that have not
+   * run yet. Working backwards matters: anything the planner did not move
+   * then stays exactly where the final plan puts it, so a partially played
+   * replay can never leave an object stranded in a spot the plan gave away.
+   */
   objectsAt(cursor: number): TwinObject[] {
-    const base = new Map(
-      objectsFromPack(this.plan.before, this.plan.space).map((object) => [object.id, object]),
+    const final = new Map(
+      objectsFromPack(this.plan.after, this.plan.space).map((object) => [object.id, object]),
     );
-    // Objects with no "before" start at their motion origin.
-    for (const step of this.state.motion.steps) {
-      if (!base.has(step.objectId)) {
-        const target = this.state.scene.objects.find((object) => object.id === step.objectId);
-        if (target) base.set(step.objectId, { ...target, transform: clone(step.from) });
-      }
-    }
-    for (let index = 0; index < cursor; index += 1) {
-      const step = this.state.motion.steps[index];
-      if (!step) break;
-      const object = base.get(step.objectId);
-      if (object) base.set(step.objectId, { ...object, transform: clone(step.to) });
-    }
-    // Anything the optimised plan holds but the base pack never had.
     for (const object of this.state.scene.objects) {
-      if (!base.has(object.id)) base.set(object.id, object);
+      if (!final.has(object.id)) final.set(object.id, object);
     }
-    return [...base.values()];
+    const steps = this.state.motion.steps;
+    for (let index = steps.length - 1; index >= cursor; index -= 1) {
+      const step = steps[index]!;
+      const object = final.get(step.objectId);
+      if (object) final.set(step.objectId, { ...object, transform: clone(step.from) });
+    }
+    return [...final.values()];
   }
+
 
   /* ------------------------------------------------------------ editing */
 

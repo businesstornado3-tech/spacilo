@@ -52,11 +52,13 @@ function HomePage() {
   return (
     <MarketingLayout>
       <HeroSection />
-      <AiTransformation />
+      <TwoSidedValue />
       <SpacePlannerDemo />
-      <WhySpacePlanner />
       <MarketplaceEntry />
+      <HostEarnings />
+      <WhySpacePlanner />
       <FinalCta />
+
     </MarketingLayout>
   );
 }

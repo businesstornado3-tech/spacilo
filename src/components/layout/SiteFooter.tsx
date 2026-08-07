@@ -94,8 +94,7 @@ export function SiteFooter() {
 
         <div className="mt-8 flex flex-wrap items-baseline justify-between gap-2">
           <p className="type-body-sm text-muted-foreground">
-            © {new Date().getFullYear()} {brand.legalName}. Built with AI. Powered by local
-            communities.
+            © {new Date().getFullYear()} {brand.name}. Built with AI. Powered by local communities.
           </p>
           <p className="type-body-sm text-muted-foreground">
             Preparing for our {brand.pilotAreas[0]} pilot. Prices in GBP (£).

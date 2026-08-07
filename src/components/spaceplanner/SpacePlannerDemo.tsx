@@ -110,7 +110,7 @@ export function SpacePlannerDemo() {
     <section
       id={DEMO_ANCHOR_ID}
       aria-labelledby="spaceplanner-heading"
-      className="scroll-mt-20 py-7 sm:py-9"
+      className="scroll-mt-20 py-6 sm:py-8"
     >
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
@@ -123,12 +123,12 @@ export function SpacePlannerDemo() {
           </span>
         </header>
 
-        <div className="mt-4 grid gap-4">
+        <div className="mt-3 grid gap-3">
 
-          <div className="order-2 grid min-w-0 gap-4 sm:grid-cols-2">
-            <div className="rounded-3xl border border-border bg-card p-4 shadow-card">
+          <div className="order-2 grid min-w-0 items-stretch gap-3 sm:grid-cols-2">
+            <div className="h-full rounded-2xl border border-border bg-card p-3 shadow-card">
               <h3 className="type-h4">What are you storing?</h3>
-              <div className="mt-3">
+              <div className="mt-2">
                 <InventoryBuilder
                   quantities={quantities}
                   onChange={(itemId, quantity) =>
@@ -143,13 +143,14 @@ export function SpacePlannerDemo() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-border bg-card p-4 shadow-card">
+            <div className="h-full rounded-2xl border border-border bg-card p-3 shadow-card">
               <h3 className="type-h4">Where might it go?</h3>
-              <div className="mt-3">
+              <div className="mt-2">
                 <StorageSelector selectedId={space.id} onSelect={setSpace} />
               </div>
             </div>
           </div>
+
 
           <div className="order-1 min-w-0">
 
@@ -287,13 +288,13 @@ function ViewTab({
 
 function EmptyState({ onPreset }: { onPreset: () => void }) {
   return (
-    <div className="grid place-items-center rounded-2xl border border-dashed border-border-strong bg-surface p-8 text-center">
-      <Boxes className="size-8 text-muted-foreground" aria-hidden="true" />
-      <p className="mt-3 type-label">Nothing to plan yet</p>
+    <div className="grid place-items-center rounded-2xl border border-dashed border-border-strong bg-surface p-5 text-center">
+      <Boxes className="size-6 text-muted-foreground" aria-hidden="true" />
+      <p className="mt-2 type-label">Nothing to plan yet</p>
       <p className="mt-1 max-w-xs type-body-sm text-muted-foreground">
-        Choose belongings alongside, or load a typical inventory to see how the planner works.
+        Choose belongings alongside, or load a typical inventory.
       </p>
-      <Button variant="secondary" className="mt-4" onClick={onPreset}>
+      <Button variant="secondary" size="sm" className="mt-3" onClick={onPreset}>
         Load the “{DEFAULT_PRESET.name}” example
       </Button>
     </div>

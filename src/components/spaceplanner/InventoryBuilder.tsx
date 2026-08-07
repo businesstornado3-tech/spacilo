@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { ObjectIllustration } from "@/components/spaceplanner/ObjectArt";
 import {
   INVENTORY_PRESETS,
-  itemVolume,
+  
   searchCatalogue,
   type CatalogueItem,
 } from "@/lib/spaceplanner";
@@ -24,15 +24,7 @@ export interface InventoryBuilderProps {
 }
 
 /** The belongings almost every visitor recognises — the compact default set. */
-const COMMON_ITEM_IDS = [
-  "medium-box",
-  "large-box",
-  "suitcase",
-  "bicycle",
-  "television",
-  "wardrobe",
-  "sports-kit",
-];
+const COMMON_ITEM_IDS = ["medium-box", "large-box", "bicycle", "television"];
 
 export function InventoryBuilder({
   quantities,
@@ -93,30 +85,33 @@ export function InventoryBuilder({
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search belongings — boxes, bike, mattress…"
           aria-label="Search demo belongings"
-          className="h-11 w-full rounded-xl border border-input bg-card pl-9 pr-3 type-body-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring"
+          className="h-10 w-full rounded-xl border border-input bg-card pl-9 pr-3 type-body-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring"
         />
       </div>
 
-      <ul className="mt-3 grid grid-cols-2 gap-2.5">
-        {results.map((item) => (
+      <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {results.map((item, index) => (
           <ItemCard
             key={item.id}
             item={item}
             quantity={quantities[item.id] ?? 0}
             onChange={(next) => onChange(item.id, next)}
+            revealed={index >= COMMON_ITEM_IDS.length}
           />
         ))}
       </ul>
 
       {hidden > 0 || (expanded && query.trim() === "") ? (
-        <button
-          type="button"
-          onClick={() => setExpanded((open) => !open)}
-          aria-expanded={expanded}
-          className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-border bg-card type-label transition-colors hover:border-primary hover:bg-primary-soft/40"
-        >
-          {expanded ? "Show fewer items" : `Show more items (${hidden})`}
-        </button>
+        <div className="mt-3 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setExpanded((open) => !open)}
+            aria-expanded={expanded}
+            className="inline-flex min-h-9 items-center justify-center rounded-full border border-border bg-card px-4 type-label transition-colors hover:border-primary hover:bg-primary-soft/40"
+          >
+            {expanded ? "Show fewer items" : "Show more items"}
+          </button>
+        </div>
       ) : null}
 
       {results.length === 0 ? (
@@ -132,18 +127,21 @@ function ItemCard({
   item,
   quantity,
   onChange,
+  revealed,
 }: {
   item: CatalogueItem;
   quantity: number;
   onChange: (quantity: number) => void;
+  revealed?: boolean;
 }) {
   const selected = quantity > 0;
 
   return (
     <li
       className={cn(
-        "group relative overflow-hidden rounded-2xl border p-2.5 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-raised motion-reduce:hover:translate-y-0",
+        "group relative overflow-hidden rounded-xl border p-1.5 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-raised motion-reduce:hover:translate-y-0",
         selected ? "border-primary/60 bg-primary-soft/25 shadow-card" : "border-border bg-card",
+        revealed && "duration-300 animate-in fade-in slide-in-from-top-1",
       )}
     >
       <button
@@ -151,44 +149,43 @@ function ItemCard({
         onClick={() => onChange(quantity > 0 ? 0 : 1)}
         aria-pressed={selected}
         aria-label={`${selected ? "Remove" : "Add"} ${item.name}`}
-        className="block w-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="block w-full rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <span className="block rounded-xl bg-scene-wall p-1">
+        <span className="block rounded-lg bg-scene-wall p-0.5">
           <ObjectIllustration
             icon={item.icon}
             className={cn(
-              "aspect-4/3 transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none",
+              "aspect-3/2 transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none",
               selected && "scale-105",
             )}
           />
         </span>
-        <span className="mt-1.5 block truncate text-left type-label">{item.name}</span>
-        <span className="block text-left type-badge text-muted-foreground">
-          ~{itemVolume(item).toFixed(2)}m³
+        <span className="mt-1 block truncate text-left type-badge text-foreground">
+          {item.name}
         </span>
       </button>
 
-      <div className="mt-2 flex items-center justify-between gap-1">
+      <div className="mt-1 flex items-center justify-between gap-0.5">
         <button
           type="button"
-          className="grid size-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-surface disabled:opacity-40"
+          className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-surface disabled:opacity-40"
           aria-label={`Remove one ${item.name}`}
           disabled={quantity === 0}
           onClick={() => onChange(Math.max(0, quantity - 1))}
         >
-          <Minus className="size-4" aria-hidden="true" />
+          <Minus className="size-3.5" aria-hidden="true" />
         </button>
-        <span className="type-label tabular-nums" aria-label={`${quantity} ${item.name} selected`}>
+        <span className="type-badge tabular-nums" aria-label={`${quantity} ${item.name} selected`}>
           {quantity}
         </span>
         <button
           type="button"
-          className="grid size-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-surface disabled:opacity-40"
+          className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-surface disabled:opacity-40"
           aria-label={`Add one ${item.name}`}
           disabled={quantity >= 24}
           onClick={() => onChange(quantity + 1)}
         >
-          <Plus className="size-4" aria-hidden="true" />
+          <Plus className="size-3.5" aria-hidden="true" />
         </button>
       </div>
     </li>

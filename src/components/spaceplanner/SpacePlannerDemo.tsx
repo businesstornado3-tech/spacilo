@@ -249,24 +249,11 @@ export function SpacePlannerDemo() {
             </div>
 
             {phase === "plan" && plan ? (
-              <>
-                <div className="mt-4">
-                  <AIExplanation plan={plan} />
-                </div>
-                <div className="mt-4 rounded-3xl border border-primary/30 bg-primary-soft/40 p-4 sm:p-5">
-                  <p className="type-card-title">Ready to see your own storage plan?</p>
-                  <p className="mt-1 type-body-sm text-muted-foreground">
-                    Spacilo AI works from your own photos, then matches spaces nearby.
-                  </p>
-
-                  <div className="mt-4">
-                    <ScanStuffButton from="homepage_planner_result">
-                      Try it on my own things
-                    </ScanStuffButton>
-                  </div>
-                </div>
-              </>
+              <div className="mt-4">
+                <AIExplanation plan={plan} />
+              </div>
             ) : null}
+
           </div>
         </div>
       </div>

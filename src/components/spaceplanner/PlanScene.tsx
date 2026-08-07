@@ -13,7 +13,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { SceneObject, SHELVING_ART } from "@/components/spaceplanner/ObjectArt";
+import { SceneObject } from "@/components/spaceplanner/ObjectArt";
 import { placementReason, type PackResult, type Placement, type StorageSpace } from "@/lib/spaceplanner";
 
 const SCALE = 100;
@@ -63,8 +63,9 @@ export function PlanScene({
   return (
     <div className={cn("min-w-0", className)}>
       <div
+        style={{ width: `min(100%, calc(28rem * ${(space.width / space.depth).toFixed(3)}))` }}
         className={cn(
-          "relative overflow-hidden rounded-2xl bg-scene-wall transition-shadow duration-500",
+          "relative mx-auto overflow-hidden rounded-2xl bg-scene-wall transition-shadow duration-500",
           dropping && "ring-2 ring-primary",
         )}
         {...(onAdd
@@ -86,7 +87,7 @@ export function PlanScene({
         <svg
           viewBox={`-10 -10 ${w + 20} ${d + 20}`}
           style={{ aspectRatio: Math.max(0.55, space.width / space.depth) }}
-          className="mx-auto max-h-[26rem] w-full"
+          className="mx-auto max-h-[28rem] w-full"
           preserveAspectRatio="xMidYMid meet"
           role="img"
           aria-label={label}
@@ -115,13 +116,6 @@ export function PlanScene({
             className="stroke-scene-wood-dark"
             strokeWidth={3}
           />
-
-          {/* back-wall shelving — real storage the planner can fill */}
-          <g opacity={0.85} aria-hidden="true">
-            <svg x={w * 0.06} y={-2} width={w * 0.34} height={44} viewBox="0 0 100 100" preserveAspectRatio="none">
-              <SHELVING_ART />
-            </svg>
-          </g>
 
           {/* access strip */}
           {pack.walkway ? (

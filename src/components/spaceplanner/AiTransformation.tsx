@@ -86,7 +86,7 @@ export function AiTransformation() {
           </p>
         </header>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-start lg:gap-10">
+        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] lg:items-start lg:gap-10">
           <PlanScene
             space={SPACE}
             pack={plan.after}

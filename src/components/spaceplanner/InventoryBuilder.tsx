@@ -23,6 +23,17 @@ export interface InventoryBuilderProps {
   onClear: () => void;
 }
 
+/** The belongings almost every visitor recognises — the compact default set. */
+const COMMON_ITEM_IDS = [
+  "medium-box",
+  "large-box",
+  "suitcase",
+  "bicycle",
+  "television",
+  "wardrobe",
+  "sports-kit",
+];
+
 export function InventoryBuilder({
   quantities,
   onChange,
@@ -30,7 +41,19 @@ export function InventoryBuilder({
   onClear,
 }: InventoryBuilderProps) {
   const [query, setQuery] = React.useState("");
-  const results = React.useMemo(() => searchCatalogue(query), [query]);
+  const [expanded, setExpanded] = React.useState(false);
+  const matches = React.useMemo(() => searchCatalogue(query), [query]);
+  const compact = !expanded && query.trim() === "";
+  const results = React.useMemo(
+    () =>
+      compact
+        ? matches.filter(
+            (item) => COMMON_ITEM_IDS.includes(item.id) || (quantities[item.id] ?? 0) > 0,
+          )
+        : matches,
+    [compact, matches, quantities],
+  );
+  const hidden = matches.length - results.length;
   const total = Object.values(quantities).reduce((sum, q) => sum + q, 0);
 
   return (

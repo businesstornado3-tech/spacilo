@@ -5,6 +5,7 @@
  * be traced back to the engine and contract that produced it.
  */
 import { CONTRACT_VERSION, type IntelligenceMeta } from "./contracts";
+import { IntelligenceError } from "./errors";
 
 export function buildMeta(
   provider: { id: string; model: string },
@@ -20,12 +21,7 @@ export function buildMeta(
   };
 }
 
-/** Rejects with the standard cancellation error when the caller aborts. */
+/** Throws the standard cancellation error when the caller has aborted. */
 export function throwIfAborted(signal?: AbortSignal): void {
-  if (signal?.aborted) {
-    throw new IntelligenceErrorRef("cancelled");
-  }
+  if (signal?.aborted) throw new IntelligenceError("cancelled");
 }
-
-// Imported lazily to keep this module free of cycles at type level.
-import { IntelligenceError as IntelligenceErrorRef } from "./errors";

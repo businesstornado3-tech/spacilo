@@ -283,6 +283,12 @@ function ListingDetail({
 
       <ListingGallery photoUrls={photoUrls} title={heading} />
 
+      <BookingCompatibilityPanel
+        className="mt-6"
+        listing={listing}
+        onBook={() => bookRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+      />
+
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-start">
         <div className="min-w-0 space-y-6">
           <ListingAbout

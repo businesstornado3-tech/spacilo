@@ -76,7 +76,7 @@ export function HostEarnings() {
   );
 }
 
-function EarningsEstimator() {
+export function EarningsEstimator() {
   const [kind, setKind] = React.useState<EarningSpaceKind>("garage");
   const [size, setSize] = React.useState<SizeBandId>("medium");
   const [demand, setDemand] = React.useState<DemandBandId>("town");

@@ -4,17 +4,11 @@ import { brand } from "@/config/brand";
 import { canonicalUrl, publicRouteMeta } from "@/lib/seo/meta";
 import { MarketingLayout } from "@/components/layout/MarketingLayout";
 import { HeroSection } from "@/components/spaceplanner/HeroSection";
+import { AiTransformation } from "@/components/spaceplanner/AiTransformation";
 import { SpacePlannerDemo } from "@/components/spaceplanner/SpacePlannerDemo";
+import { WhySpacePlanner } from "@/components/home/WhySpacePlanner";
 import { MarketplaceEntry } from "@/components/home/MarketplaceEntry";
-import { StorageNearYou } from "@/components/home/StorageNearYou";
-import { SpaceFitStory } from "@/components/home/SpaceFitStory";
-import { HowItWorks } from "@/components/home/HowItWorks";
-import { BrandStory } from "@/components/home/BrandStory";
-import { HostCallout } from "@/components/home/HostCallout";
-import { HostAiSection } from "@/components/home/HostAiSection";
-import { HostControl } from "@/components/home/HostControl";
-import { TrustSection } from "@/components/home/TrustSection";
-import { LaunchArea } from "@/components/home/LaunchArea";
+import { FinalCta } from "@/components/home/FinalCta";
 
 const title = `${brand.name} | AI Storage Planning & Neighbourhood Storage`;
 const description =

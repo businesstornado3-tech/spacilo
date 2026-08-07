@@ -191,7 +191,7 @@ function TabPanel({
       id={`earnings-panel-${id}`}
       aria-labelledby={`earnings-tab-${id}`}
       aria-hidden={!active}
-      {...(active ? {} : { inert: "" })}
+      inert={!active}
       className={cn(
         "col-start-1 row-start-1 transition-opacity ease-out motion-reduce:transition-none",
         active ? "opacity-100" : "pointer-events-none opacity-0",

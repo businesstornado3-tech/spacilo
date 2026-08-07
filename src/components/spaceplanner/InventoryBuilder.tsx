@@ -97,7 +97,7 @@ export function InventoryBuilder({
         />
       </div>
 
-      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <ul className="mt-3 grid grid-cols-2 gap-2.5">
         {results.map((item) => (
           <ItemCard
             key={item.id}
@@ -107,6 +107,17 @@ export function InventoryBuilder({
           />
         ))}
       </ul>
+
+      {hidden > 0 || (expanded && query.trim() === "") ? (
+        <button
+          type="button"
+          onClick={() => setExpanded((open) => !open)}
+          aria-expanded={expanded}
+          className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-border bg-card type-label transition-colors hover:border-primary hover:bg-primary-soft/40"
+        >
+          {expanded ? "Show fewer items" : `Show more items (${hidden})`}
+        </button>
+      ) : null}
 
       {results.length === 0 ? (
         <p className="mt-4 rounded-xl bg-surface p-4 type-body-sm text-muted-foreground">

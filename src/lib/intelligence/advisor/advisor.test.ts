@@ -278,7 +278,7 @@ describe("booking intelligence", () => {
   });
 
   it("warns rather than encourages when the space is too small", () => {
-    const booking = adviseListing(LINES, SMALL).booking;
+    const booking = adviseListing([...LINES, line("wardrobe", 3)], SMALL).booking;
     expect(["review_first", "look_elsewhere"]).toContain(booking.verdict);
     expect(booking.risks.length).toBeGreaterThan(0);
   });

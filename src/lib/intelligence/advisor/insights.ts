@@ -114,7 +114,9 @@ export function buildHostInsights(assessment: ListingAssessment): HostInsight[] 
       kind: "business",
       title: "Open the space up to business storage",
       detail: `It rates ${business.rating} for business use, which usually means longer stays.`,
-      evidence: business.reasons.slice(0, 2),
+      evidence: business.reasons.slice(0, 2).length
+        ? business.reasons.slice(0, 2)
+        : [`Business suitability scored ${business.score}/100.`],
       upliftPence: Math.round(monthly * 0.15),
       effort: "low",
       confidence: business.confidence,

@@ -121,14 +121,14 @@ export function SpaceFitEntry({
   return (
     <section
       aria-labelledby="spacefit-entry-heading"
-      className={cn("border-y border-border/70 bg-surface/60 py-11 sm:py-14", className)}
+      className={cn("border-y border-border/70 bg-surface/60 py-9 sm:py-11", className)}
     >
       <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
         <div className="text-center">
           <div className="inline-flex">
             <SpaceFitAiMark size="sm" />
           </div>
-          <h2 id="spacefit-entry-heading" className="mt-3 text-balance type-h1">
+          <h2 id="spacefit-entry-heading" className="mt-3 text-balance type-h2">
             Your stuff. Your space. Just show us.
           </h2>
           <p className="mx-auto mt-2.5 max-w-lg type-body text-muted-foreground">
@@ -136,7 +136,7 @@ export function SpaceFitEntry({
           </p>
         </div>
 
-        <div className="mt-7 grid gap-4 sm:grid-cols-2 sm:gap-5">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 sm:gap-5">
           <Reveal>
             <article className="flex h-full flex-col rounded-3xl border border-border bg-card p-5 shadow-card transition-shadow hover:shadow-raised sm:p-6">
               <span className="inline-flex items-center gap-2 type-label">

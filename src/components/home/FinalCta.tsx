@@ -9,16 +9,16 @@ import { track } from "@/lib/analytics/tracker";
 
 export function FinalCta() {
   return (
-    <section aria-labelledby="final-cta-heading" className="py-12 sm:py-16">
+    <section aria-labelledby="final-cta-heading" className="py-10 sm:py-12">
       <div className="mx-auto w-full max-w-3xl px-4 text-center sm:px-6">
-        <h2 id="final-cta-heading" className="type-h1">
+        <h2 id="final-cta-heading" className="type-h2">
           Store nearby. Earn at home.
         </h2>
         <p className="mx-auto mt-3 max-w-md type-body text-muted-foreground">
           Find trusted storage near you, or turn your unused space into monthly income.
         </p>
 
-        <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <Button
             asChild
             size="lg"

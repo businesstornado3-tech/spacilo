@@ -25,13 +25,13 @@ const POINTS = [
 
 export function WhySpacePlanner() {
   return (
-    <section aria-labelledby="why-heading" className="py-12 sm:py-14">
+    <section aria-labelledby="why-heading" className="py-9 sm:py-11">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-        <h2 id="why-heading" className="max-w-xl type-h1">
+        <h2 id="why-heading" className="max-w-xl type-h2">
           Why Spacilo.
         </h2>
 
-        <ul className="mt-7 grid gap-4 sm:grid-cols-3">
+        <ul className="mt-6 grid gap-4 sm:grid-cols-3">
           {POINTS.map((point, index) => (
             <Reveal as="li" key={point.title} delay={index * 80}>
               <div className="h-full rounded-3xl border border-border bg-card p-5 shadow-card">

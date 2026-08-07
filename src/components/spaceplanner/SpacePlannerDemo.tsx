@@ -110,11 +110,11 @@ export function SpacePlannerDemo() {
     <section
       id={DEMO_ANCHOR_ID}
       aria-labelledby="spaceplanner-heading"
-      className="scroll-mt-20 py-10 sm:py-12"
+      className="scroll-mt-20 py-8 sm:py-10"
     >
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
-          <h2 id="spaceplanner-heading" className="type-h1">
+          <h2 id="spaceplanner-heading" className="type-h2">
             See it fit, before you book.
           </h2>
           <span className="inline-flex items-center gap-2 rounded-full bg-signal-soft px-3 py-1 type-badge text-signal-soft-foreground">
@@ -123,7 +123,7 @@ export function SpacePlannerDemo() {
           </span>
         </header>
 
-        <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,0.7fr)] lg:items-start">
+        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,0.62fr)] lg:items-start">
 
           <div className="min-w-0 lg:order-2">
             <div className="rounded-3xl border border-border bg-card p-4 shadow-card">
@@ -194,7 +194,7 @@ export function SpacePlannerDemo() {
                       disabled={itemCount === 0}
                       onClick={run}
                     >
-                      Plan my space with Spacilo AI
+                      Plan my storage
                       <ArrowRight className="size-4" aria-hidden="true" />
                     </Button>
                   </div>

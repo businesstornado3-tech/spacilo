@@ -32,9 +32,8 @@ const hero = readFileSync("src/components/spaceplanner/HeroSection.tsx", "utf8")
 describe("homepage structure", () => {
   const sections = [
     "HeroSection",
-    "TwoSidedValue",
-    "SpacePlannerDemo",
     "SpaceFitEntry",
+    "SpacePlannerDemo",
     "MarketplaceEntry",
     "HostEarnings",
     "WhySpacePlanner",
@@ -56,6 +55,7 @@ describe("homepage structure", () => {
       "HostControl",
       "TrustSection",
       "LaunchArea",
+      "TwoSidedValue",
     ]) {
       expect(homepage).not.toContain(retired);
     }
@@ -76,7 +76,9 @@ describe("hero delivers the three messages", () => {
   });
 
   it("shows the transformation, not a static illustration", () => {
-    expect(hero).toContain("HeroGarageAnimation");
+    expect(hero).toContain("HeroVisual");
+    const visual = readFileSync("src/components/spaceplanner/HeroVisual.tsx", "utf8");
+    expect(visual).toContain("HeroGarageAnimation");
   });
 });
 

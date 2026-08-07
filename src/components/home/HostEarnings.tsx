@@ -25,18 +25,18 @@ const JOURNEY = ["Unused", "Listed", "Generating income"];
 
 export function HostEarnings() {
   return (
-    <section aria-labelledby="host-earnings-heading" className="py-12 sm:py-16">
+    <section aria-labelledby="host-earnings-heading" className="py-9 sm:py-12">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <header className="max-w-xl">
-          <h2 id="host-earnings-heading" className="type-h1">
+          <h2 id="host-earnings-heading" className="type-h2">
             Your empty garage is already earning — for someone else.
           </h2>
-          <p className="mt-3 type-body text-muted-foreground">
+          <p className="mt-2.5 type-body-sm text-muted-foreground">
             List the space you are not using and let it pay for itself.
           </p>
         </header>
 
-        <ul className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {EARNING_EXAMPLES.map((example, index) => (
             <Reveal as="li" key={example.kind} delay={index * 60}>
               <div className="h-full rounded-2xl border border-border bg-card p-4 shadow-card">
@@ -48,7 +48,7 @@ export function HostEarnings() {
           ))}
         </ul>
 
-        <ol className="mt-6 flex flex-wrap items-center gap-2" aria-label="Hosting journey">
+        <ol className="mt-5 flex flex-wrap items-center gap-2" aria-label="Hosting journey">
           {JOURNEY.map((step, index) => (
             <React.Fragment key={step}>
               {index > 0 ? (
@@ -84,7 +84,7 @@ function EarningsEstimator() {
   const range = estimateEarnings({ kind, size, demand });
 
   return (
-    <div className="mt-8 grid gap-5 rounded-3xl border border-border bg-card p-5 shadow-card lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:items-center sm:p-6">
+    <div className="mt-6 grid gap-5 rounded-3xl border border-border bg-card p-5 shadow-card lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:items-center sm:p-6">
       <div className="min-w-0">
         <h3 className="type-h4">Estimate my earnings</h3>
         <p className="mt-1 type-body-sm text-muted-foreground">

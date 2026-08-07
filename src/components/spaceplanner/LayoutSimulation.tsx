@@ -21,6 +21,8 @@ export interface LayoutSimulationProps {
   /** Staggered entrance for the optimised pass. */
   animate?: boolean;
   showLabels?: boolean;
+  /** Hide the caption row (used by stacked comparison layers). */
+  showCaption?: boolean;
   title: string;
   className?: string;
 }
@@ -30,6 +32,7 @@ export function LayoutSimulation({
   pack,
   animate = true,
   showLabels = true,
+  showCaption = true,
   title,
   className,
 }: LayoutSimulationProps) {
@@ -125,6 +128,7 @@ export function LayoutSimulation({
         ))}
       </svg>
 
+      {showCaption ? (
       <figcaption className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 type-badge text-muted-foreground">
         <span className="type-label text-foreground">{title}</span>
         <span>{pack.floorAreaUsed.toFixed(1)}m² floor used</span>
@@ -135,6 +139,7 @@ export function LayoutSimulation({
           </span>
         ) : null}
       </figcaption>
+      ) : null}
     </figure>
   );
 }

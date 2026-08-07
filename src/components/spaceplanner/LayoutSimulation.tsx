@@ -35,12 +35,15 @@ export function LayoutSimulation({
 }: LayoutSimulationProps) {
   const w = space.width * SCALE;
   const d = space.depth * SCALE;
+  // Match the panel to the room's real proportions so the scene fills the frame.
+  const ratio = Math.min(1.7, Math.max(0.5, space.width / space.depth));
 
   return (
     <figure className={cn("min-w-0", className)}>
       <svg
         viewBox={`-10 -10 ${w + 20} ${d + 20}`}
-        className="aspect-4/3 w-full rounded-2xl bg-scene-wall"
+        style={{ aspectRatio: ratio }}
+        className="mx-auto w-full max-h-[26rem] rounded-2xl bg-scene-wall"
         preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label={`${title}: plan view of a ${space.name} with ${pack.placements.length} placed groups`}

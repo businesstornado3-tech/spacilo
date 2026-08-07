@@ -98,7 +98,8 @@ export function HeroAnimation({ className }: { className?: string }) {
       <div className="relative mt-4 overflow-hidden rounded-2xl bg-scene-wall">
         <svg
           viewBox={`-8 -8 ${w + 16} ${d + 16}`}
-          className="aspect-4/5 w-full sm:aspect-4/3"
+          style={{ aspectRatio: Math.max(0.5, HERO_SPACE.width / HERO_SPACE.depth) }}
+          className="mx-auto max-h-[22rem] w-full"
           preserveAspectRatio="xMidYMid meet"
           aria-hidden="true"
         >

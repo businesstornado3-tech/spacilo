@@ -471,6 +471,11 @@
 
   --accent-soft: oklch(0.3 0.04 70);
   --accent-soft-foreground: oklch(0.93 0.04 80);
+
+  --ai-canvas-from: oklch(0.24 0.03 190);
+  --ai-canvas-to: oklch(0.21 0.028 200);
+  --ai-canvas-glow: oklch(0.4 0.06 165 / 0.45);
+  --ai-canvas-dot: oklch(0.85 0.08 163 / 0.05);
 }
 
 @keyframes stow-rise {

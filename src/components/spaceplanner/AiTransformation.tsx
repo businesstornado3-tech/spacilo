@@ -62,7 +62,13 @@ export function AiTransformation() {
   const organised = current.organised;
   const thinking = beat > 0 && !organised;
 
-  const target = organised ? plan.metrics.utilisation : plan.metrics.utilisationBefore;
+  // Honest, derived improvement: how much of the floor stays walkable once the
+  // same belongings are stacked, stood upright and pushed to the walls.
+  const floorArea = SPACE.width * SPACE.depth;
+  const clear = (used: number) => Math.max(0, Math.min(100, Math.round(100 - (used / floorArea) * 100)));
+  const clearBefore = clear(plan.before.floorAreaUsed);
+  const clearAfter = clear(plan.after.floorAreaUsed);
+  const target = organised ? clearAfter : clearBefore;
   const animated = useCountUp(target, 1100, inView);
 
   return (
@@ -93,7 +99,7 @@ export function AiTransformation() {
 
           <div className="min-w-0">
             <div className="rounded-3xl border border-border bg-card p-4 shadow-card sm:p-5">
-              <p className="type-overline text-muted-foreground">Estimated space used</p>
+              <p className="type-overline text-muted-foreground">Estimated floor kept clear</p>
               <p className="mt-1 flex items-baseline gap-2">
                 <span className="type-hero tabular-nums">{Math.round(animated)}%</span>
                 <span
@@ -102,9 +108,7 @@ export function AiTransformation() {
                     organised ? "text-primary" : "text-muted-foreground",
                   )}
                 >
-                  {organised
-                    ? `up from ${plan.metrics.utilisationBefore}%`
-                    : "before planning"}
+                  {organised ? `up from ${clearBefore}%` : "before planning"}
                 </span>
               </p>
 

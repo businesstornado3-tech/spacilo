@@ -59,7 +59,8 @@ describe("scene architecture", () => {
 
     expect(space.kind).toBe("garage");
     expect(plan.after.placements.length).toBeGreaterThan(0);
-    expect(plan.metrics.utilisation).toBeGreaterThanOrEqual(plan.metrics.utilisationBefore);
+    // the optimised layout must free floor area, never consume more of it
+    expect(plan.after.floorAreaUsed).toBeLessThan(plan.before.floorAreaUsed);
   });
 
   it("offers droppable objects that the catalogue knows", () => {

@@ -110,7 +110,7 @@ export function SpacePlannerDemo() {
     <section
       id={DEMO_ANCHOR_ID}
       aria-labelledby="spaceplanner-heading"
-      className="scroll-mt-20 py-8 sm:py-10"
+      className="scroll-mt-20 py-7 sm:py-9"
     >
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
@@ -123,9 +123,9 @@ export function SpacePlannerDemo() {
           </span>
         </header>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,0.62fr)] lg:items-start">
+        <div className="mt-4 grid gap-4">
 
-          <div className="min-w-0 lg:order-2">
+          <div className="order-2 grid min-w-0 gap-4 sm:grid-cols-2">
             <div className="rounded-3xl border border-border bg-card p-4 shadow-card">
               <h3 className="type-h4">What are you storing?</h3>
               <div className="mt-3">
@@ -141,15 +141,18 @@ export function SpacePlannerDemo() {
                   }}
                 />
               </div>
+            </div>
 
-              <h3 className="mt-5 type-h4">Where might it go?</h3>
+            <div className="rounded-3xl border border-border bg-card p-4 shadow-card">
+              <h3 className="type-h4">Where might it go?</h3>
               <div className="mt-3">
                 <StorageSelector selectedId={space.id} onSelect={setSpace} />
               </div>
             </div>
           </div>
 
-          <div className="min-w-0 lg:order-1">
+          <div className="order-1 min-w-0">
+
             <div className="rounded-3xl border border-border bg-card p-4 shadow-card sm:p-5">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
                 <div className="min-w-0">

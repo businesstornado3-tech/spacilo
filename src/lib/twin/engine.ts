@@ -283,7 +283,17 @@ export class DigitalTwinEngine {
   private initialState(plan: SpacePlan): TwinState {
     const room = buildRoomShell(plan.space, this.options.room);
     const motion = buildMotionPlan(plan, this.options.motion);
-    const objects = settleAll(objectsFromPack(plan.before, plan.space));
+    // Start from the optimised layout with every step rewound, so step 0 and
+    // the final frame are two ends of one consistent scene.
+    const final = new Map(
+      objectsFromPack(plan.after, plan.space).map((object) => [object.id, object]),
+    );
+    for (let index = motion.steps.length - 1; index >= 0; index -= 1) {
+      const step = motion.steps[index]!;
+      const object = final.get(step.objectId);
+      if (object) final.set(step.objectId, { ...object, transform: clone(step.from) });
+    }
+    const objects = settleAll([...final.values()]);
     const scene: TwinScene = {
       room,
       objects,

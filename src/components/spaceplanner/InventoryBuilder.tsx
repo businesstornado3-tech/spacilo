@@ -127,18 +127,21 @@ function ItemCard({
   item,
   quantity,
   onChange,
+  revealed,
 }: {
   item: CatalogueItem;
   quantity: number;
   onChange: (quantity: number) => void;
+  revealed?: boolean;
 }) {
   const selected = quantity > 0;
 
   return (
     <li
       className={cn(
-        "group relative overflow-hidden rounded-2xl border p-2.5 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-raised motion-reduce:hover:translate-y-0",
+        "group relative overflow-hidden rounded-xl border p-1.5 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-raised motion-reduce:hover:translate-y-0",
         selected ? "border-primary/60 bg-primary-soft/25 shadow-card" : "border-border bg-card",
+        revealed && "duration-300 animate-in fade-in slide-in-from-top-1",
       )}
     >
       <button
@@ -146,44 +149,43 @@ function ItemCard({
         onClick={() => onChange(quantity > 0 ? 0 : 1)}
         aria-pressed={selected}
         aria-label={`${selected ? "Remove" : "Add"} ${item.name}`}
-        className="block w-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="block w-full rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <span className="block rounded-xl bg-scene-wall p-1">
+        <span className="block rounded-lg bg-scene-wall p-0.5">
           <ObjectIllustration
             icon={item.icon}
             className={cn(
-              "aspect-4/3 transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none",
+              "aspect-3/2 transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none",
               selected && "scale-105",
             )}
           />
         </span>
-        <span className="mt-1.5 block truncate text-left type-label">{item.name}</span>
-        <span className="block text-left type-badge text-muted-foreground">
-          ~{itemVolume(item).toFixed(2)}m³
+        <span className="mt-1 block truncate text-left type-badge text-foreground">
+          {item.name}
         </span>
       </button>
 
-      <div className="mt-2 flex items-center justify-between gap-1">
+      <div className="mt-1 flex items-center justify-between gap-0.5">
         <button
           type="button"
-          className="grid size-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-surface disabled:opacity-40"
+          className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-surface disabled:opacity-40"
           aria-label={`Remove one ${item.name}`}
           disabled={quantity === 0}
           onClick={() => onChange(Math.max(0, quantity - 1))}
         >
-          <Minus className="size-4" aria-hidden="true" />
+          <Minus className="size-3.5" aria-hidden="true" />
         </button>
-        <span className="type-label tabular-nums" aria-label={`${quantity} ${item.name} selected`}>
+        <span className="type-badge tabular-nums" aria-label={`${quantity} ${item.name} selected`}>
           {quantity}
         </span>
         <button
           type="button"
-          className="grid size-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-surface disabled:opacity-40"
+          className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-surface disabled:opacity-40"
           aria-label={`Add one ${item.name}`}
           disabled={quantity >= 24}
           onClick={() => onChange(quantity + 1)}
         >
-          <Plus className="size-4" aria-hidden="true" />
+          <Plus className="size-3.5" aria-hidden="true" />
         </button>
       </div>
     </li>

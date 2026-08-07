@@ -28,7 +28,7 @@ export function StorageSelector({
 
   return (
     <div>
-      <ul className="mobile-rail grid grid-cols-4 gap-1.5">
+      <ul className="mobile-rail gap-1.5 sm:grid sm:grid-cols-4">
         {visible.map((space, index) => {
           const selected = space.id === selectedId;
           return (

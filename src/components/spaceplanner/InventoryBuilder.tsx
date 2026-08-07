@@ -89,7 +89,7 @@ export function InventoryBuilder({
         />
       </div>
 
-      <ul className="mobile-rail mt-3 grid grid-cols-4 gap-1.5">
+      <ul className="mobile-rail mt-3 gap-1.5 sm:grid sm:grid-cols-4">
         {results.map((item, index) => (
           <ItemCard
             key={item.id}

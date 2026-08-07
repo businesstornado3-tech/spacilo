@@ -11,7 +11,6 @@ import { HostEarnings } from "@/components/home/HostEarnings";
 import { WhySpacePlanner } from "@/components/home/WhySpacePlanner";
 import { FinalCta } from "@/components/home/FinalCta";
 
-
 const title = `${brand.name} | AI Storage Planning & Neighbourhood Storage`;
 const description =
   "Try Spacilo AI SpacePlanner free: plan what fits in a garage, loft or spare room in seconds, then find trusted neighbourhood storage near you.";
@@ -58,7 +57,6 @@ function HomePage() {
       <HostEarnings />
       <WhySpacePlanner />
       <FinalCta />
-
     </MarketingLayout>
   );
 }

@@ -66,7 +66,9 @@ export function AIThinkingTimeline({ onComplete }: { onComplete: () => void }) {
               <span
                 className={cn(
                   "grid size-5 shrink-0 place-items-center rounded-full",
-                  complete ? "bg-success text-success-foreground" : "bg-surface text-muted-foreground",
+                  complete
+                    ? "bg-success text-success-foreground"
+                    : "bg-surface text-muted-foreground",
                 )}
               >
                 {complete ? (

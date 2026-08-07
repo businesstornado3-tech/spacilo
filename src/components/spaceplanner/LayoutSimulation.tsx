@@ -52,7 +52,12 @@ export function LayoutSimulation({
           <pattern id="sp-boards" width="200" height="46" patternUnits="userSpaceOnUse">
             <rect width="200" height="46" className="fill-scene-floor" />
             <path d="M0 46h200" className="stroke-scene-floor-line" strokeWidth={1.4} fill="none" />
-            <path d="M60 0v46M150 0v46" className="stroke-scene-floor-line" strokeWidth={1.2} fill="none" />
+            <path
+              d="M60 0v46M150 0v46"
+              className="stroke-scene-floor-line"
+              strokeWidth={1.2}
+              fill="none"
+            />
           </pattern>
         </defs>
 
@@ -219,7 +224,13 @@ function PlacementShape({
         ) : null}
 
         {fragile ? (
-          <circle cx={w - 11} cy={11} r={6} className="fill-warning-soft stroke-warning" strokeWidth={1.4} />
+          <circle
+            cx={w - 11}
+            cy={11}
+            r={6}
+            className="fill-warning-soft stroke-warning"
+            strokeWidth={1.4}
+          />
         ) : null}
 
         {showLabel && !compact ? (

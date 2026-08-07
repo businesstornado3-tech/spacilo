@@ -144,10 +144,7 @@ function ItemCard({
         >
           <Minus className="size-4" aria-hidden="true" />
         </button>
-        <span
-          className="type-label tabular-nums"
-          aria-label={`${quantity} ${item.name} selected`}
-        >
+        <span className="type-label tabular-nums" aria-label={`${quantity} ${item.name} selected`}>
           {quantity}
         </span>
         <button

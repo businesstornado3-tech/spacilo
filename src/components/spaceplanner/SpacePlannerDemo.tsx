@@ -161,7 +161,6 @@ export function SpacePlannerDemo() {
                 <div className="min-w-0">
                   <h3 className="type-h4">Your estimated plan</h3>
                   <p className="mt-1 truncate type-body-sm text-muted-foreground">
-
                     {itemCount === 0
                       ? "Add a few belongings to begin."
                       : `${itemCount} item${itemCount === 1 ? "" : "s"} · ~${rawVolume.toFixed(1)}m³ · ${space.name}`}

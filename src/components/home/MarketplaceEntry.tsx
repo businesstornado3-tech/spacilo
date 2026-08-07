@@ -16,7 +16,7 @@ export function MarketplaceEntry() {
   return (
     <section
       aria-labelledby="marketplace-heading"
-      className="border-y border-border/70 bg-surface/60 py-12 sm:py-14"
+      className="border-y border-border/70 bg-surface/60 py-11 sm:py-14"
     >
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-12">
         <div className="min-w-0">
@@ -30,7 +30,7 @@ export function MarketplaceEntry() {
 
           <div className="mt-6 rounded-3xl border border-border bg-card p-4 shadow-card sm:p-5">
             <SearchControls
-              submitLabel="Find storage"
+              submitLabel="Search nearby"
               onSubmit={({ location, radius }) => {
                 track("storage_search_started", { props: { radius, from: "homepage" } });
                 void navigate({ to: "/search", search: { location, radius } });

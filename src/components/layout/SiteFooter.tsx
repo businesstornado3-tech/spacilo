@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Check } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { Logo } from "@/components/layout/Logo";

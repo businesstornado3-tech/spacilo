@@ -32,9 +32,8 @@ const hero = readFileSync("src/components/spaceplanner/HeroSection.tsx", "utf8")
 describe("homepage structure", () => {
   const sections = [
     "HeroSection",
-    "TwoSidedValue",
-    "SpacePlannerDemo",
     "SpaceFitEntry",
+    "SpacePlannerDemo",
     "MarketplaceEntry",
     "HostEarnings",
     "WhySpacePlanner",
@@ -56,6 +55,7 @@ describe("homepage structure", () => {
       "HostControl",
       "TrustSection",
       "LaunchArea",
+      "TwoSidedValue",
     ]) {
       expect(homepage).not.toContain(retired);
     }

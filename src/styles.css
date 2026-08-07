@@ -496,3 +496,18 @@
     scroll-behavior: auto !important;
   }
 }
+
+/** SpacePlanner™ hero: the analysis sweep across the plan view. */
+@keyframes sp-scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(var(--sp-scan-distance, 400px));
+    opacity: 0.15;
+  }
+}

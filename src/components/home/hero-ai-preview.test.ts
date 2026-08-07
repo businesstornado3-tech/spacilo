@@ -60,7 +60,7 @@ describe("hero illustrative Spacilo AI preview", () => {
   });
 
   it("is wired into the hero card in place of the old static copy", () => {
-    const hero = readFileSync("src/components/home/Hero.tsx", "utf8");
+    const hero = readFileSync("src/components/home/MarketplaceEntry.tsx", "utf8");
     expect(hero).toContain("<HeroAiPreview />");
     expect(hero).not.toContain("A neighbourhood storage marketplace.");
   });

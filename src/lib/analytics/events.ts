@@ -21,6 +21,10 @@ export const ANALYTICS_EVENTS = [
   "signup_completed",
   "login_completed",
 
+  // ---- Spacilo AI: public SpacePlanner demonstration (no account, no upload)
+  "spaceplanner_demo_started",
+  "spaceplanner_demo_completed",
+
   // ---- Spacilo AI: renter ("scan my stuff")
   "spacefit_stuff_started",
   "spacefit_stuff_completed",

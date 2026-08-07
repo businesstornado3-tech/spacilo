@@ -31,7 +31,7 @@ export function WhySpacePlanner() {
           Why Spacilo.
         </h2>
 
-        <ul className="mt-6 grid gap-4 sm:grid-cols-3">
+        <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
           {POINTS.map((point, index) => (
             <Reveal as="li" key={point.title} delay={index * 80}>
               <div className="h-full rounded-3xl border border-border bg-card p-5 shadow-card">

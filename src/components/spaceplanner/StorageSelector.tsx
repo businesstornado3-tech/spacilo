@@ -28,13 +28,14 @@ export function StorageSelector({
 
   return (
     <div>
-      <ul className="grid grid-cols-4 gap-1.5">
+      <ul className="carousel-track gap-1.5 pb-1 sm:grid sm:grid-cols-4 sm:overflow-x-visible sm:pb-0">
         {visible.map((space, index) => {
           const selected = space.id === selectedId;
           return (
             <li
               key={space.id}
               className={cn(
+                "carousel-item w-[6.5rem] sm:w-auto",
                 index >= COMMON_SPACE_IDS.length &&
                   "duration-300 animate-in fade-in slide-in-from-top-1",
               )}

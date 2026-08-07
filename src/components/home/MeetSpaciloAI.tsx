@@ -58,7 +58,7 @@ export function MeetSpaciloAI() {
           </div>
         </div>
 
-        <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {STEPS.map((step, index) => (
             <Reveal as="li" key={step.title} delay={index * 70}>
               <div className="h-full rounded-3xl border border-border bg-card p-5 shadow-card transition-shadow hover:shadow-raised">

@@ -89,7 +89,7 @@ export function InventoryBuilder({
         />
       </div>
 
-      <ul className="mt-3 grid grid-cols-4 gap-1.5">
+      <ul className="carousel-track mt-3 gap-1.5 pb-1 sm:grid sm:grid-cols-4 sm:overflow-x-visible sm:pb-0">
         {results.map((item, index) => (
           <ItemCard
             key={item.id}
@@ -139,7 +139,7 @@ function ItemCard({
   return (
     <li
       className={cn(
-        "group relative overflow-hidden rounded-lg border p-1 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-raised motion-reduce:hover:translate-y-0",
+        "carousel-item group relative w-[6.5rem] overflow-hidden rounded-lg border p-1 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-raised motion-reduce:hover:translate-y-0 sm:w-auto",
         selected ? "border-primary/60 bg-primary-soft/25 shadow-card" : "border-border bg-card",
         revealed && "duration-300 animate-in fade-in slide-in-from-top-1",
       )}

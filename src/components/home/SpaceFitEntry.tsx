@@ -121,10 +121,10 @@ export function SpaceFitEntry({
   return (
     <section
       aria-labelledby="spacefit-entry-heading"
-      className={cn("py-10 sm:py-14", className)}
+      className={cn("pb-10 pt-1 sm:pb-14 sm:pt-3", className)}
     >
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-        <div className="ai-canvas overflow-hidden rounded-[2rem] border border-signal-soft px-4 py-12 shadow-card sm:px-10 sm:py-16">
+        <div className="ai-canvas overflow-hidden rounded-[2rem] border border-signal-soft px-4 py-8 shadow-card sm:px-10 sm:py-14">
           <div className="mx-auto w-full max-w-5xl">
         <div className="text-center">
           <div className="inline-flex">

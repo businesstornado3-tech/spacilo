@@ -1,110 +1,96 @@
 /**
  * Spacilo AI SpacePlanner™ — the interactive homepage demonstration.
  *
- * Three steps: choose belongings, choose a space, watch the planner work. The
- * plan is produced by the deterministic engine in `@/lib/spaceplanner` — no
- * network call, no model, no camera and no account. What a visitor sees here
- * is exactly what the engine computes, so the demo can be trusted as a
- * preview of the real product rather than a scripted mock-up.
+ * This is the visitor-mode surface of the shared planner: the same provider,
+ * panels and canvas the renter dashboard and host review panel use, with a
+ * capability set that caps the inventory and withholds saving, photos and
+ * comparison. The plan itself is produced by the deterministic engine in
+ * `@/lib/spaceplanner` — no network call, no model, no camera and no account.
  */
 import * as React from "react";
-import { ArrowRight, Boxes, RotateCcw, Sparkles } from "lucide-react";
+import { Boxes, RotateCcw, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { InventoryBuilder } from "@/components/spaceplanner/InventoryBuilder";
-import { StorageSelector } from "@/components/spaceplanner/StorageSelector";
-import { AIThinkingTimeline } from "@/components/spaceplanner/AIThinkingTimeline";
-import { LayoutSimulation } from "@/components/spaceplanner/LayoutSimulation";
-import { PlanScene } from "@/components/spaceplanner/PlanScene";
+import {
+  SpacePlannerProvider,
+  useSpacePlanner,
+} from "@/components/spaceplanner/SpacePlannerProvider";
+import { InventoryPanel } from "@/components/spaceplanner/InventoryPanel";
+import { StoragePanel } from "@/components/spaceplanner/StoragePanel";
+import { AIProgressPanel } from "@/components/spaceplanner/AIProgressPanel";
+import { PlannerCanvas } from "@/components/spaceplanner/PlannerCanvas";
+import { PlannerToolbar } from "@/components/spaceplanner/PlannerToolbar";
+import { RecommendationPanel } from "@/components/spaceplanner/RecommendationPanel";
+import { FitScore } from "@/components/spaceplanner/FitScore";
+import { UnlockCard } from "@/components/spaceplanner/UnlockCard";
 import { ObjectIllustration } from "@/components/spaceplanner/ObjectArt";
 import { ComparisonSlider } from "@/components/spaceplanner/ComparisonSlider";
-import { AIExplanation, AISummary } from "@/components/spaceplanner/AISummary";
+import { AISummary } from "@/components/spaceplanner/AISummary";
 import { DEMO_ANCHOR_ID, onStartDemo } from "@/components/spaceplanner/demo-bus";
 import { track } from "@/lib/analytics/tracker";
-import {
-  CATALOGUE_BY_ID,
-  GARAGE_STORY,
-  INVENTORY_PRESETS,
-  SPACE_BY_ID,
-  itemVolume,
-  simulationEngine,
-  type InventoryLine,
-  type StorageSpace,
-} from "@/lib/spaceplanner";
-
-type Phase = "build" | "thinking" | "plan";
+import { CATALOGUE_BY_ID, GARAGE_STORY, INVENTORY_PRESETS, SPACE_BY_ID } from "@/lib/spaceplanner";
 
 const DEFAULT_SPACE = SPACE_BY_ID.get("garage")!;
 const DEFAULT_PRESET = INVENTORY_PRESETS[0]!;
 
 export function SpacePlannerDemo() {
-  const [quantities, setQuantities] = React.useState<Record<string, number>>({});
-  const [space, setSpace] = React.useState<StorageSpace>(DEFAULT_SPACE);
-  const [phase, setPhase] = React.useState<Phase>("build");
+  return (
+    <SpacePlannerProvider mode="visitor" initialSpace={DEFAULT_SPACE}>
+      <DemoBody />
+    </SpacePlannerProvider>
+  );
+}
+
+function DemoBody() {
+  const {
+    phase,
+    plan,
+    score,
+    space,
+    itemCount,
+    rawVolume,
+    hasCompletedRun,
+    loadPreset,
+    addOne,
+    setPhase,
+  } = useSpacePlanner();
   const [view, setView] = React.useState<"plan" | "compare">("plan");
   const resultsRef = React.useRef<HTMLDivElement>(null);
-
-  const lines: InventoryLine[] = React.useMemo(
-    () =>
-      Object.entries(quantities)
-        .map(([itemId, quantity]) => ({ item: CATALOGUE_BY_ID.get(itemId)!, quantity }))
-        .filter((line) => line.item && line.quantity > 0),
-    [quantities],
-  );
-
-  const itemCount = lines.reduce((sum, line) => sum + line.quantity, 0);
-  const rawVolume = lines.reduce((sum, line) => sum + itemVolume(line.item) * line.quantity, 0);
-  const plan = React.useMemo(
-    () => (itemCount > 0 ? simulationEngine.plan(lines, space) : null),
-    [lines, space, itemCount],
-  );
-
-  const loadPreset = React.useCallback(
-    (presetLines: Array<{ itemId: string; quantity: number }>) => {
-      setQuantities(Object.fromEntries(presetLines.map((l) => [l.itemId, l.quantity])));
-      setPhase("build");
-    },
-    [],
-  );
-
-  const run = React.useCallback(() => {
-    setPhase("thinking");
-    setView("plan");
-    track("spaceplanner_demo_started", {
-      props: { space: space.kind, items: itemCount, from: "homepage_planner" },
-    });
-  }, [space.kind, itemCount]);
 
   // "Try SpacePlanner™" in the hero starts a real run, loading a preset first
   // if the visitor has not chosen anything yet.
   React.useEffect(
     () =>
       onStartDemo(() => {
-        setQuantities((current) => {
-          const empty = Object.values(current).every((q) => !q);
-          if (!empty) return current;
-          return Object.fromEntries(DEFAULT_PRESET.lines.map((l) => [l.itemId, l.quantity]));
-        });
+        if (itemCount === 0) loadPreset(DEFAULT_PRESET.lines);
         setView("plan");
         setPhase("thinking");
       }),
-    [],
+    [itemCount, loadPreset, setPhase],
   );
 
-  /** Micro-interaction: drop or tap one more object and the plan recalculates. */
-  const addOne = React.useCallback((itemId: string) => {
-    setQuantities((current) => ({ ...current, [itemId]: (current[itemId] ?? 0) + 1 }));
-    track("spaceplanner_demo_object_added", { props: { item: itemId } });
-  }, []);
+  const onRun = React.useCallback(() => {
+    setView("plan");
+    track("spaceplanner_demo_started", {
+      props: { space: space.kind, items: itemCount, from: "homepage_planner" },
+    });
+  }, [space.kind, itemCount]);
 
-  const onThinkingComplete = React.useCallback(() => {
-    setPhase("plan");
+  const onComplete = React.useCallback(() => {
     track("spaceplanner_demo_completed", {
       props: { space: space.kind, utilisation: plan?.metrics.utilisation ?? 0 },
     });
     window.setTimeout(() => resultsRef.current?.focus({ preventScroll: true }), 60);
   }, [space.kind, plan?.metrics.utilisation]);
+
+  const onAdd = React.useCallback(
+    (itemId: string) => {
+      addOne(itemId);
+      track("spaceplanner_demo_object_added", { props: { item: itemId } });
+    },
+    [addOne],
+  );
 
   return (
     <section
@@ -124,36 +110,23 @@ export function SpacePlannerDemo() {
         </header>
 
         <div className="mt-3 grid gap-3">
-
           <div className="order-2 grid min-w-0 items-stretch gap-3 sm:grid-cols-2">
             <div className="h-full rounded-2xl border border-border bg-card p-3 shadow-card">
               <h3 className="type-h4">What are you storing?</h3>
               <div className="mt-2">
-                <InventoryBuilder
-                  quantities={quantities}
-                  onChange={(itemId, quantity) =>
-                    setQuantities((current) => ({ ...current, [itemId]: quantity }))
-                  }
-                  onPreset={(presetLines) => loadPreset(presetLines)}
-                  onClear={() => {
-                    setQuantities({});
-                    setPhase("build");
-                  }}
-                />
+                <InventoryPanel />
               </div>
             </div>
 
             <div className="h-full rounded-2xl border border-border bg-card p-3 shadow-card">
               <h3 className="type-h4">Where might it go?</h3>
               <div className="mt-2">
-                <StorageSelector selectedId={space.id} onSelect={setSpace} />
+                <StoragePanel />
               </div>
             </div>
           </div>
 
-
           <div className="order-1 min-w-0">
-
             <div className="rounded-3xl border border-border bg-card p-4 shadow-card sm:p-5">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
                 <div className="min-w-0">
@@ -181,32 +154,17 @@ export function SpacePlannerDemo() {
                 {phase === "build" ? (
                   <div>
                     {plan ? (
-                      <LayoutSimulation
-                        space={space}
-                        pack={plan.before}
-                        animate={false}
-                        showLabels={false}
-                        title="Unplanned — everything loaded as it arrives"
-                      />
+                      <PlannerCanvas view="before" />
                     ) : (
                       <EmptyState onPreset={() => loadPreset(DEFAULT_PRESET.lines)} />
                     )}
-                    <Button
-                      block
-                      size="lg"
-                      className="mt-4"
-                      disabled={itemCount === 0}
-                      onClick={run}
-                    >
-                      Plan my storage
-                      <ArrowRight className="size-4" aria-hidden="true" />
-                    </Button>
+                    <div className="mt-4">
+                      <PlannerToolbar onRun={onRun} />
+                    </div>
                   </div>
                 ) : null}
 
-                {phase === "thinking" ? (
-                  <AIThinkingTimeline onComplete={onThinkingComplete} />
-                ) : null}
+                {phase === "thinking" ? <AIProgressPanel onComplete={onComplete} /> : null}
 
                 {phase === "plan" && plan ? (
                   <div ref={resultsRef} tabIndex={-1} className="outline-none">
@@ -225,18 +183,18 @@ export function SpacePlannerDemo() {
 
                     {view === "plan" ? (
                       <>
-                        <PlanScene
-                          space={space}
-                          pack={plan.after}
-                          explain
-                          onAdd={addOne}
-                          label={`Optimised plan view of the ${space.name.toLowerCase()}`}
-                        />
-                        <AddTray onAdd={addOne} />
+                        <PlannerCanvas view="after" />
+                        <AddTray onAdd={onAdd} />
                       </>
                     ) : (
                       <ComparisonSlider plan={plan} />
                     )}
+
+                    {score ? (
+                      <div className="mt-4 rounded-2xl border border-border bg-surface/60 p-4">
+                        <FitScore score={score} />
+                      </div>
+                    ) : null}
 
                     <div className="mt-4">
                       <AISummary plan={plan} />
@@ -247,11 +205,11 @@ export function SpacePlannerDemo() {
             </div>
 
             {phase === "plan" && plan ? (
-              <div className="mt-4">
-                <AIExplanation plan={plan} />
+              <div className="mt-4 grid gap-4">
+                <RecommendationPanel />
+                {hasCompletedRun ? <UnlockCard /> : null}
               </div>
             ) : null}
-
           </div>
         </div>
       </div>

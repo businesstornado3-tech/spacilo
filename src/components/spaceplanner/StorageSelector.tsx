@@ -23,14 +23,12 @@ export function StorageSelector({
   const [expanded, setExpanded] = React.useState(false);
   const visible = expanded
     ? DEMO_SPACES
-    : DEMO_SPACES.filter(
-        (space) => COMMON_SPACE_IDS.includes(space.id) || space.id === selectedId,
-      );
+    : DEMO_SPACES.filter((space) => COMMON_SPACE_IDS.includes(space.id)).slice(0, 4);
   const hidden = DEMO_SPACES.length - visible.length;
 
   return (
     <div>
-      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <ul className="grid grid-cols-4 gap-1.5">
         {visible.map((space, index) => {
           const selected = space.id === selectedId;
           return (
@@ -46,17 +44,19 @@ export function StorageSelector({
                 onClick={() => onSelect(space)}
                 aria-pressed={selected}
                 className={cn(
-                  "h-full w-full overflow-hidden rounded-xl border p-1.5 text-left transition-[border-color,background-color,transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-raised motion-reduce:hover:translate-y-0",
+                  "h-full w-full overflow-hidden rounded-lg border p-1 text-left transition-[border-color,background-color,transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-raised motion-reduce:hover:translate-y-0",
                   selected
                     ? "border-primary/60 bg-primary-soft/25 shadow-card"
                     : "border-border bg-card hover:border-border-strong",
                 )}
               >
-                <span className="block overflow-hidden rounded-lg">
+                <span className="block overflow-hidden rounded-md">
                   <RoomIllustration kind={space.kind} />
                 </span>
-                <p className="mt-1 truncate type-badge text-foreground">{space.name}</p>
-                <p className="type-badge text-muted-foreground">
+                <p className="mt-0.5 truncate text-[0.6875rem] leading-4 text-foreground">
+                  {space.name}
+                </p>
+                <p className="truncate text-[0.6875rem] leading-4 text-muted-foreground">
                   {space.width}m × {space.depth}m
                 </p>
               </button>
@@ -64,6 +64,7 @@ export function StorageSelector({
           );
         })}
       </ul>
+
 
       {hidden > 0 || expanded ? (
         <div className="mt-3 flex justify-center">

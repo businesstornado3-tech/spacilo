@@ -121,9 +121,11 @@ export function SpaceFitEntry({
   return (
     <section
       aria-labelledby="spacefit-entry-heading"
-      className={cn("border-y border-border/70 bg-surface/60 py-9 sm:py-11", className)}
+      className={cn("py-10 sm:py-14", className)}
     >
-      <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+        <div className="ai-canvas overflow-hidden rounded-[2rem] border border-signal-soft px-4 py-12 shadow-card sm:px-10 sm:py-16">
+          <div className="mx-auto w-full max-w-5xl">
         <div className="text-center">
           <div className="inline-flex">
             <SpaceFitAiMark size="sm" />
@@ -135,6 +137,7 @@ export function SpaceFitEntry({
             Spacilo AI works out what fits — whether that's your belongings or your spare space.
           </p>
         </div>
+
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 sm:gap-5">
           <Reveal>
@@ -173,7 +176,10 @@ export function SpaceFitEntry({
         <p className="mt-4 text-center type-badge text-muted-foreground">
           All estimates you can review and correct before anything is booked.
         </p>
+          </div>
+        </div>
       </div>
     </section>
+
   );
 }

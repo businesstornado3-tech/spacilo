@@ -1,9 +1,10 @@
 /**
- * The homepage is the public SpacePlanner™ product experience.
+ * The homepage is the marketplace, with Spacilo AI SpacePlanner™ layered on
+ * top as the differentiator.
  *
- * These tests lock the six-chapter structure and the demonstrate-don't-explain
- * rule: no reintroduction of the long marketing stack, and every scene stays
- * data-driven so the same definitions can power the authenticated planner.
+ * These tests lock the three messages every visitor must receive (find storage
+ * nearby, earn from unused space, see it fit before booking), the section
+ * order, and the data-driven scene architecture.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -17,21 +18,30 @@ import {
   sceneLines,
   sceneSpace,
 } from "@/lib/spaceplanner";
+import {
+  DEMAND_BANDS,
+  EARNING_EXAMPLES,
+  SIZE_BANDS,
+  estimateEarnings,
+  formatEarningsRange,
+} from "@/lib/home/earnings-estimate";
 
 const homepage = readFileSync("src/routes/index.tsx", "utf8");
+const hero = readFileSync("src/components/spaceplanner/HeroSection.tsx", "utf8");
 
 describe("homepage structure", () => {
-  const chapters = [
+  const sections = [
     "HeroSection",
-    "AiTransformation",
+    "TwoSidedValue",
     "SpacePlannerDemo",
-    "WhySpacePlanner",
     "MarketplaceEntry",
+    "HostEarnings",
+    "WhySpacePlanner",
     "FinalCta",
   ];
 
-  it("renders exactly the six chapters, in order", () => {
-    const positions = chapters.map((chapter) => homepage.indexOf(`<${chapter} />`));
+  it("renders the marketplace-first sections, in order", () => {
+    const positions = sections.map((section) => homepage.indexOf(`<${section} />`));
     expect(positions.every((p) => p > -1)).toBe(true);
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
   });
@@ -41,13 +51,76 @@ describe("homepage structure", () => {
       "StorageNearYou",
       "SpaceFitStory",
       "BrandStory",
-      "HostCallout",
       "HostAiSection",
       "HostControl",
       "TrustSection",
       "LaunchArea",
     ]) {
       expect(homepage).not.toContain(retired);
+    }
+  });
+});
+
+describe("hero delivers the three messages", () => {
+  it("offers both marketplace journeys", () => {
+    expect(hero).toContain("Find storage");
+    expect(hero).toContain("List your space");
+    expect(hero).toContain("/find-storage");
+  });
+
+  it("names the AI differentiator and the host earning opportunity", () => {
+    expect(hero).toContain("SpacePlanner™");
+    expect(hero).toContain("could earn");
+    expect(hero).toContain("Earn passive income");
+  });
+
+  it("shows the transformation, not a static illustration", () => {
+    expect(hero).toContain("TransformationScene");
+  });
+});
+
+describe("host earnings estimator", () => {
+  it("formats indicative ranges", () => {
+    expect(formatEarningsRange({ min: 80, max: 250 })).toBe("£80–£250/month");
+  });
+
+  it("covers every space type with an ascending range", () => {
+    expect(EARNING_EXAMPLES.map((e) => e.kind)).toEqual([
+      "garage",
+      "spare-room",
+      "driveway",
+      "loft",
+    ]);
+    for (const example of EARNING_EXAMPLES) {
+      expect(example.range.min).toBeLessThan(example.range.max);
+    }
+  });
+
+  it("is deterministic and scales with size and demand", () => {
+    const base = estimateEarnings({ kind: "garage", size: "medium", demand: "town" });
+    expect(estimateEarnings({ kind: "garage", size: "medium", demand: "town" })).toEqual(base);
+
+    const bigger = estimateEarnings({ kind: "garage", size: "large", demand: "city" });
+    expect(bigger.min).toBeGreaterThan(base.min);
+    expect(bigger.max).toBeGreaterThan(base.max);
+
+    const smaller = estimateEarnings({ kind: "garage", size: "small", demand: "rural" });
+    expect(smaller.max).toBeLessThan(base.max);
+  });
+
+  it("never produces a zero or inverted range for any combination", () => {
+    for (const example of EARNING_EXAMPLES) {
+      for (const size of SIZE_BANDS) {
+        for (const demand of DEMAND_BANDS) {
+          const range = estimateEarnings({
+            kind: example.kind,
+            size: size.id,
+            demand: demand.id,
+          });
+          expect(range.min).toBeGreaterThan(0);
+          expect(range.max).toBeGreaterThan(range.min);
+        }
+      }
     }
   });
 });

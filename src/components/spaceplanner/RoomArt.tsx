@@ -136,7 +136,13 @@ function Parking() {
   return (
     <Frame>
       <rect x={0} y={40} width={160} height={34} className={FLOOR} />
-      <path d="M28 40v34M132 40v34" className="stroke-scene-accent" strokeWidth={3} fill="none" opacity={0.6} />
+      <path
+        d="M28 40v34M132 40v34"
+        className="stroke-scene-accent"
+        strokeWidth={3}
+        fill="none"
+        opacity={0.6}
+      />
       <rect x={44} y={46} width={72} height={22} rx={9} className="fill-scene-fabric" />
       <rect x={58} y={40} width={44} height={12} rx={6} className="fill-scene-fabric-dark" />
       <circle cx={58} cy={70} r={5} className="fill-scene-ink" />

@@ -16,11 +16,20 @@ export function AISummary({ plan }: { plan: SpacePlan }) {
   return (
     <div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <Metric label="Space utilisation" value={`${m.utilisation}%`} tone="signal" bar={m.utilisation} />
+        <Metric
+          label="Space utilisation"
+          value={`${m.utilisation}%`}
+          tone="signal"
+          bar={m.utilisation}
+        />
         <Metric label="Storage compatibility" value={`${m.compatibility}%`} bar={m.compatibility} />
         <Metric label="Retrieval ease" value={`${m.retrieval}%`} bar={m.retrieval} />
         <Metric label="Accessibility" value={`${m.accessibility}%`} bar={m.accessibility} />
-        <Metric label="Stacking efficiency" value={`${m.stackingEfficiency}%`} bar={m.stackingEfficiency} />
+        <Metric
+          label="Stacking efficiency"
+          value={`${m.stackingEfficiency}%`}
+          bar={m.stackingEfficiency}
+        />
         <Metric
           label="Estimated space left"
           value={`${m.remainingCapacity.toFixed(1)}m³`}
@@ -29,7 +38,11 @@ export function AISummary({ plan }: { plan: SpacePlan }) {
       </div>
 
       <dl className="mt-3 grid gap-3 sm:grid-cols-3">
-        <Fact label="Your belongings" value={`~${m.itemVolume.toFixed(1)}m³`} hint={`${plan.itemCount} items`} />
+        <Fact
+          label="Your belongings"
+          value={`~${m.itemVolume.toFixed(1)}m³`}
+          hint={`${plan.itemCount} items`}
+        />
         <Fact
           label="With packing allowance"
           value={`~${m.requiredVolume.toFixed(1)}m³`}
@@ -43,8 +56,16 @@ export function AISummary({ plan }: { plan: SpacePlan }) {
       </dl>
 
       <ul className="mt-3 flex flex-wrap gap-2">
-        <Check ok={m.everythingFits} yes="Everything fits on these estimates" no="Needs a larger space" />
-        <Check ok={m.fragileProtected} yes="Fragile items kept clear" no="Fragile items need care" />
+        <Check
+          ok={m.everythingFits}
+          yes="Everything fits on these estimates"
+          no="Needs a larger space"
+        />
+        <Check
+          ok={m.fragileProtected}
+          yes="Fragile items kept clear"
+          no="Fragile items need care"
+        />
         <Check ok={m.heavyItemsLow} yes="Heavy items on the floor" no="Heavy items stacked high" />
         <Check ok={m.walkwayPreserved} yes="Access strip kept clear" no="Access strip blocked" />
       </ul>
@@ -54,7 +75,10 @@ export function AISummary({ plan }: { plan: SpacePlan }) {
 
 export function AIExplanation({ plan }: { plan: SpacePlan }) {
   return (
-    <section aria-labelledby="sp-reasoning" className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+    <section
+      aria-labelledby="sp-reasoning"
+      className="rounded-2xl border border-border bg-card p-4 sm:p-5"
+    >
       <h3 id="sp-reasoning" className="flex items-center gap-2 type-h4">
         <Info className="size-4 text-signal-soft-foreground" aria-hidden="true" />
         Why Spacilo AI planned it this way
@@ -126,7 +150,9 @@ function Check({ ok, yes, no }: { ok: boolean; yes: string; no: string }) {
     <li
       className={cn(
         "rounded-full px-3 py-1 type-badge",
-        ok ? "bg-success-soft text-success-soft-foreground" : "bg-warning-soft text-warning-soft-foreground",
+        ok
+          ? "bg-success-soft text-success-soft-foreground"
+          : "bg-warning-soft text-warning-soft-foreground",
       )}
     >
       {ok ? yes : no}

@@ -108,8 +108,18 @@ function BikeArt() {
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      <path d="M40 26h14" className="fill-none stroke-scene-ink" strokeWidth={4.5} strokeLinecap="round" />
-      <path d="M66 26v12" className="fill-none stroke-scene-ink" strokeWidth={4.5} strokeLinecap="round" />
+      <path
+        d="M40 26h14"
+        className="fill-none stroke-scene-ink"
+        strokeWidth={4.5}
+        strokeLinecap="round"
+      />
+      <path
+        d="M66 26v12"
+        className="fill-none stroke-scene-ink"
+        strokeWidth={4.5}
+        strokeLinecap="round"
+      />
     </g>
   );
 }
@@ -142,10 +152,19 @@ function MattressArt() {
     <g>
       <Outline x={4} y={18} w={92} h={64} r={12} className={FABRIC} />
       {[34, 50, 66].map((y) => (
-        <path key={y} d={`M12 ${y}h76`} className={LINE} strokeWidth={1.4} fill="none" opacity={0.7} />
+        <path
+          key={y}
+          d={`M12 ${y}h76`}
+          className={LINE}
+          strokeWidth={1.4}
+          fill="none"
+          opacity={0.7}
+        />
       ))}
       {[26, 50, 74].map((x) =>
-        [34, 50, 66].map((y) => <circle key={`${x}-${y}`} cx={x} cy={y} r={2} className={FABRIC_DARK} />),
+        [34, 50, 66].map((y) => (
+          <circle key={`${x}-${y}`} cx={x} cy={y} r={2} className={FABRIC_DARK} />
+        )),
       )}
     </g>
   );
@@ -211,8 +230,18 @@ function SportsArt() {
       <rect x={6} y={44} width={88} height={12} className={FABRIC_DARK} opacity={0.5} />
       <circle cx={30} cy={50} r={12} className={METAL} />
       <path d="M18 50h24M30 38v24" className={LINE} strokeWidth={1.6} fill="none" />
-      <path d="M62 34l18 32" className="fill-none stroke-scene-accent" strokeWidth={5} strokeLinecap="round" />
-      <path d="M72 32l14 28" className="fill-none stroke-scene-accent" strokeWidth={5} strokeLinecap="round" />
+      <path
+        d="M62 34l18 32"
+        className="fill-none stroke-scene-accent"
+        strokeWidth={5}
+        strokeLinecap="round"
+      />
+      <path
+        d="M72 32l14 28"
+        className="fill-none stroke-scene-accent"
+        strokeWidth={5}
+        strokeLinecap="round"
+      />
     </g>
   );
 }

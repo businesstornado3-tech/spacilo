@@ -1,8 +1,8 @@
 /**
- * Chapter 5 — the marketplace.
+ * Marketplace search entry.
  *
- * The planner is the product; the marketplace is where a plan becomes a real
- * space. One proposition, one search, nothing else.
+ * Follows the planner section, so the copy carries the visitor across: they
+ * have a layout, now they need the space.
  */
 import { useNavigate } from "@tanstack/react-router";
 
@@ -16,15 +16,16 @@ export function MarketplaceEntry() {
   return (
     <section
       aria-labelledby="marketplace-heading"
-      className="border-y border-border/70 bg-surface/60 py-12 sm:py-16"
+      className="border-y border-border/70 bg-surface/60 py-12 sm:py-14"
     >
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-12">
         <div className="min-w-0">
-          <h2 id="marketplace-heading" className="max-w-[16ch] type-h1">
-            Then find the space nearby.
+          <h2 id="marketplace-heading" className="max-w-[18ch] type-h1">
+            Now find the perfect space nearby.
           </h2>
           <p className="mt-3 max-w-md type-body text-muted-foreground">
-            Garages, lofts and spare rooms from neighbours — with the plan you just made.
+            Your belongings have an optimised layout. Next: trusted garages, lofts and spare rooms
+            from neighbours near you.
           </p>
 
           <div className="mt-6 rounded-3xl border border-border bg-card p-4 shadow-card sm:p-5">

@@ -7,8 +7,8 @@
  */
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { CATALOGUE } from "@/lib/spaceplanner/catalogue";
-import { SPACES } from "@/lib/spaceplanner/spaces";
+import { CATALOGUE_ITEMS } from "@/lib/spaceplanner/catalogue";
+import { DEMO_SPACES } from "@/lib/spaceplanner/spaces";
 import type { InventoryLine, StorageSpace, VisionPhoto } from "./contracts";
 import { bandFor, combineConfidence } from "./confidence";
 import { IntelligenceError, toIntelligenceError } from "./errors";
@@ -23,10 +23,10 @@ import {
   supports,
 } from "./registry";
 
-const space: StorageSpace = SPACES[0]!;
+const space: StorageSpace = DEMO_SPACES[0]!;
 const lines: InventoryLine[] = [
-  { item: CATALOGUE[0]!, quantity: 4 },
-  { item: CATALOGUE[1]!, quantity: 1 },
+  { item: CATALOGUE_ITEMS[0]!, quantity: 4 },
+  { item: CATALOGUE_ITEMS[1]!, quantity: 1 },
 ];
 
 const photo = (id: string): VisionPhoto => ({
@@ -59,10 +59,8 @@ describe("registry", () => {
     registerProvider("packing", {
       ...activeProviders().packing,
       id: "test-packing",
-      async pack(inputLines, inputSpace, request) {
-        return activeProviders().packing.pack === undefined
-          ? before
-          : { ...before, meta: { ...before.meta, provider: "test-packing" } };
+      async pack() {
+        return { ...before, meta: { ...before.meta, provider: "test-packing" } };
       },
     });
     const after = await packInventory(lines, space);

@@ -96,6 +96,7 @@ export function LayoutSimulation({
             >
               Walkway
             </text>
+            ) : null}
           </g>
         ) : null}
 

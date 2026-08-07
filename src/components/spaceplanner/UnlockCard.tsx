@@ -37,7 +37,9 @@ export function UnlockCard() {
       </ul>
 
       <Button asChild size="lg" className="mt-5 w-full sm:w-auto">
-        <Link to="/signup">Create free account</Link>
+        <Link to="/signup" search={{ mode: "renter" }}>
+          Create free account
+        </Link>
       </Button>
     </section>
   );

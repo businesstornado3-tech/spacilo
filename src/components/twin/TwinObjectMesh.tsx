@@ -51,9 +51,10 @@ function damp(current: number, target: number, lambda: number, delta: number): n
   return current + (target - current) * (1 - Math.exp(-lambda * delta));
 }
 
-function shortestAngle(from: number, to: number): number {
+/** Signed smallest rotation from `from` to `to`, in radians. */
+function shortestDelta(from: number, to: number): number {
   const twoPi = Math.PI * 2;
-  return from + (((to - from) % twoPi) + twoPi * 1.5) % twoPi - Math.PI;
+  return (((to - from + Math.PI) % twoPi) + twoPi) % twoPi - Math.PI;
 }
 
 export function TwinObjectMesh({
@@ -93,7 +94,8 @@ export function TwinObjectMesh({
     node.position.z = damp(node.position.z, position.z, lambda, step);
     // Vertical motion is a touch snappier so items never appear to float.
     node.position.y = damp(node.position.y, position.y, lambda * 1.4, step);
-    node.rotation.y = damp(shortestAngle(node.rotation.y, targetRot), targetRot, lambda, step);
+    const unwrapped = node.rotation.y + shortestDelta(node.rotation.y, targetRot);
+    node.rotation.y = damp(node.rotation.y, unwrapped, lambda, step);
   });
 
   const handleClick = onSelect

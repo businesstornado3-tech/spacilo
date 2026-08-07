@@ -31,7 +31,10 @@ export const mockPricingProvider: PricingProvider = {
       spaceType: input.spaceType,
       usableVolumeM3: input.volumeM3,
       accessType: input.access ?? null,
-    } as Parameters<typeof suggestPrice>[0]);
+      moistureCondition: null,
+      temperatureCondition: null,
+      features: null,
+    });
 
     if (suggestion.suggestedMonthlyPence === null) {
       throw new IntelligenceError("low_confidence", suggestion.notes[0]);

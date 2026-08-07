@@ -147,8 +147,8 @@ describe("physics rules", () => {
       ...flat,
       id: "stacked",
       transform: {
-        ...base.transform,
-        position: { ...base.transform.position, y: base.size.heightM },
+        ...flat.transform,
+        position: { ...flat.transform.position, y: flat.size.heightM },
       },
     };
     expect(supports(flat, stacked)).toBe(true);

@@ -37,7 +37,7 @@ describe("homepage structure", () => {
     "SpacePlannerDemo",
     "NearbySpaces",
     "MeetSpaciloAI",
-    "HostEarnings",
+    "SpaceValueSection",
     "WhySpacePlanner",
     "FinalCta",
   ];

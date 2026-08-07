@@ -17,12 +17,15 @@ import { InventoryBuilder } from "@/components/spaceplanner/InventoryBuilder";
 import { StorageSelector } from "@/components/spaceplanner/StorageSelector";
 import { AIThinkingTimeline } from "@/components/spaceplanner/AIThinkingTimeline";
 import { LayoutSimulation } from "@/components/spaceplanner/LayoutSimulation";
+import { PlanScene } from "@/components/spaceplanner/PlanScene";
+import { ObjectIllustration } from "@/components/spaceplanner/ObjectArt";
 import { ComparisonSlider } from "@/components/spaceplanner/ComparisonSlider";
 import { AIExplanation, AISummary } from "@/components/spaceplanner/AISummary";
 import { DEMO_ANCHOR_ID, onStartDemo } from "@/components/spaceplanner/demo-bus";
 import { track } from "@/lib/analytics/tracker";
 import {
   CATALOGUE_BY_ID,
+  GARAGE_STORY,
   INVENTORY_PRESETS,
   SPACE_BY_ID,
   itemVolume,
@@ -89,6 +92,12 @@ export function SpacePlannerDemo() {
       }),
     [],
   );
+
+  /** Micro-interaction: drop or tap one more object and the plan recalculates. */
+  const addOne = React.useCallback((itemId: string) => {
+    setQuantities((current) => ({ ...current, [itemId]: (current[itemId] ?? 0) + 1 }));
+    track("spaceplanner_demo_object_added", { props: { item: itemId } });
+  }, []);
 
   const onThinkingComplete = React.useCallback(() => {
     setPhase("plan");
@@ -214,12 +223,16 @@ export function SpacePlannerDemo() {
                     </div>
 
                     {view === "plan" ? (
-                      <LayoutSimulation
-                        key={`${space.id}-${itemCount}`}
-                        space={space}
-                        pack={plan.after}
-                        title="After — optimised by Spacilo AI"
-                      />
+                      <>
+                        <PlanScene
+                          space={space}
+                          pack={plan.after}
+                          explain
+                          onAdd={addOne}
+                          label={`Optimised plan view of the ${space.name.toLowerCase()}`}
+                        />
+                        <AddTray onAdd={addOne} />
+                      </>
                     ) : (
                       <ComparisonSlider plan={plan} />
                     )}
@@ -318,6 +331,40 @@ function EmptyState({ onPreset }: { onPreset: () => void }) {
       <Button variant="secondary" className="mt-4" onClick={onPreset}>
         Load the “{DEFAULT_PRESET.name}” example
       </Button>
+    </div>
+  );
+}
+
+/** Extra belongings a visitor can drag (or tap) into the finished plan. */
+function AddTray({ onAdd }: { onAdd: (itemId: string) => void }) {
+  const items = GARAGE_STORY.addable
+    .map((id) => CATALOGUE_BY_ID.get(id))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+
+  return (
+    <div className="mt-4 rounded-2xl border border-dashed border-border-strong bg-surface p-3">
+      <p className="type-label">Add one more thing</p>
+      <p className="mt-0.5 type-body-sm text-muted-foreground">
+        Drag an object into the plan, or tap it — Spacilo AI replans instantly.
+      </p>
+      <ul className="mt-3 flex flex-wrap gap-2">
+        {items.map((item) => (
+          <li key={item.id}>
+            <button
+              type="button"
+              draggable
+              onDragStart={(event) => event.dataTransfer.setData("text/plain", item.id)}
+              onClick={() => onAdd(item.id)}
+              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card px-3 type-label transition-colors hover:border-primary hover:bg-primary-soft/40"
+            >
+              <span className="size-6 shrink-0">
+                <ObjectIllustration icon={item.icon} />
+              </span>
+              {item.name}
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -123,8 +123,8 @@ export async function runCapability<T>(
       provider,
       at: Date.now(),
       durationMs,
-      confidence: options.confidence?.(result),
-      detail: options.detail?.(result),
+      ...(options.confidence ? { confidence: options.confidence(result) } : {}),
+      ...(options.detail ? { detail: options.detail(result) } : {}),
     });
     return result;
   } catch (error) {

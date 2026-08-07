@@ -28,11 +28,10 @@ export function HeroSection() {
 
           <h1 className="mt-4 max-w-[15ch] type-hero">Store Smarter with AI.</h1>
 
-          <p className="mt-4 max-w-lg type-body text-muted-foreground">
-            Experience AI-assisted storage planning before you create an account. Choose your
-            belongings, choose a space, and watch Spacilo AI build an intelligent storage plan in
-            seconds.
+          <p className="mt-4 max-w-md type-body text-muted-foreground">
+            Watch Spacilo AI organise a real garage — then try it on yours.
           </p>
+
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Button
@@ -71,9 +70,9 @@ export function HeroSection() {
           </button>
 
           <p className="mt-6 max-w-md type-badge text-muted-foreground">
-            No account, no upload and no card needed to try it. Spacilo AI produces estimates you
-            review — never guarantees.
+            No account needed. Spacilo AI produces estimates you review.
           </p>
+
         </div>
 
         <HeroAnimation className="lg:sticky lg:top-24" />

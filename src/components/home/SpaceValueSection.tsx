@@ -222,9 +222,7 @@ function Tab({
       id={`earnings-tab-${id}`}
       aria-selected={active}
       aria-controls={`earnings-panel-${id}`}
-      tabIndex={active ? 0 : -1}
       onClick={onSelect}
-      onFocus={onSelect}
       className={cn(
         "inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 type-label transition-colors",
         active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted",

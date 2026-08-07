@@ -26,10 +26,11 @@ export function MarketplaceEntry() {
       />
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 pb-10 pt-6 sm:px-6 sm:pb-14 sm:pt-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start lg:gap-12 lg:pb-16 lg:pt-10">
         <div className="animate-fade min-w-0">
-          <h1 className="max-w-[14ch] type-hero">
+          <h2 className="max-w-[14ch] type-hero">
             <span className="block">Space nearby.</span>
             <span className="block">Income at home.</span>
-          </h1>
+          </h2>
+
 
           <p className="mt-4 max-w-md type-body text-muted-foreground">
             Find trusted neighbourhood storage — or earn from the space you're not using.

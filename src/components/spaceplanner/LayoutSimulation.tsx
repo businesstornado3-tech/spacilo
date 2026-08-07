@@ -1,15 +1,17 @@
 /**
- * Plan-view rendering of a packed space.
+ * Illustrated plan view of a packed space.
  *
- * The geometry is the engine's, unaltered: 1 metre = 100 SVG units. Items move
- * between the naive and optimised passes with a compositor-only transform, so
- * the "watch it reorganise" moment stays smooth on mobile.
+ * The geometry is the engine's, unaltered: 1 metre = 100 SVG units. Every
+ * placement is drawn as the real object it represents — bike, boxes, mattress,
+ * wardrobe — on a warm timber floor, so a visitor recognises their own garage
+ * rather than reading a CAD drawing. Items move between the naive and
+ * optimised passes with a compositor-only transform.
  */
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { iconFor } from "@/components/spaceplanner/icons";
-import type { PackResult, StorageSpace } from "@/lib/spaceplanner";
+import { SceneObject } from "@/components/spaceplanner/ObjectArt";
+import type { PackResult, StorageSpace, IconKey } from "@/lib/spaceplanner";
 
 const SCALE = 100;
 
@@ -38,18 +40,20 @@ export function LayoutSimulation({
     <figure className={cn("min-w-0", className)}>
       <svg
         viewBox={`-10 -10 ${w + 20} ${d + 20}`}
-        className="aspect-4/3 w-full rounded-2xl bg-surface"
+        className="aspect-4/3 w-full rounded-2xl bg-scene-wall"
         preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label={`${title}: plan view of a ${space.name} with ${pack.placements.length} placed groups`}
       >
         <defs>
-          <pattern id="sp-grid" width="50" height="50" patternUnits="userSpaceOnUse">
-            <path d="M50 0H0V50" fill="none" className="stroke-border" strokeWidth={1} />
+          <pattern id="sp-boards" width="200" height="46" patternUnits="userSpaceOnUse">
+            <rect width="200" height="46" className="fill-scene-floor" />
+            <path d="M0 46h200" className="stroke-scene-floor-line" strokeWidth={1.4} fill="none" />
+            <path d="M60 0v46M150 0v46" className="stroke-scene-floor-line" strokeWidth={1.2} fill="none" />
           </pattern>
         </defs>
 
-        <rect x={0} y={0} width={w} height={d} rx={12} fill="url(#sp-grid)" />
+        <rect x={0} y={0} width={w} height={d} rx={12} fill="url(#sp-boards)" />
         <rect
           x={0}
           y={0}
@@ -57,8 +61,8 @@ export function LayoutSimulation({
           height={d}
           rx={12}
           fill="none"
-          className="stroke-border-strong"
-          strokeWidth={2.5}
+          className="stroke-scene-wood-dark"
+          strokeWidth={3}
         />
 
         {pack.walkway ? (
@@ -68,16 +72,17 @@ export function LayoutSimulation({
               y={pack.walkway.y * SCALE}
               width={pack.walkway.w * SCALE}
               height={pack.walkway.d * SCALE}
-              className="fill-signal-soft opacity-70"
+              rx={10}
+              className="fill-primary-soft opacity-80"
             />
             <text
               x={(pack.walkway.x + pack.walkway.w / 2) * SCALE}
               y={(pack.walkway.y + pack.walkway.d / 2) * SCALE + 6}
               textAnchor="middle"
-              className="fill-signal-soft-foreground"
+              className="fill-primary-soft-foreground"
               style={{ fontSize: 18, fontWeight: 600 }}
             >
-              Access
+              Walkway
             </text>
           </g>
         ) : null}
@@ -88,8 +93,8 @@ export function LayoutSimulation({
           y1={d}
           x2={(space.width / 2 + space.doorWidth / 2) * SCALE}
           y2={d}
-          className="stroke-signal"
-          strokeWidth={7}
+          className="stroke-primary"
+          strokeWidth={8}
           strokeLinecap="round"
         />
 
@@ -108,7 +113,6 @@ export function LayoutSimulation({
             units={p.units}
             level={p.level}
             fragile={p.fragile}
-            heavy={p.weight === "heavy"}
           />
         ))}
       </svg>
@@ -140,7 +144,6 @@ function PlacementShape({
   units,
   level,
   fragile,
-  heavy,
 }: {
   index: number;
   animate: boolean;
@@ -149,101 +152,85 @@ function PlacementShape({
   y: number;
   w: number;
   h: number;
-  icon: Parameters<typeof iconFor>[0];
+  icon: IconKey;
   label: string;
   units: number;
   level: number;
   fragile: boolean;
-  heavy: boolean;
 }) {
-  const Icon = iconFor(icon);
-  const compact = Math.min(w, h) < 34;
+  const compact = Math.min(w, h) < 40;
   const [entered, setEntered] = React.useState(!animate);
 
   React.useEffect(() => {
     if (!animate) return setEntered(true);
-    const id = window.setTimeout(() => setEntered(true), 40 + index * 55);
+    const id = window.setTimeout(() => setEntered(true), 40 + index * 70);
     return () => window.clearTimeout(id);
   }, [animate, index]);
 
   return (
     <g
       style={{ transform: `translate(${x}px, ${y}px)` }}
-      className="transition-transform duration-500 ease-out motion-reduce:transition-none"
+      className="transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
     >
       <g
         style={{ transformOrigin: `${w / 2}px ${h / 2}px` }}
         className={cn(
-          "transition-[opacity,transform] duration-500 ease-out motion-reduce:transition-none",
+          "transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
           entered ? "scale-100 opacity-100" : "scale-90 opacity-0 motion-reduce:opacity-100",
         )}
       >
+        {/* soft ground shadow so objects sit on the floor */}
+        <rect
+          x={2.5}
+          y={4}
+          width={Math.max(w - 5, 4)}
+          height={Math.max(h - 5, 4)}
+          rx={10}
+          className="fill-scene-ink opacity-[0.09]"
+        />
         <rect
           width={w}
           height={h}
-          rx={8}
+          rx={10}
           className={cn(
-            fragile
-              ? "fill-warning-soft stroke-warning"
-              : heavy
-                ? "fill-secondary stroke-border-strong"
-                : "fill-primary-soft stroke-primary/45",
+            "stroke-scene-line",
+            level > 0 ? "fill-scene-wall opacity-95" : "fill-scene-wall",
           )}
-          strokeWidth={1.75}
+          strokeWidth={1.5}
         />
+
+        <SceneObject icon={icon} x={0} y={0} w={w} h={showLabel && !compact ? h - 14 : h} />
+
         {level > 0 ? (
           <rect
-            x={4}
-            y={4}
-            width={Math.max(w - 8, 4)}
-            height={Math.max(h - 8, 4)}
-            rx={6}
+            x={5}
+            y={5}
+            width={Math.max(w - 10, 4)}
+            height={Math.max(h - 10, 4)}
+            rx={8}
             fill="none"
-            className="stroke-foreground/25"
-            strokeDasharray="6 5"
-            strokeWidth={1.25}
+            className="stroke-primary/45"
+            strokeDasharray="7 6"
+            strokeWidth={1.5}
           />
         ) : null}
 
-        {!compact ? (
-          <>
-            <Icon
-              x={w / 2 - 11}
-              y={h / 2 - (showLabel ? 20 : 11)}
-              width={22}
-              height={22}
-              className="text-foreground/70"
-              aria-hidden="true"
-            />
-            {showLabel ? (
-              <>
-                <text
-                  x={w / 2}
-                  y={h / 2 + 12}
-                  textAnchor="middle"
-                  className="fill-foreground"
-                  style={{ fontSize: Math.min(15, Math.max(9, w / 6)), fontWeight: 600 }}
-                >
-                  {units > 1 ? `${units}× ` : ""}
-                  {label}
-                </text>
-                {level > 0 ? (
-                  <text
-                    x={w / 2}
-                    y={h / 2 + 28}
-                    textAnchor="middle"
-                    className="fill-muted-foreground"
-                    style={{ fontSize: 13 }}
-                  >
-                    stacked
-                  </text>
-                ) : null}
-              </>
-            ) : null}
-          </>
-        ) : (
-          <circle cx={w / 2} cy={h / 2} r={Math.min(w, h) / 5} className="fill-foreground/25" />
-        )}
+        {fragile ? (
+          <circle cx={w - 11} cy={11} r={6} className="fill-warning-soft stroke-warning" strokeWidth={1.4} />
+        ) : null}
+
+        {showLabel && !compact ? (
+          <text
+            x={w / 2}
+            y={h - 7}
+            textAnchor="middle"
+            className="fill-foreground"
+            style={{ fontSize: Math.min(15, Math.max(10, w / 7)), fontWeight: 600 }}
+          >
+            {units > 1 ? `${units}× ` : ""}
+            {label}
+          </text>
+        ) : null}
       </g>
     </g>
   );

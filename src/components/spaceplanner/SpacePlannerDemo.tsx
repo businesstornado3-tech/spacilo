@@ -113,18 +113,14 @@ export function SpacePlannerDemo() {
           <h2 id="spaceplanner-heading" className="mt-3 type-h1">
             Plan a real space in three steps.
           </h2>
-          <p className="mt-3 type-body text-muted-foreground">
-            Pick what you need to store, pick where it might go, and Spacilo AI produces an
-            estimated storage plan — what fits, what stacks, what stays reachable and how much room
-            is left over.
-          </p>
         </header>
 
-        <ol className="mt-8 flex flex-wrap gap-2" aria-label="Demonstration steps">
-          <StepChip index={1} label="Your belongings" icon={Boxes} done={itemCount > 0} />
-          <StepChip index={2} label="Your space" icon={Warehouse} done={itemCount > 0} />
-          <StepChip index={3} label="Your plan" icon={Sparkles} done={phase === "plan"} />
+        <ol className="mt-6 flex flex-wrap gap-2" aria-label="Demonstration steps">
+          <StepChip index={1} label="Choose your belongings" icon={Boxes} done={itemCount > 0} />
+          <StepChip index={2} label="Pick a storage space" icon={Warehouse} done={itemCount > 0} />
+          <StepChip index={3} label="Watch it organise" icon={Sparkles} done={phase === "plan"} />
         </ol>
+
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.02fr)] lg:items-start">
           <div className="min-w-0 rounded-3xl border border-border bg-card p-4 shadow-card sm:p-5">
@@ -241,12 +237,12 @@ export function SpacePlannerDemo() {
                 <div className="mt-4">
                   <AIExplanation plan={plan} />
                 </div>
-                <div className="mt-4 rounded-3xl border border-signal/30 bg-signal-soft/40 p-4 sm:p-5">
-                  <p className="type-card-title">Ready to plan your own belongings?</p>
+                <div className="mt-4 rounded-3xl border border-primary/30 bg-primary-soft/40 p-4 sm:p-5">
+                  <p className="type-card-title">Ready to see your own storage plan?</p>
                   <p className="mt-1 type-body-sm text-muted-foreground">
-                    The real Spacilo AI works from your photos instead of a demo catalogue, then
-                    matches you to spaces nearby that could take it.
+                    Spacilo AI works from your own photos, then matches spaces nearby.
                   </p>
+
                   <div className="mt-4">
                     <ScanStuffButton from="homepage_planner_result">
                       Try it on my own things

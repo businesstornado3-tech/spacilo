@@ -87,15 +87,15 @@ export function LayoutSimulation({
               className="fill-primary-soft opacity-80"
             />
             {showLabels ? (
-            <text
-              x={(pack.walkway.x + pack.walkway.w / 2) * SCALE}
-              y={(pack.walkway.y + pack.walkway.d / 2) * SCALE + 6}
-              textAnchor="middle"
-              className="fill-primary-soft-foreground"
-              style={{ fontSize: 18, fontWeight: 600 }}
-            >
-              Walkway
-            </text>
+              <text
+                x={(pack.walkway.x + pack.walkway.w / 2) * SCALE}
+                y={(pack.walkway.y + pack.walkway.d / 2) * SCALE + 6}
+                textAnchor="middle"
+                className="fill-primary-soft-foreground"
+                style={{ fontSize: 18, fontWeight: 600 }}
+              >
+                Walkway
+              </text>
             ) : null}
           </g>
         ) : null}

@@ -76,7 +76,9 @@ describe("hero delivers the three messages", () => {
   });
 
   it("shows the transformation, not a static illustration", () => {
-    expect(hero).toContain("HeroGarageAnimation");
+    expect(hero).toContain("HeroVisual");
+    const visual = readFileSync("src/components/spaceplanner/HeroVisual.tsx", "utf8");
+    expect(visual).toContain("HeroGarageAnimation");
   });
 });
 

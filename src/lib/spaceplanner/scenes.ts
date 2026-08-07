@@ -82,13 +82,13 @@ export interface NarrationBeat {
  * engine performs it — never a decorative loading state.
  */
 export const TRANSFORMATION_BEATS: NarrationBeat[] = [
-  { id: "start", label: "Your garage today", ms: 2600, organised: false },
-  { id: "analyse", label: "Analysing belongings…", ms: 1300, organised: false },
-  { id: "dimensions", label: "Calculating dimensions…", ms: 1200, organised: false },
-  { id: "unused", label: "Detecting unused storage…", ms: 1200, organised: false },
-  { id: "stacking", label: "Checking safe stacking…", ms: 1200, organised: false },
-  { id: "access", label: "Optimising access…", ms: 1200, organised: false },
-  { id: "layout", label: "Recommended layout", ms: 4200, organised: true },
+  { id: "start", label: "Your garage today", ms: 2400, organised: false },
+  { id: "corners", label: "Looking for unused corners…", ms: 1100, organised: false },
+  { id: "walkway", label: "Keeping your walkway clear…", ms: 1100, organised: false },
+  { id: "fragile", label: "Protecting fragile belongings…", ms: 1100, organised: false },
+  { id: "vertical", label: "Optimising vertical storage…", ms: 1100, organised: false },
+  { id: "placement", label: "Calculating best placement…", ms: 1100, organised: false },
+  { id: "layout", label: "Finished", ms: 4600, organised: true },
 ];
 
 /* -------------------------------------------------------------------------- */

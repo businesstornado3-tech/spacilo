@@ -22,6 +22,8 @@ export * from "./catalogue";
 export * from "./spaces";
 export * from "./stages";
 export * from "./scenes";
+export * from "./capabilities";
+export * from "./score";
 export { computeMetrics, totalItemVolume, PACKING_ALLOWANCE } from "./metrics";
 export { packNaive, packOptimised } from "./pack";
 

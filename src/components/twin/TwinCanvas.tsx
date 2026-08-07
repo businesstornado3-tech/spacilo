@@ -62,7 +62,7 @@ export default function TwinCanvas({
    */
   const fitted = useMemo(() => {
     const { widthM: w, depthM: d, heightM: h } = scene.room;
-    const target = camera.target;
+    const target = { x: w / 2, y: h * 0.34, z: d / 2 };
     const dir = {
       x: camera.position.x - target.x,
       y: camera.position.y - target.y,
@@ -70,7 +70,7 @@ export default function TwinCanvas({
     };
     const length = Math.hypot(dir.x, dir.y, dir.z) || 1;
     const radius = Math.hypot(w, d, h) / 2;
-    const distance = (radius / Math.tan((camera.preset.fov * Math.PI) / 360)) * 0.82;
+    const distance = (radius / Math.tan((camera.preset.fov * Math.PI) / 360)) * 0.95;
     return [
       target.x + (dir.x / length) * distance,
       Math.max(h * 0.55, target.y + (dir.y / length) * distance),
@@ -92,7 +92,7 @@ export default function TwinCanvas({
         gl.domElement.addEventListener("webglcontextlost", () => onError?.());
       }}
     >
-      <color attach="background" args={["#ff00ff"]} />
+      <color attach="background" args={["#f7f5f1"]} />
       <fog attach="fog" args={["#f4f1ec", 8, 26]} />
 
       {/* Warm key light through the opening, cool fill from the back wall. */}

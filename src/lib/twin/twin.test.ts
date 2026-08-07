@@ -135,7 +135,14 @@ describe("physics rules", () => {
     const plan = samplePlan();
     const [lower] = objectsFromPack(plan.after, plan.space);
     const base = lower!;
-    const flat = { ...base, transform: { ...base.transform, rotationDeg: 0 } };
+    const flat = {
+      ...base,
+      transform: {
+        ...base.transform,
+        rotationDeg: 0,
+        position: { ...base.transform.position, y: 0 },
+      },
+    };
     const stacked = {
       ...flat,
       id: "stacked",

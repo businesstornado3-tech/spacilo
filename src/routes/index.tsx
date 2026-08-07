@@ -55,8 +55,10 @@ function HomePage() {
     <MarketingLayout>
       <HeroSection />
       <SpaceFitEntry />
-      <SpacePlannerDemo />
       <MarketplaceEntry />
+      <SpacePlannerDemo />
+      <NearbySpaces />
+      <MeetSpaciloAI />
       <HostEarnings />
       <WhySpacePlanner />
       <FinalCta />

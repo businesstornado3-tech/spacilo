@@ -8,11 +8,10 @@
  * preview of the real product rather than a scripted mock-up.
  */
 import * as React from "react";
-import { ArrowRight, Boxes, RotateCcw, Sparkles, Warehouse } from "lucide-react";
+import { ArrowRight, Boxes, RotateCcw, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ScanStuffButton } from "@/components/home/SpaceFitEntry";
 import { InventoryBuilder } from "@/components/spaceplanner/InventoryBuilder";
 import { StorageSelector } from "@/components/spaceplanner/StorageSelector";
 import { AIThinkingTimeline } from "@/components/spaceplanner/AIThinkingTimeline";
@@ -124,13 +123,8 @@ export function SpacePlannerDemo() {
           </span>
         </header>
 
-        <ol className="mt-4 flex flex-wrap gap-2" aria-label="Demonstration steps">
-          <StepChip index={1} label="Choose belongings" icon={Boxes} done={itemCount > 0} />
-          <StepChip index={2} label="Choose storage type" icon={Warehouse} done={itemCount > 0} />
-          <StepChip index={3} label="Watch AI organise" icon={Sparkles} done={phase === "plan"} />
-        </ol>
+        <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,0.7fr)] lg:items-start">
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,0.75fr)] lg:items-start">
           <div className="min-w-0 lg:order-2">
             <div className="rounded-3xl border border-border bg-card p-4 shadow-card">
               <h3 className="type-h4">What are you storing?</h3>
@@ -249,54 +243,15 @@ export function SpacePlannerDemo() {
             </div>
 
             {phase === "plan" && plan ? (
-              <>
-                <div className="mt-4">
-                  <AIExplanation plan={plan} />
-                </div>
-                <div className="mt-4 rounded-3xl border border-primary/30 bg-primary-soft/40 p-4 sm:p-5">
-                  <p className="type-card-title">Ready to see your own storage plan?</p>
-                  <p className="mt-1 type-body-sm text-muted-foreground">
-                    Spacilo AI works from your own photos, then matches spaces nearby.
-                  </p>
-
-                  <div className="mt-4">
-                    <ScanStuffButton from="homepage_planner_result">
-                      Try it on my own things
-                    </ScanStuffButton>
-                  </div>
-                </div>
-              </>
+              <div className="mt-4">
+                <AIExplanation plan={plan} />
+              </div>
             ) : null}
+
           </div>
         </div>
       </div>
     </section>
-  );
-}
-
-function StepChip({
-  index,
-  label,
-  icon: Icon,
-  done,
-}: {
-  index: number;
-  label: string;
-  icon: typeof Boxes;
-  done: boolean;
-}) {
-  return (
-    <li
-      className={cn(
-        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 type-badge transition-colors",
-        done
-          ? "border-signal/50 bg-signal-soft/50 text-signal-soft-foreground"
-          : "border-border bg-card text-muted-foreground",
-      )}
-    >
-      <Icon className="size-3.5" aria-hidden="true" />
-      <span className="tabular-nums">{index}.</span> {label}
-    </li>
   );
 }
 

@@ -58,10 +58,12 @@ function space(id: string, width: number, depth: number, height: number): Storag
     width,
     depth,
     height,
+    door: "front",
     doorWidth: 2.2,
-    doorHeight: 2,
+    blurb: "Test space",
   };
 }
+
 
 function listing(overrides: Partial<AdvisorListing> = {}): AdvisorListing {
   return {

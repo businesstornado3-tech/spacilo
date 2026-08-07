@@ -9,6 +9,7 @@
  * touch anything.
  */
 import * as React from "react";
+import { Camera, PoundSterling, Zap } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { EarningsEstimator } from "@/components/home/HostEarnings";
@@ -25,9 +26,10 @@ import {
   type EarningsTabId,
 } from "@/lib/home/earnings-tab-rotation";
 
-const TAB_LABELS: Record<EarningsTabId, { icon: string; label: string }> = {
-  quick: { icon: "⚡", label: "Quick estimate" },
-  scan: { icon: "📷", label: "AI space scan" },
+/** Lucide glyphs rather than emoji: identical rendering on every device. */
+const TAB_LABELS: Record<EarningsTabId, { Icon: typeof Zap; label: string }> = {
+  quick: { Icon: Zap, label: "Quick estimate" },
+  scan: { Icon: Camera, label: "AI space scan" },
 };
 
 export function SpaceValueSection() {
@@ -83,7 +85,7 @@ export function SpaceValueSection() {
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <header className="max-w-xl">
           <p className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 type-badge text-muted-foreground">
-            <span aria-hidden="true">💷</span> Spacilo Earnings Estimator
+            <PoundSterling className="size-3.5" aria-hidden="true" /> Spacilo Earnings Estimator
           </p>
           <h2 id="space-value-heading" className="mt-3 type-h2">
             How much could your space earn?
@@ -106,7 +108,10 @@ export function SpaceValueSection() {
               active={route === id}
               onSelect={() => selectTab(id)}
             >
-              <span aria-hidden="true">{TAB_LABELS[id].icon}</span>
+              {React.createElement(TAB_LABELS[id].Icon, {
+                className: "size-4",
+                "aria-hidden": true,
+              })}
               {TAB_LABELS[id].label}
             </Tab>
           ))}

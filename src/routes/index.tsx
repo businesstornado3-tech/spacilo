@@ -10,7 +10,7 @@ import { SpacePlannerDemo } from "@/components/spaceplanner/SpacePlannerDemo";
 import { NearbySpaces } from "@/components/home/NearbySpaces";
 import { MeetSpaciloAI } from "@/components/home/MeetSpaciloAI";
 
-import { HostEarnings } from "@/components/home/HostEarnings";
+import { SpaceValueSection } from "@/components/home/SpaceValueSection";
 import { WhySpacePlanner } from "@/components/home/WhySpacePlanner";
 import { FinalCta } from "@/components/home/FinalCta";
 
@@ -59,7 +59,7 @@ function HomePage() {
       <SpacePlannerDemo />
       <NearbySpaces />
       <MeetSpaciloAI />
-      <HostEarnings />
+      <SpaceValueSection />
       <WhySpacePlanner />
       <FinalCta />
     </MarketingLayout>

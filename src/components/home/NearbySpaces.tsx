@@ -31,9 +31,9 @@ export function NearbySpaces() {
           </div>
         </div>
 
-        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mobile-rail mobile-rail-bleed mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {listings.map((listing, index) => (
-            <Reveal as="li" key={listing.id} delay={index * 70}>
+            <Reveal as="li" key={listing.id} delay={index * 70} className="mobile-rail-card">
               <ListingCard
                 id={listing.id}
                 title={listing.title}

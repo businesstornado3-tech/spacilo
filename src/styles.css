@@ -585,6 +585,22 @@
   }
 }
 
+@utility mobile-rail-card {
+  @media (width < 40rem) {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+    width: 78%;
+    max-width: 20rem;
+  }
+}
+
+@utility mobile-rail-bleed {
+  @media (width < 40rem) {
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+  }
+}
+
 @utility mobile-rail-item {
   @media (width < 40rem) {
     scroll-snap-align: start;

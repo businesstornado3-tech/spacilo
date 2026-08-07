@@ -29,7 +29,7 @@ import type {
   VisionPhoto,
 } from "./contracts";
 import type { OverallConfidence } from "./confidence";
-import { IntelligenceError, toIntelligenceError, type FallbackPlan } from "./errors";
+import { IntelligenceError, toIntelligenceError } from "./errors";
 import { overallStatus, providerHealth, type IntelligenceStatus, type ProviderHealth } from "./health";
 import {
   analyseBelongings,
@@ -55,7 +55,7 @@ export interface SpaciloAIState {
   compatibility: CompatibilityResult | null;
   confidence: OverallConfidence | null;
   error: IntelligenceError | null;
-  fallback: FallbackPlan | null;
+  fallback: string | null;
 }
 
 export interface SpaciloAIContextValue extends SpaciloAIState {

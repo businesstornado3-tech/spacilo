@@ -14,7 +14,12 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 import { SceneObject } from "@/components/spaceplanner/ObjectArt";
-import { placementReason, type PackResult, type Placement, type StorageSpace } from "@/lib/spaceplanner";
+import {
+  placementReason,
+  type PackResult,
+  type Placement,
+  type StorageSpace,
+} from "@/lib/spaceplanner";
 
 const SCALE = 100;
 
@@ -95,8 +100,18 @@ export function PlanScene({
           <defs>
             <pattern id="plan-floor" width="210" height="48" patternUnits="userSpaceOnUse">
               <rect width="210" height="48" className="fill-scene-floor" />
-              <path d="M0 48h210" className="stroke-scene-floor-line" strokeWidth={1.4} fill="none" />
-              <path d="M74 0v48M168 0v48" className="stroke-scene-floor-line" strokeWidth={1.2} fill="none" />
+              <path
+                d="M0 48h210"
+                className="stroke-scene-floor-line"
+                strokeWidth={1.4}
+                fill="none"
+              />
+              <path
+                d="M74 0v48M168 0v48"
+                className="stroke-scene-floor-line"
+                strokeWidth={1.2}
+                fill="none"
+              />
             </pattern>
             <linearGradient id="plan-daylight" x1="0.9" y1="0" x2="0.1" y2="1">
               <stop offset="0%" stopColor="var(--color-scene-wall)" stopOpacity="0.85" />
@@ -214,7 +229,12 @@ export function PlanScene({
             <span
               key={i}
               className="absolute size-[3px] rounded-full bg-scene-ink/25 motion-safe:animate-sp-dust"
-              style={{ left: dust.left, top: dust.top, animationDelay: dust.delay, animationDuration: dust.duration }}
+              style={{
+                left: dust.left,
+                top: dust.top,
+                animationDelay: dust.delay,
+                animationDuration: dust.duration,
+              }}
             />
           ))}
           <div

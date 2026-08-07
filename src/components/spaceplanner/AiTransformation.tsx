@@ -65,7 +65,8 @@ export function AiTransformation() {
   // Honest, derived improvement: how much of the floor stays walkable once the
   // same belongings are stacked, stood upright and pushed to the walls.
   const floorArea = SPACE.width * SPACE.depth;
-  const clear = (used: number) => Math.max(0, Math.min(100, Math.round(100 - (used / floorArea) * 100)));
+  const clear = (used: number) =>
+    Math.max(0, Math.min(100, Math.round(100 - (used / floorArea) * 100)));
   const clearBefore = clear(plan.before.floorAreaUsed);
   const clearAfter = clear(plan.after.floorAreaUsed);
   const target = organised ? clearAfter : clearBefore;
@@ -145,7 +146,9 @@ export function AiTransformation() {
               size="lg"
               className="mt-4"
               onClick={() => {
-                track("cta_clicked", { props: { cta: "try_spaceplanner", from: "homepage_transformation" } });
+                track("cta_clicked", {
+                  props: { cta: "try_spaceplanner", from: "homepage_transformation" },
+                });
                 startDemo();
               }}
             >

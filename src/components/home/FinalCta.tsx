@@ -34,7 +34,9 @@ export function FinalCta() {
             asChild
             size="lg"
             variant="secondary"
-            onClick={() => track("cta_clicked", { props: { cta: "list_space", from: "homepage_final" } })}
+            onClick={() =>
+              track("cta_clicked", { props: { cta: "list_space", from: "homepage_final" } })
+            }
           >
             <Link to="/list-space">List your space</Link>
           </Button>

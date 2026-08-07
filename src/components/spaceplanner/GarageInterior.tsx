@@ -51,26 +51,49 @@ export function GarageInterior({ className }: { className?: string }) {
         {/* sectional door, part open, daylight beneath */}
         <rect x="368" y="40" width="248" height="150" rx="6" className="fill-scene-metal" />
         {[76, 112, 148].map((y) => (
-          <path key={y} d={`M368 ${y}h248`} className="stroke-scene-line" strokeWidth="2" fill="none" />
+          <path
+            key={y}
+            d={`M368 ${y}h248`}
+            className="stroke-scene-line"
+            strokeWidth="2"
+            fill="none"
+          />
         ))}
-        <rect x="368" y="190" width="248" height="110" className="fill-scene-screen" opacity="0.5" />
+        <rect
+          x="368"
+          y="190"
+          width="248"
+          height="110"
+          className="fill-scene-screen"
+          opacity="0.5"
+        />
         <rect x="368" y="186" width="248" height="10" rx="5" className="fill-scene-metal-dark" />
 
         {/* timber shelving with cardboard boxes */}
         <rect x="24" y="70" width="230" height="230" rx="6" className="fill-scene-wood" />
         {[70, 140, 210, 276].map((y) => (
-          <rect key={y} x="24" y={y} width="230" height="10" rx="4" className="fill-scene-wood-dark" />
+          <rect
+            key={y}
+            x="24"
+            y={y}
+            width="230"
+            height="10"
+            rx="4"
+            className="fill-scene-wood-dark"
+          />
         ))}
-        {([
-          [36, 86],
-          [96, 86],
-          [156, 86],
-          [36, 156],
-          [110, 156],
-          [180, 156],
-          [36, 226],
-          [120, 226],
-        ] as Array<[number, number]>).map(([x, y]) => (
+        {(
+          [
+            [36, 86],
+            [96, 86],
+            [156, 86],
+            [36, 156],
+            [110, 156],
+            [180, 156],
+            [36, 226],
+            [120, 226],
+          ] as Array<[number, number]>
+        ).map(([x, y]) => (
           <g key={`${x}-${y}`}>
             <rect x={x} y={y} width="56" height="52" rx="4" className="fill-scene-card" />
             <path
@@ -79,15 +102,38 @@ export function GarageInterior({ className }: { className?: string }) {
               strokeWidth="1.5"
               fill="none"
             />
-            <rect x={x + 18} y={y + 20} width="20" height="12" rx="3" className="fill-scene-card-dark" />
+            <rect
+              x={x + 18}
+              y={y + 20}
+              width="20"
+              height="12"
+              rx="3"
+              className="fill-scene-card-dark"
+            />
           </g>
         ))}
 
         {/* workbench + cabinets */}
         <rect x="272" y="212" width="86" height="12" rx="4" className="fill-scene-wood-dark" />
         <rect x="276" y="224" width="78" height="76" rx="5" className="fill-scene-wood" />
-        <rect x="284" y="236" width="28" height="26" rx="3" className="fill-scene-wood-dark" opacity="0.4" />
-        <rect x="320" y="236" width="28" height="26" rx="3" className="fill-scene-wood-dark" opacity="0.4" />
+        <rect
+          x="284"
+          y="236"
+          width="28"
+          height="26"
+          rx="3"
+          className="fill-scene-wood-dark"
+          opacity="0.4"
+        />
+        <rect
+          x="320"
+          y="236"
+          width="28"
+          height="26"
+          rx="3"
+          className="fill-scene-wood-dark"
+          opacity="0.4"
+        />
         <rect x="286" y="176" width="26" height="34" rx="4" className="fill-scene-metal" />
         <rect x="320" y="188" width="34" height="22" rx="4" className="fill-scene-fabric" />
 
@@ -102,13 +148,26 @@ export function GarageInterior({ className }: { className?: string }) {
             strokeLinejoin="round"
             strokeLinecap="round"
           />
-          <path d="M52 18h22" className="fill-none stroke-scene-ink" strokeWidth="6" strokeLinecap="round" />
+          <path
+            d="M52 18h22"
+            className="fill-none stroke-scene-ink"
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
         </g>
 
         {/* suitcase + stacked boxes on the floor */}
         <rect x="530" y="228" width="66" height="72" rx="8" className="fill-scene-ink" />
         <rect x="548" y="214" width="30" height="12" rx="6" className="fill-scene-metal" />
-        <rect x="536" y="248" width="54" height="8" rx="4" className="fill-scene-metal-dark" opacity="0.5" />
+        <rect
+          x="536"
+          y="248"
+          width="54"
+          height="8"
+          rx="4"
+          className="fill-scene-metal-dark"
+          opacity="0.5"
+        />
 
         {/* warm daylight wash */}
         <rect width="640" height="400" fill="url(#gi-sun)" opacity="0.55" />

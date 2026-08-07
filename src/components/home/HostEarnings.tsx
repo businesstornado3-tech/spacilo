@@ -10,7 +10,6 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Reveal } from "@/components/common/Reveal";
 import { HostEntryButton } from "@/components/home/HostEntryButton";
-import { track } from "@/lib/analytics/tracker";
 import {
   DEMAND_BANDS,
   EARNING_EXAMPLES,
@@ -83,12 +82,6 @@ function EarningsEstimator() {
   const [demand, setDemand] = React.useState<DemandBandId>("town");
 
   const range = estimateEarnings({ kind, size, demand });
-
-  React.useEffect(() => {
-    track("cta_clicked", { props: { cta: "estimate_earnings", from: "homepage_host" } });
-    // only when the visitor changes an input
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kind, size, demand]);
 
   return (
     <div className="mt-8 grid gap-5 rounded-3xl border border-border bg-card p-5 shadow-card lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:items-center sm:p-6">

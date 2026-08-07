@@ -52,9 +52,8 @@ function HomePage() {
   return (
     <MarketingLayout>
       <HeroSection />
-      <TwoSidedValue />
-      <SpacePlannerDemo />
       <SpaceFitEntry />
+      <SpacePlannerDemo />
       <MarketplaceEntry />
       <HostEarnings />
       <WhySpacePlanner />

@@ -61,7 +61,7 @@ export function GarageInterior({ className }: { className?: string }) {
         {[70, 140, 210, 276].map((y) => (
           <rect key={y} x="24" y={y} width="230" height="10" rx="4" className="fill-scene-wood-dark" />
         ))}
-        {[
+        {([
           [36, 86],
           [96, 86],
           [156, 86],
@@ -70,7 +70,7 @@ export function GarageInterior({ className }: { className?: string }) {
           [180, 156],
           [36, 226],
           [120, 226],
-        ].map(([x, y]) => (
+        ] as Array<[number, number]>).map(([x, y]) => (
           <g key={`${x}-${y}`}>
             <rect x={x} y={y} width="56" height="52" rx="4" className="fill-scene-card" />
             <path

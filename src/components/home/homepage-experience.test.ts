@@ -34,6 +34,7 @@ describe("homepage structure", () => {
     "HeroSection",
     "TwoSidedValue",
     "SpacePlannerDemo",
+    "SpaceFitEntry",
     "MarketplaceEntry",
     "HostEarnings",
     "WhySpacePlanner",
@@ -75,7 +76,7 @@ describe("hero delivers the three messages", () => {
   });
 
   it("shows the transformation, not a static illustration", () => {
-    expect(hero).toContain("TransformationScene");
+    expect(hero).toContain("HeroGarageAnimation");
   });
 });
 

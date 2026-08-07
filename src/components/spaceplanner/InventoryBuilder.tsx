@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { ObjectIllustration } from "@/components/spaceplanner/ObjectArt";
 import {
   INVENTORY_PRESETS,
-  itemVolume,
+  
   searchCatalogue,
   type CatalogueItem,
 } from "@/lib/spaceplanner";
@@ -85,7 +85,7 @@ export function InventoryBuilder({
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search belongings — boxes, bike, mattress…"
           aria-label="Search demo belongings"
-          className="h-11 w-full rounded-xl border border-input bg-card pl-9 pr-3 type-body-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring"
+          className="h-10 w-full rounded-xl border border-input bg-card pl-9 pr-3 type-body-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring"
         />
       </div>
 

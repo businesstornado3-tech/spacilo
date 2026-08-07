@@ -12,7 +12,9 @@ import { isPrivateRoute } from "@/lib/seo/routes";
 
 const HOMEPAGE_FILES = [
   "src/routes/index.tsx",
-  "src/components/home/Hero.tsx",
+  "src/components/spaceplanner/HeroSection.tsx",
+  "src/components/spaceplanner/SpacePlannerDemo.tsx",
+  "src/components/home/MarketplaceEntry.tsx",
   "src/components/home/StorageNearYou.tsx",
   "src/components/home/SpaceFitStory.tsx",
   "src/components/home/HowItWorks.tsx",
@@ -63,7 +65,7 @@ describe("homepage route contract", () => {
       expect(homepageTargets).toContain(expected);
     }
     // Search is reached through the typed navigate() call in the hero search form.
-    expect(read("src/components/home/Hero.tsx")).toContain('to: "/search"');
+    expect(read("src/components/home/MarketplaceEntry.tsx")).toContain('to: "/search"');
     expect(knownRoutes.has("/search")).toBe(true);
   });
 });

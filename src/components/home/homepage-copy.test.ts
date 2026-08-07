@@ -12,7 +12,9 @@ import { scanSpaceTarget, scanStuffTarget } from "@/lib/spacefit-entry";
 
 const FILES = [
   "src/routes/index.tsx",
-  "src/components/home/Hero.tsx",
+  "src/components/spaceplanner/HeroSection.tsx",
+  "src/components/spaceplanner/SpacePlannerDemo.tsx",
+  "src/components/home/MarketplaceEntry.tsx",
   "src/components/home/StorageNearYou.tsx",
   "src/components/home/SpaceFitStory.tsx",
   "src/components/home/HowItWorks.tsx",
@@ -27,7 +29,9 @@ const FILES = [
 const read = (file: string) => readFileSync(file, "utf8");
 const copy = FILES.map(read).join("\n");
 
-const hero = read("src/components/home/Hero.tsx");
+const hero = read("src/components/spaceplanner/HeroSection.tsx");
+const demo = read("src/components/spaceplanner/SpacePlannerDemo.tsx");
+const marketplace = read("src/components/home/MarketplaceEntry.tsx");
 const entry = read("src/components/home/SpaceFitEntry.tsx");
 const story = read("src/components/home/SpaceFitStory.tsx");
 const hostAi = read("src/components/home/HostAiSection.tsx");
@@ -52,13 +56,19 @@ describe("homepage copy", () => {
     }
   });
 
-  it("leads with the required two-sided headline", () => {
-    expect(hero).toContain("Space nearby.");
-    expect(hero).toContain("Income at home.");
+  it("leads with the SpacePlanner proposition", () => {
+    expect(hero).toContain("Store Smarter with AI.");
+    expect(hero).toContain("Try SpacePlanner™ Free");
+    expect(hero).toContain("Watch live demo");
   });
 
-  it("gives both halves of the headline equal treatment inside the single h1", () => {
-    const h1 = hero.slice(hero.indexOf("<h1"), hero.indexOf("</h1>"));
+  it("keeps the two-sided marketplace headline directly under the demonstration", () => {
+    expect(marketplace).toContain("Space nearby.");
+    expect(marketplace).toContain("Income at home.");
+  });
+
+  it("gives both halves of the marketplace headline equal treatment", () => {
+    const h1 = marketplace.slice(marketplace.indexOf("<h2"), marketplace.indexOf("</h2>"));
     const renter = h1.indexOf("Space nearby.");
     const host = h1.indexOf("Income at home.");
     expect(renter).toBeGreaterThan(-1);
@@ -67,30 +77,29 @@ describe("homepage copy", () => {
   });
 
   it("explains the marketplace directly under the headline", () => {
-    expect(hero).toContain(
+    expect(marketplace).toContain(
       "Find trusted neighbourhood storage — or earn from the space you're not using.",
     );
   });
 
-  it("keeps the postcode search in the hero", () => {
-    expect(hero).toContain("SearchControls");
+  it("keeps the postcode search in the marketplace entry", () => {
+    expect(marketplace).toContain("SearchControls");
   });
 });
 
 describe("hero Spacilo AI launcher", () => {
   it("drops the generic hero Find storage / Start earning buttons", () => {
-    expect(hero).not.toContain('<Link to="/find-storage">');
-    expect(hero).not.toContain("HostEntryButton");
-    expect(hero).not.toContain('label="Start earning"');
+    expect(marketplace).not.toContain("HostEntryButton");
+    expect(marketplace).not.toContain('label="Start earning"');
     // "Find storage" survives only as the search submit label.
-    expect(hero.match(/Find storage/g)).toHaveLength(1);
-    expect(hero).toContain('submitLabel="Find storage"');
+    expect(marketplace.match(/Find storage/g)).toHaveLength(1);
+    expect(marketplace).toContain('submitLabel="Find storage"');
   });
 
   it("puts the real Spacilo AI launcher between the proposition and the search", () => {
-    const proposition = hero.indexOf("Find trusted neighbourhood storage");
-    const launcher = hero.indexOf("<SpaceFitEntry");
-    const search = hero.indexOf("<SearchControls");
+    const proposition = marketplace.indexOf("Find trusted neighbourhood storage");
+    const launcher = marketplace.indexOf("<SpaceFitEntry");
+    const search = marketplace.indexOf("<SearchControls");
     expect(proposition).toBeGreaterThan(-1);
     expect(launcher).toBeGreaterThan(proposition);
     expect(search).toBeGreaterThan(launcher);
@@ -104,9 +113,10 @@ describe("hero Spacilo AI launcher", () => {
     expect(entry).toContain("What could my unused space earn?");
   });
 
-  it("never simulates Spacilo AI on the homepage", () => {
-    expect(copy + entry).not.toMatch(/DEMO_STATES|Illustrative Spacilo AI example/);
+  it("keeps the public demonstration deterministic — no camera, no model, no upload", () => {
     expect(copy + entry).not.toMatch(/getUserMedia|LiveScanner|useLiveScan|<video/);
+    expect(demo).toContain("simulationEngine");
+    expect(demo).not.toMatch(/fetch\(|supabase|Math\.random/);
   });
 
   it("loads no AI, camera or admin internals into the homepage bundle", () => {
@@ -118,8 +128,9 @@ describe("hero Spacilo AI launcher", () => {
 describe("CTA repetition rule", () => {
   it("introduces the renter scan journey once at the top, with one secondary echo", () => {
     expect(entry.match(/<ScanStuffButton/g) ?? []).toHaveLength(1);
-    expect(copy.match(/<ScanStuffButton/g) ?? []).toHaveLength(1);
-    expect(hero).toContain("<SpaceFitEntry");
+    // launcher echo in the AI story, plus the conversion step of the demo
+    expect(copy.match(/<ScanStuffButton/g) ?? []).toHaveLength(2);
+    expect(marketplace).toContain("<SpaceFitEntry");
     expect(story).toContain("<ScanStuffButton");
   });
 
@@ -146,7 +157,9 @@ describe("CTA repetition rule", () => {
 
 describe("homepage structure", () => {
   const order = [
-    "<Hero />",
+    "<HeroSection />",
+    "<SpacePlannerDemo />",
+    "<MarketplaceEntry />",
     "<StorageNearYou />",
     "<SpaceFitStory />",
     "<HowItWorks />",
@@ -201,7 +214,7 @@ describe("homepage structure", () => {
   });
 
   it("gives the homepage marketplace-led metadata and a self-referencing canonical", () => {
-    expect(page).toContain("Neighbourhood Storage Near You");
+    expect(page).toContain("AI Storage Planning & Neighbourhood Storage");
     expect(page).toContain("publicRouteMeta");
     expect(page).toContain('"@type": "WebSite"');
   });

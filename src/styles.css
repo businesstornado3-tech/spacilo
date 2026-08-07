@@ -435,10 +435,33 @@
   --accent-soft: oklch(0.968 0.026 168);
   --accent-soft-foreground: oklch(0.33 0.07 178);
 
+  /* Spacilo AI canvas — very soft green wash used behind AI storytelling */
+  --ai-canvas-from: oklch(0.989 0.009 155);
+  --ai-canvas-to: oklch(0.976 0.017 158);
+  --ai-canvas-glow: oklch(0.93 0.05 160 / 0.55);
+  --ai-canvas-dot: oklch(0.62 0.09 163 / 0.05);
+
   --duration-fast: 150ms;
   --duration-base: 220ms;
   --duration-slow: 340ms;
 }
+
+@utility ai-canvas {
+  background-color: var(--ai-canvas-from);
+  background-image:
+    radial-gradient(60% 45% at 50% 0%, var(--ai-canvas-glow), transparent 70%),
+    radial-gradient(var(--ai-canvas-dot) 1px, transparent 1px),
+    linear-gradient(160deg, var(--ai-canvas-from), var(--ai-canvas-to));
+  background-size:
+    100% 100%,
+    22px 22px,
+    100% 100%;
+  background-position:
+    center top,
+    0 0,
+    center;
+}
+
 
 .dark {
   --signal: oklch(0.8 0.14 165);

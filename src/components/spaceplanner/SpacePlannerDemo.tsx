@@ -124,13 +124,8 @@ export function SpacePlannerDemo() {
           </span>
         </header>
 
-        <ol className="mt-4 flex flex-wrap gap-2" aria-label="Demonstration steps">
-          <StepChip index={1} label="Choose belongings" icon={Boxes} done={itemCount > 0} />
-          <StepChip index={2} label="Choose storage type" icon={Warehouse} done={itemCount > 0} />
-          <StepChip index={3} label="Watch AI organise" icon={Sparkles} done={phase === "plan"} />
-        </ol>
+        <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,0.7fr)] lg:items-start">
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,0.75fr)] lg:items-start">
           <div className="min-w-0 lg:order-2">
             <div className="rounded-3xl border border-border bg-card p-4 shadow-card">
               <h3 className="type-h4">What are you storing?</h3>

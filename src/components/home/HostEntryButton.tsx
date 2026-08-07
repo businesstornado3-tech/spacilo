@@ -14,7 +14,7 @@ interface HostEntryButtonProps {
   label?: string;
   from: string;
   size?: "default" | "sm" | "lg";
-  variant?: "default" | "secondary" | "outline" | "ghost" | "subtle";
+  variant?: "default" | "secondary" | "outline" | "ghost" | "subtle" | "text" | "link";
   block?: boolean;
   className?: string;
   withArrow?: boolean;

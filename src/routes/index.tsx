@@ -50,17 +50,11 @@ function HomePage() {
   return (
     <MarketingLayout>
       <HeroSection />
+      <AiTransformation />
       <SpacePlannerDemo />
+      <WhySpacePlanner />
       <MarketplaceEntry />
-      <StorageNearYou />
-      <SpaceFitStory />
-      <HowItWorks />
-      <BrandStory />
-      <HostCallout />
-      <HostAiSection />
-      <HostControl />
-      <TrustSection />
-      <LaunchArea />
+      <FinalCta />
     </MarketingLayout>
   );
 }

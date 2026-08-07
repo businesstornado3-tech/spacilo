@@ -28,7 +28,13 @@ import { AIProgressPanel } from "@/components/spaceplanner/AIProgressPanel";
 import { PlannerCanvas } from "@/components/spaceplanner/PlannerCanvas";
 import { RecommendationPanel } from "@/components/spaceplanner/RecommendationPanel";
 import { PlannerToolbar } from "@/components/spaceplanner/PlannerToolbar";
-import { continuePlanning, spaceFor, toQuantities, type SavedInventory } from "@/lib/spaceplanner/library";
+import {
+  continuePlanning,
+  spaceFor,
+  toQuantities,
+  type PlanRun,
+  type SavedInventory,
+} from "@/lib/spaceplanner/library";
 
 const title = "My planner — " + brand.name;
 const description =
@@ -114,7 +120,7 @@ function PlannerWorkspace({
   mode,
 }: {
   inventory: SavedInventory;
-  runs: ReturnType<typeof usePlanRuns>["data"] extends infer T ? NonNullable<T> : never;
+  runs: PlanRun[];
   onBack: () => void;
   mode: "renter" | "host";
 }) {

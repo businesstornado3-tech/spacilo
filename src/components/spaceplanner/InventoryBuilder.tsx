@@ -89,26 +89,29 @@ export function InventoryBuilder({
         />
       </div>
 
-      <ul className="mt-3 grid grid-cols-2 gap-2.5">
-        {results.map((item) => (
+      <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {results.map((item, index) => (
           <ItemCard
             key={item.id}
             item={item}
             quantity={quantities[item.id] ?? 0}
             onChange={(next) => onChange(item.id, next)}
+            revealed={index >= COMMON_ITEM_IDS.length}
           />
         ))}
       </ul>
 
       {hidden > 0 || (expanded && query.trim() === "") ? (
-        <button
-          type="button"
-          onClick={() => setExpanded((open) => !open)}
-          aria-expanded={expanded}
-          className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-border bg-card type-label transition-colors hover:border-primary hover:bg-primary-soft/40"
-        >
-          {expanded ? "Show fewer items" : `Show more items (${hidden})`}
-        </button>
+        <div className="mt-3 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setExpanded((open) => !open)}
+            aria-expanded={expanded}
+            className="inline-flex min-h-9 items-center justify-center rounded-full border border-border bg-card px-4 type-label transition-colors hover:border-primary hover:bg-primary-soft/40"
+          >
+            {expanded ? "Show fewer items" : "Show more items"}
+          </button>
+        </div>
       ) : null}
 
       {results.length === 0 ? (

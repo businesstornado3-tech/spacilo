@@ -6,7 +6,7 @@
  * a real vision provider is plugged in above it.
  */
 import { buildPlan } from "@/lib/spaceplanner";
-import { scorePlan } from "@/lib/spaceplanner/score";
+import { spaciloScore } from "@/lib/spaceplanner/score";
 
 import type { PackingResult } from "../contracts";
 import { buildMeta, throwIfAborted } from "../meta";
@@ -27,7 +27,7 @@ export const mockPackingProvider: PackingProvider = {
     const startedAt = Date.now();
     throwIfAborted(request?.signal);
     const plan = buildPlan(lines, space);
-    const score = scorePlan(plan);
+    const score = spaciloScore(plan);
     return { plan, score, meta: buildMeta(IDENTITY, startedAt) };
   },
 };

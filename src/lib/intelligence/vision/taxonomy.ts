@@ -134,7 +134,7 @@ export const DETECTION_CLASSES: DetectionClass[] = [
   }),
 
   /* Furniture */
-  d("wardrobe", { subcategory: "Bedroom furniture", storageType: "furniture", orientation: "upright", cue: "tall двух-door cabinet outline", handling: "Store upright; empty before moving." }),
+  d("wardrobe", { subcategory: "Bedroom furniture", storageType: "furniture", orientation: "upright", cue: "tall two-door cabinet outline", handling: "Store upright; empty before moving." }),
   d("chest-drawers", { subcategory: "Bedroom furniture", storageType: "furniture", orientation: "upright", cue: "stacked drawer fronts with handles" }),
   d("bed-frame", { subcategory: "Bed", storageType: "furniture", orientation: "on_edge", cue: "slatted frame and headboard panel", handling: "Dismantle where possible." }),
   d("double-mattress", { subcategory: "Mattress", storageType: "bulk", orientation: "on_edge", cue: "quilted rectangular surface, double width", handling: "Store on edge against a wall, bagged." }),

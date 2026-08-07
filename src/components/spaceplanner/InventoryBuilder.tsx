@@ -24,15 +24,7 @@ export interface InventoryBuilderProps {
 }
 
 /** The belongings almost every visitor recognises — the compact default set. */
-const COMMON_ITEM_IDS = [
-  "medium-box",
-  "large-box",
-  "suitcase",
-  "bicycle",
-  "television",
-  "wardrobe",
-  "sports-kit",
-];
+const COMMON_ITEM_IDS = ["medium-box", "large-box", "bicycle", "television"];
 
 export function InventoryBuilder({
   quantities,

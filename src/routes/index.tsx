@@ -53,6 +53,7 @@ function HomePage() {
       <HeroSection />
       <TwoSidedValue />
       <SpacePlannerDemo />
+      <SpaceFitEntry />
       <MarketplaceEntry />
       <HostEarnings />
       <WhySpacePlanner />
@@ -60,3 +61,4 @@ function HomePage() {
     </MarketingLayout>
   );
 }
+

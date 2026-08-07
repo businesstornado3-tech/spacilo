@@ -5,6 +5,7 @@
  * the experience is honest and unit-testable. There is no network call and no
  * randomness — a real provider replaces this file alone.
  */
+import { hashString } from "./hash";
 import { VISION_CLASSES, VISION_CLASS_BY_KEY, classVolume } from "./taxonomy";
 import type { VisionProvider } from "./provider";
 import type {
@@ -15,15 +16,7 @@ import type {
   VisionResult,
 } from "./types";
 
-/** Small stable string hash — same input, same output, everywhere. */
-export function hashString(value: string): number {
-  let hash = 2166136261;
-  for (let i = 0; i < value.length; i += 1) {
-    hash ^= value.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return Math.abs(hash);
-}
+
 
 function photoSeed(photo: VisionPhoto, index: number): number {
   return hashString(`${photo.name}:${photo.sizeBytes}:${index}`);

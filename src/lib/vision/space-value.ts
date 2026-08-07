@@ -6,7 +6,7 @@
  * Demand is a broad band estimated from the postcode area, clearly labelled as
  * an estimate based on nearby listings.
  */
-import { hashString } from "./simulation-provider";
+import { hashString } from "./hash";
 
 export type ValueSpaceType = "garage" | "loft" | "spare-room" | "storage-room" | "shed" | "driveway";
 

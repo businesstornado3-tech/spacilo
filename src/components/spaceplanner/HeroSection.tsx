@@ -24,9 +24,9 @@ export function HeroSection() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 -top-48 h-[32rem] bg-[radial-gradient(55%_60%_at_50%_35%,var(--color-signal-soft),transparent_72%)] opacity-80"
       />
-      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 pb-10 pt-8 sm:px-6 sm:pb-14 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)] lg:items-center lg:gap-12 lg:pb-16 lg:pt-12">
+      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 pb-10 pt-8 sm:px-6 sm:pb-14 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)] lg:items-center lg:gap-12 lg:pb-16 lg:pt-12">
         <div className="animate-fade min-w-0">
-          <h1 className="max-w-[18ch] type-hero">
+          <h1 className="max-w-[22ch] type-hero">
             Turn unused space into income. Find trusted storage nearby.
           </h1>
 

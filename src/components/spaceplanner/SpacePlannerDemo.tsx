@@ -162,7 +162,7 @@ export function SpacePlannerDemo() {
                   <h3 className="type-h4">Your estimated plan</h3>
                   <p className="mt-1 truncate type-body-sm text-muted-foreground">
                     {itemCount === 0
-                      ? "Add a few belongings to begin."
+                      ? "Choose belongings to begin."
                       : `${itemCount} item${itemCount === 1 ? "" : "s"} · ~${rawVolume.toFixed(1)}m³ · ${space.name}`}
                   </p>
                 </div>
@@ -333,7 +333,7 @@ function EmptyState({ onPreset }: { onPreset: () => void }) {
       <Boxes className="size-8 text-muted-foreground" aria-hidden="true" />
       <p className="mt-3 type-label">Nothing to plan yet</p>
       <p className="mt-1 max-w-xs type-body-sm text-muted-foreground">
-        Add belongings on the left, or load a typical inventory to see how the planner works.
+        Choose belongings alongside, or load a typical inventory to see how the planner works.
       </p>
       <Button variant="secondary" className="mt-4" onClick={onPreset}>
         Load the “{DEFAULT_PRESET.name}” example

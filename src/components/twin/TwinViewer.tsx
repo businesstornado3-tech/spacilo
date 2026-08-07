@@ -30,21 +30,29 @@ export interface TwinViewerProps {
   scene: TwinScene;
   mode?: CameraMode;
   highlightId?: string | null;
+  /** Several objects lit at once, e.g. while the AI is observing them. */
+  highlightIds?: readonly string[];
   onSelect?: (id: string) => void;
+  onHover?: (id: string | null) => void;
   /** Force the 2D plan — used by print, tests and reduced-capability surfaces. */
   force2d?: boolean;
   className?: string;
   height?: number;
+  /** Set when the viewer sits inside a labelled experience shell. */
+  bare?: boolean;
 }
 
 export function TwinViewer({
   scene,
   mode = "perspective",
   highlightId = null,
+  highlightIds,
   onSelect,
+  onHover,
   force2d = false,
   className,
   height = 380,
+  bare = false,
 }: TwinViewerProps) {
   const [webgl, setWebgl] = useState<boolean | null>(null);
   const [failed, setFailed] = useState(false);
@@ -66,8 +74,12 @@ export function TwinViewer({
 
   return (
     <div
-      className={cn("relative overflow-hidden rounded-xl border border-border bg-muted/30", className)}
-      style={{ height }}
+      className={cn(
+        "relative overflow-hidden",
+        bare ? "size-full" : "rounded-xl border border-border bg-muted/30",
+        className,
+      )}
+      {...(bare ? {} : { style: { height } })}
       role="img"
       aria-label={`${scene.label}: ${scene.objects.length} item groups in a ${scene.room.widthM}m by ${scene.room.depthM}m space`}
     >
@@ -77,7 +89,9 @@ export function TwinViewer({
             scene={scene}
             camera={camera}
             highlightId={highlightId}
+            highlightIds={highlightIds}
             onSelect={onSelect}
+            onHover={onHover}
             onError={() => setFailed(true)}
           />
         </Suspense>

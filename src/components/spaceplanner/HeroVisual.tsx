@@ -11,10 +11,10 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { HeroGarageAnimation } from "@/components/spaceplanner/HeroGarageAnimation";
+import { HeroTwin } from "@/components/twin/HeroTwin";
 
 export interface HeroVisualProps {
-  /** The visual to render. Defaults to the current garage animation. */
+  /** The visual to render. Defaults to the homepage Digital Twin. */
   children?: React.ReactNode;
   className?: string;
 }
@@ -26,7 +26,7 @@ export function HeroVisual({ children, className }: HeroVisualProps) {
       className={cn("min-w-0 lg:sticky lg:top-24", className)}
       aria-live="off"
     >
-      {children ?? <HeroGarageAnimation />}
+      {children ?? <HeroTwin />}
     </div>
   );
 }

@@ -22,8 +22,19 @@ const SURFACE = {
 
 const RAD = Math.PI / 180;
 
-function Feature({ feature }: { feature: RoomShell["features"][number] }) {
+function Feature({
+  feature,
+  openDoor,
+}: {
+  feature: RoomShell["features"][number];
+  openDoor: boolean;
+}) {
   const { position, size, kind } = feature;
+  // An up-and-over door left shut would hide the whole room from the outside
+  // camera, so it is rolled up into a lintel unless a surface asks otherwise.
+  const rolled = openDoor && kind === "roller_door";
+  const heightM = rolled ? Math.min(0.28, size.heightM) : size.heightM;
+  const baseY = rolled ? Math.max(0, size.heightM - heightM) : 0;
   const colour =
     kind === "roller_door"
       ? SURFACE.metal
@@ -37,12 +48,12 @@ function Feature({ feature }: { feature: RoomShell["features"][number] }) {
 
   return (
     <mesh
-      position={[position.x, position.y + size.heightM / 2, position.z]}
+      position={[position.x, position.y + baseY + heightM / 2, position.z]}
       rotation={[0, feature.rotationDeg * RAD, 0]}
       castShadow={kind === "shelving" || kind === "workbench"}
       receiveShadow
     >
-      <boxGeometry args={[size.widthM, size.heightM, size.depthM]} />
+      <boxGeometry args={[size.widthM, heightM, size.depthM]} />
       <meshStandardMaterial
         color={colour}
         roughness={kind === "window" ? 0.1 : 0.8}
@@ -60,9 +71,11 @@ interface GarageShellProps {
   room: RoomShell;
   walkway?: TwinScene["walkway"];
   showFixtures?: boolean;
+  /** Roll the up-and-over door open so the room is visible from outside. */
+  openDoor?: boolean;
 }
 
-export function GarageShell({ room, walkway, showFixtures = true }: GarageShellProps) {
+export function GarageShell({ room, walkway, showFixtures = true, openDoor = true }: GarageShellProps) {
   const { widthM: w, depthM: d, heightM: h } = room;
   const features = showFixtures ? room.features : [];
 
@@ -102,7 +115,7 @@ export function GarageShell({ room, walkway, showFixtures = true }: GarageShellP
       ) : null}
 
       {features.map((feature) => (
-        <Feature key={feature.id} feature={feature} />
+        <Feature key={feature.id} feature={feature} openDoor={openDoor} />
       ))}
     </group>
   );

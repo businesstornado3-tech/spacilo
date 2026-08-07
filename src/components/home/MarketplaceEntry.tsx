@@ -15,7 +15,7 @@ import { track } from "@/lib/analytics/tracker";
  * No camera, no AI code and no analysis runs here — the launcher only routes
  * into the existing renter and host Spacilo AI experiences.
  */
-export function Hero() {
+export function MarketplaceEntry() {
   const navigate = useNavigate();
 
   return (

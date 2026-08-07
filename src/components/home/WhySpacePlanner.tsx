@@ -1,8 +1,5 @@
 /**
- * Chapter 4 — why SpacePlanner™.
- *
- * Three facts, each one demonstrated by the chapters above rather than
- * explained at length. Deliberately short.
+ * Why Spacilo — three promises, each already demonstrated above.
  */
 import { Boxes, Ruler, ShieldCheck } from "lucide-react";
 
@@ -11,30 +8,30 @@ import { Reveal } from "@/components/common/Reveal";
 const POINTS = [
   {
     icon: Ruler,
-    title: "Measured, not guessed",
-    body: "Every plan works from real item dimensions and the room's usable footprint.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Safe by design",
-    body: "Fragile items stay off the bottom, heavy items stay low, the walkway stays clear.",
+    title: "Know it fits before you book",
+    body: "Spacilo AI plans from real item dimensions and the room's usable footprint.",
   },
   {
     icon: Boxes,
-    title: "Right-sized storage",
-    body: "See how much space you actually need before you pay for space you don't.",
+    title: "Earn money from unused space",
+    body: "List a garage, loft, driveway or spare room. You set the price and accept the requests.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Planned safely and intelligently",
+    body: "Fragile items stay off the bottom, heavy items stay low, the walkway stays clear.",
   },
 ];
 
 export function WhySpacePlanner() {
   return (
-    <section aria-labelledby="why-heading" className="py-12 sm:py-16">
+    <section aria-labelledby="why-heading" className="py-12 sm:py-14">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <h2 id="why-heading" className="max-w-xl type-h1">
-          Planning you can check.
+          Why Spacilo.
         </h2>
 
-        <ul className="mt-8 grid gap-4 sm:grid-cols-3">
+        <ul className="mt-7 grid gap-4 sm:grid-cols-3">
           {POINTS.map((point, index) => (
             <Reveal as="li" key={point.title} delay={index * 80}>
               <div className="h-full rounded-3xl border border-border bg-card p-5 shadow-card">

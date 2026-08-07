@@ -112,11 +112,9 @@ export function SpaceValueSection() {
           ))}
         </div>
 
-        <div
-          className="mt-5"
-          aria-live="polite"
-          style={{ transitionDuration: `${EARNINGS_TRANSITION_MS}ms` }}
-        >
+        {/* Both panels share one grid cell: the container keeps the taller
+            height, so switching tabs never shifts the page. */}
+        <div className="mt-5 grid" aria-live="polite">
           <TabPanel id="quick" active={route === "quick"}>
             <EarningsEstimator />
           </TabPanel>
@@ -192,10 +190,11 @@ function TabPanel({
       role="tabpanel"
       id={`earnings-panel-${id}`}
       aria-labelledby={`earnings-tab-${id}`}
-      hidden={!active}
+      aria-hidden={!active}
+      {...(active ? {} : { inert: "" })}
       className={cn(
-        "transition-opacity ease-out motion-reduce:transition-none",
-        active ? "opacity-100" : "opacity-0",
+        "col-start-1 row-start-1 transition-opacity ease-out motion-reduce:transition-none",
+        active ? "opacity-100" : "pointer-events-none opacity-0",
       )}
       style={{ transitionDuration: `${EARNINGS_TRANSITION_MS}ms` }}
     >

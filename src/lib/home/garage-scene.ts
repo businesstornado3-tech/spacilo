@@ -218,7 +218,7 @@ export const GARAGE_OBJECTS: GarageObject[] = [
     kind: "television",
     label: "Television",
     before: p(520, 590, 1, -9),
-    after: p(872, 300, 0.62, 0),
+    after: p(880, 246, 0.55, 0),
     step: 7,
   },
   {
@@ -266,7 +266,7 @@ export const GARAGE_OBJECTS: GarageObject[] = [
     kind: "vacuum",
     label: "Vacuum cleaner",
     before: p(430, 610, 1, 12),
-    after: p(792, 372, 0.7, 0),
+    after: p(722, 372, 0.68, 0),
     step: 5,
   },
 
@@ -276,7 +276,7 @@ export const GARAGE_OBJECTS: GarageObject[] = [
     kind: "tool-chest",
     label: "Tool chest",
     before: p(190, 560, 0.95, -6),
-    after: p(872, 372, 0.78, 0),
+    after: p(806, 372, 0.74, 0),
     step: 8,
   },
   {
@@ -292,7 +292,7 @@ export const GARAGE_OBJECTS: GarageObject[] = [
     kind: "stroller",
     label: "Baby stroller",
     before: p(700, 615, 1.05, -10),
-    after: p(944, 300, 0.6, 0),
+    after: p(906, 372, 0.68, 0),
     step: 8,
   },
 ];

@@ -70,7 +70,7 @@ export default function TwinCanvas({
     };
     const length = Math.hypot(dir.x, dir.y, dir.z) || 1;
     const radius = Math.hypot(w, d, h) / 2;
-    const distance = (radius / Math.tan((camera.preset.fov * Math.PI) / 360)) * 1.06;
+    const distance = (radius / Math.tan((camera.preset.fov * Math.PI) / 360)) * 0.82;
     return [
       target.x + (dir.x / length) * distance,
       Math.max(h * 0.55, target.y + (dir.y / length) * distance),

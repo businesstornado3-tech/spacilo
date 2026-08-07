@@ -114,7 +114,7 @@ export function TwinExperience({
         <TwinViewer
           bare
           scene={state.scene}
-          mode="perspective"
+          mode="isometric"
           highlightId={focusId}
           highlightIds={highlightIds}
           onHover={setHovered}

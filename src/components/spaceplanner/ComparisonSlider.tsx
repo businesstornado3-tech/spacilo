@@ -17,44 +17,49 @@ export function ComparisonSlider({ plan, className }: { plan: SpacePlan; classNa
 
   return (
     <div className={cn("min-w-0", className)}>
-      <div className="relative select-none overflow-hidden rounded-2xl border border-border bg-card p-3">
-        <LayoutSimulation
-          space={plan.space}
-          pack={plan.after}
-          title="After — optimised by Spacilo AI"
-          animate={false}
-        />
-
-        <div
-          className="pointer-events-none absolute inset-0 p-3"
-          style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
-          aria-hidden="true"
-        >
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <div className="relative select-none overflow-hidden rounded-xl">
           <LayoutSimulation
             space={plan.space}
-            pack={plan.before}
-            title="Before — loaded in the order it arrives"
+            pack={plan.after}
+            title="After — optimised by Spacilo AI"
             animate={false}
+            showCaption={false}
           />
-        </div>
 
-        <div
-          className="pointer-events-none absolute inset-y-3 w-px bg-signal"
-          style={{ left: `calc(${position}% )` }}
-          aria-hidden="true"
-        >
-          <span className="absolute left-1/2 top-1/2 grid size-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-signal text-signal-foreground shadow-raised">
-            <MoveHorizontal className="size-4" aria-hidden="true" />
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
+            aria-hidden="true"
+          >
+            <LayoutSimulation
+              space={plan.space}
+              pack={plan.before}
+              title="Before — loaded in the order it arrives"
+              animate={false}
+              showCaption={false}
+            />
+          </div>
+
+          <div
+            className="pointer-events-none absolute inset-y-0 w-px bg-signal"
+            style={{ left: `calc(${position}% )` }}
+            aria-hidden="true"
+          >
+            <span className="absolute left-1/2 top-1/2 grid size-9 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-signal text-signal-foreground shadow-raised">
+              <MoveHorizontal className="size-4" aria-hidden="true" />
+            </span>
+          </div>
+
+          <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-card/90 px-2.5 py-1 type-badge backdrop-blur">
+            Before
+          </span>
+          <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-card/90 px-2.5 py-1 type-badge backdrop-blur">
+            After
           </span>
         </div>
-
-        <span className="pointer-events-none absolute left-5 top-5 rounded-full bg-card/90 px-2.5 py-1 type-badge backdrop-blur">
-          Before
-        </span>
-        <span className="pointer-events-none absolute right-5 top-5 rounded-full bg-card/90 px-2.5 py-1 type-badge backdrop-blur">
-          After
-        </span>
       </div>
+
 
       <label className="mt-3 block">
         <span className="type-label">Drag to compare before and after</span>

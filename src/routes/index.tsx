@@ -4,9 +4,8 @@ import { brand } from "@/config/brand";
 import { canonicalUrl, publicRouteMeta } from "@/lib/seo/meta";
 import { MarketingLayout } from "@/components/layout/MarketingLayout";
 import { HeroSection } from "@/components/spaceplanner/HeroSection";
-import { TwoSidedValue } from "@/components/home/TwoSidedValue";
-import { SpacePlannerDemo } from "@/components/spaceplanner/SpacePlannerDemo";
 import { SpaceFitEntry } from "@/components/home/SpaceFitEntry";
+import { SpacePlannerDemo } from "@/components/spaceplanner/SpacePlannerDemo";
 import { MarketplaceEntry } from "@/components/home/MarketplaceEntry";
 
 import { HostEarnings } from "@/components/home/HostEarnings";

@@ -176,7 +176,10 @@ export function SpaceFitEntry({
         <p className="mt-4 text-center type-badge text-muted-foreground">
           All estimates you can review and correct before anything is booked.
         </p>
+          </div>
+        </div>
       </div>
     </section>
+
   );
 }

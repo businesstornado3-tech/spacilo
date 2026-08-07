@@ -31,7 +31,7 @@ export function PlannerCanvas({
         pack={plan.before}
         animate={false}
         showLabels={false}
-        className={className}
+        {...(className ? { className } : {})}
         title="Unplanned — everything loaded as it arrives"
       />
     );
@@ -43,8 +43,8 @@ export function PlannerCanvas({
       pack={plan.after}
       from={plan.before}
       explain={interactive}
-      onAdd={interactive ? addOne : undefined}
-      className={className}
+      {...(interactive ? { onAdd: addOne } : {})}
+      {...(className ? { className } : {})}
       label={`Optimised plan view of the ${space.name.toLowerCase()}`}
     />
   );

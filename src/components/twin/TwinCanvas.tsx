@@ -65,8 +65,9 @@ export default function TwinCanvas({
     // Objects stage themselves outside the opening before they move in, so the
     // fit radius has to cover them too — otherwise the story starts off-screen.
     const reach = scene.objects.reduce((max, object) => {
-      const { x, z } = object.placement.position;
-      return Math.max(max, Math.hypot(x - w / 2, z - d / 2));
+      const p = object?.placement?.position;
+      if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.z)) return max;
+      return Math.max(max, Math.hypot(p.x - w / 2, p.z - d / 2));
     }, Math.hypot(w, d) / 2);
     const target = { x: w / 2, y: h * 0.3, z: d / 2 };
     const radius = Math.max(reach, Math.hypot(w, d, h) / 2);

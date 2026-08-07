@@ -54,6 +54,29 @@ export default function TwinCanvas({
     [scene.room.widthM, scene.room.depthM],
   );
   const lit = useMemo(() => new Set(highlightIds ?? []), [highlightIds]);
+
+  /**
+   * Frame the whole room. Presets give the direction to look from; the
+   * distance is solved from the room's diagonal and the field of view so a
+   * 2.4m loft and a 6m garage are both fully in shot with the same preset.
+   */
+  const fitted = useMemo(() => {
+    const { widthM: w, depthM: d, heightM: h } = scene.room;
+    const target = camera.target;
+    const dir = {
+      x: camera.position.x - target.x,
+      y: camera.position.y - target.y,
+      z: camera.position.z - target.z,
+    };
+    const length = Math.hypot(dir.x, dir.y, dir.z) || 1;
+    const radius = Math.hypot(w, d, h) / 2;
+    const distance = (radius / Math.tan((camera.preset.fov * Math.PI) / 360)) * 1.06;
+    return [
+      target.x + (dir.x / length) * distance,
+      Math.max(h * 0.55, target.y + (dir.y / length) * distance),
+      target.z + (dir.z / length) * distance,
+    ] as [number, number, number];
+  }, [scene.room, camera]);
   const anyHighlight = Boolean(highlightId) || lit.size > 0;
 
   return (
@@ -62,7 +85,7 @@ export default function TwinCanvas({
       dpr={small ? [1, 1.5] : [1, 2]}
       gl={{ antialias: !small, powerPreference: "high-performance" }}
       camera={{
-        position: [camera.position.x, camera.position.y, camera.position.z],
+        position: fitted,
         fov: camera.preset.fov,
       }}
       onCreated={({ gl }) => {

@@ -1,0 +1,12 @@
+/**
+ * Spacilo Vision AI — public entry point.
+ *
+ * Belongings → Vision AI → Inventory → SpacePlanner → Compatibility → Booking
+ * Space      → Vision AI → Space value → Listing → Bookings
+ */
+export * from "./types";
+export * from "./taxonomy";
+export * from "./provider";
+export * from "./inventory";
+export * from "./space-value";
+export * from "./stages";

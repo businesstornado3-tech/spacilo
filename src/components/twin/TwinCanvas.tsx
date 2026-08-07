@@ -62,21 +62,24 @@ export default function TwinCanvas({
    */
   const fitted = useMemo(() => {
     const { widthM: w, depthM: d, heightM: h } = scene.room;
-    const target = { x: w / 2, y: h * 0.34, z: d / 2 };
-    const dir = {
-      x: camera.position.x - target.x,
-      y: camera.position.y - target.y,
-      z: camera.position.z - target.z,
-    };
-    const length = Math.hypot(dir.x, dir.y, dir.z) || 1;
-    const radius = Math.hypot(w, d, h) / 2;
-    const distance = (radius / Math.tan((camera.preset.fov * Math.PI) / 360)) * 0.95;
+    // Objects stage themselves outside the opening before they move in, so the
+    // fit radius has to cover them too — otherwise the story starts off-screen.
+    const reach = scene.objects.reduce((max, object) => {
+      const { x, z } = object.placement.position;
+      return Math.max(max, Math.hypot(x - w / 2, z - d / 2));
+    }, Math.hypot(w, d) / 2);
+    const target = { x: w / 2, y: h * 0.3, z: d / 2 };
+    const radius = Math.max(reach, Math.hypot(w, d, h) / 2);
+    const distance = (radius / Math.tan((camera.preset.fov * Math.PI) / 360)) * 0.92;
+    // A raised three-quarter view: high enough to read the floor plan, low
+    // enough to keep the opening and the walls in shot.
+    const yaw = Math.PI * 0.14;
     return [
-      target.x + (dir.x / length) * distance,
-      Math.max(h * 0.55, target.y + (dir.y / length) * distance),
-      target.z + (dir.z / length) * distance,
+      target.x + Math.sin(yaw) * distance,
+      target.y + distance * 0.42,
+      target.z + Math.cos(yaw) * distance,
     ] as [number, number, number];
-  }, [scene.room, camera]);
+  }, [scene.room, scene.objects, camera]);
   const anyHighlight = Boolean(highlightId) || lit.size > 0;
 
   return (

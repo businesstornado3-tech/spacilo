@@ -92,7 +92,7 @@ export default function TwinCanvas({
         gl.domElement.addEventListener("webglcontextlost", () => onError?.());
       }}
     >
-      <color attach="background" args={["#f7f5f1"]} />
+      <color attach="background" args={["#ff00ff"]} />
       <fog attach="fog" args={["#f4f1ec", 8, 26]} />
 
       {/* Warm key light through the opening, cool fill from the back wall. */}

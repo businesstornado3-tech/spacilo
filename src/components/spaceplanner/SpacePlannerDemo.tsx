@@ -287,13 +287,13 @@ function ViewTab({
 
 function EmptyState({ onPreset }: { onPreset: () => void }) {
   return (
-    <div className="grid place-items-center rounded-2xl border border-dashed border-border-strong bg-surface p-8 text-center">
-      <Boxes className="size-8 text-muted-foreground" aria-hidden="true" />
-      <p className="mt-3 type-label">Nothing to plan yet</p>
+    <div className="grid place-items-center rounded-2xl border border-dashed border-border-strong bg-surface p-5 text-center">
+      <Boxes className="size-6 text-muted-foreground" aria-hidden="true" />
+      <p className="mt-2 type-label">Nothing to plan yet</p>
       <p className="mt-1 max-w-xs type-body-sm text-muted-foreground">
-        Choose belongings alongside, or load a typical inventory to see how the planner works.
+        Choose belongings alongside, or load a typical inventory.
       </p>
-      <Button variant="secondary" className="mt-4" onClick={onPreset}>
+      <Button variant="secondary" size="sm" className="mt-3" onClick={onPreset}>
         Load the “{DEFAULT_PRESET.name}” example
       </Button>
     </div>

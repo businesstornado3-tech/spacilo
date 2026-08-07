@@ -111,54 +111,57 @@ export function SpacePlannerDemo() {
     <section
       id={DEMO_ANCHOR_ID}
       aria-labelledby="spaceplanner-heading"
-      className="scroll-mt-20 border-y border-border/70 bg-surface/60 py-12 sm:py-16"
+      className="scroll-mt-20 py-10 sm:py-12"
     >
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-        <header className="max-w-2xl">
+        <header className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+          <h2 id="spaceplanner-heading" className="type-h1">
+            See it fit, before you book.
+          </h2>
           <span className="inline-flex items-center gap-2 rounded-full bg-signal-soft px-3 py-1 type-badge text-signal-soft-foreground">
             <Sparkles className="size-3.5" aria-hidden="true" />
             Live demonstration
           </span>
-          <h2 id="spaceplanner-heading" className="mt-3 type-h1">
-            Plan a real space in three steps.
-          </h2>
         </header>
 
-        <ol className="mt-6 flex flex-wrap gap-2" aria-label="Demonstration steps">
-          <StepChip index={1} label="Choose your belongings" icon={Boxes} done={itemCount > 0} />
-          <StepChip index={2} label="Pick a storage space" icon={Warehouse} done={itemCount > 0} />
-          <StepChip index={3} label="Watch it organise" icon={Sparkles} done={phase === "plan"} />
+        <ol className="mt-4 flex flex-wrap gap-2" aria-label="Demonstration steps">
+          <StepChip index={1} label="Choose belongings" icon={Boxes} done={itemCount > 0} />
+          <StepChip index={2} label="Choose storage type" icon={Warehouse} done={itemCount > 0} />
+          <StepChip index={3} label="Watch AI organise" icon={Sparkles} done={phase === "plan"} />
         </ol>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.02fr)] lg:items-start">
-          <div className="min-w-0 rounded-3xl border border-border bg-card p-4 shadow-card sm:p-5">
-            <h3 className="type-h4">1. What are you storing?</h3>
-            <div className="mt-4">
-              <InventoryBuilder
-                quantities={quantities}
-                onChange={(itemId, quantity) =>
-                  setQuantities((current) => ({ ...current, [itemId]: quantity }))
-                }
-                onPreset={(presetLines) => loadPreset(presetLines)}
-                onClear={() => {
-                  setQuantities({});
-                  setPhase("build");
-                }}
-              />
-            </div>
+        <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,0.75fr)] lg:items-start">
+          <div className="min-w-0 lg:order-2">
+            <div className="rounded-3xl border border-border bg-card p-4 shadow-card">
+              <h3 className="type-h4">What are you storing?</h3>
+              <div className="mt-3">
+                <InventoryBuilder
+                  quantities={quantities}
+                  onChange={(itemId, quantity) =>
+                    setQuantities((current) => ({ ...current, [itemId]: quantity }))
+                  }
+                  onPreset={(presetLines) => loadPreset(presetLines)}
+                  onClear={() => {
+                    setQuantities({});
+                    setPhase("build");
+                  }}
+                />
+              </div>
 
-            <h3 className="mt-8 type-h4">2. Where might it go?</h3>
-            <div className="mt-4">
-              <StorageSelector selectedId={space.id} onSelect={setSpace} />
+              <h3 className="mt-5 type-h4">Where might it go?</h3>
+              <div className="mt-3">
+                <StorageSelector selectedId={space.id} onSelect={setSpace} />
+              </div>
             </div>
           </div>
 
-          <div className="min-w-0 lg:sticky lg:top-24">
+          <div className="min-w-0 lg:order-1">
             <div className="rounded-3xl border border-border bg-card p-4 shadow-card sm:p-5">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
                 <div className="min-w-0">
-                  <h3 className="type-h4">3. Your estimated plan</h3>
+                  <h3 className="type-h4">Your estimated plan</h3>
                   <p className="mt-1 truncate type-body-sm text-muted-foreground">
+
                     {itemCount === 0
                       ? "Add a few belongings to begin."
                       : `${itemCount} item${itemCount === 1 ? "" : "s"} · ~${rawVolume.toFixed(1)}m³ · ${space.name}`}

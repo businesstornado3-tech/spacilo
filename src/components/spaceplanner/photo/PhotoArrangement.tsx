@@ -14,9 +14,10 @@ import { AlertTriangle, MoveHorizontal, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { projectPlacements, toPoints, DEFAULT_FLOOR_QUAD, type FloorQuad } from "@/lib/spaceplanner/photo";
+import type { CoverageReport } from "@/lib/spaceplanner/photo/manifest";
 import type { PackResult, StorageSpace } from "@/lib/spaceplanner";
 
-export type ArrangementStatus = "idle" | "working" | "ready" | "failed";
+export type ArrangementStatus = "idle" | "working" | "ready" | "incomplete" | "failed";
 
 export interface PhotoArrangementProps {
   /** The user's own photograph of the space. */
@@ -31,6 +32,8 @@ export interface PhotoArrangementProps {
   arrangedUrl?: string | null;
   status?: ArrangementStatus;
   statusLabel?: string;
+  /** How many required items the generated image was shown to contain. */
+  coverage?: CoverageReport | null;
   onRetry?: () => void;
   className?: string;
 }

@@ -23,6 +23,10 @@ import type {
   SpaceInput,
   VisionInput,
 } from "../providers/local";
+import { analyseVision, type VisionAnalysisRequest } from "../vision/analyse";
+import { recordVisionCorrection } from "../vision/feedback";
+import { visionMetrics } from "../vision/metrics";
+import type { VisionAnalysis } from "../vision/types";
 import type {
   DetectedInventory,
   DetectedSpace,

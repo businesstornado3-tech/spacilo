@@ -193,7 +193,27 @@ export function buildPhotoPlan(
 
   const space = toStorageSpace(source);
   const plan = buildPlan(lines, space);
-  const usable = usableVolume(space);
+
+  // The physical engine is the source of truth: user-confirmed inventory and
+  // user-defined usable space in, a validated arrangement out.
+  const usableRect =
+    source.usable ??
+    (source.usableSelection
+      ? usableRectFromSelection(
+          { widthM: space.width, depthM: space.depth },
+          source.usableSelection,
+        )
+      : undefined);
+  const planningSpace = planningSpaceFrom(space, {
+    ...(usableRect ? { usable: usableRect } : {}),
+    ...(source.obstacles ? { obstacles: source.obstacles } : {}),
+    ...(source.walkwayClearanceM ? { walkwayClearanceM: source.walkwayClearanceM } : {}),
+    dimensionBasis: source.basis === "photo" ? "estimated" : "confirmed",
+    ...(source.confidence !== undefined ? { confidence: source.confidence } : {}),
+  });
+  const arrangement = bestArrangement(planningItemsFrom(objects), planningSpace);
+
+  const usable = arrangement.usableVolumeM3 > 0 ? arrangement.usableVolumeM3 : usableVolume(space);
   const required = plan.metrics.requiredVolume;
 
   const detection = averageConfidence(objects);
@@ -202,7 +222,11 @@ export function buildPhotoPlan(
 
   const spread = confidence > 0.8 ? 0.07 : confidence > 0.65 ? 0.12 : 0.18;
   const oversize = oversizeItems(lines, space);
-  const fitPercent = fitPercentFor(plan, oversize.length);
+  const everythingFits = arrangement.unplaced.length === 0 && arrangement.valid;
+  const fitPercent = Math.min(
+    fitPercentFor(plan, oversize.length),
+    arrangement.score.completeness,
+  );
 
   const improvements: string[] = [];
   if (dimension < LOW_CONFIDENCE)
@@ -213,27 +237,31 @@ export function buildPhotoPlan(
     improvements.push(
       `These look too large for this space: ${oversize.slice(0, 3).join(", ")}. Check their measurements.`,
     );
-  if (plan.after.unplaced.length > 0)
-    improvements.push("Some items didn't fit in this arrangement. Try a larger space.");
-
+  if (arrangement.unplaced.length > 0)
+    improvements.push(
+      `${arrangement.unplaced.map((entry) => entry.label).slice(0, 3).join(", ")} could not be placed while keeping the access route clear. A larger space, or a smaller walkway, would be needed.`,
+    );
 
   return {
     plan,
     space,
+    arrangement,
     fitPercent,
-    spaceUsedM3: round1(Math.min(required, usable)),
-    spaceRemainingM3: round1(Math.max(0, usable - required)),
+    spaceUsedM3: round1(Math.min(arrangement.occupiedVolumeM3 || required, usable)),
+    spaceRemainingM3: round1(Math.max(0, usable - (arrangement.occupiedVolumeM3 || required))),
     requirementLowM3: round1(required * (1 - spread)),
     requirementHighM3: round1(required * (1 + spread)),
     itemCount: plan.itemCount,
     distinctItems: lines.length,
-    everythingFits: plan.metrics.everythingFits,
-    walkwayPreserved: plan.metrics.walkwayPreserved,
+    everythingFits,
+    walkwayPreserved: Boolean(arrangement.walkway) || arrangement.valid,
+    unplaced: arrangement.unplaced,
     confidence,
     explanation: explainFit(plan, fitPercent, source),
     improvements,
   };
 }
+
 
 export function explainFit(plan: SpacePlan, fitPercent: number, source: SpaceSource): string {
   const basis =

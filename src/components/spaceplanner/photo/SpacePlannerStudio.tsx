@@ -165,7 +165,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   const attempted = React.useRef<string | null>(null);
   React.useEffect(() => {
     if (step !== "result" || !inventory || !manifest || !result || !spacePhoto) return;
-    const signature = `${spacePhoto.id}:${inventory?.signature ?? result.itemCount}:${result.fitPercent}`;
+    const signature = `${spacePhoto.id}:${manifest.planHash}`;
     if (attempted.current === signature) return;
     attempted.current = signature;
     void visual.generate();

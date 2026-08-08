@@ -246,6 +246,8 @@ export function useSpaceVisualisation(options: {
     setStatus("idle");
     setImageUrl(null);
     setCoverage(null);
+    setDiagnostics(null);
+
     setError(null);
     setAttempt(0);
     setElapsedMs(0);

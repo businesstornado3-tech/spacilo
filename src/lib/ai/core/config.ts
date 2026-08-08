@@ -179,7 +179,7 @@ export function capabilityConfig(capability: AiCapability): AiCapabilityConfig {
 
 /** Deep-ish merge for start-up or per-environment overrides. */
 export function configureAi(patch: DeepPartial<AiConfig>): AiConfig {
-  current = merge(clone(current), patch) as AiConfig;
+  current = merge(clone(current) as unknown as Record<string, unknown>, patch) as AiConfig;
   return current;
 }
 

@@ -329,3 +329,22 @@ describe("the deterministic plan controls the visualisation", () => {
     expect(instruction).not.toContain("towards the back of the room");
   });
 });
+
+describe("phase 6L — verification no longer mistakes duplicates for hallucinations", () => {
+  it("treats an extra unit of an allowed label as faithful", () => {
+    const coverage = coverageOf(
+      ["u_01", "u_02"],
+      ["u_01", "u_02"],
+      ["extra Cardboard box", "another suitcase"],
+      ["Cardboard box", "Suitcase"],
+    );
+    expect(coverage.faithful).toBe(true);
+    expect(coverage.unexpected).toEqual([]);
+  });
+
+  it("still rejects a genuinely invented object", () => {
+    const coverage = coverageOf(["u_01"], ["u_01"], ["pair of shoes"], ["Cardboard box"]);
+    expect(coverage.faithful).toBe(false);
+    expect(coverage.unexpected).toEqual(["pair of shoes"]);
+  });
+});

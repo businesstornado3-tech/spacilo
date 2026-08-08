@@ -127,8 +127,9 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
         {(
           [
             ["stuff", "1. Your stuff", Boxes],
-            ["space", "2. Your space", Home],
-            ["result", "3. How it fits", Sparkles],
+            ["review", "2. Confirm items", CheckCircle2],
+            ["space", "3. Your space", Home],
+            ["result", "4. How it fits", Sparkles],
           ] as const
         ).map(([id, label, Icon]) => (
           <button
@@ -165,7 +166,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 rejected={stuff.rejected}
                 disabled={!stuff.canAddMore}
                 title="Show Spacilo AI your belongings"
-                hint="Boxes, furniture, bikes, appliances — a few clear photos is plenty."
+                hint="Photograph the whole item where possible — one clear photo per item, or per group of similar items."
               />
               <PhotoGallery
                 photos={stuff.photos}

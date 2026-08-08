@@ -113,6 +113,44 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     itemPhotos: stuff.photos,
   });
 
+  /** Ten real pipeline stages, derived from state that genuinely exists. */
+  const steps = React.useMemo(
+    () =>
+      plannerSteps({
+        itemPhotos: stuff.photos.length,
+        detectedUnits: stuff.objects.reduce((sum, object) => sum + object.quantity, 0),
+        sized: Boolean(inventory && inventory.items.length > 0),
+        spaceSupplied: space.photos.length > 0 || Boolean(manualSource),
+        roomReady: Boolean(source),
+        inventoryLocked: Boolean(inventory),
+        planReady: Boolean(manifest),
+        constraintsClear: Boolean(result && result.arrangement.violations.length === 0),
+        render:
+          visual.status === "working"
+            ? "working"
+            : visual.status === "ready"
+              ? "ready"
+              : visual.status === "failed" || visual.status === "rejected"
+                ? "failed"
+                : "idle",
+        verification: verificationStatusOf(visual.coverage),
+      }),
+    [
+      stuff.photos.length,
+      stuff.objects,
+      inventory,
+      space.photos.length,
+      manualSource,
+      source,
+      manifest,
+      result,
+      visual.status,
+      visual.coverage,
+    ],
+  );
+
+
+
   React.useEffect(() => {
     if (result) {
       track("spaceplanner_fit_calculated", {

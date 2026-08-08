@@ -414,7 +414,11 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                     pack={result.plan.after}
                     arrangedUrl={visual.imageUrl}
                     status={visual.status}
-                    statusLabel={visual.stageLabel}
+                    statusLabel={
+                      visual.status === "working"
+                        ? `${visual.stageLabel}${visual.attempt > 1 ? " (refining)" : ""} · ${Math.round(visual.elapsedMs / 1000)}s`
+                        : visual.stageLabel
+                    }
                     coverage={visual.coverage}
                     onRetry={() => void visual.generate()}
                     description={`${result.itemCount} items shown in the space you photographed. Estimated fit ${result.fitPercent}%, with about ${result.spaceRemainingM3.toFixed(1)}m³ estimated to remain.`}

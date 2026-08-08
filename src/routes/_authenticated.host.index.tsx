@@ -69,6 +69,7 @@ function HostDashboardPage() {
       title={firstName ? `Hi, ${firstName}` : "Hi there"}
       description="Let's put your unused space to work."
     >
+      <CoachMark id="host_dashboard" className="mb-4" />
       <ActionsNeeded audience="host" />
       <ReviewPrompts audience="host" />
 

@@ -30,10 +30,16 @@ interface InputImage {
   id?: string;
   mimeType?: string;
   base64?: string;
+  /** Plain description of the region the user selected, when they selected one. */
+  region?: string;
+  /** The user's own words for what they selected. */
+  hint?: string;
 }
 
 interface DetectBody {
   task?: "belongings" | "space";
+  /** "selected" = only what the user marked. "whole" = everything visible. */
+  mode?: "selected" | "whole";
   images?: InputImage[];
   spaceType?: string | null;
 }
@@ -45,6 +51,7 @@ interface Observation {
   countBasis?: string;
   occluded?: boolean;
   sizeCue?: string;
+  partOf?: string;
   confidence?: number;
 }
 
@@ -63,7 +70,10 @@ export interface DetectedItemPayload {
   confidence: number;
   photoIds: string[];
   evidence: string;
+  /** Parts of this object that are not separate items (rails, cushions…). */
+  components: string[];
 }
+
 
 function dataUrl(image: InputImage): string | null {
   if (!image?.base64) return null;

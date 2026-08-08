@@ -11,10 +11,17 @@
  * When the endpoint cannot answer, the scan fails honestly. A fabricated
  * inventory is worse than no inventory.
  */
-import { prepareImage } from "@/lib/spaceplanner/photo/image-optimise";
 import type { ItemCategory, WeightClass } from "@/lib/spaceplanner/types";
 
-import type { VisionProvider } from "./provider";
+import { prepareSelection } from "./crop";
+import {
+  detectionCacheKey,
+  readDetectionCache,
+  recordTiming,
+  writeDetectionCache,
+} from "./detection-cache";
+import { describeSelection, isFullPhoto, type PhotoSelection } from "./selection";
+import type { AnalyseOptions, VisionProvider } from "./provider";
 import type {
   DetectedObject,
   SpaceScanResult,
@@ -47,6 +54,7 @@ interface ApiItem {
   confidence: number;
   photoIds: string[];
   evidence?: string;
+  components?: string[];
 }
 
 const CATEGORIES: ItemCategory[] = [
@@ -87,27 +95,53 @@ export function toDetectedObject(item: ApiItem): DetectedObject {
     source: "ai",
     ...(item.countBasis ? { countBasis: item.countBasis } : {}),
     ...(item.evidence ? { evidence: item.evidence } : {}),
+    ...(item.components?.length ? { components: item.components } : {}),
   };
+}
+
+/** The user's selection for a photo, if they made one. */
+function selectionFor(
+  photo: VisionPhoto,
+  selections: PhotoSelection[] | undefined,
+): PhotoSelection | null {
+  return selections?.find((selection) => selection.photoId === photo.id) ?? null;
 }
 
 async function postPhotos(
   photos: VisionPhoto[],
   task: "belongings" | "space",
   spaceType?: string,
+  options?: AnalyseOptions,
 ): Promise<Record<string, unknown>> {
+  options?.onStage?.("reading");
+  const startedPrepare = Date.now();
   const prepared = await Promise.all(
-    photos.map(async (photo) => ({ id: photo.id, ...(await prepareImage(photo.url)) })),
+    photos.map(async (photo) => {
+      const selection = selectionFor(photo, options?.selections);
+      return {
+        id: photo.id,
+        ...(await prepareSelection(photo.url, selection)),
+        ...(selection && !isFullPhoto(selection)
+          ? { region: describeSelection(selection), ...(selection.label ? { hint: selection.label } : {}) }
+          : {}),
+      };
+    }),
   );
+  recordTiming("prepare", Date.now() - startedPrepare);
 
+  options?.onStage?.(task === "space" ? "space" : "finding");
+  const started = Date.now();
   const response = await fetch(DETECT_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       task,
+      mode: options?.mode ?? "whole",
       images: prepared,
       ...(spaceType ? { spaceType } : {}),
     }),
   });
+  recordTiming(task, Date.now() - started);
 
   const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
   if (!response.ok || !payload) {
@@ -129,11 +163,38 @@ export const aiVisionProvider: VisionProvider = {
   id: "spacilo-vision-ai",
   model: "gateway/two-stage",
 
-  async analyseBelongings(photos: VisionPhoto[]): Promise<VisionResult> {
-    const payload = await postPhotos(photos, "belongings");
+  async analyseBelongings(
+    photos: VisionPhoto[],
+    options?: AnalyseOptions,
+  ): Promise<VisionResult> {
+    const key = detectionCacheKey({
+      photos: photos.map((photo) => ({
+        id: photo.id,
+        sizeBytes: photo.sizeBytes,
+        rotation: photo.rotation,
+      })),
+      selections: options?.selections ?? [],
+      mode: options?.mode ?? "whole",
+    });
+    const cached = readDetectionCache(key);
+    if (cached) {
+      options?.onStage?.("estimating");
+      return {
+        objects: cached,
+        photoIds: photos.map((photo) => photo.id),
+        provider: "spacilo-vision-ai",
+        model: "cache",
+        analysedAt: Date.now(),
+      };
+    }
+
+    const payload = await postPhotos(photos, "belongings", undefined, options);
+    options?.onStage?.("estimating");
     const items = Array.isArray(payload["items"]) ? (payload["items"] as ApiItem[]) : [];
+    const objects = items.map(toDetectedObject);
+    writeDetectionCache(key, objects);
     return {
-      objects: items.map(toDetectedObject),
+      objects,
       photoIds: photos.map((photo) => photo.id),
       provider: "spacilo-vision-ai",
       model: typeof payload["model"] === "string" ? String(payload["model"]) : "gateway",
@@ -141,8 +202,12 @@ export const aiVisionProvider: VisionProvider = {
     };
   },
 
-  async analyseSpace(photos: VisionPhoto[], spaceType?: string): Promise<SpaceScanResult> {
-    const payload = await postPhotos(photos, "space", spaceType);
+  async analyseSpace(
+    photos: VisionPhoto[],
+    spaceType?: string,
+    options?: AnalyseOptions,
+  ): Promise<SpaceScanResult> {
+    const payload = await postPhotos(photos, "space", spaceType, options);
     const space = (payload["space"] ?? {}) as Record<string, unknown>;
     const widthM = positive(space["widthM"], 3);
     const depthM = positive(space["depthM"], 3);

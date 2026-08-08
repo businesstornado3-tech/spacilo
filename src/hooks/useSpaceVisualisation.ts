@@ -23,16 +23,31 @@ import type { DetectedObject, VisionPhoto } from "@/lib/vision/types";
 
 export type VisualisationStatus = "idle" | "working" | "ready" | "incomplete" | "failed";
 
+/**
+ * Hard ceiling on one render request. A visual preview that has not arrived
+ * within this window is abandoned rather than left spinning: the numeric
+ * result is already on screen and must never be held hostage to the image.
+ */
+export const RENDER_TIMEOUT_MS = 75_000;
+
+/** One render plus, at most, one corrective refinement. */
+export const MAX_RENDER_ATTEMPTS = 2;
+
 export interface UseSpaceVisualisation {
   status: VisualisationStatus;
   stage: VisualisationStage;
   stageLabel: string;
+  /** Which render attempt is in flight, 1-based. */
+  attempt: number;
+  /** Milliseconds since the current run started, updated about once a second. */
+  elapsedMs: number;
   imageUrl: string | null;
   coverage: CoverageReport | null;
   error: string | null;
   generate: () => Promise<void>;
   reset: () => void;
 }
+
 
 export function useSpaceVisualisation(options: {
   result: PhotoPlanResult | null;

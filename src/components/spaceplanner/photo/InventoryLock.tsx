@@ -60,7 +60,7 @@ export function InventoryLock({
         ))}
       </ul>
 
-      <DetectedInventory objects={objects} actions={actions} onAdd={onAdd} />
+      <DetectedInventory objects={objects} actions={actions} {...(onAdd ? { onAdd } : {})} />
 
       <div className="flex flex-wrap gap-2">
         <Button type="button" size="lg" onClick={onConfirm} disabled={objects.length === 0}>

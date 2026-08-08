@@ -102,7 +102,9 @@ export function useSpaceVisualisation(options: {
       return;
     }
     const renderItems = manifestPayload(manifest);
-    if (renderItems.length !== manifest.expectedUnits) {
+    // Items the planner could not fit are legitimately absent from the render
+    // list; only an empty list means there is nothing to draw.
+    if (renderItems.length === 0) {
       setError("inventory_not_fully_placeable");
       setStatus("failed");
       return;
@@ -165,12 +167,9 @@ export function useSpaceVisualisation(options: {
       for (let pass = 1; pass < MAX_RENDER_ATTEMPTS; pass += 1) {
         setStage("checking");
         const coverageNow = response.coverage;
-        if (!coverageNow) {
-          setImageUrl(null);
-          setCoverage(null);
-          setStatus("rejected");
-          return;
-        }
+        // An unverifiable render is not a wrong render: the checker simply
+        // could not answer. It is shown, flagged as unverified.
+        if (!coverageNow) break;
         const missingItems = coverageNow.missing.length > 0;
         const invented = (coverageNow.unexpected?.length ?? 0) > 0;
         if (!missingItems && !invented) break;
@@ -188,24 +187,19 @@ export function useSpaceVisualisation(options: {
       }
 
       const finalCoverage = response.coverage;
-      const rejected =
-        !finalCoverage ||
-        !finalCoverage.complete ||
-        !finalCoverage.faithful ||
-        (finalCoverage.unexpected?.length ?? 0) > 0;
-      if (rejected) {
-        // A physically wrong but attractive image is worse than no image.
-        setStage("checking");
+      setStage("checking");
+      setCoverage(finalCoverage);
+
+      // Only an image proven to contain belongings the user does not own is
+      // withheld. A physically wrong but attractive image is worse than none.
+      if (response.verification === "unfaithful") {
         setImageUrl(null);
-        setCoverage(finalCoverage);
         setStatus("rejected");
         return;
       }
 
-      setStage("checking");
       setImageUrl(response.image);
-      setCoverage(response.coverage);
-      setStatus("ready");
+      setStatus(response.verification === "incomplete" ? "incomplete" : "ready");
     } catch (cause) {
       if (run.current !== token) return;
       const aborted = cause instanceof DOMException && cause.name === "AbortError";
@@ -215,6 +209,7 @@ export function useSpaceVisualisation(options: {
       if (run.current === token) stopClock();
     }
   }, [result, objects, manifest, spacePhoto, itemPhotos, stopClock]);
+
 
   const reset = React.useCallback(() => {
     run.current += 1;

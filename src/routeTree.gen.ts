@@ -31,6 +31,7 @@ import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedRenterRouteImport } from './routes/_authenticated.renter'
 import { Route as AuthenticatedSpacefitRouteImport } from './routes/_authenticated.spacefit'
+import { Route as ApiSpaceplannerVisualiseRouteImport } from './routes/api/spaceplanner-visualise'
 import { Route as LegalIndexRouteImport } from './routes/legal.index'
 import { Route as LegalDocRouteImport } from './routes/legal.$doc'
 import { Route as SpacefitSpaceRouteImport } from './routes/spacefit.space'
@@ -188,6 +189,12 @@ const AuthenticatedSpacefitRoute = AuthenticatedSpacefitRouteImport.update({
   path: '/spacefit',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiSpaceplannerVisualiseRoute =
+  ApiSpaceplannerVisualiseRouteImport.update({
+    id: '/api/spaceplanner-visualise',
+    path: '/api/spaceplanner-visualise',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LegalIndexRoute = LegalIndexRouteImport.update({
   id: '/legal/',
   path: '/legal/',
@@ -477,6 +484,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/renter': typeof AuthenticatedRenterRouteWithChildren
   '/spacefit': typeof AuthenticatedSpacefitRoute
+  '/api/spaceplanner-visualise': typeof ApiSpaceplannerVisualiseRoute
   '/legal/$doc': typeof LegalDocRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
@@ -544,6 +552,7 @@ export interface FileRoutesByTo {
   '/planner': typeof AuthenticatedPlannerRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/spacefit': typeof AuthenticatedSpacefitRoute
+  '/api/spaceplanner-visualise': typeof ApiSpaceplannerVisualiseRoute
   '/legal/$doc': typeof LegalDocRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
@@ -614,6 +623,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/renter': typeof AuthenticatedRenterRouteWithChildren
   '/_authenticated/spacefit': typeof AuthenticatedSpacefitRoute
+  '/api/spaceplanner-visualise': typeof ApiSpaceplannerVisualiseRoute
   '/legal/$doc': typeof LegalDocRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
@@ -685,6 +695,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/renter'
     | '/spacefit'
+    | '/api/spaceplanner-visualise'
     | '/legal/$doc'
     | '/spacefit/space'
     | '/spacefit/stuff'
@@ -752,6 +763,7 @@ export interface FileRouteTypes {
     | '/planner'
     | '/profile'
     | '/spacefit'
+    | '/api/spaceplanner-visualise'
     | '/legal/$doc'
     | '/spacefit/space'
     | '/spacefit/stuff'
@@ -821,6 +833,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/renter'
     | '/_authenticated/spacefit'
+    | '/api/spaceplanner-visualise'
     | '/legal/$doc'
     | '/spacefit/space'
     | '/spacefit/stuff'
@@ -886,6 +899,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StoragePolicyRoute: typeof StoragePolicyRoute
   TrustRoute: typeof TrustRoute
+  ApiSpaceplannerVisualiseRoute: typeof ApiSpaceplannerVisualiseRoute
   LegalDocRoute: typeof LegalDocRoute
   SpacefitSpaceRoute: typeof SpacefitSpaceRoute
   SpacefitStuffRoute: typeof SpacefitStuffRoute
@@ -1051,6 +1065,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/spacefit'
       preLoaderRoute: typeof AuthenticatedSpacefitRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/spaceplanner-visualise': {
+      id: '/api/spaceplanner-visualise'
+      path: '/api/spaceplanner-visualise'
+      fullPath: '/api/spaceplanner-visualise'
+      preLoaderRoute: typeof ApiSpaceplannerVisualiseRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/legal/': {
       id: '/legal/'
@@ -1536,6 +1557,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StoragePolicyRoute: StoragePolicyRoute,
   TrustRoute: TrustRoute,
+  ApiSpaceplannerVisualiseRoute: ApiSpaceplannerVisualiseRoute,
   LegalDocRoute: LegalDocRoute,
   SpacefitSpaceRoute: SpacefitSpaceRoute,
   SpacefitStuffRoute: SpacefitStuffRoute,
@@ -1548,3 +1570,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

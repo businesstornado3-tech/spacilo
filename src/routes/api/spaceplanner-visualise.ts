@@ -2,8 +2,8 @@
  * Spacilo AI SpacePlanner™ — visualisation endpoint (OpenAI renderer).
  *
  * PROVIDER: OpenAI, called directly with the server-side `OPENAI_API_KEY`.
- * Google/Gemini is no longer part of this path — not as the renderer, not as a
- * fallback, and not as the verifier.
+ * The previous Google image provider is no longer part of this path — not as
+ * the renderer, not as a fallback, and not as the verifier.
  *
  * The deterministic physical planner remains the sole authority for the
  * arrangement. This route receives an already-final PlacementManifest and asks
@@ -15,7 +15,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 
-/** OpenAI image-edit model. Overridable, but never a Gemini id. */
+/** OpenAI image-edit model. Overridable, but always an OpenAI id. */
 const DEFAULT_IMAGE_MODEL = "gpt-image-2";
 /** Vision model used only to check the render. Not a renderer. */
 const DEFAULT_VERIFY_MODEL = "gpt-4.1-mini";
@@ -116,7 +116,9 @@ export function normaliseReported(label: string): string {
     .replace(/\b(an?|the|one|two|three|four|five|extra|additional|another|second|third|duplicate|more|further|spare|other)\b/g, " ")
     .replace(/[^a-z0-9 ]/g, " ")
     .replace(/\s+/g, " ")
-    .replace(/\b(\w+?)e?s\b/g, "$1")
+    // Singular/plural must converge on one stem: "suitcase" and "suitcases"
+    // are the same object, so a duplicate is never read as an invention.
+    .replace(/\b\w+\b/g, (word) => word.replace(/(?:es|s)$/, "").replace(/e$/, ""))
     .trim();
 }
 

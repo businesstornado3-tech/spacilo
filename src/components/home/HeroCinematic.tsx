@@ -6,8 +6,8 @@
  * into an optimised arrangement before a calm success state. It loops roughly
  * every 18 seconds.
  *
- * Deliberately free of product UI — no controls, no metrics, no confidence
- * scores, no Digital Twin. The interactive twin lives in the product routes
+ * Deliberately free of product UI — no controls, no metrics, no scoring
+ * numbers, no Digital Twin. The interactive twin lives in the product routes
  * (planner, listings, booking, dashboards) and is untouched by this file.
  */
 import * as React from "react";

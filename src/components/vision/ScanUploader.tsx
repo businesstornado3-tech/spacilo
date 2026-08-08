@@ -117,7 +117,7 @@ export function ScanUploader({
         className="sr-only"
         aria-label="Take a photo"
         onChange={(event) => {
-          if (event.target.files?.length) onFiles(event.target.files);
+          if (event.target.files?.length) accept(event.target.files, "camera");
           event.target.value = "";
         }}
       />

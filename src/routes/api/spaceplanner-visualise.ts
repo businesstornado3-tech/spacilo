@@ -309,11 +309,11 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const key = process.env["OPENAI_API_KEY"];
+        const key = process.env["LOVABLE_API_KEY"];
         if (!key) {
           // No silent fallback to another provider: report the misconfiguration.
           return Response.json(
-            { error: "not_configured", provider: PROVIDER, detail: "OPENAI_API_KEY is not set" },
+            { error: "not_configured", provider: PROVIDER, detail: "LOVABLE_API_KEY is not set" },
             { status: 503 },
           );
         }
@@ -332,7 +332,8 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         }
         const itemPhotos = (body.itemImages ?? [])
           .slice(0, MAX_ITEM_PHOTOS)
-          .filter((photo): photo is { mimeType?: string; base64: string } => Boolean(photo?.base64));
+          .map(dataUrl)
+          .filter((url): url is string => Boolean(url));
 
         const manifest = body.manifest ?? [];
         const required = manifest
@@ -366,38 +367,30 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           hasItemPhotos: itemPhotos.length > 0,
         });
 
-        // Multipart image edit: the user's space photograph first, then their
-        // belongings as visual references. This is a true edit of the original
-        // photograph, not a fresh generation.
-        const form = new FormData();
-        form.append("model", model);
-        form.append("prompt", prompt);
-        form.append("n", "1");
-        form.append("size", "1024x1024");
-        form.append("quality", process.env["OPENAI_IMAGE_QUALITY"]?.trim() || "medium");
-        form.append("input_fidelity", "high");
-        form.append(
-          "image[]",
-          blobFromBase64(spacePhoto.base64, spacePhoto.mimeType || "image/jpeg"),
-          "space.jpg",
-        );
-        itemPhotos.forEach((photo, index) => {
-          form.append(
-            "image[]",
-            blobFromBase64(photo.base64, photo.mimeType || "image/jpeg"),
-            `item-${index + 1}.jpg`,
-          );
-        });
+        // Image-to-image edit through the gateway: the user's space photograph
+        // first, then their belongings as visual references. The source photo
+        // is the foundation, not a fresh generation.
+        const content: Record<string, unknown>[] = [
+          { type: "text", text: prompt },
+          { type: "image_url", image_url: { url: space } },
+          ...itemPhotos.map((url) => ({ type: "image_url", image_url: { url } })),
+        ];
 
         const startedRender = Date.now();
         let upstream: Response;
         try {
-          upstream = await fetch(`${OPENAI}/images/edits`, {
+          upstream = await fetch(`${GATEWAY}/images/generations`, {
             method: "POST",
-            headers: { Authorization: `Bearer ${key}` },
-            body: form,
+            headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model,
+              messages: [{ role: "user", content }],
+              modalities: ["image", "text"],
+              stream: false,
+            }),
           });
         } catch {
+
           return Response.json(
             { error: "upstream_unreachable", provider: PROVIDER, model, diagnosticId },
             { status: 502 },

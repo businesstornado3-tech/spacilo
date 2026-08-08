@@ -10,6 +10,11 @@ interface EmptyStateProps {
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
+  /** Optional quieter follow-up action. */
+  secondaryLabel?: string;
+  onSecondaryAction?: () => void;
+  /** Custom actions (e.g. links) rendered instead of the built-in buttons. */
+  action?: React.ReactNode;
   className?: string;
 }
 
@@ -19,12 +24,15 @@ export function EmptyState({
   description,
   actionLabel,
   onAction,
+  secondaryLabel,
+  onSecondaryAction,
+  action,
   className,
 }: EmptyStateProps) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center rounded-2xl border border-dashed border-border-strong bg-card px-6 py-12 text-center",
+        "animate-fade flex flex-col items-center rounded-2xl border border-dashed border-border-strong bg-card px-6 py-12 text-center",
         className,
       )}
     >
@@ -37,10 +45,16 @@ export function EmptyState({
       {description ? (
         <p className="mt-2 max-w-sm type-body-sm text-muted-foreground">{description}</p>
       ) : null}
-      {actionLabel ? (
-        <Button className="mt-5" onClick={onAction}>
-          {actionLabel}
-        </Button>
+      {actionLabel || action || secondaryLabel ? (
+        <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+          {actionLabel ? <Button onClick={onAction}>{actionLabel}</Button> : null}
+          {action}
+          {secondaryLabel ? (
+            <Button variant="text" onClick={onSecondaryAction}>
+              {secondaryLabel}
+            </Button>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

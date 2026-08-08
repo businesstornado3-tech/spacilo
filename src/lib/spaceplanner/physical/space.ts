@@ -194,9 +194,17 @@ export function accessGeometry(space: PlanningSpace): AccessGeometry {
   }
 
   const doorCentre = space.doorway.x + space.doorway.w / 2;
-  const corridorX = round2(
-    Math.max(usable.x, Math.min(doorCentre - corridorWidth / 2, usable.x + usable.w - corridorWidth)),
-  );
+  const rightMost = round2(usable.x + usable.w - corridorWidth);
+  const side = space.corridorSide ?? "centre";
+  // A corridor down one side keeps the storage as a single contiguous block;
+  // a central corridor necessarily splits it into two.
+  const corridorX =
+    side === "left"
+      ? round2(usable.x)
+      : side === "right"
+        ? rightMost
+        : round2(Math.max(usable.x, Math.min(doorCentre - corridorWidth / 2, rightMost)));
+
   const walkway: Rect = {
     x: corridorX,
     y: round2(usable.y + backBand),

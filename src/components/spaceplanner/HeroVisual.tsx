@@ -11,10 +11,10 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { HeroTwin } from "@/components/twin/HeroTwin";
+import { HeroCinematic } from "@/components/home/HeroCinematic";
 
 export interface HeroVisualProps {
-  /** The visual to render. Defaults to the homepage Digital Twin. */
+  /** The visual to render. Defaults to the cinematic homepage animation. */
   children?: React.ReactNode;
   className?: string;
 }
@@ -26,7 +26,10 @@ export function HeroVisual({ children, className }: HeroVisualProps) {
       className={cn("min-w-0 lg:sticky lg:top-24", className)}
       aria-live="off"
     >
-      {children ?? <HeroTwin />}
+      {children ?? <HeroCinematic />}
+    </div>
+  );
+}
     </div>
   );
 }

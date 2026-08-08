@@ -63,6 +63,10 @@ export interface DetectedObject {
   /** Photos this object was proposed from. */
   photoIds: string[];
   source: DetectionSource;
+  /** How the quantity was arrived at — always evidence, never assumption. */
+  countBasis?: string;
+  /** What was actually visible that led to this item. */
+  evidence?: string;
 }
 
 export interface VisionResult {

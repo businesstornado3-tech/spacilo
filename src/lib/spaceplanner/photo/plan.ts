@@ -10,8 +10,7 @@
 import { buildPlan } from "../index";
 import { CATALOGUE_BY_ID } from "../catalogue";
 import { usableVolume } from "../spaces";
-import type { InventoryLine, SpacePlan, StorageSpace } from "../types";
-import { toPlannerQuantities } from "@/lib/vision/inventory";
+import type { CatalogueItem, InventoryLine, SpacePlan, StorageSpace } from "../types";
 import type { DetectedObject, SpaceScanResult } from "@/lib/vision/types";
 
 export interface SpaceSource {
@@ -51,16 +50,40 @@ export interface PhotoPlanResult {
 
 export const LOW_CONFIDENCE = 0.7;
 
-/** Detected belongings → planner inventory lines. */
+/**
+ * Confirmed belongings → planner inventory lines.
+ *
+ * The locked inventory is canonical: every confirmed item becomes its own
+ * line, keeping its own id, its own name and its own estimated dimensions.
+ * Nothing is collapsed into "medium boxes" and nothing is swapped for a
+ * catalogue lookalike, so the plan, the manifest and the visualisation all
+ * describe the same physical objects the user photographed.
+ */
 export function linesFromObjects(objects: DetectedObject[]): InventoryLine[] {
-  const quantities = toPlannerQuantities(objects);
-  return Object.entries(quantities)
-    .map(([id, quantity]) => {
-      const item = CATALOGUE_BY_ID.get(id);
-      return item ? { item, quantity } : null;
-    })
-    .filter((line): line is InventoryLine => line !== null && line.quantity > 0);
+  return objects
+    .filter((object) => object.quantity > 0 && object.label.trim().length > 0)
+    .map((object) => {
+      const catalogue = object.catalogueId ? CATALOGUE_BY_ID.get(object.catalogueId) : undefined;
+      const item: CatalogueItem = {
+        id: object.id,
+        name: object.label,
+        category: object.category,
+        icon: catalogue?.icon ?? "box",
+        width: Math.max(3, object.width),
+        depth: Math.max(3, object.depth),
+        height: Math.max(3, object.height),
+        fragile: object.fragile,
+        stackable: object.stackable,
+        maxStack: object.stackable ? (catalogue?.maxStack ?? 3) : 1,
+        weight: object.weight,
+        standsUpright: catalogue?.standsUpright ?? false,
+        frequentlyUsed: catalogue?.frequentlyUsed ?? false,
+        popular: false,
+      };
+      return { item, quantity: object.quantity };
+    });
 }
+
 
 /** A scanned space → the planner's metric space. */
 export function spaceFromScan(scan: SpaceScanResult, name = "Your space"): SpaceSource {
@@ -100,13 +123,32 @@ function averageConfidence(objects: DetectedObject[]): number {
 }
 
 /**
- * The estimated fit.
- *
- * Placement is the primary evidence — anything the packer could not place
- * counts against the score — and a tight volume is penalised because a
- * photograph cannot prove the last few centimetres.
+ * Items that physically cannot go in, whatever the cubic maths says: too tall
+ * for the ceiling, or too wide and too deep to turn into the room.
  */
-export function fitPercentFor(plan: SpacePlan): number {
+export function oversizeItems(lines: InventoryLine[], space: StorageSpace): string[] {
+  return lines
+    .filter(({ item }) => {
+      const w = item.width / 100;
+      const d = item.depth / 100;
+      const h = item.height / 100;
+      const tooTall = h > space.height;
+      const tooBroad = Math.min(w, d) > Math.max(space.width, space.depth);
+      const tooWide = w > space.width && d > space.width;
+      return tooTall || tooBroad || tooWide;
+    })
+    .map(({ item }) => item.name);
+}
+
+/**
+ * The estimated fit — spatial feasibility, not cubic volume.
+ *
+ * Placement is the primary evidence: anything the packer could not put on the
+ * floor counts against the score, and anything physically too large for the
+ * room caps it. A tight volume is penalised on top, because a photograph
+ * cannot prove the last few centimetres.
+ */
+export function fitPercentFor(plan: SpacePlan, oversize = 0): number {
   const totalUnits = plan.itemCount;
   if (totalUnits === 0) return 0;
   const unplaced = plan.after.unplaced.length;
@@ -115,8 +157,10 @@ export function fitPercentFor(plan: SpacePlan): number {
   const headroom = usable > 0 ? requiredVolume / usable : 2;
   const tightness = headroom > 1 ? 0.72 : headroom > 0.95 ? 0.93 : 1;
   const access = plan.metrics.walkwayPreserved ? 1 : 0.94;
-  return pct(placedShare * tightness * access * 100);
+  const feasibility = oversize > 0 ? Math.max(0.3, 1 - oversize * 0.2) : 1;
+  return pct(placedShare * tightness * access * feasibility * 100);
 }
+
 
 export function buildPhotoPlan(
   objects: DetectedObject[],
@@ -135,15 +179,21 @@ export function buildPhotoPlan(
   const confidence = Math.max(0.35, Math.min(0.95, detection * 0.55 + dimension * 0.45));
 
   const spread = confidence > 0.8 ? 0.07 : confidence > 0.65 ? 0.12 : 0.18;
-  const fitPercent = fitPercentFor(plan);
+  const oversize = oversizeItems(lines, space);
+  const fitPercent = fitPercentFor(plan, oversize.length);
 
   const improvements: string[] = [];
   if (dimension < LOW_CONFIDENCE)
     improvements.push("Add another photo of the space, or confirm its dimensions.");
   if (detection < LOW_CONFIDENCE)
     improvements.push("Check the detected items — correcting a few sharpens the estimate.");
+  if (oversize.length > 0)
+    improvements.push(
+      `These look too large for this space: ${oversize.slice(0, 3).join(", ")}. Check their measurements.`,
+    );
   if (plan.after.unplaced.length > 0)
     improvements.push("Some items didn't fit in this arrangement. Try a larger space.");
+
 
   return {
     plan,

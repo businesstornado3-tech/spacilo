@@ -101,6 +101,12 @@ export function useSpaceVisualisation(options: {
       setStatus("failed");
       return;
     }
+    const renderItems = manifestPayload(manifest);
+    if (renderItems.length !== manifest.expectedUnits) {
+      setError("inventory_not_fully_placeable");
+      setStatus("failed");
+      return;
+    }
     const token = ++run.current;
     abort.current?.abort();
     setStatus("working");
@@ -145,7 +151,7 @@ export function useSpaceVisualisation(options: {
         spaceImage: space,
         itemImages: items,
         instruction: buildVisualisationInstruction(result, objects, manifest ?? undefined),
-        manifest: manifestPayload(manifest),
+        manifest: renderItems,
         roomFeatures: manifest.roomFeatures,
       };
 

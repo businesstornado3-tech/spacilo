@@ -13,6 +13,7 @@ import {
   coverageFrom,
   formatManifestForModel,
   lockInventory,
+  manifestUnitCount,
   requiredLabels,
   requiredRenderItems,
 } from "./manifest";
@@ -99,7 +100,7 @@ describe("Phase 6I — inventory is the source of truth", () => {
     for (const label of labels) {
       expect(inventoryObjects.some((entry) => entry.label === label)).toBe(true);
     }
-    expect(manifestPayload(manifest).length).toBe(labels.length);
+    expect(manifestPayload(manifest).length).toBe(manifestUnitCount(manifest));
   });
 
   it("freezes a stable identity for every physical unit", () => {

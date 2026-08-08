@@ -175,8 +175,9 @@ describe("visualisation instruction", () => {
     const plan = buildPhotoPlan(inventory.objects, source)!;
     const payload = manifestPayload(buildPlacementManifest(inventory, plan));
     expect(payload).toEqual([
-      { label: "Bedside crib", quantity: 1 },
-      { label: "Large suitcase", quantity: 2 },
+      { id: "obj-crib_01", label: "Bedside crib", quantity: 1 },
+      { id: "obj-case_01", label: "Large suitcase", quantity: 1 },
+      { id: "obj-case_02", label: "Large suitcase", quantity: 1 },
     ]);
   });
 });

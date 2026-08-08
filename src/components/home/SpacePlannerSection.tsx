@@ -39,13 +39,13 @@ export function SpacePlannerSection() {
   const [zoomed, setZoomed] = React.useState(false);
 
   return (
-    <section aria-labelledby="spaceplanner-heading" className="py-10 sm:py-14">
+    <section aria-labelledby="spaceplanner-preview-heading" className="py-10 sm:py-14">
       <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
         <Reveal>
           <div className="overflow-hidden rounded-[2rem] border border-signal-soft bg-card shadow-card">
             <div className="p-5 sm:p-8">
               <p className="type-overline text-muted-foreground">Spacilo AI SpacePlanner™</p>
-              <h2 id="spaceplanner-heading" className="mt-2 text-balance type-h2">
+              <h2 id="spaceplanner-preview-heading" className="mt-2 text-balance type-h2">
                 Show us your stuff. Show us your space. We&apos;ll show you how it fits.
               </h2>
               <p className="mt-2.5 max-w-2xl type-body text-muted-foreground">

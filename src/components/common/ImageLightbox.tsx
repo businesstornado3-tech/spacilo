@@ -94,11 +94,12 @@ export function ImageLightbox({
     return () => element.removeEventListener("wheel", onWheel);
   }, [open, zoomAt]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
   const down = (event: React.PointerEvent) => {
     event.currentTarget.setPointerCapture(event.pointerId);
     pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    moved.current = false;
     if (pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()];
       pinch.current = { distance: Math.hypot(a!.x - b!.x, a!.y - b!.y), zoom: view.zoom };
@@ -113,6 +114,7 @@ export function ImageLightbox({
     pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
 
     if (pointers.current.size === 2 && pinch.current) {
+      moved.current = true;
       const [a, b] = [...pointers.current.values()];
       const distance = Math.hypot(a!.x - b!.x, a!.y - b!.y);
       if (pinch.current.distance > 0) {
@@ -127,6 +129,7 @@ export function ImageLightbox({
 
     if (drag.current) {
       const start = drag.current;
+      if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 4) moved.current = true;
       setView({
         zoom: start.view.zoom,
         x: start.view.x + (event.clientX - start.x),
@@ -147,14 +150,28 @@ export function ImageLightbox({
     zoomAt(view.zoom * factor, box.left + box.width / 2, box.top + box.height / 2);
   };
 
-  return (
+  /**
+   * Rendered into `document.body`.
+   *
+   * A `fixed` element is positioned against the nearest transformed ancestor,
+   * and the result cards live inside animated (transformed) wrappers — which is
+   * exactly why the viewer used to open half off-screen with a grey band. The
+   * portal removes that whole class of bug.
+   */
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label={alt}
-      className="fixed inset-0 z-50 flex flex-col bg-scene-ink/95"
+      className="fixed inset-0 z-[100] flex h-[100dvh] w-screen flex-col overscroll-contain bg-scene-ink/95"
+      style={{
+        paddingTop: "env(safe-area-inset-top)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+        paddingLeft: "env(safe-area-inset-left)",
+        paddingRight: "env(safe-area-inset-right)",
+      }}
     >
-      <div className="flex items-center justify-between gap-2 p-3">
+      <div className="flex shrink-0 items-center justify-between gap-2 p-3">
         <p className="min-w-0 truncate rounded-full bg-card/90 px-3 py-1.5 type-body-sm text-foreground">
           {caption ?? alt}
         </p>
@@ -180,11 +197,16 @@ export function ImageLightbox({
         onPointerMove={move}
         onPointerUp={up}
         onPointerCancel={up}
+        onClick={() => {
+          // Tapping the backdrop closes, but only when nothing was dragged and
+          // the image is not zoomed in.
+          if (!moved.current && viewRef.current.zoom === 1) onClose();
+        }}
         onDoubleClick={(event) =>
           view.zoom > 1 ? setView(RESET) : zoomAt(2.5, event.clientX, event.clientY)
         }
         className={cn(
-          "relative flex-1 touch-none overflow-hidden select-none",
+          "relative min-h-0 flex-1 touch-none overflow-hidden select-none",
           view.zoom > 1 ? "cursor-grab" : "cursor-zoom-in",
         )}
       >
@@ -192,7 +214,8 @@ export function ImageLightbox({
           src={src}
           alt={alt}
           draggable={false}
-          className="pointer-events-none absolute inset-0 m-auto max-h-full max-w-full object-contain"
+          onClick={(event) => event.stopPropagation()}
+          className="absolute inset-0 m-auto max-h-full max-w-full object-contain"
           style={{
             transform: `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`,
             transformOrigin: "center center",
@@ -200,14 +223,16 @@ export function ImageLightbox({
         />
       </div>
 
-      <p className="p-3 text-center type-body-xs">
+      <p className="shrink-0 p-3 text-center type-body-xs">
         <span className="rounded-full bg-card/80 px-3 py-1 text-muted-foreground">
           Pinch, scroll or double-tap to zoom. Drag to pan.
         </span>
       </p>
-    </div>
+    </div>,
+    document.body,
   );
 }
+
 
 function ZoomButton({
   label,

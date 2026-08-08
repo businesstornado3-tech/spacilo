@@ -59,6 +59,7 @@ function RenterHomePage() {
       title={firstName ? `Hi, ${firstName}` : "Hi there"}
       description="What do you need space for?"
     >
+      <CoachMark id="renter_dashboard" className="mb-4" />
       <ActionsNeeded audience="renter" />
       <ReviewPrompts audience="renter" />
 

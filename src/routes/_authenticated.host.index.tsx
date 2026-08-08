@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { EmptyState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { ActionsNeeded } from "@/components/bookings/ActionsNeeded";
+import { CoachMark } from "@/components/onboarding/CoachMark";
 import { ReviewPrompts } from "@/components/reviews/ReviewPrompts";
 import { useAuth } from "@/hooks/useAuth";
 import { useHostRequests } from "@/hooks/useStorageRequests";

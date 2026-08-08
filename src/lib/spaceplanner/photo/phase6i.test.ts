@@ -14,6 +14,7 @@ import {
   formatManifestForModel,
   lockInventory,
   requiredLabels,
+  requiredRenderItems,
 } from "./manifest";
 import { manifestHash, runDiagnostics, serialiseManifest, verificationStatusOf } from "./diagnostics";
 import { manifestPayload } from "./visualise";
@@ -101,6 +102,13 @@ describe("Phase 6I — inventory is the source of truth", () => {
     expect(manifestPayload(manifest).length).toBe(labels.length);
   });
 
+  it("freezes a stable identity for every physical unit", () => {
+    const { inventory, manifest } = planOnce();
+    expect(inventory.items).toHaveLength(7);
+    expect(new Set(inventory.items.map((item) => item.itemId)).size).toBe(7);
+    expect(requiredRenderItems(manifest)).toHaveLength(7);
+  });
+
   it("states the exact object count and forbids invention in the rendering order", () => {
     const text = formatManifestForModel(manifest);
     expect(text).toContain("TOTAL OBJECTS TO DRAW: exactly");
@@ -127,6 +135,14 @@ describe("Phase 6I — render verification rejects hallucinations", () => {
 
   it("matches the endpoint's verifier", () => {
     expect(coverageOf(["TV"], ["TV"], ["Lamp"])).toEqual(coverageFrom(["TV"], ["TV"], ["Lamp"]));
+  });
+
+  it("rejects the real shoe invention and TV omission failure", () => {
+    const report = coverageFrom(["ITEM-001_01", "ITEM-TV_01"], ["ITEM-001_01"], ["Shoes"]);
+    expect(report.complete).toBe(false);
+    expect(report.missing).toEqual(["ITEM-TV_01"]);
+    expect(report.faithful).toBe(false);
+    expect(report.unexpected).toEqual(["Shoes"]);
   });
 
   it("parses the verifier's structured reply", () => {

@@ -49,7 +49,7 @@ export interface VisualisationRequest {
   instruction: string;
   /** Structured manifest the image must satisfy. */
   manifest?: { id: string; label: string; quantity: number }[];
-  roomFeatures?: { id: string; label: string; kind: string; position: string }[];
+  roomFeatures?: readonly { id: string; label: string; kind: string; position: string }[];
   /** Items a previous attempt missed; the retry emphasises these. */
   emphasise?: string[];
   /** Distinguishes a corrective re-render from the cached first attempt. */

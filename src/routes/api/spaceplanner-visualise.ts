@@ -20,6 +20,7 @@ const MAX_ITEM_PHOTOS = 3;
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 
 interface ManifestItem {
+  id?: string;
   label?: string;
   quantity?: number;
 }
@@ -30,6 +31,7 @@ interface VisualiseBody {
   instruction?: string;
   manifest?: ManifestItem[];
   emphasise?: string[];
+  roomFeatures?: { id?: string; label?: string; kind?: string; position?: string }[];
 }
 
 function dataUrl(image: { mimeType?: string; base64?: string }): string | null {
@@ -140,8 +142,10 @@ export function parseCheckReply(
  */
 async function checkCoverage(
   key: string,
+  sourceImage: string,
   image: string,
-  required: string[],
+  required: { id: string; label: string }[],
+  roomFeatures: { id: string; label: string }[],
 ): Promise<Coverage | null> {
   if (required.length === 0) return null;
   try {
@@ -156,8 +160,9 @@ async function checkCoverage(
             content: [
               {
                 type: "text",
-                text: `Look at this photograph of a storage space. The only stored belongings that should appear are: ${required.join("; ")}. Reply with JSON only, in the form {"present":["…"],"unexpected":["…"]}. "present" lists the items from that list you can clearly see, named exactly as written. "unexpected" lists any other stored belongings, boxes, bags, furniture or storage units visible on the floor that are NOT on the list. Ignore fixtures that belong to the room itself (walls, doors, windows, lights, fitted shelving already built in).`,
+                text: `Compare the SOURCE room photograph (first image) with the GENERATED photograph (second image). Required inventory units are: ${required.map((item) => `${item.id}=${item.label}`).join("; ")}. Required fixed room features are: ${roomFeatures.map((feature) => `${feature.id}=${feature.label}`).join("; ") || "all visible source fixtures"}. Reply JSON only as {"present":["ITEM_ID"],"unexpected":["description"]}. Count duplicate units separately. A required unit is present only when clearly visible. Report any generated stored object without a required ID as unexpected. Also report as unexpected any source television, radiator, door, window, fitted shelf, built-in furnishing or electrical fixture that disappeared, moved, changed or became covered.`,
               },
+              { type: "image_url", image_url: { url: sourceImage } },
               { type: "image_url", image_url: { url: image } },
             ],
           },
@@ -172,7 +177,7 @@ async function checkCoverage(
     const text = typeof content === "string" ? content : "";
     const reply = parseCheckReply(text);
     if (!reply) return null;
-    return coverageOf(required, reply.present, reply.unexpected);
+    return coverageOf(required.map((item) => item.id), reply.present, reply.unexpected);
   } catch {
     return null;
   }
@@ -204,9 +209,21 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           .filter((url): url is string => Boolean(url));
 
         const required = (body.manifest ?? [])
-          .map((entry) => (typeof entry?.label === "string" ? entry.label.trim() : ""))
-          .filter(Boolean)
+          .flatMap((entry, index) => {
+            const label = typeof entry?.label === "string" ? entry.label.trim() : "";
+            if (!label) return [];
+            const id = typeof entry?.id === "string" && entry.id.trim() ? entry.id.trim() : `ITEM-${index + 1}`;
+            return [{ id, label }];
+          })
           .slice(0, 20);
+        if (required.length === 0) {
+          return Response.json({ error: "verified_manifest_required" }, { status: 400 });
+        }
+        const roomFeatures = (body.roomFeatures ?? []).flatMap((feature, index) => {
+          const label = typeof feature?.label === "string" ? feature.label.trim() : "";
+          if (!label) return [];
+          return [{ id: feature.id?.trim() || `FEATURE-${index + 1}`, label }];
+        });
         const emphasise = (body.emphasise ?? [])
           .filter((label): label is string => typeof label === "string")
           .slice(0, 20);
@@ -224,12 +241,13 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
                 : "Place the described belongings into the photographed space.",
               body.instruction?.slice(0, 6000) ?? "",
               required.length
-                ? `ALLOWED OBJECTS — this is an exhaustive whitelist. Render ONLY these, each exactly once per stated quantity:\n${(body.manifest ?? [])
+                ? `ALLOWED OBJECTS — this is an exhaustive per-unit whitelist. Render every ID exactly once:\n${(body.manifest ?? [])
                     .map((entry, index) => {
                       const label = typeof entry?.label === "string" ? entry.label.trim() : "";
                       const quantity =
                         typeof entry?.quantity === "number" && entry.quantity > 0 ? entry.quantity : 1;
-                      return label ? `item_${String(index + 1).padStart(2, "0")} = ${quantity} × ${label}` : "";
+                      const id = typeof entry?.id === "string" ? entry.id : `item_${String(index + 1).padStart(2, "0")}`;
+                      return label ? `${id} = ${quantity} × ${label}` : "";
                     })
                     .filter(Boolean)
                     .join("\n")}`
@@ -237,6 +255,9 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
               required.length
                 ? "Do not add, remove, replace, duplicate, merge or invent any object. Any object that is not on the whitelist above must not appear. No shoes, chairs, tables, extra boxes, extra bags, plants, tools, bicycles or decorative items."
                 : "",
+              roomFeatures.length
+                ? `FIXED ROOM FEATURES — preserve these exactly where they are in the source image and never treat them as inventory: ${roomFeatures.map((feature) => `${feature.id}=${feature.label}`).join("; ")}.`
+                : "Preserve every source room feature, especially any television, radiator, door, window, fitted shelf, built-in furnishing and electrical fixture. Never remove, relocate, replace or cover them.",
               emphasise.length
                 ? `The previous attempt did not show these items. They must be clearly visible this time: ${emphasise.join("; ")}.`
                 : "",
@@ -244,7 +265,7 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
               "THE MANIFEST IS AUTHORITATIVE. Do not move, rotate, resize, duplicate, remove, substitute or reinterpret any object because another position would look better. A position you disagree with is still the position you must draw.",
               "Do not add shelving, racks, cupboards, cabinets, drawers, hooks, pallets, crates or any storage furniture that is not already in the photograph.",
               required.length
-                ? `The finished photograph must contain exactly ${required.length} distinct stored belongings from the list — no extra objects of any kind.`
+                ? `The finished photograph must contain exactly ${required.length} stored units from the list — no extra objects of any kind.`
                 : "",
               "Return only the edited photograph. No labels, no boxes, no outlines, no text overlays.",
 
@@ -289,7 +310,10 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           return Response.json({ error: "no_image_returned" }, { status: 502 });
         }
 
-        const coverage = await checkCoverage(key, image, required);
+        const coverage = await checkCoverage(key, space, image, required, roomFeatures);
+        if (!coverage || !coverage.complete || !coverage.faithful) {
+          return Response.json({ error: "render_verification_failed", coverage }, { status: 422 });
+        }
         return Response.json({ image, model: MODEL, coverage });
       },
     },

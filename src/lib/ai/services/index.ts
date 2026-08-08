@@ -23,6 +23,10 @@ import type {
   SpaceInput,
   VisionInput,
 } from "../providers/local";
+import { analyseVision, type VisionAnalysisRequest } from "../vision/analyse";
+import { recordVisionCorrection } from "../vision/feedback";
+import { visionMetrics } from "../vision/metrics";
+import type { VisionAnalysis } from "../vision/types";
 import type {
   DetectedInventory,
   DetectedSpace,
@@ -118,6 +122,21 @@ export const visionAi = {
       "Scanning your space",
     );
   },
+
+  /**
+   * Full Phase 6C detail — instances, OCR, materials, damage and the scene
+   * spatial map. The screens above still use `analyseBelongings`; this is for
+   * callers that need the richer record rather than the narrowed contract.
+   */
+  analyseDetailed(request: VisionAnalysisRequest): Promise<VisionAnalysis> {
+    return analyseVision(request);
+  },
+
+  /** Captures an anonymised class-level correction signal. */
+  recordCorrection: recordVisionCorrection,
+
+  /** Operational counters for the vision stack. */
+  metrics: visionMetrics,
 };
 
 /* ------------------------------------------------------- inventory AI */

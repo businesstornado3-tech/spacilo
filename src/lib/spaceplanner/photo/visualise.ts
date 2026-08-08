@@ -73,10 +73,31 @@ export function buildVisualisationInstruction(
     })
     .join(", ");
 
-  const placements = result.plan.after.placements
-    .slice(0, 8)
-    .map((placement) => `${placement.label} near ${describeSpot(placement.x, placement.y, result)}`)
+  // The validated physical arrangement is the source of truth. The image model
+  // renders these positions; it never decides them.
+  const arrangement = result.arrangement;
+  const placements = arrangement.entries
+    .slice(0, 12)
+    .map((entry) => {
+      const count = entry.units > 1 ? `${entry.units}× ` : "";
+      const stacked =
+        entry.units > 1 ? " stacked vertically" : entry.layer > 0 ? " resting on the item below" : "";
+      const turned =
+        entry.orientation === "upright"
+          ? ", standing upright on its edge"
+          : entry.rotationDeg
+            ? ", turned 90°"
+            : "";
+      return `${count}${entry.label} at ${describeSpot(entry.x + entry.w / 2, entry.y + entry.d / 2, result)}${turned}${stacked}`;
+    })
     .join("; ");
+
+  const walkway = arrangement.walkway
+    ? "Leave a clear walkway from the opening through the space; no item may stand in it."
+    : "";
+  const excluded = arrangement.unplaced.length
+    ? `Do NOT draw these — they did not fit: ${arrangement.unplaced.map((entry) => entry.label).join(", ")}.`
+    : "";
 
   return [
     `The space is roughly ${result.space.width.toFixed(1)}m wide by ${result.space.depth.toFixed(1)}m deep with about ${result.space.height.toFixed(1)}m of height.`,
@@ -85,7 +106,11 @@ export function buildVisualisationInstruction(
       : items
         ? `Belongings to place: ${items}.`
         : "",
-    placements ? `Recommended arrangement: ${placements}.` : "",
+    placements
+      ? `The arrangement has already been calculated. Place each item exactly as specified and do not move, add, remove or rearrange anything: ${placements}.`
+      : "",
+    walkway,
+    excluded,
     `They should occupy roughly ${result.spaceUsedM3.toFixed(1)}m³, leaving about ${result.spaceRemainingM3.toFixed(1)}m³ of the space free.`,
   ]
     .filter(Boolean)
@@ -99,6 +124,7 @@ function describeSpot(x: number, y: number, result: PhotoPlanResult): string {
   const depth = into < 0.34 ? "the back of the room" : into > 0.66 ? "the entrance" : "the middle";
   return `${side}, towards ${depth}`;
 }
+
 
 /** Manifest → the compact list the endpoint validates against. */
 export function manifestPayload(manifest: PlacementManifest): { label: string; quantity: number }[] {

@@ -10,6 +10,7 @@ import { ShieldCheck } from "lucide-react";
 
 import heroPhoto from "@/assets/hero-storage.jpg";
 import { SearchControls } from "@/components/search/SearchControls";
+import { CoachMark } from "@/components/onboarding/CoachMark";
 import { track } from "@/lib/analytics/tracker";
 
 export function MarketplaceEntry() {

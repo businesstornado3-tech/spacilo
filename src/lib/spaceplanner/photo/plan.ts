@@ -10,8 +10,7 @@
 import { buildPlan } from "../index";
 import { CATALOGUE_BY_ID } from "../catalogue";
 import { usableVolume } from "../spaces";
-import type { InventoryLine, SpacePlan, StorageSpace } from "../types";
-import { toPlannerQuantities } from "@/lib/vision/inventory";
+import type { CatalogueItem, InventoryLine, SpacePlan, StorageSpace } from "../types";
 import type { DetectedObject, SpaceScanResult } from "@/lib/vision/types";
 
 export interface SpaceSource {

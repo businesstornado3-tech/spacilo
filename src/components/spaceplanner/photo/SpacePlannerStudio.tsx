@@ -29,6 +29,8 @@ import { useSpaceVisualisation } from "@/hooks/useSpaceVisualisation";
 import { useStableScroll } from "@/hooks/useStableScroll";
 import { InventoryLock } from "@/components/spaceplanner/photo/InventoryLock";
 import { SpacePlannerDiagnostics } from "@/components/spaceplanner/photo/SpacePlannerDiagnostics";
+import { PlannerProgress } from "@/components/spaceplanner/photo/PlannerProgress";
+import { ArrangementPlanDiagram } from "@/components/spaceplanner/photo/ArrangementPlanDiagram";
 import { buildPhotoPlan, spaceFromScan, type SpaceSource } from "@/lib/spaceplanner/photo";
 import { earningsFromPlan } from "@/lib/spaceplanner/photo/earnings";
 import { usableVolume } from "@/lib/spaceplanner/spaces";
@@ -37,8 +39,12 @@ import {
   lockInventory,
   type CanonicalInventory,
 } from "@/lib/spaceplanner/photo/manifest";
+import { generaliseUncertain } from "@/lib/spaceplanner/photo/uncertain";
+import { plannerSteps } from "@/lib/spaceplanner/photo/progress";
+import { verificationStatusOf } from "@/lib/spaceplanner/photo/diagnostics";
 import { track } from "@/lib/analytics/tracker";
 import { clearVisualisationCache } from "@/lib/spaceplanner/photo/visualise";
+
 
 type Step = "stuff" | "review" | "space" | "result";
 
@@ -107,6 +113,44 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     itemPhotos: stuff.photos,
   });
 
+  /** Ten real pipeline stages, derived from state that genuinely exists. */
+  const steps = React.useMemo(
+    () =>
+      plannerSteps({
+        itemPhotos: stuff.photos.length,
+        detectedUnits: stuff.objects.reduce((sum, object) => sum + object.quantity, 0),
+        sized: Boolean(inventory && inventory.items.length > 0),
+        spaceSupplied: space.photos.length > 0 || Boolean(manualSource),
+        roomReady: Boolean(source),
+        inventoryLocked: Boolean(inventory),
+        planReady: Boolean(manifest),
+        constraintsClear: Boolean(result && result.arrangement.violations.length === 0),
+        render:
+          visual.status === "working"
+            ? "working"
+            : visual.status === "ready"
+              ? "ready"
+              : visual.status === "failed" || visual.status === "rejected"
+                ? "failed"
+                : "idle",
+        verification: verificationStatusOf(visual.coverage),
+      }),
+    [
+      stuff.photos.length,
+      stuff.objects,
+      inventory,
+      space.photos.length,
+      manualSource,
+      source,
+      manifest,
+      result,
+      visual.status,
+      visual.coverage,
+    ],
+  );
+
+
+
   React.useEffect(() => {
     if (result) {
       track("spaceplanner_fit_calculated", {
@@ -142,7 +186,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   };
 
   const confirmInventory = () => {
-    const locked = lockInventory(stuff.objects);
+    const locked = lockInventory(generaliseUncertain(stuff.objects));
     setInventory(locked);
     track("spaceplanner_items_detected", {
       props: { count: locked.distinctItems, units: locked.itemCount, confirmed: 1 },
@@ -426,7 +470,13 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
         <div className="space-y-4">
           {result ? (
             <>
+              <PlannerProgress
+                steps={steps}
+                elapsedMs={visual.elapsedMs}
+                planReady={Boolean(manifest)}
+              />
               <SpacePlannerResult result={result}>
+
                 {spacePhoto ? (
                   <PhotoArrangement
                     photoUrl={spacePhoto.url}
@@ -450,7 +500,25 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 )}
               </SpacePlannerResult>
 
+              {manifest ? (
+                <details
+                  className="rounded-2xl border border-border bg-surface p-4"
+                  open={visual.status === "failed" || visual.status === "rejected"}
+                >
+                  <summary className="cursor-pointer type-label text-foreground">
+                    View arrangement plan
+                  </summary>
+                  <p className="mt-2 type-body-sm text-muted-foreground">
+                    {visual.status === "failed" || visual.status === "rejected"
+                      ? "Your SpacePlanner analysis is ready. We couldn't generate the photographic preview this time, but your fit and arrangement plan is available."
+                      : "Exactly where the planner decided each item goes — the same plan the visual preview renders."}
+                  </p>
+                  <ArrangementPlanDiagram manifest={manifest} className="mt-3" />
+                </details>
+              ) : null}
+
               {earnings ? <EarningsEstimateCard earnings={earnings} /> : null}
+
 
               <div className="flex flex-wrap gap-2">
                 {onExplore ? (

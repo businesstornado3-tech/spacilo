@@ -67,6 +67,10 @@ export interface DetectedObject {
   countBasis?: string;
   /** What was actually visible that led to this item. */
   evidence?: string;
+  /** Parts of this object that are not separately storable (rails, cushions…). */
+  components?: string[];
+  /** The user's own selection this object came from, when they marked one. */
+  selectionId?: string;
 }
 
 export interface VisionResult {

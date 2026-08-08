@@ -123,13 +123,32 @@ function averageConfidence(objects: DetectedObject[]): number {
 }
 
 /**
- * The estimated fit.
- *
- * Placement is the primary evidence — anything the packer could not place
- * counts against the score — and a tight volume is penalised because a
- * photograph cannot prove the last few centimetres.
+ * Items that physically cannot go in, whatever the cubic maths says: too tall
+ * for the ceiling, or too wide and too deep to turn into the room.
  */
-export function fitPercentFor(plan: SpacePlan): number {
+export function oversizeItems(lines: InventoryLine[], space: StorageSpace): string[] {
+  return lines
+    .filter(({ item }) => {
+      const w = item.width / 100;
+      const d = item.depth / 100;
+      const h = item.height / 100;
+      const tooTall = h > space.height;
+      const tooBroad = Math.min(w, d) > Math.max(space.width, space.depth);
+      const tooWide = w > space.width && d > space.width;
+      return tooTall || tooBroad || tooWide;
+    })
+    .map(({ item }) => item.name);
+}
+
+/**
+ * The estimated fit — spatial feasibility, not cubic volume.
+ *
+ * Placement is the primary evidence: anything the packer could not put on the
+ * floor counts against the score, and anything physically too large for the
+ * room caps it. A tight volume is penalised on top, because a photograph
+ * cannot prove the last few centimetres.
+ */
+export function fitPercentFor(plan: SpacePlan, oversize = 0): number {
   const totalUnits = plan.itemCount;
   if (totalUnits === 0) return 0;
   const unplaced = plan.after.unplaced.length;
@@ -138,8 +157,10 @@ export function fitPercentFor(plan: SpacePlan): number {
   const headroom = usable > 0 ? requiredVolume / usable : 2;
   const tightness = headroom > 1 ? 0.72 : headroom > 0.95 ? 0.93 : 1;
   const access = plan.metrics.walkwayPreserved ? 1 : 0.94;
-  return pct(placedShare * tightness * access * 100);
+  const feasibility = oversize > 0 ? Math.max(0.3, 1 - oversize * 0.2) : 1;
+  return pct(placedShare * tightness * access * feasibility * 100);
 }
+
 
 export function buildPhotoPlan(
   objects: DetectedObject[],

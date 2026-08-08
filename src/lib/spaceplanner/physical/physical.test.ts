@@ -29,10 +29,10 @@ const space: StorageSpace = {
   width: 3,
   depth: 5.5,
   height: 2.4,
+  door: "front",
   doorWidth: 2.3,
-  monthlyPrice: 90,
-  description: "Test space",
-  icon: "garage",
+  kind: "garage",
+  blurb: "Test space",
 };
 
 function object(partial: Partial<DetectedObject> & { id: string; label: string }): DetectedObject {
@@ -126,7 +126,7 @@ describe("physical placement engine", () => {
   });
 
   it("keeps fixed furniture unobstructed", () => {
-    const obstacle = { x: 0, y: 0, w: 1, d: 1, kind: "fixed_furniture" as const, label: "Boiler" };
+    const obstacle = { id: "obs-1", x: 0, y: 0, w: 1, d: 1, kind: "fixed_furniture" as const, label: "Boiler" };
     const planning = planningSpaceFrom(space, { obstacles: [obstacle] });
     const plan = arrangeItems(boxes, planning);
     for (const entry of plan.entries.filter((e) => e.layer === 0)) {
@@ -166,7 +166,7 @@ describe("physical placement engine", () => {
           layer: 0,
           rotationDeg: 0,
           orientation: "flat",
-          zone: "floor_open",
+          zone: "interior",
           supportsItemIds: [],
           supportedBy: null,
           groupId: "GHOST",

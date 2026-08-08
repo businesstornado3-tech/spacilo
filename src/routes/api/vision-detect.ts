@@ -342,7 +342,11 @@ export const Route = createFileRoute("/api/vision-detect")({
             [
               {
                 type: "text",
-                text: `These observations come from ${images.length} photograph(s) of one person's belongings. Merge the same physical object across photographs, then classify each distinct item.\n\n${JSON.stringify(
+                text: `These observations come from ${images.length} photograph(s) of one person's belongings.${
+                  selected
+                    ? " The user marked exactly what they want to store, so every observation is in scope and nothing outside it exists."
+                    : ""
+                } Merge the same physical object across photographs, report primary objects with their components, then classify each distinct item.\n\n${JSON.stringify(
                   observations,
                 )}`,
               },

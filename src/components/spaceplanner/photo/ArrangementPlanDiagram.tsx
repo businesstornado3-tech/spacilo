@@ -111,8 +111,20 @@ export function ArrangementPlanDiagram({
           </dd>
         </div>
         <div>
+          <dt>Access route</dt>
+          <dd className="font-medium text-foreground">{manifest.corridorSide}</dd>
+        </div>
+        <div>
+          <dt>Packing approach</dt>
+          <dd className="font-medium text-foreground">{manifest.strategy}</dd>
+        </div>
+        <div>
+          <dt>Arrangement score</dt>
+          <dd className="font-medium text-foreground">{manifest.qualityScore}/100</dd>
+        </div>
+        <div>
           <dt>Plan reference</dt>
-          <dd className="break-all font-mono text-foreground">{manifestHash(manifest)}</dd>
+          <dd className="break-all font-mono text-foreground">{manifest.planHash || manifestHash(manifest)}</dd>
         </div>
       </dl>
 

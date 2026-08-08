@@ -8,7 +8,9 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { track } from "@/lib/analytics/tracker";
 import { Reveal } from "@/components/common/Reveal";
+import { CoachMark } from "@/components/onboarding/CoachMark";
 import { HostEntryButton } from "@/components/home/HostEntryButton";
 import {
   DEMAND_BANDS,

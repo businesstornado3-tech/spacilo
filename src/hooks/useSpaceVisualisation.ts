@@ -35,7 +35,7 @@ export type VisualisationStatus =
  * within this window is abandoned rather than left spinning: the numeric
  * result is already on screen and must never be held hostage to the image.
  */
-export const RENDER_TIMEOUT_MS = 75_000;
+export const RENDER_TIMEOUT_MS = 95_000;
 
 /** One render plus, at most, one corrective refinement. */
 export const MAX_RENDER_ATTEMPTS = 2;

@@ -58,12 +58,40 @@ export interface VisualisationResponse {
   coverage: CoverageReport | null;
 }
 
-/** Structured, model-facing description of what to place and where. */
+/**
+ * The rendering order sent to the image model.
+ *
+ * The deterministic physical plan is the single authority. When a manifest
+ * exists, the manifest's metric coordinates ARE the instruction — no second,
+ * looser description is included alongside it, because two descriptions of the
+ * same arrangement is exactly how items end up scattered. Without a manifest
+ * (a preview before the inventory is locked) a plain-language fallback is used.
+ */
 export function buildVisualisationInstruction(
   result: PhotoPlanResult,
   objects: DetectedObject[],
   manifest?: PlacementManifest,
 ): string {
+  const arrangement = result.arrangement;
+  const excluded = arrangement.unplaced.length
+    ? `Do NOT draw these — the plan could not fit them: ${arrangement.unplaced.map((entry) => entry.label).join(", ")}.`
+    : "";
+  const dimensions = `The space is roughly ${result.space.width.toFixed(1)}m wide by ${result.space.depth.toFixed(1)}m deep with about ${result.space.height.toFixed(1)}m of height.`;
+  const volume = `The placed items occupy roughly ${result.spaceUsedM3.toFixed(1)}m³, leaving about ${result.spaceRemainingM3.toFixed(1)}m³ free.`;
+
+  if (manifest) {
+    return [
+      "YOU ARE A RENDERER, NOT A PLANNER. The arrangement below has already been calculated by a physical planning engine and validated. Reproduce it exactly. Do not move, add, remove, resize, duplicate or rearrange anything, and do not scatter items across the open floor.",
+      dimensions,
+      `EVERY item in this manifest must appear in the edited photograph, at the exact coordinates given:\n\n${formatManifestForModel(manifest)}`,
+      "Items sharing a wall must sit shoulder to shoulder with no gaps between them. Nothing floats, nothing overlaps, nothing sits in the middle of the floor unless its coordinates say so.",
+      excluded,
+      volume,
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
   const items = objects
     .slice(0, 8)
     .map((object) => {
@@ -73,9 +101,6 @@ export function buildVisualisationInstruction(
     })
     .join(", ");
 
-  // The validated physical arrangement is the source of truth. The image model
-  // renders these positions; it never decides them.
-  const arrangement = result.arrangement;
   const placements = arrangement.entries
     .slice(0, 12)
     .map((entry) => {
@@ -92,30 +117,22 @@ export function buildVisualisationInstruction(
     })
     .join("; ");
 
-  const walkway = arrangement.walkway
-    ? "Leave a clear walkway from the opening through the space; no item may stand in it."
-    : "";
-  const excluded = arrangement.unplaced.length
-    ? `Do NOT draw these — they did not fit: ${arrangement.unplaced.map((entry) => entry.label).join(", ")}.`
-    : "";
-
   return [
-    `The space is roughly ${result.space.width.toFixed(1)}m wide by ${result.space.depth.toFixed(1)}m deep with about ${result.space.height.toFixed(1)}m of height.`,
-    manifest
-      ? `EVERY item in this manifest must appear in the edited photograph:\n\n${formatManifestForModel(manifest)}`
-      : items
-        ? `Belongings to place: ${items}.`
-        : "",
+    dimensions,
+    items ? `Belongings to place: ${items}.` : "",
     placements
       ? `The arrangement has already been calculated. Place each item exactly as specified and do not move, add, remove or rearrange anything: ${placements}.`
       : "",
-    walkway,
+    arrangement.walkway
+      ? "Leave a clear walkway from the opening through the space; no item may stand in it."
+      : "",
     excluded,
-    `They should occupy roughly ${result.spaceUsedM3.toFixed(1)}m³, leaving about ${result.spaceRemainingM3.toFixed(1)}m³ of the space free.`,
+    volume,
   ]
     .filter(Boolean)
     .join(" ");
 }
+
 
 function describeSpot(x: number, y: number, result: PhotoPlanResult): string {
   const across = x / Math.max(result.space.width, 0.1);

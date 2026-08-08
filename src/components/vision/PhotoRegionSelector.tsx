@@ -44,7 +44,7 @@ export function PhotoRegionSelector({
   selection,
   onChange,
   title = "Select what you want to store",
-  hint = "Draw round the item, or tap it. Everything outside your selection is ignored.",
+  hint = "Press and drag round the item, or tap it, then confirm. Everything outside your selection is ignored.",
   wholeLabel = "Use the whole photo",
   className,
 }: {
@@ -60,12 +60,15 @@ export function PhotoRegionSelector({
 }) {
   const [tool, setTool] = React.useState<Exclude<SelectionShape, "full">>("rect");
   const [draft, setDraft] = React.useState<PhotoSelection | null>(null);
+  /** Drawn but not yet committed. Nothing leaves this component until confirmed. */
+  const [pending, setPending] = React.useState<PhotoSelection | null>(null);
   const frame = React.useRef<HTMLDivElement>(null);
   const origin = React.useRef<Point | null>(null);
   const trail = React.useRef<Point[]>([]);
   const moved = React.useRef(false);
 
-  const shown = draft ?? selection;
+  const shown = draft ?? pending ?? selection;
+
 
   const toPoint = (event: React.PointerEvent): Point => {
     const box = frame.current?.getBoundingClientRect();
@@ -110,8 +113,9 @@ export function PhotoRegionSelector({
     if (!origin.current) return;
     const point = toPoint(event);
 
-    // Tap-to-select: no drag, so propose a boundary around the tap and let the
-    // user adjust it rather than making them draw precisely on a small screen.
+    // Nothing is ever committed by a gesture. A tap proposes a boundary and a
+    // drag draws one; either way the user reviews it and presses Confirm. That
+    // is what stops a stray touch on a phone locking in the wrong area.
     if (!moved.current) {
       const half = TAP_BOX / 2;
       const proposal = rectSelection(
@@ -120,8 +124,9 @@ export function PhotoRegionSelector({
         { x: point.x + half, y: point.y + half },
       );
       origin.current = null;
+      trail.current = [];
       setDraft(null);
-      onChange(proposal);
+      setPending(proposal);
       return;
     }
 
@@ -129,8 +134,15 @@ export function PhotoRegionSelector({
     origin.current = null;
     trail.current = [];
     setDraft(null);
-    onChange(isUsableSelection(next) ? next : null);
+    setPending(isUsableSelection(next) ? next : null);
   };
+
+  const confirm = () => {
+    if (!pending) return;
+    onChange(pending);
+    setPending(null);
+  };
+
 
   const outline = shown && !isFullPhoto(shown) ? shown : null;
   const box = outline ? boundingBox(outline) : null;
@@ -213,27 +225,49 @@ export function PhotoRegionSelector({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={() => onChange(fullSelection(photoId))}
-        >
-          {wholeLabel}
-        </Button>
-        {selection ? (
+        {pending ? (
+          <>
+            <Button type="button" size="sm" onClick={confirm}>
+              Confirm selection
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setPending(null);
+                setDraft(null);
+              }}
+            >
+              Redraw
+            </Button>
+          </>
+        ) : (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => onChange(fullSelection(photoId))}
+          >
+            {wholeLabel}
+          </Button>
+        )}
+        {selection && !pending ? (
           <Button type="button" variant="text" size="sm" onClick={() => onChange(null)}>
             Clear selection
           </Button>
         ) : null}
         <p className="type-body-xs text-muted-foreground" aria-live="polite">
-          {!selection
-            ? "Nothing selected yet."
-            : isFullPhoto(selection)
-              ? "Analysing the whole photo."
-              : `Selected about ${Math.round((box?.width ?? 0) * (box?.height ?? 0) * 100)}% of the photo.`}
+          {pending
+            ? `Drawn about ${Math.round((box?.width ?? 0) * (box?.height ?? 0) * 100)}% of the photo. Adjust it, or confirm to use it.`
+            : !selection
+              ? "Nothing selected yet — press and drag round the area, or tap it."
+              : isFullPhoto(selection)
+                ? "Analysing the whole photo."
+                : `Selected about ${Math.round((box?.width ?? 0) * (box?.height ?? 0) * 100)}% of the photo.`}
         </p>
       </div>
+
     </div>
   );
 }

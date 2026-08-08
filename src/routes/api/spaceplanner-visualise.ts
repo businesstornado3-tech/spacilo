@@ -172,21 +172,23 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           {
             type: "text",
             text: [
+              "You are a photo-realistic RENDERER. A physical planning engine has already decided the arrangement. Your only job is to draw it. You must not plan, re-plan, improve, tidy or reinterpret the layout.",
               "Edit the FIRST image, which is a real photograph of a room or storage space.",
               "Keep that photograph as the foundation: same walls, floor, doorway, camera angle, lighting and colour.",
               "Do not generate a new room and do not change the existing contents.",
               items.length
                 ? "The following images show the user's real belongings. Place those exact items into the photographed space, matching their appearance, materials and colours."
                 : "Place the described belongings into the photographed space.",
-              body.instruction?.slice(0, 3000) ?? "",
+              body.instruction?.slice(0, 6000) ?? "",
               required.length
                 ? `Every one of these items must be clearly visible in the edited photograph: ${required.join("; ")}.`
                 : "",
               emphasise.length
                 ? `The previous attempt did not show these items. They must be clearly visible this time: ${emphasise.join("; ")}.`
                 : "",
-              "Respect perspective and scale, rest every item flat on the floor with contact shadows, keep a clear walkway to the doorway, and avoid floating or clipped objects.",
+              "ARRANGEMENT RULES, in priority order: (1) draw each item at the exact coordinates given; (2) pack items against walls, shoulder to shoulder, with no gaps between neighbours; (3) never place an item in the middle of the open floor or spread items evenly across the room; (4) keep the stated access corridor completely empty; (5) respect perspective and scale, rest every item on the floor or on the item below with contact shadows; (6) no floating, clipped, duplicated or invented objects.",
               "Return only the edited photograph. No labels, no boxes, no outlines, no text overlays.",
+
             ]
               .filter(Boolean)
               .join(" "),

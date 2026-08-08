@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 
 import { Logo } from "@/components/layout/Logo";
 import { AppSideNav, MobileBottomNav } from "@/components/layout/AppNav";
@@ -23,10 +23,11 @@ export function AppLayout({
   children: React.ReactNode;
 }) {
   const { loading, profile } = useAuth();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const showSkeleton = loading && !profile;
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
+    <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6">
           <Logo to={mode === "host" ? "/host" : "/renter"} />
@@ -40,7 +41,7 @@ export function AppLayout({
 
       <div className="mx-auto flex max-w-6xl gap-8 px-4 py-6 sm:px-6 sm:py-8">
         <AppSideNav mode={mode} />
-        <main id="main" className="min-w-0 flex-1">
+        <main id="main" key={pathname} className="animate-fade min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               {showSkeleton ? (

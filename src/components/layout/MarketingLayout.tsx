@@ -1,12 +1,16 @@
+import { useRouterState } from "@tanstack/react-router";
+
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 
 /** Layout for public marketing and auth-adjacent pages. */
 export function MarketingLayout({ children }: { children: React.ReactNode }) {
+  // Re-keying on pathname gives every route the same calm entrance.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-dvh flex-col bg-background">
       <SiteHeader />
-      <main id="main" className="flex-1">
+      <main id="main" key={pathname} className="animate-fade flex-1">
         {children}
       </main>
       <SiteFooter />

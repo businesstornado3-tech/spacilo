@@ -80,16 +80,38 @@ export function EarningsEstimator() {
   const [kind, setKind] = React.useState<EarningSpaceKind>("garage");
   const [size, setSize] = React.useState<SizeBandId>("medium");
   const [demand, setDemand] = React.useState<DemandBandId>("town");
+  const [touched, setTouched] = React.useState(false);
+  const started = React.useRef(false);
 
   const range = estimateEarnings({ kind, size, demand });
 
+  /** Records the first interaction, then the settled estimate. */
+  const noteInteraction = () => {
+    if (!started.current) {
+      started.current = true;
+      track("earnings_estimate_started");
+    }
+    setTouched(true);
+  };
+
+  React.useEffect(() => {
+    if (!touched) return;
+    const timer = window.setTimeout(() => {
+      track("earnings_estimate_completed", { props: { kind, size, demand } });
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [touched, kind, size, demand]);
+
   return (
-    <div className="mt-6 grid gap-5 rounded-3xl border border-border bg-card p-5 shadow-card lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:items-center sm:p-6">
+    <div className="mt-6 grid gap-5 rounded-3xl border border-border bg-card p-5 shadow-card sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:items-center">
       <div className="min-w-0">
         <h3 className="type-h4">Estimate my earnings</h3>
         <p className="mt-1 type-body-sm text-muted-foreground">
           Three quick choices — no account, no address.
         </p>
+
+        <CoachMark id="earnings_estimator" className="mt-3" />
+
 
         <ChoiceRow label="Space type">
           {EARNING_EXAMPLES.map((example) => (

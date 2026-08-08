@@ -41,7 +41,10 @@ export interface PhotoArrangementProps {
   statusLabel?: string;
   /** How many required items the generated image was shown to contain. */
   coverage?: CoverageReport | null;
+  /** Why the render failed, so the message says what actually happened. */
+  errorCode?: string | null;
   onRetry?: () => void;
+
   className?: string;
 }
 
@@ -84,6 +87,28 @@ function Overlay({
   );
 }
 
+/** Plain-language reason, by failure category. */
+function failureMessage(code?: string | null): string {
+  switch (code) {
+    case "timed_out":
+      return "The visual preview took longer than expected, so we stopped waiting.";
+    case "upstream_429":
+      return "The image service is busy right now.";
+    case "upstream_402":
+      return "The image service is temporarily unavailable.";
+    case "no_image_returned":
+    case "bad_upstream_payload":
+      return "The image service didn't return a picture this time.";
+    case "not_configured":
+    case "upstream_unreachable":
+      return "We couldn't reach the image service.";
+    case "inventory_not_fully_placeable":
+      return "There were no items the planner could place in this space.";
+    default:
+      return "We couldn't create the visual preview this time.";
+  }
+}
+
 export function PhotoArrangement({
   photoUrl,
   photoAlt = "The space you photographed",
@@ -95,10 +120,12 @@ export function PhotoArrangement({
   status = "idle",
   statusLabel,
   coverage = null,
+  errorCode = null,
   onRetry,
   className,
 }: PhotoArrangementProps) {
   const hasVisual = (status === "ready" || status === "incomplete") && Boolean(arrangedUrl);
+
   const [showArranged, setShowArranged] = React.useState(true);
   const [position, setPosition] = React.useState(100);
   const [showOverlay, setShowOverlay] = React.useState(false);
@@ -288,9 +315,10 @@ export function PhotoArrangement({
 
           <p className="flex items-start gap-2 type-body-sm">
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
-            We couldn&apos;t create the visual arrangement this time. Your fit analysis below is
+            {failureMessage(errorCode)} Your optimised arrangement plan below is ready and
             unaffected.
           </p>
+
           <div className="mt-2 flex flex-wrap gap-2">
             {onRetry ? (
               <Button type="button" size="sm" variant="secondary" onClick={onRetry}>

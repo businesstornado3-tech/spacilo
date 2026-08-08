@@ -56,10 +56,17 @@ export interface VisualisationRequest {
   nonce?: number;
 }
 
+/** How the server's own verification pass judged the returned image. */
+export type VerificationVerdict = "verified" | "incomplete" | "unfaithful" | "unverified";
+
 export interface VisualisationResponse {
   image: string;
   coverage: CoverageReport | null;
+  verification: VerificationVerdict;
+  /** Correlates this render with the server log line for support. */
+  diagnosticId: string | null;
 }
+
 
 /**
  * The rendering order sent to the image model.
@@ -210,7 +217,13 @@ export async function requestVisualisation(
 
 
   const payload = (await response.json().catch(() => null)) as
-    | { image?: unknown; error?: unknown; coverage?: CoverageReport }
+    | {
+        image?: unknown;
+        error?: unknown;
+        coverage?: CoverageReport;
+        verification?: VerificationVerdict;
+        diagnosticId?: unknown;
+      }
     | null;
 
   if (!response.ok) {
@@ -222,10 +235,22 @@ export async function requestVisualisation(
     throw new VisualisationError("no_image_returned");
   }
 
+  const coverage = payload.coverage ?? null;
   const result: VisualisationResponse = {
     image: payload.image,
-    coverage: payload.coverage ?? null,
+    coverage,
+    verification:
+      payload.verification ??
+      (!coverage
+        ? "unverified"
+        : !coverage.faithful
+          ? "unfaithful"
+          : coverage.complete
+            ? "verified"
+            : "incomplete"),
+    diagnosticId: typeof payload.diagnosticId === "string" ? payload.diagnosticId : null,
   };
   sessionCache.set(signature, result);
   return result;
 }
+

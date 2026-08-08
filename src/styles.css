@@ -555,6 +555,29 @@
   animation: stow-twinkle 2.4s ease-in-out infinite;
 }
 
+/** Cinematic hero: a slow AI scan pass down the scene. */
+@keyframes stow-hero-scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(720px);
+    opacity: 0;
+  }
+}
+
+@utility animate-hero-scan {
+  animation: stow-hero-scan 3.6s var(--ease-out-soft) infinite;
+}
+
+
 /** Horizontal, touch-friendly card carousel. */
 @utility carousel-track {
   display: flex;

@@ -315,9 +315,10 @@ export function PhotoArrangement({
 
           <p className="flex items-start gap-2 type-body-sm">
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
-            We couldn&apos;t create the visual arrangement this time. Your fit analysis below is
+            {failureMessage(errorCode)} Your optimised arrangement plan below is ready and
             unaffected.
           </p>
+
           <div className="mt-2 flex flex-wrap gap-2">
             {onRetry ? (
               <Button type="button" size="sm" variant="secondary" onClick={onRetry}>

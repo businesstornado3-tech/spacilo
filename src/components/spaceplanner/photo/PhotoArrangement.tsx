@@ -87,10 +87,11 @@ export function PhotoArrangement({
   arrangedUrl = null,
   status = "idle",
   statusLabel,
+  coverage = null,
   onRetry,
   className,
 }: PhotoArrangementProps) {
-  const hasVisual = status === "ready" && Boolean(arrangedUrl);
+  const hasVisual = (status === "ready" || status === "incomplete") && Boolean(arrangedUrl);
   const [showArranged, setShowArranged] = React.useState(true);
   const [position, setPosition] = React.useState(100);
   const [showOverlay, setShowOverlay] = React.useState(false);

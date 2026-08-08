@@ -90,6 +90,8 @@ export function useSpaceVisualisation(options: {
   const [error, setError] = React.useState<string | null>(null);
   const [attempt, setAttempt] = React.useState(0);
   const [elapsedMs, setElapsedMs] = React.useState(0);
+  const [diagnostics, setDiagnostics] = React.useState<RenderDiagnostics | null>(null);
+
   const run = React.useRef(0);
   const abort = React.useRef<AbortController | null>(null);
   const timer = React.useRef<ReturnType<typeof setInterval> | null>(null);

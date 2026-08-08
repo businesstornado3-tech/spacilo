@@ -10,6 +10,7 @@
  * not slam straight to the zoom limit.
  */
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { Minus, Plus, RotateCcw, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -46,6 +47,8 @@ export function ImageLightbox({
   const pointers = React.useRef(new Map<number, { x: number; y: number }>());
   const pinch = React.useRef<{ distance: number; zoom: number } | null>(null);
   const drag = React.useRef<{ x: number; y: number; view: View } | null>(null);
+  /** True once a gesture moved, so a drag never counts as a backdrop tap. */
+  const moved = React.useRef(false);
   const viewRef = React.useRef(view);
   viewRef.current = view;
 

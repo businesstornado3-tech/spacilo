@@ -10,6 +10,15 @@
 import { buildPlan } from "../index";
 import { CATALOGUE_BY_ID } from "../catalogue";
 import { usableVolume } from "../spaces";
+import {
+  bestArrangement,
+  planningItemsFrom,
+  planningSpaceFrom,
+  usableRectFromSelection,
+  type PhysicalArrangement,
+  type Obstacle,
+  type Rect,
+} from "../physical";
 import type { CatalogueItem, InventoryLine, SpacePlan, StorageSpace } from "../types";
 import type { DetectedObject, SpaceScanResult } from "@/lib/vision/types";
 
@@ -23,11 +32,21 @@ export interface SpaceSource {
   confidence?: number;
   /** How the dimensions were obtained. Drives the transparency copy. */
   basis: "photo" | "manual" | "listing";
+  /** The floor the user approved for storage, when they marked one. */
+  usable?: Rect;
+  /** Normalised (0–1) usable-area selection from the space photograph. */
+  usableSelection?: { x: number; y: number; width: number; height: number };
+  /** Fixed furniture and exclusion zones that must stay unobstructed. */
+  obstacles?: Obstacle[];
+  /** Minimum access clearance in metres. Configurable per space. */
+  walkwayClearanceM?: number;
 }
 
 export interface PhotoPlanResult {
   plan: SpacePlan;
   space: StorageSpace;
+  /** The validated physical arrangement. Source of truth for every figure below. */
+  arrangement: PhysicalArrangement;
   /** 0–100 estimated fit. Always labelled as an estimate in the UI. */
   fitPercent: number;
   /** Estimated cubic metres the belongings would occupy. */
@@ -41,12 +60,15 @@ export interface PhotoPlanResult {
   distinctItems: number;
   everythingFits: boolean;
   walkwayPreserved: boolean;
+  /** Items the validated plan could not place while keeping access. */
+  unplaced: { itemId: string; label: string; units: number; reason: string }[];
   /** 0–1, combining detection confidence with dimension confidence. */
   confidence: number;
   explanation: string;
   /** What would make the estimate better, when confidence is low. */
   improvements: string[];
 }
+
 
 export const LOW_CONFIDENCE = 0.7;
 

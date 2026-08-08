@@ -30,6 +30,43 @@ import type {
   PricingEstimate,
   Recommendation,
 } from "@/lib/intelligence/contracts";
+import type {
+  RankingInput,
+  RankingOutput,
+  SuitabilityAssessment,
+  SuitabilityInput,
+} from "../providers/suitability";
+import type {
+  DescriptionInput,
+  DescriptionOutput,
+  HostInsightsInput,
+  HostInsightsOutput,
+  HostPricingGuidance,
+  HostPricingInput,
+  ListingQualityInput,
+  ListingQualityReview,
+} from "../providers/host";
+import type {
+  HelpSearchInput,
+  HelpSearchOutput,
+  NlSearchInput,
+  NlSearchOutput,
+  SeasonalInput,
+  SeasonalOutput,
+  TrustSummaryInput,
+  TrustSummaryOutput,
+} from "../providers/discovery";
+import type {
+  BookingAdvice,
+  BookingAdviceInput,
+  InventoryAssistance,
+  InventoryAssistantInput,
+  MessageAssistInput,
+  MessageAssistOutput,
+  NotificationDigest,
+  NotificationDigestInput,
+} from "../providers/guidance";
+import type { FraudInput, FraudOutput } from "../providers/fraud";
 
 type Options = Pick<AiRequest<unknown>, "signal" | "userKey" | "ip" | "priority" | "skipCache" | "onProgress">;
 
@@ -182,8 +219,8 @@ export const assistantAi = {
 /* --------------------------------------------------- suitability + rank */
 
 export const suitabilityAi = {
-  assess(input: SuitabilityInput, options: Options = {}): Promise<AiResponse<SuitabilityOutput>> {
-    return executeAi<SuitabilityInput, SuitabilityOutput>({
+  assess(input: SuitabilityInput, options: Options = {}): Promise<AiResponse<SuitabilityAssessment>> {
+    return executeAi<SuitabilityInput, SuitabilityAssessment>({
       capability: "suitability",
       promptId: "suitability.assess",
       input,
@@ -206,16 +243,16 @@ export const rankingAi = {
 /* --------------------------------------------------------------- host AI */
 
 export const hostAi = {
-  priceGuidance(input: HostPricingInput, options: Options = {}): Promise<AiResponse<HostPricingOutput>> {
-    return executeAi<HostPricingInput, HostPricingOutput>({
+  priceGuidance(input: HostPricingInput, options: Options = {}): Promise<AiResponse<HostPricingGuidance>> {
+    return executeAi<HostPricingInput, HostPricingGuidance>({
       capability: "host-pricing",
       promptId: "pricing.host.guidance",
       input,
       ...options,
     });
   },
-  reviewListing(input: ListingQualityInput, options: Options = {}): Promise<AiResponse<ListingQualityOutput>> {
-    return executeAi<ListingQualityInput, ListingQualityOutput>({
+  reviewListing(input: ListingQualityInput, options: Options = {}): Promise<AiResponse<ListingQualityReview>> {
+    return executeAi<ListingQualityInput, ListingQualityReview>({
       capability: "listing-quality",
       promptId: "listing.quality.review",
       input,

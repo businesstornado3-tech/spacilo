@@ -3,20 +3,20 @@ import { createFileRoute } from "@tanstack/react-router";
 import { brand } from "@/config/brand";
 import { canonicalUrl, publicRouteMeta } from "@/lib/seo/meta";
 import { MarketingLayout } from "@/components/layout/MarketingLayout";
-import { Hero } from "@/components/home/Hero";
-import { StorageNearYou } from "@/components/home/StorageNearYou";
-import { SpaceFitStory } from "@/components/home/SpaceFitStory";
-import { HowItWorks } from "@/components/home/HowItWorks";
-import { BrandStory } from "@/components/home/BrandStory";
-import { HostCallout } from "@/components/home/HostCallout";
-import { HostAiSection } from "@/components/home/HostAiSection";
-import { HostControl } from "@/components/home/HostControl";
-import { TrustSection } from "@/components/home/TrustSection";
-import { LaunchArea } from "@/components/home/LaunchArea";
+import { HeroSection } from "@/components/spaceplanner/HeroSection";
+import { SpaceFitEntry } from "@/components/home/SpaceFitEntry";
+import { MarketplaceEntry } from "@/components/home/MarketplaceEntry";
+import { SpacePlannerDemo } from "@/components/spaceplanner/SpacePlannerDemo";
+import { NearbySpaces } from "@/components/home/NearbySpaces";
+import { MeetSpaciloAI } from "@/components/home/MeetSpaciloAI";
 
-const title = `${brand.name} | Neighbourhood Storage Near You`;
+import { SpaceValueSection } from "@/components/home/SpaceValueSection";
+import { WhySpacePlanner } from "@/components/home/WhySpacePlanner";
+import { FinalCta } from "@/components/home/FinalCta";
+
+const title = `${brand.name} | AI Storage Planning & Neighbourhood Storage`;
 const description =
-  "Find trusted neighbourhood storage near you, or earn from an unused garage, loft, shed or spare room. Spacilo AI helps estimate what fits.";
+  "Try Spacilo AI SpacePlanner free: plan what fits in a garage, loft or spare room in seconds, then find trusted neighbourhood storage near you.";
 
 export const Route = createFileRoute("/")({
   head: () => {
@@ -53,16 +53,16 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   return (
     <MarketingLayout>
-      <Hero />
-      <StorageNearYou />
-      <SpaceFitStory />
-      <HowItWorks />
-      <BrandStory />
-      <HostCallout />
-      <HostAiSection />
-      <HostControl />
-      <TrustSection />
-      <LaunchArea />
+      <HeroSection />
+      <SpaceFitEntry />
+      <MarketplaceEntry />
+      <SpacePlannerDemo />
+      <NearbySpaces />
+      <MeetSpaciloAI />
+      <SpaceValueSection />
+      <WhySpacePlanner />
+      <FinalCta />
     </MarketingLayout>
   );
 }
+

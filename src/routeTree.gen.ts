@@ -27,6 +27,7 @@ import { Route as StoragePolicyRouteImport } from './routes/storage-policy'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated.host'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
+import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticated.planner'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated.profile'
 import { Route as AuthenticatedRenterRouteImport } from './routes/_authenticated.renter'
 import { Route as AuthenticatedSpacefitRouteImport } from './routes/_authenticated.spacefit'
@@ -167,6 +168,11 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedPlannerRoute = AuthenticatedPlannerRouteImport.update({
+  id: '/planner',
+  path: '/planner',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -467,6 +473,7 @@ export interface FileRoutesByFullPath {
   '/trust': typeof TrustRoute
   '/host': typeof AuthenticatedHostRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/planner': typeof AuthenticatedPlannerRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/renter': typeof AuthenticatedRenterRouteWithChildren
   '/spacefit': typeof AuthenticatedSpacefitRoute
@@ -534,6 +541,7 @@ export interface FileRoutesByTo {
   '/storage-policy': typeof StoragePolicyRoute
   '/trust': typeof TrustRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/planner': typeof AuthenticatedPlannerRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/spacefit': typeof AuthenticatedSpacefitRoute
   '/legal/$doc': typeof LegalDocRoute
@@ -602,6 +610,7 @@ export interface FileRoutesById {
   '/trust': typeof TrustRoute
   '/_authenticated/host': typeof AuthenticatedHostRouteWithChildren
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/planner': typeof AuthenticatedPlannerRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/renter': typeof AuthenticatedRenterRouteWithChildren
   '/_authenticated/spacefit': typeof AuthenticatedSpacefitRoute
@@ -672,6 +681,7 @@ export interface FileRouteTypes {
     | '/trust'
     | '/host'
     | '/notifications'
+    | '/planner'
     | '/profile'
     | '/renter'
     | '/spacefit'
@@ -739,6 +749,7 @@ export interface FileRouteTypes {
     | '/storage-policy'
     | '/trust'
     | '/notifications'
+    | '/planner'
     | '/profile'
     | '/spacefit'
     | '/legal/$doc'
@@ -806,6 +817,7 @@ export interface FileRouteTypes {
     | '/trust'
     | '/_authenticated/host'
     | '/_authenticated/notifications'
+    | '/_authenticated/planner'
     | '/_authenticated/profile'
     | '/_authenticated/renter'
     | '/_authenticated/spacefit'
@@ -1010,6 +1022,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/planner': {
+      id: '/_authenticated/planner'
+      path: '/planner'
+      fullPath: '/planner'
+      preLoaderRoute: typeof AuthenticatedPlannerRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/profile': {
@@ -1467,6 +1486,7 @@ const AuthenticatedRenterRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedHostRoute: typeof AuthenticatedHostRouteWithChildren
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedPlannerRoute: typeof AuthenticatedPlannerRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRenterRoute: typeof AuthenticatedRenterRouteWithChildren
   AuthenticatedSpacefitRoute: typeof AuthenticatedSpacefitRoute
@@ -1482,6 +1502,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedHostRoute: AuthenticatedHostRouteWithChildren,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedPlannerRoute: AuthenticatedPlannerRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRenterRoute: AuthenticatedRenterRouteWithChildren,
   AuthenticatedSpacefitRoute: AuthenticatedSpacefitRoute,

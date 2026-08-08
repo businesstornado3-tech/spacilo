@@ -80,6 +80,26 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  /* Warm illustration palette for the SpacePlanner scenes */
+  --color-scene-floor: var(--scene-floor);
+  --color-scene-floor-line: var(--scene-floor-line);
+  --color-scene-wall: var(--scene-wall);
+  --color-scene-card: var(--scene-card);
+  --color-scene-card-dark: var(--scene-card-dark);
+  --color-scene-wood: var(--scene-wood);
+  --color-scene-wood-dark: var(--scene-wood-dark);
+  --color-scene-fabric: var(--scene-fabric);
+  --color-scene-fabric-dark: var(--scene-fabric-dark);
+  --color-scene-metal: var(--scene-metal);
+  --color-scene-metal-dark: var(--scene-metal-dark);
+  --color-scene-ink: var(--scene-ink);
+  --color-scene-screen: var(--scene-screen);
+  --color-scene-line: var(--scene-line);
+  --color-scene-accent: var(--scene-accent);
+  --color-scene-leaf: var(--scene-leaf);
+  --color-scene-leaf-dark: var(--scene-leaf-dark);
+
+
   --shadow-card: var(--elevation-card);
   --shadow-raised: var(--elevation-raised);
   --shadow-overlay: var(--elevation-overlay);
@@ -162,6 +182,26 @@
   --elevation-card: 0 1px 2px oklch(0.22 0.021 240 / 0.04), 0 6px 20px -12px oklch(0.22 0.021 240 / 0.16);
   --elevation-raised: 0 2px 4px oklch(0.22 0.021 240 / 0.05), 0 14px 34px -18px oklch(0.22 0.021 240 / 0.24);
   --elevation-overlay: 0 24px 60px -20px oklch(0.22 0.021 240 / 0.3);
+
+  /* Warm, welcoming scene palette — timber, cardboard, linen, brushed metal */
+  --scene-floor: oklch(0.962 0.012 82);
+  --scene-floor-line: oklch(0.9 0.016 80);
+  --scene-wall: oklch(0.985 0.008 85);
+  --scene-card: oklch(0.885 0.055 74);
+  --scene-card-dark: oklch(0.78 0.075 68);
+  --scene-wood: oklch(0.82 0.07 66);
+  --scene-wood-dark: oklch(0.62 0.075 58);
+  --scene-fabric: oklch(0.9 0.028 200);
+  --scene-fabric-dark: oklch(0.76 0.04 210);
+  --scene-metal: oklch(0.92 0.006 240);
+  --scene-metal-dark: oklch(0.72 0.012 240);
+  --scene-ink: oklch(0.36 0.026 250);
+  --scene-screen: oklch(0.52 0.035 245);
+  --scene-line: oklch(0.55 0.03 250 / 0.45);
+  --scene-accent: oklch(0.62 0.12 162);
+  --scene-leaf: oklch(0.62 0.1 150);
+  --scene-leaf-dark: oklch(0.5 0.1 150);
+
 }
 
 .dark {
@@ -235,6 +275,26 @@
   --elevation-card: 0 1px 2px oklch(0 0 0 / 0.3), 0 6px 20px -12px oklch(0 0 0 / 0.6);
   --elevation-raised: 0 2px 4px oklch(0 0 0 / 0.35), 0 14px 34px -18px oklch(0 0 0 / 0.7);
   --elevation-overlay: 0 24px 60px -20px oklch(0 0 0 / 0.75);
+
+  /* Scene palette, dimmed for dark mode but still warm */
+  --scene-floor: oklch(0.3 0.014 80);
+  --scene-floor-line: oklch(0.38 0.016 80);
+  --scene-wall: oklch(0.26 0.012 82);
+  --scene-card: oklch(0.6 0.055 72);
+  --scene-card-dark: oklch(0.48 0.06 66);
+  --scene-wood: oklch(0.56 0.055 62);
+  --scene-wood-dark: oklch(0.42 0.055 58);
+  --scene-fabric: oklch(0.56 0.03 210);
+  --scene-fabric-dark: oklch(0.44 0.035 215);
+  --scene-metal: oklch(0.6 0.008 240);
+  --scene-metal-dark: oklch(0.46 0.012 240);
+  --scene-ink: oklch(0.28 0.02 250);
+  --scene-screen: oklch(0.42 0.03 245);
+  --scene-line: oklch(0.9 0.01 250 / 0.28);
+  --scene-accent: oklch(0.75 0.12 162);
+  --scene-leaf: oklch(0.66 0.1 150);
+  --scene-leaf-dark: oklch(0.52 0.1 150);
+
 }
 
 @layer base {
@@ -375,10 +435,33 @@
   --accent-soft: oklch(0.968 0.026 168);
   --accent-soft-foreground: oklch(0.33 0.07 178);
 
+  /* Spacilo AI canvas — very soft green wash used behind AI storytelling */
+  --ai-canvas-from: oklch(0.989 0.009 155);
+  --ai-canvas-to: oklch(0.976 0.017 158);
+  --ai-canvas-glow: oklch(0.93 0.05 160 / 0.55);
+  --ai-canvas-dot: oklch(0.62 0.09 163 / 0.05);
+
   --duration-fast: 150ms;
   --duration-base: 220ms;
   --duration-slow: 340ms;
 }
+
+@utility ai-canvas {
+  background-color: var(--ai-canvas-from);
+  background-image:
+    radial-gradient(60% 45% at 50% 0%, var(--ai-canvas-glow), transparent 70%),
+    radial-gradient(var(--ai-canvas-dot) 1px, transparent 1px),
+    linear-gradient(160deg, var(--ai-canvas-from), var(--ai-canvas-to));
+  background-size:
+    100% 100%,
+    22px 22px,
+    100% 100%;
+  background-position:
+    center top,
+    0 0,
+    center;
+}
+
 
 .dark {
   --signal: oklch(0.8 0.14 165);
@@ -388,6 +471,11 @@
 
   --accent-soft: oklch(0.3 0.04 70);
   --accent-soft-foreground: oklch(0.93 0.04 80);
+
+  --ai-canvas-from: oklch(0.24 0.03 190);
+  --ai-canvas-to: oklch(0.21 0.028 200);
+  --ai-canvas-glow: oklch(0.4 0.06 165 / 0.45);
+  --ai-canvas-dot: oklch(0.85 0.08 163 / 0.05);
 }
 
 @keyframes stow-rise {
@@ -467,6 +555,29 @@
   animation: stow-twinkle 2.4s ease-in-out infinite;
 }
 
+/** Cinematic hero: a slow AI scan pass down the scene. */
+@keyframes stow-hero-scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(720px);
+    opacity: 0;
+  }
+}
+
+@utility animate-hero-scan {
+  animation: stow-hero-scan 3.6s var(--ease-out-soft) infinite;
+}
+
+
 /** Horizontal, touch-friendly card carousel. */
 @utility carousel-track {
   display: flex;
@@ -478,6 +589,46 @@
   overscroll-behavior-x: contain;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/** Mobile-only horizontal rail: flex + snap below sm, untouched above. */
+@utility mobile-rail {
+  @media (width < 40rem) {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    padding-bottom: 0.25rem;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+@utility mobile-rail-card {
+  @media (width < 40rem) {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+    width: 78%;
+    max-width: 20rem;
+  }
+}
+
+@utility mobile-rail-bleed {
+  @media (width < 40rem) {
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+  }
+}
+
+@utility mobile-rail-item {
+  @media (width < 40rem) {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+    width: 6.25rem;
   }
 }
 
@@ -495,4 +646,54 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/** SpacePlanner™ hero: the analysis sweep across the plan view. */
+@keyframes sp-scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(var(--sp-scan-distance, 400px));
+    opacity: 0.15;
+  }
+}
+
+/** SpacePlanner™ ambience: a slow shaft of daylight and drifting dust. */
+@keyframes sp-daylight {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: translateX(-6%) rotate(-12deg);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateX(6%) rotate(-12deg);
+  }
+}
+
+@keyframes sp-dust {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  40% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(14px, -26px, 0);
+  }
+}
+
+@utility animate-sp-daylight {
+  animation: sp-daylight 9s var(--ease-out-soft) infinite;
+}
+
+@utility animate-sp-dust {
+  animation: sp-dust 10s linear infinite;
 }

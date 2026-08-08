@@ -32,6 +32,7 @@ import { usePublicHostProfile, useSpaceAvailability } from "@/hooks/useListingPu
 import { track } from "@/lib/analytics/tracker";
 import { ListingGallery } from "@/components/listing/ListingGallery";
 import { BookingPanel } from "@/components/listing/BookingPanel";
+import { BookingCompatibilityPanel } from "@/components/spaceplanner/booking/BookingCompatibilityPanel";
 import {
   ListingAbout,
   ListingFacts,
@@ -262,6 +263,7 @@ function ListingDetail({
   similar: SimilarListing[];
   askRef: React.RefObject<HTMLDivElement | null>;
 }) {
+  const bookRef = React.useRef<HTMLDivElement | null>(null);
   const area = publicLocation(listing.approximate_area, listing.postcode_district);
   const type = spaceTypeLabel(listing.space_type as SpaceTypeValue);
   const heading = listing.title ?? `${type} in ${area}`;
@@ -282,6 +284,12 @@ function ListingDetail({
       </header>
 
       <ListingGallery photoUrls={photoUrls} title={heading} />
+
+      <BookingCompatibilityPanel
+        className="mt-6"
+        listing={listing}
+        onBook={() => bookRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+      />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-start">
         <div className="min-w-0 space-y-6">
@@ -314,7 +322,7 @@ function ListingDetail({
           <SimilarListings listings={similar} />
         </div>
 
-        <div className="min-w-0 lg:sticky lg:top-24">
+        <div ref={bookRef} className="min-w-0 lg:sticky lg:top-24">
           <BookingPanel
             spaceId={spaceId}
             monthlyPricePence={listing.monthly_price_pence ?? null}

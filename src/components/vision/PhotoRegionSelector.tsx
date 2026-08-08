@@ -225,27 +225,49 @@ export function PhotoRegionSelector({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={() => onChange(fullSelection(photoId))}
-        >
-          {wholeLabel}
-        </Button>
-        {selection ? (
+        {pending ? (
+          <>
+            <Button type="button" size="sm" onClick={confirm}>
+              Confirm selection
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setPending(null);
+                setDraft(null);
+              }}
+            >
+              Redraw
+            </Button>
+          </>
+        ) : (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => onChange(fullSelection(photoId))}
+          >
+            {wholeLabel}
+          </Button>
+        )}
+        {selection && !pending ? (
           <Button type="button" variant="text" size="sm" onClick={() => onChange(null)}>
             Clear selection
           </Button>
         ) : null}
         <p className="type-body-xs text-muted-foreground" aria-live="polite">
-          {!selection
-            ? "Nothing selected yet."
-            : isFullPhoto(selection)
-              ? "Analysing the whole photo."
-              : `Selected about ${Math.round((box?.width ?? 0) * (box?.height ?? 0) * 100)}% of the photo.`}
+          {pending
+            ? `Drawn about ${Math.round((box?.width ?? 0) * (box?.height ?? 0) * 100)}% of the photo. Adjust it, or confirm to use it.`
+            : !selection
+              ? "Nothing selected yet — press and drag round the area, or tap it."
+              : isFullPhoto(selection)
+                ? "Analysing the whole photo."
+                : `Selected about ${Math.round((box?.width ?? 0) * (box?.height ?? 0) * 100)}% of the photo.`}
         </p>
       </div>
+
     </div>
   );
 }

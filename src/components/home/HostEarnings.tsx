@@ -114,13 +114,15 @@ export function EarningsEstimator() {
 
         <CoachMark id="earnings_estimator" className="mt-3" />
 
-
         <ChoiceRow label="Space type">
           {EARNING_EXAMPLES.map((example) => (
             <Chip
               key={example.kind}
               active={kind === example.kind}
-              onClick={() => setKind(example.kind)}
+              onClick={() => {
+                setKind(example.kind);
+                noteInteraction();
+              }}
             >
               {example.label}
             </Chip>
@@ -129,7 +131,14 @@ export function EarningsEstimator() {
 
         <ChoiceRow label="Approximate size">
           {SIZE_BANDS.map((band) => (
-            <Chip key={band.id} active={size === band.id} onClick={() => setSize(band.id)}>
+            <Chip
+              key={band.id}
+              active={size === band.id}
+              onClick={() => {
+                setSize(band.id);
+                noteInteraction();
+              }}
+            >
               {band.label}
               <span className="text-muted-foreground"> · {band.hint}</span>
             </Chip>
@@ -138,7 +147,14 @@ export function EarningsEstimator() {
 
         <ChoiceRow label="Location">
           {DEMAND_BANDS.map((band) => (
-            <Chip key={band.id} active={demand === band.id} onClick={() => setDemand(band.id)}>
+            <Chip
+              key={band.id}
+              active={demand === band.id}
+              onClick={() => {
+                setDemand(band.id);
+                noteInteraction();
+              }}
+            >
               {band.label}
             </Chip>
           ))}

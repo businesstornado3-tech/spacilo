@@ -72,6 +72,17 @@ export const ANALYTICS_EVENTS = [
   "host_profile_viewed",
   "review_submitted",
   "availability_calendar_viewed",
+
+  // ---- Phase 5.5 instrumentation: journey milestones, counts only
+  "earnings_estimate_started",
+  "earnings_estimate_completed",
+  "vision_upload_started",
+  "planner_started",
+  "planner_completed",
+  "digital_twin_viewed",
+  "payment_completed",
+  "host_onboarding_completed",
+  "onboarding_hint_dismissed",
 ] as const;
 
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];

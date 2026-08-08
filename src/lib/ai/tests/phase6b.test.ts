@@ -26,8 +26,9 @@ describe("natural-language search", () => {
 
   it("routes through the orchestrator", async () => {
     const response = await aiServices.discovery.parseSearch({ query: "student storage in Southsea" });
-    expect(response.result.filters.intent).toBe("student");
-    expect(response.explanation.reason).toBeTruthy();
+    expect(response.result?.filters.intent).toBe("student");
+    expect(response.explanation?.reason).toBeTruthy();
+
   });
 });
 

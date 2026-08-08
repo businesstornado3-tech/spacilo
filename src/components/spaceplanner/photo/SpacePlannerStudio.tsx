@@ -148,7 +148,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   };
 
   const confirmInventory = () => {
-    const locked = lockInventory(stuff.objects);
+    const locked = lockInventory(generaliseUncertain(stuff.objects));
     setInventory(locked);
     track("spaceplanner_items_detected", {
       props: { count: locked.distinctItems, units: locked.itemCount, confirmed: 1 },

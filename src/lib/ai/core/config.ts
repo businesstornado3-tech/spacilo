@@ -65,6 +65,27 @@ export interface AiConfig {
 
 const MINUTE = 60_000;
 
+/**
+ * Shorthand for the Phase 6B reasoning capabilities. They run on Spacilo's own
+ * engines by default; a remote vendor is added to `providers` ahead of the
+ * local id and inherits the same timeouts, retries and caching.
+ */
+function reasoning(
+  provider: string,
+  overrides: Partial<AiCapabilityConfig> = {},
+): AiCapabilityConfig {
+  return {
+    kind: "llm",
+    providers: [provider],
+    timeoutMs: 20_000,
+    retries: 1,
+    cacheTtlMs: 10 * MINUTE,
+    minConfidence: 0.5,
+    queued: false,
+    ...overrides,
+  };
+}
+
 const DEFAULT_CONFIG: AiConfig = {
   version: "ai-config-1",
   capabilities: {

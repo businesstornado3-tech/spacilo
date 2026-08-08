@@ -55,6 +55,9 @@ export interface Obstacle extends Rect {
 }
 
 /** The space the planner is allowed to work inside. */
+/** Where the access corridor runs across the usable floor. */
+export type CorridorSide = "centre" | "left" | "right";
+
 export interface PlanningSpace {
   id: string;
   name: string;
@@ -69,6 +72,12 @@ export interface PlanningSpace {
   doorway: { x: number; w: number };
   /** Minimum clear access corridor, in metres. Configurable, never hardcoded. */
   walkwayClearanceM: number;
+  /**
+   * Where the access corridor runs. A corridor down one side leaves the
+   * storage as one contiguous block, which is what real storage looks like;
+   * a central corridor splits it in two. Defaults to "centre".
+   */
+  corridorSide?: CorridorSide;
   /** Clear depth kept immediately inside the opening. */
   doorwayClearanceM: number;
   /** Fixed furniture, user exclusions and anything that must stay unobstructed. */
@@ -162,6 +171,8 @@ export interface PhysicalArrangement {
   usableVolumeM3: number;
   excludedFloorM2: number;
   walkwayFloorM2: number;
+  /** Where the corridor ran in this plan. */
+  corridorSide: CorridorSide;
   /** 0–100, occupied share of usable storage volume. */
   utilisationPercent: number;
   placedUnits: number;

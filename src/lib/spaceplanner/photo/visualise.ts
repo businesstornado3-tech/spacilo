@@ -193,6 +193,7 @@ export class VisualisationError extends Error {
 export async function requestVisualisation(
   request: VisualisationRequest,
   fetchImpl: typeof fetch = fetch,
+  options: { signal?: AbortSignal } = {},
 ): Promise<VisualisationResponse> {
   const signature = visualisationSignature(request);
   const cached = sessionCache.get(signature);
@@ -202,7 +203,9 @@ export async function requestVisualisation(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
+    ...(options.signal ? { signal: options.signal } : {}),
   });
+
 
   const payload = (await response.json().catch(() => null)) as
     | { image?: unknown; error?: unknown; coverage?: CoverageReport }

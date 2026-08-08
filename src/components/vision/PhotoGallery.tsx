@@ -2,11 +2,22 @@
  * PhotoGallery — review, reorder, rotate, zoom and remove before analysing.
  */
 import * as React from "react";
-import { ChevronLeft, ChevronRight, Maximize2, Plus, RotateCw, Trash2, X } from "lucide-react";
+import {
+  AlertTriangle,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  Plus,
+  RotateCw,
+  Scissors,
+  Trash2,
+  X,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { VisionPhoto } from "@/lib/vision";
+import type { PhotoQuality, VisionPhoto } from "@/lib/vision";
 
 export function PhotoGallery({
   photos,
@@ -14,6 +25,9 @@ export function PhotoGallery({
   onRotate,
   onMove,
   onAddMore,
+  onReplace,
+  onSelectRegion,
+  quality,
   canAddMore = true,
 }: {
   photos: VisionPhoto[];
@@ -21,9 +35,17 @@ export function PhotoGallery({
   onRotate: (id: string) => void;
   onMove: (id: string, direction: -1 | 1) => void;
   onAddMore?: () => void;
+  /** Retake — swaps a photo in place, keeping its position in the list. */
+  onReplace?: (id: string, file: File) => void;
+  /** Opens the region selector for this photo. */
+  onSelectRegion?: (id: string) => void;
+  /** Advisory quality findings, keyed by photo id. */
+  quality?: Record<string, PhotoQuality>;
   canAddMore?: boolean;
 }) {
   const [zoomed, setZoomed] = React.useState<VisionPhoto | null>(null);
+  const retakeRef = React.useRef<HTMLInputElement>(null);
+  const retakeFor = React.useRef<string | null>(null);
 
   if (photos.length === 0) return null;
 
@@ -56,6 +78,12 @@ export function PhotoGallery({
                 style={{ transform: `rotate(${photo.rotation}deg)` }}
               />
             </div>
+            {quality?.[photo.id]?.advice.length ? (
+              <p className="flex gap-1.5 px-2 pt-2 type-body-xs text-warning">
+                <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+                {quality[photo.id]!.advice[0]}
+              </p>
+            ) : null}
             <div className="flex items-center justify-between gap-1 p-1.5">
               <div className="flex">
                 <IconButton
@@ -74,6 +102,22 @@ export function PhotoGallery({
                 </IconButton>
               </div>
               <div className="flex">
+                {onSelectRegion ? (
+                  <IconButton label="Select area" onClick={() => onSelectRegion(photo.id)}>
+                    <Scissors className="size-4" aria-hidden="true" />
+                  </IconButton>
+                ) : null}
+                {onReplace ? (
+                  <IconButton
+                    label="Retake photo"
+                    onClick={() => {
+                      retakeFor.current = photo.id;
+                      retakeRef.current?.click();
+                    }}
+                  >
+                    <Camera className="size-4" aria-hidden="true" />
+                  </IconButton>
+                ) : null}
                 <IconButton label="Rotate photo" onClick={() => onRotate(photo.id)}>
                   <RotateCw className="size-4" aria-hidden="true" />
                 </IconButton>
@@ -88,6 +132,22 @@ export function PhotoGallery({
           </li>
         ))}
       </ul>
+
+      {onReplace ? (
+        <input
+          ref={retakeRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            const id = retakeFor.current;
+            if (file && id) onReplace(id, file);
+            retakeFor.current = null;
+            event.target.value = "";
+          }}
+        />
+      ) : null}
 
       {zoomed ? (
         <div

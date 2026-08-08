@@ -501,20 +501,37 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
               </SpacePlannerResult>
 
               {manifest ? (
-                <details
-                  className="rounded-2xl border border-border bg-surface p-4"
-                  open={visual.status === "failed" || visual.status === "rejected"}
-                >
-                  <summary className="cursor-pointer type-label text-foreground">
-                    View arrangement plan
-                  </summary>
-                  <p className="mt-2 type-body-sm text-muted-foreground">
-                    {visual.status === "failed" || visual.status === "rejected"
-                      ? "Your SpacePlanner analysis is ready. We couldn't generate the photographic preview this time, but your fit and arrangement plan is available."
-                      : "Exactly where the planner decided each item goes — the same plan the visual preview renders."}
-                  </p>
-                  <ArrangementPlanDiagram manifest={manifest} className="mt-3" />
-                </details>
+                visual.status === "failed" || visual.status === "rejected" ? (
+                  <section className="rounded-2xl border border-border bg-surface p-4">
+                    <h4 className="type-h4">Your arrangement plan is ready</h4>
+                    <p className="mt-1 type-body-sm text-muted-foreground">
+                      The photographic preview didn&apos;t come out accurately this time, so
+                      we&apos;re showing the plan itself — the same positions the planner decided,
+                      drawn to scale.
+                    </p>
+                    <ArrangementPlanDiagram manifest={manifest} className="mt-3" />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="mt-3"
+                      onClick={() => void visual.generate()}
+                    >
+                      <RefreshCw aria-hidden="true" />
+                      Try the visual preview again
+                    </Button>
+                  </section>
+                ) : (
+                  <details className="rounded-2xl border border-border bg-surface p-4">
+                    <summary className="cursor-pointer type-label text-foreground">
+                      View arrangement plan
+                    </summary>
+                    <p className="mt-2 type-body-sm text-muted-foreground">
+                      Exactly where the planner decided each item goes — the same plan the visual
+                      preview renders.
+                    </p>
+                    <ArrangementPlanDiagram manifest={manifest} className="mt-3" />
+                  </details>
+                )
               ) : null}
 
               {earnings ? <EarningsEstimateCard earnings={earnings} /> : null}

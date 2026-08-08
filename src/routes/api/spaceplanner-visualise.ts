@@ -345,11 +345,24 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           return Response.json({ error: "no_image_returned" }, { status: 502 });
         }
 
+        const startedCheck = Date.now();
         const coverage = await checkCoverage(key, space, image, required, roomFeatures);
-        if (!coverage || !coverage.complete || !coverage.faithful) {
-          return Response.json({ error: "render_verification_failed", coverage }, { status: 422 });
-        }
-        return Response.json({ image, model: MODEL, coverage });
+        const diagnosticId = `vis_${Date.now().toString(36)}`;
+        // Verification never withholds the image. The client decides whether a
+        // render is presentable; the server reports honestly what it observed
+        // and distinguishes "could not verify" from "verified as wrong".
+        const verification: "verified" | "incomplete" | "unfaithful" | "unverified" = !coverage
+          ? "unverified"
+          : !coverage.faithful
+            ? "unfaithful"
+            : coverage.complete
+              ? "verified"
+              : "incomplete";
+        console.log(
+          `[spaceplanner-visualise] ${diagnosticId} model=${MODEL} units=${required.length} verification=${verification} present=${coverage?.present ?? "?"}/${required.length} unexpected=${coverage?.unexpected.length ?? 0} checkMs=${Date.now() - startedCheck}`,
+        );
+        return Response.json({ image, model: MODEL, coverage, verification, diagnosticId });
+
       },
     },
   },

@@ -206,7 +206,13 @@ async function checkCoverage(
     const text = typeof content === "string" ? content : "";
     const reply = parseCheckReply(text);
     if (!reply) return null;
-    return coverageOf(required.map((item) => item.id), reply.present, reply.unexpected);
+    return coverageOf(
+      required.map((item) => item.id),
+      reply.present,
+      reply.unexpected,
+      [...required.map((item) => item.label), ...roomFeatures.map((feature) => feature.label)],
+    );
+
   } catch {
     return null;
   }

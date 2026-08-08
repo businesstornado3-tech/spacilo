@@ -171,6 +171,8 @@ export interface PhysicalArrangement {
   usableVolumeM3: number;
   excludedFloorM2: number;
   walkwayFloorM2: number;
+  /** Where the corridor ran in this plan. */
+  corridorSide: CorridorSide;
   /** 0–100, occupied share of usable storage volume. */
   utilisationPercent: number;
   placedUnits: number;

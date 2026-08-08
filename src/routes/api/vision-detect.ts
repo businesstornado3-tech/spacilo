@@ -174,7 +174,8 @@ const SPACE_SYSTEM = [
   "You estimate the usable storage geometry of a room from photographs for a UK storage marketplace.",
   "Estimate cautiously from visible references (doors, bricks, floorboards, sockets). Never state a measurement as fact.",
   "Report obstacles, access limitations and anything that reduces usable space.",
-  "Reply as JSON: {\"widthM\":0,\"depthM\":0,\"ceilingHeightM\":0,\"usableAreaM2\":0,\"usableVolumeM3\":0,\"suitability\":\"good\",\"observations\":[\"...\"],\"confidence\":0.0}",
+  "Identify fixed room features that must remain visually unchanged: wall-mounted televisions, radiators, doors, windows, fitted shelving, built-in furniture and electrical fixtures. These are room features, never storage belongings.",
+  "Reply as JSON: {\"widthM\":0,\"depthM\":0,\"ceilingHeightM\":0,\"usableAreaM2\":0,\"usableVolumeM3\":0,\"suitability\":\"good\",\"observations\":[\"...\"],\"features\":[{\"label\":\"Wall-mounted TV\",\"kind\":\"television\",\"position\":\"rear wall, centred\",\"confidence\":0.0}],\"confidence\":0.0}",
 ].join("\n");
 
 const CATEGORIES = ["boxes", "furniture", "appliances", "electronics", "leisure", "seasonal"];

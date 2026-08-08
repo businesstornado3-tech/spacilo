@@ -158,6 +158,8 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
     try {
       await publishSpace(space.id);
       track("host_listing_published", { props: { space_id: space.id } });
+      // A published first listing is the moment a host is genuinely onboarded.
+      track("host_onboarding_completed", { props: { space_id: space.id } });
       setJustPublished(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {

@@ -22,6 +22,7 @@ import {
   priceStorage,
 } from "@/lib/pricing/duration";
 import { PriceDisplay } from "@/components/marketplace/PriceDisplay";
+import { CoachMark } from "@/components/onboarding/CoachMark";
 import { RequestSpaceCta } from "@/components/requests/RequestSpaceCta";
 
 export interface BookingPanelProps {
@@ -72,6 +73,7 @@ export function BookingPanel({
 
   return (
     <div className={cn("space-y-4", className)}>
+      <CoachMark id="booking_dates" />
       <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           {typeof monthlyPricePence === "number" ? (

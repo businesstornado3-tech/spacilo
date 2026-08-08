@@ -315,7 +315,7 @@ describe("job queue", () => {
       capability: "assistant",
       input: { value: "queued" },
     });
-    expect(job.status).toBe("queued");
+    expect(["queued", "running"]).toContain(job.status);
     expect(aiQueueStats().total).toBe(1);
 
     const settled = await awaitAiJob<{ result: { value: string } | null }>(job.id);

@@ -1,10 +1,10 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ErrorState } from "@/components/common/States";
+import { ErrorState, LoadingState } from "@/components/common/States";
 import { SpaceWizard } from "@/components/host/listing/SpaceWizard";
 import { ListingQualityCard } from "@/components/host/listing/ListingQualityCard";
 import { getMySpace, listSpacePhotos, type Space, type SpacePhoto } from "@/lib/spaces-api";
@@ -71,9 +71,7 @@ function EditSpacePage() {
   return (
     <AppLayout mode="host" title="Edit your space" description="Changes save as you go.">
       {state.kind === "loading" ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading this space…" />
       ) : null}
 
       {state.kind === "error" ? (

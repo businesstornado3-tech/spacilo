@@ -8,8 +8,9 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
 import { ClientOnly } from "@tanstack/react-router";
-import { List, Loader2, Map as MapIcon, SearchX } from "lucide-react";
+import { List, Map as MapIcon, SearchX } from "lucide-react";
 
+import { ListingCardSkeleton } from "@/components/common/Skeletons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { controlBase } from "@/components/form/Field";
@@ -252,10 +253,12 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
               the visible results heading is not rendered. */}
           <h2 className="sr-only">Search results</h2>
           {isLoading ? (
-            <p className="flex items-center gap-2 type-body-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Finding storage near
-              you…
-            </p>
+            <div className="space-y-4" role="status" aria-live="polite">
+              <p className="type-body-sm text-muted-foreground">Finding storage near you…</p>
+              <ListingCardSkeleton />
+              <ListingCardSkeleton />
+              <ListingCardSkeleton />
+            </div>
           ) : null}
 
           {results.map((entry) => (

@@ -5,11 +5,11 @@
  */
 import * as React from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ErrorState } from "@/components/common/States";
+import { ErrorState, LoadingState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { Field, TextArea, TextInput } from "@/components/form/Field";
 import { PriceDisplay } from "@/components/marketplace/PriceDisplay";
@@ -215,9 +215,7 @@ function NewRequestPage() {
       description="Check the details below. Sending a request doesn't book the space or take payment."
     >
       {loadState === "loading" ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Checking available space…" />
       ) : null}
 
       {loadState === "error" ? <ErrorState onRetry={() => void load()} /> : null}

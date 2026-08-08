@@ -4,11 +4,11 @@
  * "Awaiting payment".
  */
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarCheck, Loader2 } from "lucide-react";
+import { CalendarCheck } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { EmptyState, ErrorState } from "@/components/common/States";
+import { EmptyState, ErrorState, LoadingState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { BookingStatusBadge } from "@/components/bookings/BookingSummary";
 import { useMyBookings } from "@/hooks/useBookings";
@@ -46,9 +46,7 @@ function RenterBookingsPage() {
   return (
     <AppLayout mode="renter" title="Bookings" description={description}>
       {isLoading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading your bookings…" />
       ) : null}
 
       {error ? <ErrorState onRetry={() => void refetch()} /> : null}

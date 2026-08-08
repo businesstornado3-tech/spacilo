@@ -183,6 +183,8 @@ export function SpaceScanner({
                   <img
                     src={urls[photo.storage_path]}
                     alt="Photo of your space, used only for measuring"
+                  loading="lazy"
+                  decoding="async"
                     className="size-full object-cover"
                   />
                 ) : (

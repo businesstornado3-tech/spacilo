@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+
 
 import { AppLayout } from "@/components/layout/AppLayout";
-import { EmptyState, ErrorState } from "@/components/common/States";
+import { EmptyState, ErrorState, LoadingState } from "@/components/common/States";
 import { StaffCasePanel } from "@/components/support/StaffCasePanel";
 import { SupportCaseView } from "@/components/support/SupportCaseView";
 import { useAuth } from "@/hooks/useAuth";
@@ -36,9 +36,7 @@ function StaffCaseRoute() {
   if (staff.isLoading) {
     return (
       <AppLayout mode={mode} title="Support case">
-        <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading this case…" />
       </AppLayout>
     );
   }
@@ -57,9 +55,7 @@ function StaffCaseRoute() {
   return (
     <AppLayout mode={mode} title="Support case" description="Review, respond and resolve.">
       {isLoading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading this case…" />
       ) : null}
 
       {error ? <ErrorState description="We couldn't load this support case." /> : null}

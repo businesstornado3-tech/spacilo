@@ -100,6 +100,7 @@ export function PhotoGallery({
           <img
             src={zoomed.url}
             alt="Zoomed photo"
+            decoding="async"
             className="max-h-full max-w-full rounded-xl object-contain"
             style={{ transform: `rotate(${zoomed.rotation}deg)` }}
           />

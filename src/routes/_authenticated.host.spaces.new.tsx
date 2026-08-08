@@ -1,12 +1,12 @@
 import * as React from "react";
 import { track } from "@/lib/analytics/tracker";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
-import { ErrorState } from "@/components/common/States";
+import { ErrorState, LoadingState } from "@/components/common/States";
 import { SpaceWizard } from "@/components/host/listing/SpaceWizard";
 import { useAuth } from "@/hooks/useAuth";
 import { createDraftSpace, getLatestDraft, listSpacePhotos, type Space, type SpacePhoto } from "@/lib/spaces-api";
@@ -81,9 +81,7 @@ function NewSpacePage() {
       description="Eight quick steps. We save your progress as you go."
     >
       {phase.kind === "loading" ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Preparing the listing builder…" />
       ) : null}
 
       {phase.kind === "error" ? (

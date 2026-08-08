@@ -17,7 +17,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
-import { Loader2, Download } from "lucide-react";
+import { Download } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { AdminShell, AdminSectionBlock } from "@/components/admin/AdminShell";
@@ -25,7 +25,7 @@ import { Alert } from "@/components/common/Alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/common/Skeletons";
-import { EmptyState, ErrorState } from "@/components/common/States";
+import { EmptyState, ErrorState, LoadingState } from "@/components/common/States";
 import { NativeSelect } from "@/components/form/Field";
 import {
   useIsPlatformAdmin,
@@ -176,9 +176,7 @@ function AdminDashboardRoute() {
   if (admin.isLoading) {
     return (
       <AdminShell title="Founder console">
-        <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading platform metrics…" />
       </AdminShell>
     );
   }

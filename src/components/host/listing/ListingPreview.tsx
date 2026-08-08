@@ -60,7 +60,9 @@ export function ListingPreview({ view, footer }: { view: ListingView; footer?: R
     <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
       <div className="aspect-16/10 w-full bg-muted">
         {cover ? (
-          <img src={cover} alt={`${view.title || "Storage space"} — main photo`} className="size-full object-cover" />
+          <img src={cover} alt={`${view.title || "Storage space"} — main photo`}
+              loading="lazy"
+              decoding="async" className="size-full object-cover" />
         ) : (
           <div className="grid size-full place-items-center type-body-sm text-muted-foreground">
             No photos added yet

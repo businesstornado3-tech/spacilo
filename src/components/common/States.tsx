@@ -2,6 +2,7 @@ import { TriangleAlert, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/common/Skeletons";
 
 interface EmptyStateProps {
   icon?: LucideIcon;
@@ -9,6 +10,11 @@ interface EmptyStateProps {
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
+  /** Optional quieter follow-up action. */
+  secondaryLabel?: string;
+  onSecondaryAction?: () => void;
+  /** Custom actions (e.g. links) rendered instead of the built-in buttons. */
+  action?: React.ReactNode;
   className?: string;
 }
 
@@ -18,12 +24,15 @@ export function EmptyState({
   description,
   actionLabel,
   onAction,
+  secondaryLabel,
+  onSecondaryAction,
+  action,
   className,
 }: EmptyStateProps) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center rounded-2xl border border-dashed border-border-strong bg-card px-6 py-12 text-center",
+        "animate-fade flex flex-col items-center rounded-2xl border border-dashed border-border-strong bg-card px-6 py-12 text-center",
         className,
       )}
     >
@@ -36,10 +45,16 @@ export function EmptyState({
       {description ? (
         <p className="mt-2 max-w-sm type-body-sm text-muted-foreground">{description}</p>
       ) : null}
-      {actionLabel ? (
-        <Button className="mt-5" onClick={onAction}>
-          {actionLabel}
-        </Button>
+      {actionLabel || action || secondaryLabel ? (
+        <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+          {actionLabel ? <Button onClick={onAction}>{actionLabel}</Button> : null}
+          {action}
+          {secondaryLabel ? (
+            <Button variant="text" onClick={onSecondaryAction}>
+              {secondaryLabel}
+            </Button>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );
@@ -76,6 +91,46 @@ export function ErrorState({
           Try again
         </Button>
       ) : null}
+    </div>
+  );
+}
+
+interface LoadingStateProps {
+  /** Contextual reassurance, e.g. "Finding nearby storage…". */
+  label?: string;
+  /** Number of skeleton rows to render beneath the label. */
+  rows?: number;
+  className?: string;
+}
+
+/**
+ * Contextual loading state.
+ *
+ * Prefer this over a bare spinner: it tells the user what work is happening
+ * and holds the layout with skeleton rows so nothing shifts on arrival.
+ */
+export function LoadingState({ label = "Loading…", rows = 3, className }: LoadingStateProps) {
+  return (
+    <div className={cn("animate-fade space-y-3", className)} role="status" aria-live="polite">
+      <p className="flex items-center gap-2 type-body-sm text-muted-foreground">
+        <span
+          aria-hidden="true"
+          className="relative flex size-2 shrink-0 items-center justify-center"
+        >
+          <span className="absolute inline-flex size-2 animate-ping rounded-full bg-primary/50" />
+          <span className="relative inline-flex size-2 rounded-full bg-primary" />
+        </span>
+        {label}
+      </p>
+      <div className="space-y-3" aria-hidden="true">
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="rounded-2xl border border-border bg-card p-4">
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="mt-3 h-3 w-2/3" />
+            <Skeleton className="mt-2 h-3 w-1/2" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

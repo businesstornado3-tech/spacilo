@@ -3,11 +3,11 @@
  * Every figure comes from each request's immutable snapshot.
  */
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Inbox, Loader2 } from "lucide-react";
+import { Inbox } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { EmptyState, ErrorState } from "@/components/common/States";
+import { EmptyState, ErrorState, LoadingState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RequestStatusBadge } from "@/components/requests/RequestSummary";
@@ -85,9 +85,7 @@ function HostBookingsPage() {
   return (
     <AppLayout mode="host" title="Bookings" description="Manage storage requests and bookings.">
       {isLoading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading your bookings…" />
       ) : null}
 
       {error ? <ErrorState onRetry={() => void refetch()} /> : null}

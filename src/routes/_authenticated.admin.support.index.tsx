@@ -1,10 +1,10 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+
 
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/common/States";
+import { EmptyState, LoadingState } from "@/components/common/States";
 import { Field, NativeSelect } from "@/components/form/Field";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsSupportStaff, useSupportQueue } from "@/hooks/useSupportCases";
@@ -49,9 +49,7 @@ function SupportQueueRoute() {
   if (staff.isLoading) {
     return (
       <AppLayout mode={mode} title="Support queue">
-        <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading support cases…" />
       </AppLayout>
     );
   }
@@ -108,9 +106,7 @@ function SupportQueueRoute() {
       </div>
 
       {queue.isLoading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading support cases…" />
       ) : null}
 
       {!queue.isLoading && cases.length === 0 ? (

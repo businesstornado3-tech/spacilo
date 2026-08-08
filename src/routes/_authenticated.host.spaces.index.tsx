@@ -1,10 +1,10 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader2, Plus, Warehouse } from "lucide-react";
+import { Plus,  Warehouse } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { EmptyState, ErrorState } from "@/components/common/States";
+import { EmptyState, ErrorState, LoadingState } from "@/components/common/States";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PriceDisplay } from "@/components/marketplace/PriceDisplay";
@@ -107,9 +107,7 @@ function HostSpacesPage() {
       {failed ? <ErrorState onRetry={() => void load()} /> : null}
 
       {!failed && spaces === null ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading your spaces…" />
       ) : null}
 
       {!failed && spaces?.length === 0 ? (

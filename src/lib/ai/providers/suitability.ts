@@ -422,7 +422,10 @@ const WEIGHTS: Weight[] = [
     max: 10,
     score: (listing, preferences) =>
       normalise(listing.monthlyPrice, 0, preferences.maxMonthlyPrice ?? 300),
-    reason: (listing) => null && listing.id ? null : null,
+    reason: (listing) =>
+      listing.monthlyPrice !== undefined && listing.monthlyPrice <= 80
+        ? `£${Math.round(listing.monthlyPrice)} a month`
+        : null,
   },
   {
     signal: "access hours",

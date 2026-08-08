@@ -24,7 +24,7 @@ export function MarketplaceEntry() {
             Now find the perfect space nearby.
           </h2>
           <p className="mt-3 max-w-md type-body text-muted-foreground">
-            Your belongings have an optimised layout. Next: trusted garages, lofts and spare rooms
+            Your belongings have an optimised layout. Next: trusted spaces — garages, lofts, spare rooms and more —
             from neighbours near you.
           </p>
 

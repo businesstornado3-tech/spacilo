@@ -10,9 +10,9 @@ import * as React from "react";
 
 import { HeroGarageAnimation } from "@/components/spaceplanner/HeroGarageAnimation";
 
-const TwinExperience = React.lazy(() =>
-  import("@/components/twin/TwinExperience").then((module) => ({
-    default: module.TwinExperience,
+const TwinTeaser = React.lazy(() =>
+  import("@/components/twin/HeroTwinTeaser").then((module) => ({
+    default: module.HeroTwinTeaser,
   })),
 );
 
@@ -25,7 +25,7 @@ export function HeroTwin() {
 
   return (
     <React.Suspense fallback={placeholder}>
-      <TwinExperience />
+      <TwinTeaser />
     </React.Suspense>
   );
 }

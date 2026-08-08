@@ -29,7 +29,7 @@ export function HostEarnings() {
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <header className="max-w-xl">
           <h2 id="host-earnings-heading" className="type-h2">
-            Your empty garage is already earning — for someone else.
+            Your unused space is already earning — for someone else.
           </h2>
           <p className="mt-2.5 type-body-sm text-muted-foreground">
             List the space you are not using and let it pay for itself.

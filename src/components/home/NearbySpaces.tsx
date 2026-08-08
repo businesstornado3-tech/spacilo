@@ -25,7 +25,7 @@ export function NearbySpaces() {
               Real storage nearby.
             </h2>
             <p className="mt-2 max-w-md type-body-sm text-muted-foreground">
-              Garages, spare rooms and lofts from neighbours in the pilot area. Sample spaces shown
+              Garages, spare rooms, lofts and driveways from neighbours in the pilot area. Sample spaces shown
               for illustration.
             </p>
           </div>

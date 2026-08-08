@@ -40,7 +40,7 @@ export function HeroSection({ visual }: HeroSectionProps) {
           <p className="mt-3 flex max-w-md items-start gap-2 type-body-sm text-muted-foreground">
             <Sparkles className="mt-0.5 size-4 shrink-0 text-signal" aria-hidden="true" />
             <span>
-              Rent from trusted local hosts or earn from your spare garage — and{" "}
+              Rent from trusted local hosts or earn from your unused space — and{" "}
               <span className="text-foreground">Spacilo AI SpacePlanner™</span> shows how your
               belongings fit before you book.
             </span>
@@ -88,7 +88,7 @@ export function HeroSection({ visual }: HeroSectionProps) {
           {/* Host earning signal, visible without scrolling. */}
           <div className="mt-4 flex max-w-md flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-accent-soft/70 p-3.5 text-accent-foreground">
             <div className="min-w-0">
-              <p className="type-label text-accent-foreground/80">Garages like yours could earn</p>
+              <p className="type-label text-accent-foreground/80">Spaces like yours could earn</p>
               <p className="mt-0.5 type-h3 tabular-nums">{formatEarningsRange(GARAGE.range)}</p>
             </div>
             <button

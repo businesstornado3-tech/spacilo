@@ -8,7 +8,7 @@
  * Nothing heavy runs until someone starts a scan.
  */
 import * as React from "react";
-import { ArrowRight, Boxes, Camera, Home, RefreshCw, Sparkles } from "lucide-react";
+import { ArrowRight, Boxes, Camera, CheckCircle2, Home, RefreshCw, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ScanUploader } from "@/components/vision/ScanUploader";

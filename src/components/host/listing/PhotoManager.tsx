@@ -126,6 +126,8 @@ export function PhotoManager({
                 <img
                   src={urls[photo.storage_path]}
                   alt={photo.alt ?? "Photo of the storage space"}
+                  loading="lazy"
+                  decoding="async"
                   className="size-full object-cover"
                 />
               ) : (

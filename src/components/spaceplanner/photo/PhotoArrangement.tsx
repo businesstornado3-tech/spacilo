@@ -41,7 +41,10 @@ export interface PhotoArrangementProps {
   statusLabel?: string;
   /** How many required items the generated image was shown to contain. */
   coverage?: CoverageReport | null;
+  /** Why the render failed, so the message says what actually happened. */
+  errorCode?: string | null;
   onRetry?: () => void;
+
   className?: string;
 }
 

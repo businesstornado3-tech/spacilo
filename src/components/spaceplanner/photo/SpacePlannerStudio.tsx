@@ -8,27 +8,35 @@
  * Nothing heavy runs until someone starts a scan.
  */
 import * as React from "react";
-import { ArrowRight, Boxes, Camera, Home, RefreshCw, Sparkles } from "lucide-react";
+import { ArrowRight, Boxes, Camera, CheckCircle2, Home, RefreshCw, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ScanUploader } from "@/components/vision/ScanUploader";
 import { PhotoGallery } from "@/components/vision/PhotoGallery";
 import { VisionAnalysis } from "@/components/vision/VisionAnalysis";
-import { DetectedInventory } from "@/components/vision/DetectedInventory";
+
 import { PhotoArrangement } from "@/components/spaceplanner/photo/PhotoArrangement";
 import { SpacePlannerResult } from "@/components/spaceplanner/photo/SpacePlannerResult";
 import { useVisionAI } from "@/hooks/useVisionAI";
 import { useSpaceVisualisation } from "@/hooks/useSpaceVisualisation";
+import { InventoryLock } from "@/components/spaceplanner/photo/InventoryLock";
 import { buildPhotoPlan, spaceFromScan, type SpaceSource } from "@/lib/spaceplanner/photo";
+import {
+  buildPlacementManifest,
+  lockInventory,
+  type CanonicalInventory,
+} from "@/lib/spaceplanner/photo/manifest";
 import { track } from "@/lib/analytics/tracker";
 
-type Step = "stuff" | "space" | "result";
+type Step = "stuff" | "review" | "space" | "result";
 
 export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   const [step, setStep] = React.useState<Step>("stuff");
   const stuff = useVisionAI({ mode: "belongings" });
   const space = useVisionAI({ mode: "space" });
   const [manual, setManual] = React.useState({ width: "", depth: "", height: "" });
+  /** The confirmed inventory. One source of truth for everything downstream. */
+  const [inventory, setInventory] = React.useState<CanonicalInventory | null>(null);
 
   const manualSource = React.useMemo<SpaceSource | null>(() => {
     const width = Number(manual.width);
@@ -42,15 +50,23 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     ? spaceFromScan(space.spaceScan)
     : manualSource;
 
+  const planObjects = inventory?.objects ?? stuff.objects;
+
   const result = React.useMemo(
-    () => (source && stuff.objects.length > 0 ? buildPhotoPlan(stuff.objects, source) : null),
-    [source, stuff.objects],
+    () => (source && planObjects.length > 0 ? buildPhotoPlan(planObjects, source) : null),
+    [source, planObjects],
+  );
+
+  const manifest = React.useMemo(
+    () => (inventory && result ? buildPlacementManifest(inventory, result) : null),
+    [inventory, result],
   );
 
   const spacePhoto = space.photos[0] ?? null;
   const visual = useSpaceVisualisation({
     result,
-    objects: stuff.objects,
+    objects: planObjects,
+    manifest,
     spacePhoto,
     itemPhotos: stuff.photos,
   });
@@ -63,22 +79,30 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     }
   }, [result]);
 
-  // One automatic attempt per result on the results step; retry is explicit.
+  // One automatic attempt per confirmed inventory + space; retry is explicit.
   const attempted = React.useRef<string | null>(null);
   React.useEffect(() => {
     if (step !== "result" || !result || !spacePhoto) return;
-    const signature = `${spacePhoto.id}:${result.itemCount}:${result.fitPercent}`;
+    const signature = `${spacePhoto.id}:${inventory?.signature ?? result.itemCount}:${result.fitPercent}`;
     if (attempted.current === signature) return;
     attempted.current = signature;
     void visual.generate();
-  }, [step, result, spacePhoto, visual]);
-
-
+  }, [step, result, spacePhoto, inventory, visual]);
 
   const analyseStuff = async () => {
     track("spaceplanner_analysis_started", { props: { mode: "belongings" } });
     await stuff.analyse();
     track("spaceplanner_items_detected", { props: { count: stuff.photos.length } });
+    setInventory(null);
+    setStep("review");
+  };
+
+  const confirmInventory = () => {
+    const locked = lockInventory(stuff.objects);
+    setInventory(locked);
+    track("spaceplanner_items_detected", {
+      props: { count: locked.distinctItems, units: locked.itemCount, confirmed: 1 },
+    });
     setStep("space");
   };
 
@@ -92,6 +116,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   const restart = () => {
     stuff.reset();
     space.reset();
+    setInventory(null);
     setManual({ width: "", depth: "", height: "" });
     setStep("stuff");
   };
@@ -102,8 +127,9 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
         {(
           [
             ["stuff", "1. Your stuff", Boxes],
-            ["space", "2. Your space", Home],
-            ["result", "3. How it fits", Sparkles],
+            ["review", "2. Confirm items", CheckCircle2],
+            ["space", "3. Your space", Home],
+            ["result", "4. How it fits", Sparkles],
           ] as const
         ).map(([id, label, Icon]) => (
           <button
@@ -140,7 +166,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 rejected={stuff.rejected}
                 disabled={!stuff.canAddMore}
                 title="Show Spacilo AI your belongings"
-                hint="Boxes, furniture, bikes, appliances — a few clear photos is plenty."
+                hint="Photograph the whole item where possible — one clear photo per item, or per group of similar items."
               />
               <PhotoGallery
                 photos={stuff.photos}
@@ -156,22 +182,34 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 </Button>
               ) : null}
               {stuff.objects.length > 0 ? (
-                <>
-                  <DetectedInventory
-                    objects={stuff.objects}
-                    actions={stuff.editor}
-                    onAdd={stuff.editor.add}
-                  />
-                  <Button type="button" variant="secondary" size="lg" onClick={() => setStep("space")}>
-                    Now show us the space
-                    <ArrowRight aria-hidden="true" />
-                  </Button>
-                </>
+                <Button type="button" variant="secondary" size="lg" onClick={() => setStep("review")}>
+                  See what Spacilo AI found
+                  <ArrowRight aria-hidden="true" />
+                </Button>
               ) : null}
             </>
           )}
         </div>
       ) : null}
+
+      {step === "review" ? (
+        <div className="space-y-4" aria-live="polite">
+          {stuff.objects.length > 0 ? (
+            <InventoryLock
+              objects={stuff.objects}
+              actions={stuff.editor}
+              onAdd={stuff.editor.add}
+              onConfirm={confirmInventory}
+              onRetake={() => setStep("stuff")}
+            />
+          ) : (
+            <p className="type-body-sm text-muted-foreground">
+              Add photos of your belongings and run Spacilo AI to build your inventory.
+            </p>
+          )}
+        </div>
+      ) : null}
+
 
       {step === "space" ? (
         <div className="space-y-4" aria-live="polite">
@@ -191,7 +229,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 rejected={space.rejected}
                 disabled={!space.canAddMore}
                 title="Now show us the space"
-                hint="A garage, spare room, loft or unit — include the door or access route."
+                hint="Capture the full space from a corner or doorway. Keep walls, floor and access points visible."
               />
               <PhotoGallery
                 photos={space.photos}
@@ -256,6 +294,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                     arrangedUrl={visual.imageUrl}
                     status={visual.status}
                     statusLabel={visual.stageLabel}
+                    coverage={visual.coverage}
                     onRetry={() => void visual.generate()}
                     description={`${result.itemCount} items shown in the space you photographed. Estimated fit ${result.fitPercent}%, with about ${result.spaceRemainingM3.toFixed(1)}m³ estimated to remain.`}
                   />

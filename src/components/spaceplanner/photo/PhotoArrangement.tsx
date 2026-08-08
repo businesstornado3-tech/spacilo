@@ -14,9 +14,10 @@ import { AlertTriangle, MoveHorizontal, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { projectPlacements, toPoints, DEFAULT_FLOOR_QUAD, type FloorQuad } from "@/lib/spaceplanner/photo";
+import type { CoverageReport } from "@/lib/spaceplanner/photo/manifest";
 import type { PackResult, StorageSpace } from "@/lib/spaceplanner";
 
-export type ArrangementStatus = "idle" | "working" | "ready" | "failed";
+export type ArrangementStatus = "idle" | "working" | "ready" | "incomplete" | "failed";
 
 export interface PhotoArrangementProps {
   /** The user's own photograph of the space. */
@@ -31,6 +32,8 @@ export interface PhotoArrangementProps {
   arrangedUrl?: string | null;
   status?: ArrangementStatus;
   statusLabel?: string;
+  /** How many required items the generated image was shown to contain. */
+  coverage?: CoverageReport | null;
   onRetry?: () => void;
   className?: string;
 }
@@ -84,10 +87,11 @@ export function PhotoArrangement({
   arrangedUrl = null,
   status = "idle",
   statusLabel,
+  coverage = null,
   onRetry,
   className,
 }: PhotoArrangementProps) {
-  const hasVisual = status === "ready" && Boolean(arrangedUrl);
+  const hasVisual = (status === "ready" || status === "incomplete") && Boolean(arrangedUrl);
   const [showArranged, setShowArranged] = React.useState(true);
   const [position, setPosition] = React.useState(100);
   const [showOverlay, setShowOverlay] = React.useState(false);
@@ -209,8 +213,45 @@ export function PhotoArrangement({
         </div>
       ) : null}
 
+      {hasVisual && coverage ? (
+        <p
+          className="mt-3 flex items-start gap-2 type-body-sm"
+          aria-live="polite"
+        >
+          {coverage.complete ? (
+            <>
+              <span className="rounded-full bg-signal-soft px-2 py-0.5 type-badge text-signal-soft-foreground">
+                {coverage.present} of {coverage.expected} items included
+              </span>
+              <span className="text-muted-foreground">Based on your photos.</span>
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
+              <span>
+                Visualisation could not reliably include every item
+                {coverage.missing.length ? ` (${coverage.missing.join(", ")})` : ""}. Your fit
+                analysis is unaffected.
+              </span>
+            </>
+          )}
+        </p>
+      ) : null}
+
+      {status === "incomplete" ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {onRetry ? (
+            <Button type="button" size="sm" variant="secondary" onClick={onRetry}>
+              <RefreshCw aria-hidden="true" />
+              Retry visualisation
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+
       {status === "failed" ? (
         <div className="mt-3 rounded-2xl border border-border bg-surface p-3">
+
           <p className="flex items-start gap-2 type-body-sm">
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
             We couldn&apos;t create the visual arrangement this time. Your fit analysis below is

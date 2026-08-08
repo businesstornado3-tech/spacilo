@@ -1,20 +1,41 @@
 /**
  * SpacePlanner visualisation — client pipeline.
  *
- * Turns the analytical plan into an instruction for the image model, sends the
- * user's own photographs to the visualisation endpoint, and returns the edited
- * photograph. A geometric overlay is never returned from here: if no image
- * comes back the caller is told visualisation is unavailable.
+ * Downstream of the confirmed inventory: the placement manifest built from the
+ * canonical inventory and the analytical plan is what the image model is asked
+ * to satisfy, and what the returned image is checked against. A geometric
+ * overlay is never returned from here: if no image comes back, or the image
+ * cannot be shown to contain the required items, the caller is told.
  */
 import type { PhotoPlanResult } from "./plan";
+import {
+  formatManifestForModel,
+  requiredLabels,
+  type CoverageReport,
+  type PlacementManifest,
+} from "./manifest";
+import { hashString } from "@/lib/vision/hash";
 import type { DetectedObject } from "@/lib/vision/types";
 
-export type VisualisationStage = "analysing" | "placing" | "rendering";
+export type VisualisationStage =
+  | "reading"
+  | "identifying"
+  | "sizing"
+  | "space"
+  | "fitting"
+  | "planning"
+  | "rendering"
+  | "checking";
 
 export const VISUALISATION_STAGES: { id: VisualisationStage; label: string }[] = [
-  { id: "analysing", label: "Spacilo AI is analysing your space…" },
-  { id: "placing", label: "Finding the best placement…" },
-  { id: "rendering", label: "Creating your SpacePlanner visualisation…" },
+  { id: "reading", label: "Reading your belongings…" },
+  { id: "identifying", label: "Identifying your items…" },
+  { id: "sizing", label: "Checking sizes and quantities…" },
+  { id: "space", label: "Reading your storage space…" },
+  { id: "fitting", label: "Calculating the best fit…" },
+  { id: "planning", label: "Planning the arrangement…" },
+  { id: "rendering", label: "Creating your visual preview…" },
+  { id: "checking", label: "Checking that all your items are included…" },
 ];
 
 export interface VisualisationImage {
@@ -26,12 +47,22 @@ export interface VisualisationRequest {
   spaceImage: VisualisationImage;
   itemImages: VisualisationImage[];
   instruction: string;
+  /** Structured manifest the image must satisfy. */
+  manifest?: { label: string; quantity: number }[];
+  /** Items a previous attempt missed; the retry emphasises these. */
+  emphasise?: string[];
 }
 
-/** Human, model-facing description of what to place and where. */
+export interface VisualisationResponse {
+  image: string;
+  coverage: CoverageReport | null;
+}
+
+/** Structured, model-facing description of what to place and where. */
 export function buildVisualisationInstruction(
   result: PhotoPlanResult,
   objects: DetectedObject[],
+  manifest?: PlacementManifest,
 ): string {
   const items = objects
     .slice(0, 8)
@@ -49,7 +80,11 @@ export function buildVisualisationInstruction(
 
   return [
     `The space is roughly ${result.space.width.toFixed(1)}m wide by ${result.space.depth.toFixed(1)}m deep with about ${result.space.height.toFixed(1)}m of height.`,
-    items ? `Belongings to place: ${items}.` : "",
+    manifest
+      ? `EVERY item in this manifest must appear in the edited photograph:\n\n${formatManifestForModel(manifest)}`
+      : items
+        ? `Belongings to place: ${items}.`
+        : "",
     placements ? `Recommended arrangement: ${placements}.` : "",
     `They should occupy roughly ${result.spaceUsedM3.toFixed(1)}m³, leaving about ${result.spaceRemainingM3.toFixed(1)}m³ of the space free.`,
   ]
@@ -65,20 +100,41 @@ function describeSpot(x: number, y: number, result: PhotoPlanResult): string {
   return `${side}, towards ${depth}`;
 }
 
-/** Blob/object URL or data URL → the bytes the endpoint expects. */
-export async function toVisualisationImage(url: string): Promise<VisualisationImage> {
-  const response = await fetch(url);
-  const blob = await response.blob();
-  const base64 = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("read_failed"));
-    reader.onload = () => {
-      const value = String(reader.result ?? "");
-      resolve(value.slice(value.indexOf(",") + 1));
-    };
-    reader.readAsDataURL(blob);
+/** Manifest → the compact list the endpoint validates against. */
+export function manifestPayload(manifest: PlacementManifest): { label: string; quantity: number }[] {
+  return requiredLabels(manifest).map((label) => {
+    const entry = manifest.entries.find((candidate) => candidate.label === label)!;
+    return { label: entry.label, quantity: entry.quantity };
   });
-  return { mimeType: blob.type || "image/jpeg", base64 };
+}
+
+/**
+ * Deterministic request signature. Same photos, same inventory, same plan →
+ * same key, so a repeated request can reuse the previous image.
+ */
+export function visualisationSignature(request: VisualisationRequest): string {
+  const parts = [
+    request.spaceImage.base64.slice(0, 256),
+    String(request.spaceImage.base64.length),
+    ...request.itemImages.map((image) => `${image.base64.length}:${image.base64.slice(0, 96)}`),
+    request.instruction,
+    (request.emphasise ?? []).join(","),
+  ];
+  return `vis_${hashString(parts.join("|")).toString(36)}`;
+}
+
+/**
+ * Per-session, in-memory only. Never persisted and never shared between
+ * users — a page reload starts empty.
+ */
+const sessionCache = new Map<string, VisualisationResponse>();
+
+export function cachedVisualisation(signature: string): VisualisationResponse | undefined {
+  return sessionCache.get(signature);
+}
+
+export function clearVisualisationCache(): void {
+  sessionCache.clear();
 }
 
 export class VisualisationError extends Error {
@@ -92,7 +148,11 @@ export class VisualisationError extends Error {
 export async function requestVisualisation(
   request: VisualisationRequest,
   fetchImpl: typeof fetch = fetch,
-): Promise<string> {
+): Promise<VisualisationResponse> {
+  const signature = visualisationSignature(request);
+  const cached = sessionCache.get(signature);
+  if (cached) return cached;
+
   const response = await fetchImpl("/api/spaceplanner-visualise", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -100,7 +160,7 @@ export async function requestVisualisation(
   });
 
   const payload = (await response.json().catch(() => null)) as
-    | { image?: unknown; error?: unknown }
+    | { image?: unknown; error?: unknown; coverage?: CoverageReport }
     | null;
 
   if (!response.ok) {
@@ -111,5 +171,11 @@ export async function requestVisualisation(
   if (typeof payload?.image !== "string" || !payload.image) {
     throw new VisualisationError("no_image_returned");
   }
-  return payload.image;
+
+  const result: VisualisationResponse = {
+    image: payload.image,
+    coverage: payload.coverage ?? null,
+  };
+  sessionCache.set(signature, result);
+  return result;
 }

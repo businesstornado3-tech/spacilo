@@ -18,7 +18,13 @@ import { projectPlacements, toPoints, DEFAULT_FLOOR_QUAD, type FloorQuad } from 
 import type { CoverageReport } from "@/lib/spaceplanner/photo/manifest";
 import type { PackResult, StorageSpace } from "@/lib/spaceplanner";
 
-export type ArrangementStatus = "idle" | "working" | "ready" | "incomplete" | "failed";
+export type ArrangementStatus =
+  | "idle"
+  | "working"
+  | "ready"
+  | "incomplete"
+  | "rejected"
+  | "failed";
 
 export interface PhotoArrangementProps {
   /** The user's own photograph of the space. */
@@ -255,6 +261,23 @@ export function PhotoArrangement({
             <Button type="button" size="sm" variant="secondary" onClick={onRetry}>
               <RefreshCw aria-hidden="true" />
               Retry visualisation
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+
+      {status === "rejected" ? (
+        <div className="mt-3 rounded-2xl border border-warning-soft bg-warning-soft p-3 text-warning-soft-foreground">
+          <p className="flex items-start gap-2 type-body-sm">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            The visual preview showed belongings you don&apos;t own
+            {coverage?.unexpected?.length ? ` (${coverage.unexpected.join(", ")})` : ""}, so we
+            rejected it rather than show you something inaccurate. Your plan below is unaffected.
+          </p>
+          {onRetry ? (
+            <Button type="button" size="sm" variant="secondary" className="mt-2" onClick={onRetry}>
+              <RefreshCw aria-hidden="true" />
+              Try the preview again
             </Button>
           ) : null}
         </div>

@@ -231,6 +231,9 @@ export async function requestVisualisation(
         coverage?: CoverageReport;
         verification?: VerificationVerdict;
         diagnosticId?: unknown;
+        provider?: unknown;
+        model?: unknown;
+        renderMs?: unknown;
       }
     | null;
 
@@ -257,7 +260,11 @@ export async function requestVisualisation(
             ? "verified"
             : "incomplete"),
     diagnosticId: typeof payload.diagnosticId === "string" ? payload.diagnosticId : null,
+    provider: typeof payload.provider === "string" ? payload.provider : null,
+    model: typeof payload.model === "string" ? payload.model : null,
+    renderMs: typeof payload.renderMs === "number" ? payload.renderMs : null,
   };
+
   sessionCache.set(signature, result);
   return result;
 }

@@ -8,8 +8,7 @@ import { Scale } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { MarketingLayout, PageSection } from "@/components/layout/MarketingLayout";
-import { Alert } from "@/components/common/Alert";
-import { LEGAL_DOCUMENTS, LEGAL_REVIEW_NOTICE } from "@/data/legal";
+import { LEGAL_DOCUMENTS } from "@/data/legal";
 import { publicRouteMeta } from "@/lib/seo/meta";
 import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
@@ -82,12 +81,6 @@ function LegalIndexPage() {
             </Link>
           </li>
         </ul>
-
-        <div className="mt-8 max-w-3xl">
-          <Alert tone="warning" title="Requires professional legal review">
-            {LEGAL_REVIEW_NOTICE}
-          </Alert>
-        </div>
       </PageSection>
     </MarketingLayout>
   );

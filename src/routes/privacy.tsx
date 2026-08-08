@@ -3,8 +3,7 @@ import { ShieldCheck } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { MarketingLayout, PageSection } from "@/components/layout/MarketingLayout";
-import { Alert } from "@/components/common/Alert";
-import { legalReviewNotice, measurementSections, privacyIntro } from "@/data/privacy";
+import { measurementSections, privacyIntro } from "@/data/privacy";
 import { publicRouteMeta } from "@/lib/seo/meta";
 import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
@@ -47,12 +46,6 @@ function PrivacyPage() {
               <p className="mt-2 type-body-sm text-muted-foreground">{section.body}</p>
             </article>
           ))}
-        </div>
-
-        <div className="mt-8 max-w-3xl">
-          <Alert tone="info" title="Wording still to be reviewed">
-            {legalReviewNotice}
-          </Alert>
         </div>
       </PageSection>
     </MarketingLayout>

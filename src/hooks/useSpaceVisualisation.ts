@@ -155,7 +155,11 @@ export function useSpaceVisualisation(options: {
         instruction: buildVisualisationInstruction(result, objects, manifest ?? undefined),
         manifest: renderItems,
         roomFeatures: manifest.roomFeatures,
+        // Diagnostics only. Retries resend the SAME plan — never a new one.
+        planHash: manifest.planHash,
+        inventoryHash: manifest.inventoryId,
       };
+
 
       let response = await render(payload);
       if (run.current !== token) return;

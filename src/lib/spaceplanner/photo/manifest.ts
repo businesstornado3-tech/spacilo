@@ -9,6 +9,7 @@
  * the inventory for itself.
  */
 import { hashString } from "@/lib/vision/hash";
+import { manifestHash } from "./diagnostics";
 import { objectVolume } from "@/lib/vision/inventory";
 import type { DetectedObject, RoomFeature } from "@/lib/vision/types";
 import type { PhotoPlanResult } from "./plan";
@@ -120,12 +121,31 @@ export interface PlacementManifest {
   roomFeatures: readonly RoomFeature[];
   /** Total units the visualisation is expected to represent. */
   expectedUnits: number;
+  /** Units the deterministic engine actually placed. */
+  placedUnits: number;
   /** Usable floor the plan was allowed to use, in metres. */
   spaceWidthM: number;
   spaceDepthM: number;
   spaceHeightM: number;
   /** The access corridor no item may stand in, when the plan kept one. */
   walkway: { xM: number; yM: number; widthM: number; depthM: number } | null;
+  /** Which side of the room the access route was kept on. */
+  corridorSide: string;
+  /** The deterministic packing strategy that won. */
+  strategy: string;
+  /** 0–100 arrangement-quality score of the winning plan. */
+  qualityScore: number;
+  /** Whether every hard constraint passed. */
+  valid: boolean;
+  /** Hard-constraint failures, in plain words. Empty on a valid plan. */
+  violations: readonly string[];
+  /** Items the engine refused to place, with the reason. */
+  unplaced: readonly { label: string; reason: string }[];
+  /**
+   * Stable identity of this plan. Same inventory + same room always produces
+   * the same value; a render retry never changes it.
+   */
+  planHash: string;
 }
 
 const r2 = (value: number) => Math.round(value * 100) / 100;
@@ -206,18 +226,30 @@ export function buildPlacementManifest(
 
   const walkway = arrangement.walkway;
 
-  return {
+  const base = {
     inventoryId: inventory.id,
     entries,
     roomFeatures: Object.freeze(roomFeatures.filter((feature) => feature.verified).map((feature) => Object.freeze({ ...feature }))),
     expectedUnits: entries.reduce((sum, entry) => sum + entry.quantity, 0),
+    placedUnits: arrangement.placedUnits,
     spaceWidthM: r2(result.space.width),
     spaceDepthM: r2(result.space.depth),
     spaceHeightM: r2(result.space.height),
     walkway: walkway
       ? { xM: r2(walkway.x), yM: r2(walkway.y), widthM: r2(walkway.w), depthM: r2(walkway.d) }
       : null,
-  };
+    corridorSide: arrangement.corridorSide,
+    strategy: arrangement.strategy,
+    qualityScore: Math.round(arrangement.score.total),
+    valid: arrangement.valid,
+    violations: Object.freeze(arrangement.violations.map((violation) => violation.message)),
+    unplaced: Object.freeze(
+      arrangement.unplaced.map((entry) => Object.freeze({ label: entry.label, reason: entry.reason })),
+    ),
+    planHash: "",
+  } satisfies PlacementManifest;
+
+  return { ...base, planHash: manifestHash(base) };
 }
 
 /**

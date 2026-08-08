@@ -69,10 +69,23 @@ export function SpacePlannerDiagnostics({
       <dl className="mt-4 grid gap-2 border-t border-border pt-4 type-body-xs text-muted-foreground sm:grid-cols-2">
         <div><dt>Verified inventory units</dt><dd className="font-medium text-foreground">{inventory?.itemCount ?? 0}</dd></div>
         <div><dt>Manifest units</dt><dd className="font-medium text-foreground">{manifest?.expectedUnits ?? 0}</dd></div>
+        <div><dt>Units placed</dt><dd className="font-medium text-foreground">{manifest?.placedUnits ?? 0}</dd></div>
         <div><dt>Fixed room features</dt><dd className="font-medium text-foreground">{manifest?.roomFeatures.length ?? 0}</dd></div>
+        <div><dt>Packing strategy</dt><dd className="font-medium text-foreground">{manifest?.strategy ?? "—"}</dd></div>
+        <div><dt>Arrangement score</dt><dd className="font-medium text-foreground">{manifest ? `${manifest.qualityScore}/100` : "—"}</dd></div>
+        <div><dt>Access corridor</dt><dd className="font-medium text-foreground">{manifest?.corridorSide ?? "—"}</dd></div>
+        <div><dt>Hard constraints</dt><dd className="font-medium text-foreground">{manifest ? (manifest.valid ? "all passed" : `${manifest.violations.length} failed`) : "—"}</dd></div>
         <div><dt>Verification</dt><dd className="font-medium text-foreground">{verified.replace("_", " ")}</dd></div>
+        {manifest && manifest.unplaced.length > 0 ? (
+          <div className="sm:col-span-2">
+            <dt>Not placed</dt>
+            <dd className="font-medium text-foreground">
+              {manifest.unplaced.map((entry) => `${entry.label} — ${entry.reason}`).join("; ")}
+            </dd>
+          </div>
+        ) : null}
         {manifest ? (
-          <div className="sm:col-span-2"><dt>Plan reference</dt><dd className="break-all font-mono text-foreground">{manifestHash(manifest)}</dd></div>
+          <div className="sm:col-span-2"><dt>Plan reference</dt><dd className="break-all font-mono text-foreground">{manifest.planHash || manifestHash(manifest)}</dd></div>
         ) : null}
       </dl>
     </details>

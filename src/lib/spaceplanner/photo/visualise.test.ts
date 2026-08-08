@@ -37,7 +37,7 @@ const source: SpaceSource = {
   name: "Your space",
 };
 
-const result = buildPhotoPlan([crib], source);
+const result = buildPhotoPlan([crib], source)!;
 
 describe("SpacePlanner fit analysis", () => {
   it("detects the item and produces a fit result", () => {

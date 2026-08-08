@@ -179,15 +179,21 @@ export function buildPhotoPlan(
   const confidence = Math.max(0.35, Math.min(0.95, detection * 0.55 + dimension * 0.45));
 
   const spread = confidence > 0.8 ? 0.07 : confidence > 0.65 ? 0.12 : 0.18;
-  const fitPercent = fitPercentFor(plan);
+  const oversize = oversizeItems(lines, space);
+  const fitPercent = fitPercentFor(plan, oversize.length);
 
   const improvements: string[] = [];
   if (dimension < LOW_CONFIDENCE)
     improvements.push("Add another photo of the space, or confirm its dimensions.");
   if (detection < LOW_CONFIDENCE)
     improvements.push("Check the detected items — correcting a few sharpens the estimate.");
+  if (oversize.length > 0)
+    improvements.push(
+      `These look too large for this space: ${oversize.slice(0, 3).join(", ")}. Check their measurements.`,
+    );
   if (plan.after.unplaced.length > 0)
     improvements.push("Some items didn't fit in this arrangement. Try a larger space.");
+
 
   return {
     plan,

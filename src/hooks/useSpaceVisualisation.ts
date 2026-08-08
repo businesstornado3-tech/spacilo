@@ -262,6 +262,8 @@ export function useSpaceVisualisation(options: {
     imageUrl,
     coverage,
     error,
+    diagnostics,
+
     generate,
     reset,
   };

@@ -5,11 +5,11 @@
  */
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarRange, Loader2, MapPin } from "lucide-react";
+import { CalendarRange,  MapPin } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ErrorState } from "@/components/common/States";
+import { ErrorState, LoadingState } from "@/components/common/States";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, TextArea } from "@/components/form/Field";
@@ -90,9 +90,7 @@ function HostRequestDetailPage() {
       }
     >
       {isLoading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading this request…" />
       ) : null}
 
       {error ? <ErrorState onRetry={() => void refetch()} /> : null}

@@ -1,10 +1,10 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+
 
 import { brand } from "@/config/brand";
 import { MarketingLayout, PageSection } from "@/components/layout/MarketingLayout";
-import { ErrorState } from "@/components/common/States";
+import { ErrorState, LoadingState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { publicLocation, spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import { formatPrice } from "@/lib/format";
@@ -214,9 +214,7 @@ function PublicSpacePage() {
     <MarketingLayout>
       <PageSection>
         {state.kind === "loading" ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-          </div>
+          <LoadingState label="Loading this space…" />
         ) : null}
 
         {state.kind === "error" ? <ErrorState onRetry={() => void load()} /> : null}

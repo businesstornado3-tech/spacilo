@@ -4,11 +4,11 @@
  * booking in "awaiting payment". No payment is taken here.
  */
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ErrorState } from "@/components/common/States";
+import { ErrorState, LoadingState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/overlay/toast";
 import { RequestSummary } from "@/components/requests/RequestSummary";
@@ -94,9 +94,7 @@ function BookingReviewPage() {
       }
     >
       {isLoading || bookingLoading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Preparing your booking…" />
       ) : null}
 
       {error ? <ErrorState onRetry={() => void refetch()} /> : null}

@@ -3,11 +3,11 @@
  * Figures come from each request's snapshot, not from live listings.
  */
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Inbox, Loader2 } from "lucide-react";
+import { Inbox } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { EmptyState, ErrorState } from "@/components/common/States";
+import { EmptyState, ErrorState, LoadingState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { RequestStatusBadge } from "@/components/requests/RequestSummary";
 import { useMyRequests } from "@/hooks/useStorageRequests";
@@ -55,9 +55,7 @@ function RequestsPage() {
       description="Storage requests you've sent to hosts. A request isn't a booking and doesn't hold the space."
     >
       {isLoading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading your requests…" />
       ) : null}
 
       {error ? <ErrorState onRetry={() => void refetch()} /> : null}

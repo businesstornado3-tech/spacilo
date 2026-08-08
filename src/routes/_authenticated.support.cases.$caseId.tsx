@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+
 
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ErrorState } from "@/components/common/States";
+import { ErrorState, LoadingState } from "@/components/common/States";
 import { SupportCaseView } from "@/components/support/SupportCaseView";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupportCase } from "@/hooks/useSupportCases";
@@ -40,9 +40,7 @@ function CaseRoute() {
   return (
     <AppLayout mode={mode} title="Support case" description="Everything recorded about this problem.">
       {isLoading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading this case…" />
       ) : null}
 
       {error ? <ErrorState description="We couldn't load this support case." /> : null}

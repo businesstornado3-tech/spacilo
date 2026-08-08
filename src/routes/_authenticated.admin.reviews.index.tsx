@@ -7,12 +7,12 @@
  */
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
+
 
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/common/States";
+import { EmptyState, LoadingState } from "@/components/common/States";
 import { Alert } from "@/components/common/Alert";
 import { Field, TextArea } from "@/components/form/Field";
 import { StarRatingDisplay } from "@/components/reviews/StarRatingInput";
@@ -51,9 +51,7 @@ function ReviewModerationRoute() {
   if (staff.isLoading) {
     return (
       <AppLayout mode={mode} title="Review moderation">
-        <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading reviews…" />
       </AppLayout>
     );
   }
@@ -84,9 +82,7 @@ function ReviewModerationRoute() {
       </p>
 
       {queue.isLoading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
-        </div>
+        <LoadingState label="Loading reviews…" />
       ) : null}
 
       {!queue.isLoading && reviews.length === 0 ? (

@@ -15,7 +15,23 @@ export type AiCapability =
   | "recommendations"
   | "pricing"
   | "search"
-  | "assistant";
+  | "assistant"
+  // Phase 6B — applied intelligence across the marketplace.
+  | "suitability"
+  | "ranking"
+  | "host-pricing"
+  | "listing-quality"
+  | "description"
+  | "nl-search"
+  | "booking-assistant"
+  | "trust-summary"
+  | "inventory-assistant"
+  | "seasonal"
+  | "notifications"
+  | "host-insights"
+  | "fraud"
+  | "message-assist"
+  | "help-search";
 
 export const AI_CAPABILITIES: AiCapability[] = [
   "vision",
@@ -26,6 +42,21 @@ export const AI_CAPABILITIES: AiCapability[] = [
   "pricing",
   "search",
   "assistant",
+  "suitability",
+  "ranking",
+  "host-pricing",
+  "listing-quality",
+  "description",
+  "nl-search",
+  "booking-assistant",
+  "trust-summary",
+  "inventory-assistant",
+  "seasonal",
+  "notifications",
+  "host-insights",
+  "fraud",
+  "message-assist",
+  "help-search",
 ];
 
 /** Provider families. A capability is served by exactly one kind. */

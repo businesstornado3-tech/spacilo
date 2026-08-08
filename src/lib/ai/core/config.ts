@@ -65,6 +65,27 @@ export interface AiConfig {
 
 const MINUTE = 60_000;
 
+/**
+ * Shorthand for the Phase 6B reasoning capabilities. They run on Spacilo's own
+ * engines by default; a remote vendor is added to `providers` ahead of the
+ * local id and inherits the same timeouts, retries and caching.
+ */
+function reasoning(
+  provider: string,
+  overrides: Partial<AiCapabilityConfig> = {},
+): AiCapabilityConfig {
+  return {
+    kind: "llm",
+    providers: [provider],
+    timeoutMs: 20_000,
+    retries: 1,
+    cacheTtlMs: 10 * MINUTE,
+    minConfidence: 0.5,
+    queued: false,
+    ...overrides,
+  };
+}
+
 const DEFAULT_CONFIG: AiConfig = {
   version: "ai-config-1",
   capabilities: {
@@ -140,6 +161,27 @@ const DEFAULT_CONFIG: AiConfig = {
       minConfidence: 0.5,
       queued: false,
     },
+
+    /* ------------------------------- Phase 6B applied intelligence */
+    suitability: reasoning("spacilo-suitability", { minConfidence: 0.55 }),
+    ranking: reasoning("spacilo-ranking", { cacheTtlMs: 5 * MINUTE }),
+    "host-pricing": reasoning("spacilo-host-pricing", { cacheTtlMs: 60 * MINUTE, retries: 2 }),
+    "listing-quality": reasoning("spacilo-listing-quality", { cacheTtlMs: 5 * MINUTE }),
+    description: reasoning("spacilo-description", { cacheTtlMs: 30 * MINUTE }),
+    "nl-search": reasoning("spacilo-nl-search", { cacheTtlMs: 6 * 60 * MINUTE, minConfidence: 0.4 }),
+    "booking-assistant": reasoning("spacilo-booking-assistant"),
+    "trust-summary": reasoning("spacilo-trust-summary", { cacheTtlMs: 60 * MINUTE }),
+    "inventory-assistant": reasoning("spacilo-inventory-assistant"),
+    seasonal: reasoning("spacilo-seasonal", { cacheTtlMs: 6 * 60 * MINUTE }),
+    notifications: reasoning("spacilo-notifications", { cacheTtlMs: 2 * MINUTE }),
+    "host-insights": reasoning("spacilo-host-insights", { cacheTtlMs: 30 * MINUTE }),
+    fraud: reasoning("spacilo-fraud", { cacheTtlMs: 5 * MINUTE, minConfidence: 0.6 }),
+    "message-assist": reasoning("spacilo-message-assist", { cacheTtlMs: 5 * MINUTE }),
+    "help-search": reasoning("spacilo-help-search", {
+      kind: "embedding",
+      cacheTtlMs: 6 * 60 * MINUTE,
+      minConfidence: 0.4,
+    }),
   },
   rateLimit: {
     perUserPerMinute: 30,

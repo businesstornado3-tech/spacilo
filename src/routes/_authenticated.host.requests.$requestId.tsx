@@ -16,6 +16,7 @@ import { Field, TextArea } from "@/components/form/Field";
 import { Modal } from "@/components/overlay/Modal";
 import { toast } from "@/components/overlay/toast";
 import { HostRequestConfidence } from "@/components/requests/HostRequestConfidence";
+import { RequestFitPanel } from "@/components/requests/RequestFitPanel";
 import { useHostRequest, useRespondToRequest } from "@/hooks/useStorageRequests";
 import { spaceTypeLabel, type SpaceTypeValue } from "@/lib/spaces";
 import {
@@ -162,6 +163,12 @@ function HostRequestDetailPage() {
           </section>
 
           <HostRequestConfidence request={request} respondable={isRespondable(request)} />
+
+          <RequestFitPanel
+            itemCount={view.itemCount}
+            requirementM3={view.requirementM3}
+            capacityM3={view.capacityM3}
+          />
 
           {view.note ? (
             <section className="rounded-2xl border border-border bg-card p-5 shadow-card">

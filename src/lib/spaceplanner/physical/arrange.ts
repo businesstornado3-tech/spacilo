@@ -1,19 +1,27 @@
 /**
- * Phase 6E — the physical placement engine.
+ * Phase 6E/6G — the physical placement engine.
  *
  * Deterministic, wall-first, corridor-preserving. Items are placed into
  * explicit storage bands carved around the access route, largest and heaviest
- * first, packed shoulder to shoulder against the wall. That is what stops the
- * scattered-across-the-floor arrangements the previous engine produced.
+ * first, packed shoulder to shoulder against the wall, then compacted so no
+ * unnecessary gap survives. That is what stops the scattered-across-the-floor
+ * arrangements the earlier engine produced.
+ *
+ * Phase 6G adds the part that was missing: one pass is not trusted. Several
+ * deterministic strategies are packed, each is validated, each is scored by the
+ * arrangement-quality gate, and the best valid plan wins. Same inputs always
+ * produce the same winner — no randomness anywhere.
  *
  * Nothing here asks an AI where things go.
  */
 import { validateArrangement, walkwayIsClear } from "./constraints";
 import { orientationsFor, placementOrder, stacksFor, type OrientationOption, type StackCandidate } from "./items";
+import { arrangementQuality } from "./quality";
 import { scoreArrangement } from "./score";
 import {
   ACCESS_DEFAULTS,
   accessGeometry,
+  contains,
   intersects,
   overlapArea,
   rectArea,
@@ -41,6 +49,71 @@ interface BandState {
   rowDepth: number;
 }
 
+/**
+ * One deterministic packing heuristic.
+ *
+ * Strategies differ only in the order they consider bands, items and
+ * orientations. They never relax a physical constraint.
+ */
+export interface PackStrategy {
+  id: string;
+  label: string;
+  bands: (bands: BandState[]) => BandState[];
+  order: (a: StackCandidate, b: StackCandidate) => number;
+  orientations: (options: OrientationOption[]) => OrientationOption[];
+}
+
+const byFootprintDesc = (a: StackCandidate, b: StackCandidate): number => {
+  const areaA = a.item.widthCm * a.item.depthCm;
+  const areaB = b.item.widthCm * b.item.depthCm;
+  if (areaA !== areaB) return areaB - areaA;
+  return a.item.id.localeCompare(b.item.id);
+};
+
+const byHeightDesc = (a: StackCandidate, b: StackCandidate): number => {
+  if (a.item.heightCm !== b.item.heightCm) return b.item.heightCm - a.item.heightCm;
+  return byFootprintDesc(a, b);
+};
+
+/** The four heuristics, always attempted in this order. */
+export const PACK_STRATEGIES: PackStrategy[] = [
+  {
+    id: "wall-first",
+    label: "Largest and heaviest against the walls",
+    bands: (bands) => bands,
+    order: placementOrder,
+    orientations: (options) => options,
+  },
+  {
+    id: "corner-first",
+    label: "Corners filled before the long walls",
+    // Narrow bands first: a corner or short return fills up before an open wall.
+    bands: (bands) => [...bands].sort((a, b) => rectArea(a.rect) - rectArea(b.rect)),
+    order: byFootprintDesc,
+    orientations: (options) => options,
+  },
+  {
+    id: "wall-vertical",
+    label: "Wall packing with vertical stacking",
+    bands: (bands) => bands,
+    order: byHeightDesc,
+    // Upright first: standing things on edge recovers the most floor.
+    orientations: (options) =>
+      [...options].sort((a, b) => {
+        const rank = (option: OrientationOption) => (option.orientation === "upright" ? 0 : 1);
+        return rank(a) - rank(b) || a.w * a.d - b.w * b.d;
+      }),
+  },
+  {
+    id: "compact-cluster",
+    label: "One compact block",
+    // Fill a single band to exhaustion before opening another one.
+    bands: (bands) => [...bands].sort((a, b) => rectArea(b.rect) - rectArea(a.rect)),
+    order: byFootprintDesc,
+    orientations: (options) => options,
+  },
+];
+
 function isCorner(band: BandState, x: number, space: PlanningSpace): boolean {
   const usable = space.usable;
   const atBack = Math.abs(band.rect.y - usable.y) < 0.01;
@@ -64,12 +137,11 @@ function firstFreeX(band: BandState, candidate: Rect, blockers: Rect[]): number 
 }
 
 export interface ArrangeOptions {
-  /** Only ever used to keep the engine deterministic in tests. */
-  now?: number;
+  strategy?: PackStrategy;
 }
 
 /**
- * Plan the arrangement.
+ * Plan the arrangement with one strategy.
  *
  * Priority order is the product brief's: fit everything, keep access, respect
  * dimensions and orientation, avoid collisions, use height, heavy items low,
@@ -78,28 +150,32 @@ export interface ArrangeOptions {
 export function arrangeItems(
   items: PlanningItem[],
   space: PlanningSpace,
+  options: ArrangeOptions = {},
 ): PhysicalArrangement {
+  const strategy = options.strategy ?? PACK_STRATEGIES[0]!;
   const ceiling = Math.min(space.heightM, ACCESS_DEFAULTS.maxStackHeightM);
   const geometry = accessGeometry(space);
   const blockers: Rect[] = [...geometry.keepClear];
 
-  const bands: BandState[] = geometry.bands.map((band) => ({
-    id: band.id,
-    rect: band.rect,
-    zone: band.zone,
-    x: band.rect.x,
-    y: band.rect.y,
-    rowDepth: 0,
-  }));
+  const bands: BandState[] = strategy.bands(
+    geometry.bands.map((band) => ({
+      id: band.id,
+      rect: band.rect,
+      zone: band.zone,
+      x: band.rect.x,
+      y: band.rect.y,
+      rowDepth: 0,
+    })),
+  );
 
-  const stacks = stacksFor(items, ceiling).sort(placementOrder);
+  const stacks = stacksFor(items, ceiling).sort(strategy.order);
   const entries: ArrangementEntry[] = [];
   const unplacedUnits = new Map<string, number>();
   const placedFloor: Rect[] = [];
   let key = 0;
 
   for (const stack of stacks) {
-    const placed = placeStack(stack, bands, blockers, placedFloor, space, ceiling, key);
+    const placed = placeStack(stack, bands, blockers, placedFloor, space, ceiling, key, strategy);
     if (placed) {
       entries.push(placed);
       placedFloor.push({ x: placed.x, y: placed.y, w: placed.w, d: placed.d });
@@ -109,9 +185,9 @@ export function arrangeItems(
     }
   }
 
-  // Fragile items must never end up under something heavy: lift them onto a
-  // larger, sturdier neighbour when one exists.
-  const lifted = protectFragile(entries, ceiling);
+  // Close every gap the row cursor left behind, then lift fragile items clear.
+  const compacted = compactEntries(entries, space, blockers);
+  const lifted = protectFragile(compacted, ceiling);
 
   const unplaced: UnplacedItem[] = [...unplacedUnits.entries()].map(([itemId, units]) => {
     const item = items.find((candidate) => candidate.id === itemId);
@@ -145,6 +221,19 @@ export function arrangeItems(
     space.obstacles.reduce((sum, obstacle) => sum + overlapArea(space.usable, obstacle), 0),
   );
 
+  const score = scoreArrangement({
+    space,
+    entries: lifted,
+    violations,
+    placedUnits,
+    expectedUnits,
+    walkwayClear,
+    occupiedVolumeM3,
+    usableVolumeM3,
+  });
+
+  const planValid = valid && walkwayClear;
+
   return {
     space,
     entries: lifted,
@@ -160,17 +249,18 @@ export function arrangeItems(
       usableVolumeM3 > 0 ? Math.min(100, Math.round((occupiedVolumeM3 / usableVolumeM3) * 100)) : 0,
     placedUnits,
     expectedUnits,
-    valid: valid && walkwayClear,
+    valid: planValid,
     violations,
-    score: scoreArrangement({
+    score,
+    strategy: strategy.id,
+    quality: arrangementQuality({
       space,
       entries: lifted,
-      violations,
-      placedUnits,
-      expectedUnits,
-      walkwayClear,
-      occupiedVolumeM3,
-      usableVolumeM3,
+      wallUse: score.wallUse,
+      compactness: score.compactness,
+      verticalUse: score.verticalUse,
+      grouping: score.grouping,
+      valid: planValid,
     }),
   };
 }
@@ -183,8 +273,9 @@ function placeStack(
   space: PlanningSpace,
   ceiling: number,
   key: number,
+  strategy: PackStrategy,
 ): ArrangementEntry | null {
-  const options = orientationsFor(stack.item, ceiling);
+  const options = strategy.orientations(orientationsFor(stack.item, ceiling));
   if (options.length === 0) return null;
 
   const unitHeight = Math.max(0.05, Math.round(stack.item.heightCm) / 100);
@@ -266,6 +357,66 @@ function findSpot(
   return null;
 }
 
+const STEP_M = 0.02;
+
+/**
+ * Gravity towards the walls.
+ *
+ * Each footprint is slid as far as it will go towards its own wall, then along
+ * that wall towards the items already placed, stopping the moment it would
+ * touch anything or leave the usable area. This is what turns "technically
+ * valid" into "shoulder to shoulder", and it is what removes the gaps that
+ * made earlier renders read as scattered.
+ */
+export function compactEntries(
+  entries: ArrangementEntry[],
+  space: PlanningSpace,
+  blockers: Rect[],
+): ArrangementEntry[] {
+  const settled: ArrangementEntry[] = [];
+  const usable = space.usable;
+
+  const free = (rect: Rect, self: string): boolean => {
+    if (!contains(usable, rect)) return false;
+    if (blockers.some((blocker) => intersects(rect, blocker))) return false;
+    return !settled.some((other) => other.key !== self && other.layer === 0 && intersects(rect, other));
+  };
+
+  const slide = (entry: ArrangementEntry, dx: number, dy: number): ArrangementEntry => {
+    let current = { ...entry };
+    for (let step = 0; step < 400; step += 1) {
+      const next: Rect = {
+        x: round2(current.x + dx * STEP_M),
+        y: round2(current.y + dy * STEP_M),
+        w: current.w,
+        d: current.d,
+      };
+      if (!free(next, entry.key)) break;
+      current = { ...current, x: next.x, y: next.y };
+    }
+    return current;
+  };
+
+  // Deterministic: settle in the order the packer produced.
+  for (const entry of entries) {
+    if (entry.layer > 0) {
+      settled.push(entry);
+      continue;
+    }
+
+    // Towards its wall first.
+    const towardsWall: [number, number] =
+      entry.zone === "right-wall" ? [1, 0] : entry.zone === "left-wall" ? [-1, 0] : [0, -1];
+    let placed = slide(entry, towardsWall[0], towardsWall[1]);
+    // Then along the wall, back towards the rear of the space, closing gaps.
+    const alongWall: [number, number] = towardsWall[0] === 0 ? [-1, 0] : [0, -1];
+    placed = slide(placed, alongWall[0], alongWall[1]);
+    settled.push(placed);
+  }
+
+  return settled;
+}
+
 /**
  * Fragile items are lifted onto a larger, non-fragile, floor-standing
  * neighbour so nothing heavy can ever be put on top of them. Nothing is
@@ -301,22 +452,49 @@ function protectFragile(entries: ArrangementEntry[], ceiling: number): Arrangeme
   });
 }
 
+/** Ranks two valid plans. Completeness, then access, then arrangement quality. */
+function betterPlan(candidate: PhysicalArrangement, incumbent: PhysicalArrangement): boolean {
+  if (candidate.valid !== incumbent.valid) return candidate.valid;
+  if (candidate.unplaced.length !== incumbent.unplaced.length)
+    return candidate.unplaced.length < incumbent.unplaced.length;
+  if (candidate.quality.score !== incumbent.quality.score)
+    return candidate.quality.score > incumbent.quality.score;
+  return candidate.score.total > incumbent.score.total;
+}
+
 /**
- * Try the plan, then try it again with a tighter corridor if not everything
- * fits. The wider corridor always wins when both plans are complete: access is
- * priority 2, immediately after fitting the inventory.
+ * The plan the product actually uses.
+ *
+ * Every strategy is packed with the preferred corridor. If none clears the
+ * quality gate with everything placed, the corridor is tightened to the
+ * physical minimum and the strategies are tried again — access is priority 2,
+ * so the wider corridor always wins when both plans are equally complete.
+ *
+ * Deterministic: identical inputs always yield the identical winning plan.
  */
 export function bestArrangement(
   items: PlanningItem[],
   space: PlanningSpace,
 ): PhysicalArrangement {
-  const first = arrangeItems(items, space);
-  if (first.valid && first.unplaced.length === 0) return first;
-
+  const spaces: PlanningSpace[] = [space];
   const tighter = Math.max(ACCESS_DEFAULTS.minWalkwayM, space.walkwayClearanceM - 0.3);
-  if (tighter >= space.walkwayClearanceM - 0.001) return first;
+  if (tighter < space.walkwayClearanceM - 0.001) {
+    spaces.push({ ...space, walkwayClearanceM: tighter });
+  }
 
-  const second = arrangeItems(items, { ...space, walkwayClearanceM: tighter });
-  if (second.unplaced.length < first.unplaced.length && second.valid) return second;
-  return second.valid && !first.valid ? second : first;
+  let best: PhysicalArrangement | null = null;
+
+  for (const candidateSpace of spaces) {
+    for (const strategy of PACK_STRATEGIES) {
+      const plan = arrangeItems(items, candidateSpace, { strategy });
+      if (!best || betterPlan(plan, best)) best = plan;
+      // A complete, valid plan that clears the quality gate needs no more tries.
+      if (plan.valid && plan.unplaced.length === 0 && plan.quality.passes) return plan;
+    }
+    // Only widen the search to a tighter corridor when the preferred one failed
+    // to place everything.
+    if (best && best.valid && best.unplaced.length === 0) return best;
+  }
+
+  return best ?? arrangeItems(items, space);
 }

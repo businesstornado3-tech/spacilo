@@ -66,18 +66,32 @@ export interface Coverage {
   expected: number;
   present: number;
   missing: string[];
+  /** Objects the verifier saw that are not in the verified inventory. */
+  unexpected: string[];
   complete: boolean;
+  /** False when the renderer invented belongings. */
+  faithful: boolean;
 }
 
 /** Compares the labels a checker reported against the labels required. */
-export function coverageOf(required: string[], present: string[]): Coverage {
+export function coverageOf(
+  required: string[],
+  present: string[],
+  unexpected: string[] = [],
+): Coverage {
   const seen = new Set(present.map((label) => label.trim().toLowerCase()));
   const missing = required.filter((label) => !seen.has(label.trim().toLowerCase()));
+  const allowed = new Set(required.map((label) => label.trim().toLowerCase()));
+  const invented = unexpected
+    .map((label) => label.trim())
+    .filter((label) => label.length > 0 && !allowed.has(label.toLowerCase()));
   return {
     expected: required.length,
     present: required.length - missing.length,
     missing,
+    unexpected: invented,
     complete: missing.length === 0 && required.length > 0,
+    faithful: invented.length === 0,
   };
 }
 
@@ -94,7 +108,36 @@ export function parsePresentLabels(text: string): string[] | null {
   }
 }
 
-/** Asks a vision model which of the required items it can see. Best effort. */
+/**
+ * Reads the verifier's reply as {present, unexpected}. Falls back to the
+ * older bare-array form so a terse model reply is still usable.
+ */
+export function parseCheckReply(
+  text: string,
+): { present: string[]; unexpected: string[] } | null {
+  const object = text.match(/\{[\s\S]*\}/);
+  if (object) {
+    try {
+      const parsed = JSON.parse(object[0]) as Record<string, unknown>;
+      const strings = (value: unknown): string[] =>
+        Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
+      const present = strings(parsed["present"]);
+      const unexpected = strings(parsed["unexpected"]);
+      if (present.length || unexpected.length) return { present, unexpected };
+    } catch {
+      /* fall through to the array form */
+    }
+  }
+  const present = parsePresentLabels(text);
+  return present ? { present, unexpected: [] } : null;
+}
+
+/**
+ * Render verification. Asks a vision model which required items it can see AND
+ * which stored objects it can see that are NOT on the list — an invented
+ * object is a critical failure, not a cosmetic one. Best effort: a verifier
+ * that cannot answer returns null rather than a false accusation.
+ */
 async function checkCoverage(
   key: string,
   image: string,
@@ -113,7 +156,7 @@ async function checkCoverage(
             content: [
               {
                 type: "text",
-                text: `Look at this photograph of a storage space. Which of the following items are visibly present in it? Items: ${required.join("; ")}. Reply with a JSON array of the item names you can see, exactly as written, and nothing else.`,
+                text: `Look at this photograph of a storage space. The only stored belongings that should appear are: ${required.join("; ")}. Reply with JSON only, in the form {"present":["…"],"unexpected":["…"]}. "present" lists the items from that list you can clearly see, named exactly as written. "unexpected" lists any other stored belongings, boxes, bags, furniture or storage units visible on the floor that are NOT on the list. Ignore fixtures that belong to the room itself (walls, doors, windows, lights, fitted shelving already built in).`,
               },
               { type: "image_url", image_url: { url: image } },
             ],
@@ -127,9 +170,9 @@ async function checkCoverage(
     };
     const content = payload.choices?.[0]?.message?.content;
     const text = typeof content === "string" ? content : "";
-    const present = parsePresentLabels(text);
-    if (!present) return null;
-    return coverageOf(required, present);
+    const reply = parseCheckReply(text);
+    if (!reply) return null;
+    return coverageOf(required, reply.present, reply.unexpected);
   } catch {
     return null;
   }
@@ -181,7 +224,18 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
                 : "Place the described belongings into the photographed space.",
               body.instruction?.slice(0, 6000) ?? "",
               required.length
-                ? `Every one of these items must be clearly visible in the edited photograph: ${required.join("; ")}.`
+                ? `ALLOWED OBJECTS — this is an exhaustive whitelist. Render ONLY these, each exactly once per stated quantity:\n${(body.manifest ?? [])
+                    .map((entry, index) => {
+                      const label = typeof entry?.label === "string" ? entry.label.trim() : "";
+                      const quantity =
+                        typeof entry?.quantity === "number" && entry.quantity > 0 ? entry.quantity : 1;
+                      return label ? `item_${String(index + 1).padStart(2, "0")} = ${quantity} × ${label}` : "";
+                    })
+                    .filter(Boolean)
+                    .join("\n")}`
+                : "",
+              required.length
+                ? "Do not add, remove, replace, duplicate, merge or invent any object. Any object that is not on the whitelist above must not appear. No shoes, chairs, tables, extra boxes, extra bags, plants, tools, bicycles or decorative items."
                 : "",
               emphasise.length
                 ? `The previous attempt did not show these items. They must be clearly visible this time: ${emphasise.join("; ")}.`

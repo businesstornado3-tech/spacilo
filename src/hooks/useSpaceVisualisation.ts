@@ -21,7 +21,14 @@ import type { CoverageReport, PlacementManifest } from "@/lib/spaceplanner/photo
 import type { PhotoPlanResult } from "@/lib/spaceplanner/photo";
 import type { DetectedObject, VisionPhoto } from "@/lib/vision/types";
 
-export type VisualisationStatus = "idle" | "working" | "ready" | "incomplete" | "failed";
+export type VisualisationStatus =
+  | "idle"
+  | "working"
+  | "ready"
+  | "incomplete"
+  /** A render that contained objects the user does not own. Never shown. */
+  | "rejected"
+  | "failed";
 
 /**
  * Hard ceiling on one render request. A visual preview that has not arrived
@@ -48,6 +55,14 @@ export interface UseSpaceVisualisation {
   reset: () => void;
 }
 
+
+/** Prefers the render that is faithful first, then the most complete. */
+function betterRender(next: CoverageReport, current: CoverageReport): boolean {
+  const nextInvented = next.unexpected?.length ?? 0;
+  const currentInvented = current.unexpected?.length ?? 0;
+  if (nextInvented !== currentInvented) return nextInvented < currentInvented;
+  return next.present >= current.present;
+}
 
 export function useSpaceVisualisation(options: {
   result: PhotoPlanResult | null;
@@ -132,24 +147,39 @@ export function useSpaceVisualisation(options: {
       let response = await render(payload);
       if (run.current !== token) return;
 
-      // Render verification gate: the returned image is checked against the
-      // manifest and, if items are missing, one corrective refinement is
-      // attempted. More attempts than that cost minutes and rarely help, so
-      // an incomplete render is reported honestly instead.
+      // Render verification gate. A render is only accepted when it shows
+      // every confirmed item AND invents nothing. One corrective pass is
+      // attempted with the same manifest — the planner is never asked to
+      // replan — and after that the result is reported honestly.
       for (let pass = 1; pass < MAX_RENDER_ATTEMPTS; pass += 1) {
         setStage("checking");
         const coverageNow = response.coverage;
-        if (!coverageNow || coverageNow.complete || coverageNow.missing.length === 0) break;
+        if (!coverageNow) break;
+        const missingItems = coverageNow.missing.length > 0;
+        const invented = (coverageNow.unexpected?.length ?? 0) > 0;
+        if (!missingItems && !invented) break;
 
         setAttempt(pass + 1);
         setStage("rendering");
-        const retry = await render({ ...payload, emphasise: coverageNow.missing });
+        const retry = await render({
+          ...payload,
+          nonce: pass,
+          ...(missingItems ? { emphasise: coverageNow.missing } : {}),
+        });
         if (run.current !== token) return;
-        // Keep whichever attempt represented more of the confirmed inventory.
-        if (!retry.coverage || retry.coverage.present >= coverageNow.present) {
-          response = retry;
-        }
-        if (response.coverage?.complete) break;
+        if (!retry.coverage || betterRender(retry.coverage, coverageNow)) response = retry;
+        if (response.coverage?.complete && (response.coverage.unexpected?.length ?? 0) === 0) break;
+      }
+
+      const finalCoverage = response.coverage;
+      const hallucinated = (finalCoverage?.unexpected?.length ?? 0) > 0;
+      if (hallucinated) {
+        // A physically wrong but attractive image is worse than no image.
+        setStage("checking");
+        setImageUrl(null);
+        setCoverage(finalCoverage);
+        setStatus("rejected");
+        return;
       }
 
       setStage("checking");

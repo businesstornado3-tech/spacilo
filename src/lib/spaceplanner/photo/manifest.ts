@@ -290,18 +290,35 @@ export interface CoverageReport {
   expected: number;
   present: number;
   missing: string[];
+  /**
+   * Objects the verifier saw that are NOT in the verified inventory. A render
+   * with any of these is a hallucination and must never be shown as the plan.
+   */
+  unexpected: string[];
   /** True only when every required item is represented. */
   complete: boolean;
+  /** True only when nothing was invented. */
+  faithful: boolean;
 }
 
-export function coverageFrom(required: string[], present: string[]): CoverageReport {
+export function coverageFrom(
+  required: string[],
+  present: string[],
+  unexpected: string[] = [],
+): CoverageReport {
   const seen = new Set(present.map((label) => label.trim().toLowerCase()));
   const missing = required.filter((label) => !seen.has(label.trim().toLowerCase()));
+  const allowed = new Set(required.map((label) => label.trim().toLowerCase()));
+  const invented = unexpected
+    .map((label) => label.trim())
+    .filter((label) => label.length > 0 && !allowed.has(label.toLowerCase()));
   return {
     expected: required.length,
     present: required.length - missing.length,
     missing,
+    unexpected: invented,
     complete: missing.length === 0 && required.length > 0,
+    faithful: invented.length === 0,
   };
 }
 

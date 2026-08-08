@@ -1,21 +1,23 @@
 /**
  * Homepage — Spacilo AI SpacePlanner™.
  *
- * The section has to earn the tap, so it shows the product doing its job:
- * two photographs in, one real arrangement out. The studio itself is
- * code-split and only loaded once someone starts it, so the homepage stays
- * fast while the deeper AI capability sits one tap away.
+ * The section has to earn the tap, so it shows the product doing its job as a
+ * story: your stuff → your space → arranged by Spacilo AI. One curated
+ * demonstration set is used throughout — the same belongings appear in every
+ * frame — and it is a static asset, so the homepage never triggers the
+ * analysis pipeline. The studio is code-split and only loaded once someone
+ * starts it.
  */
 import * as React from "react";
-import { ArrowRight, Camera, Maximize2, Ruler, Sparkles } from "lucide-react";
+import { ArrowRight, Camera, Maximize2, Ruler } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/common/Reveal";
 import { ImageLightbox } from "@/components/common/ImageLightbox";
 import { track } from "@/lib/analytics/tracker";
-import stuffPhoto from "@/assets/spaceplanner/stuff.jpg";
-import spacePhoto from "@/assets/spaceplanner/space.jpg";
-import arrangedPhoto from "@/assets/spaceplanner/arranged.jpg";
+import stuffPhoto from "@/assets/spaceplanner/demo-stuff.jpg";
+import spacePhoto from "@/assets/spaceplanner/demo-space.jpg";
+import arrangedPhoto from "@/assets/spaceplanner/demo-arranged.jpg";
 
 const SpacePlannerStudio = React.lazy(() =>
   import("@/components/spaceplanner/photo/SpacePlannerStudio").then((module) => ({
@@ -24,34 +26,51 @@ const SpacePlannerStudio = React.lazy(() =>
 );
 
 const INPUTS = [
-  { src: stuffPhoto, label: "1. Your stuff", alt: "Photograph of suitcases, boxes and bags to store" },
-  { src: spacePhoto, label: "2. The space", alt: "Photograph of an empty single garage" },
+  {
+    src: stuffPhoto,
+    step: "1",
+    label: "Your stuff",
+    alt: "Two sage suitcases, a navy duffel bag, labelled boxes, woven baskets and folded bedding",
+  },
+  {
+    src: spacePhoto,
+    step: "2",
+    label: "Your space",
+    alt: "An empty white single garage photographed from the door",
+  },
 ] as const;
 
 const READOUTS = [
   { label: "Space used", value: "38%" },
-  { label: "Room left", value: "62%" },
+  { label: "Room remaining", value: "62%" },
   { label: "Walkway kept", value: "0.9m" },
 ] as const;
+
+const ARRANGED_ALT =
+  "The same garage with the same belongings consolidated against the left wall and a clear walkway to the rear";
 
 export function SpacePlannerSection() {
   const [started, setStarted] = React.useState(false);
   const [zoomed, setZoomed] = React.useState(false);
 
   return (
-    <section aria-labelledby="spaceplanner-preview-heading" className="py-10 sm:py-14">
+    <section
+      id="spaceplanner"
+      aria-labelledby="spaceplanner-preview-heading"
+      className="scroll-mt-20 py-10 sm:py-14"
+    >
       <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
         <Reveal>
-          <div className="overflow-hidden rounded-[2rem] border border-signal-soft bg-card shadow-card">
+          <div className="overflow-hidden rounded-[2rem] border border-signal-soft bg-gradient-to-b from-accent-soft/70 to-card shadow-card">
             <div className="p-5 sm:p-8">
-              <p className="type-overline text-muted-foreground">Spacilo AI SpacePlanner™</p>
+              <p className="type-overline text-signal">Spacilo AI SpacePlanner™</p>
               <h2 id="spaceplanner-preview-heading" className="mt-2 text-balance type-h2">
                 Show us your stuff. Show us your space. We&apos;ll show you how it fits.
               </h2>
               <p className="mt-2.5 max-w-2xl type-body text-muted-foreground">
-                Take photos of your belongings and the space you&apos;re considering. Spacilo AI
-                analyses both and shows you how your belongings could fit, how much space you may
-                need, and how much room could remain.
+                See how your belongings could fit before you book. Spacilo AI reads both sets of
+                photos, works out where every item can physically go, and shows you the result in
+                your actual space.
               </p>
 
               {started ? (
@@ -68,45 +87,42 @@ export function SpacePlannerSection() {
                 </div>
               ) : (
                 <>
-                  {/* The journey, shown rather than described. */}
-                  <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,0.6fr)_auto_minmax(0,1fr)] lg:items-center">
+                  {/* One curated example, told as a journey. */}
+                  <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,0.55fr)_minmax(0,1fr)] lg:items-start">
                     <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
                       {INPUTS.map((input) => (
                         <figure key={input.label} className="min-w-0">
-                          <img
-                            src={input.src}
-                            alt={input.alt}
-                            loading="lazy"
-                            width={1024}
-                            height={768}
-                            className="aspect-4/3 w-full rounded-xl border border-border object-cover"
-                          />
-                          <figcaption className="mt-1.5 type-badge text-muted-foreground">
-                            {input.label}
-                          </figcaption>
+                          <div className="relative">
+                            <img
+                              src={input.src}
+                              alt={input.alt}
+                              loading="lazy"
+                              width={1280}
+                              height={960}
+                              className="aspect-4/3 w-full rounded-xl border border-border object-cover"
+                            />
+                            <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-full bg-card/90 px-2.5 py-1 type-badge text-foreground shadow-card">
+                              <span className="text-signal">{input.step}</span>
+                              {input.label}
+                            </span>
+                          </div>
                         </figure>
                       ))}
-                    </div>
-
-                    <div
-                      aria-hidden="true"
-                      className="flex items-center justify-center gap-2 text-signal lg:flex-col"
-                    >
-                      <span className="h-px w-8 bg-signal-soft lg:h-8 lg:w-px" />
-                      <Sparkles className="size-4" />
-                      <ArrowRight className="size-4 lg:rotate-90" />
                     </div>
 
                     <figure className="min-w-0">
                       <div className="relative">
                         <img
                           src={arrangedPhoto}
-                          alt="The same garage with the belongings arranged along both walls and a clear central walkway"
+                          alt={ARRANGED_ALT}
                           loading="lazy"
                           width={1200}
-                          height={869}
-                          className="w-full rounded-xl border border-border object-cover"
+                          height={900}
+                          className="w-full rounded-xl border border-signal-soft object-cover shadow-card"
                         />
+                        <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-full bg-signal px-2.5 py-1 type-badge text-signal-foreground shadow-card">
+                          3 Arranged by Spacilo AI
+                        </span>
                         <button
                           type="button"
                           onClick={() => setZoomed(true)}
@@ -116,17 +132,21 @@ export function SpacePlannerSection() {
                           <span className="sr-only">Enlarge the arranged space</span>
                         </button>
                       </div>
-                      <figcaption className="mt-1.5 type-badge text-signal">
-                        3. Arranged by Spacilo AI — in your actual space
+                      <figcaption className="mt-1.5 type-badge text-muted-foreground">
+                        Same belongings, same space — consolidated against one wall with the
+                        walkway kept clear.
                       </figcaption>
                     </figure>
                   </div>
 
                   <dl className="mt-5 grid grid-cols-3 gap-3">
                     {READOUTS.map((readout) => (
-                      <div key={readout.label} className="rounded-xl bg-accent-soft/60 p-3">
+                      <div
+                        key={readout.label}
+                        className="rounded-xl border border-signal-soft bg-card p-3"
+                      >
                         <dt className="type-badge text-muted-foreground">{readout.label}</dt>
-                        <dd className="mt-0.5 type-h3 tabular-nums">{readout.value}</dd>
+                        <dd className="mt-0.5 type-h3 tabular-nums text-signal">{readout.value}</dd>
                       </div>
                     ))}
                   </dl>
@@ -140,7 +160,8 @@ export function SpacePlannerSection() {
                       }}
                     >
                       <Camera aria-hidden="true" />
-                      Start SpacePlanner
+                      Try SpacePlanner
+                      <ArrowRight aria-hidden="true" />
                     </Button>
                     <span className="inline-flex items-center gap-1.5 type-badge text-muted-foreground">
                       <Ruler className="size-3.5" aria-hidden="true" />
@@ -157,8 +178,8 @@ export function SpacePlannerSection() {
       <ImageLightbox
         open={zoomed}
         src={arrangedPhoto}
-        alt="The same garage with the belongings arranged along both walls and a clear central walkway"
-        caption="Example plan — belongings against the walls, walkway kept clear"
+        alt={ARRANGED_ALT}
+        caption="Example plan — belongings consolidated against one wall, walkway kept clear"
         onClose={() => setZoomed(false)}
       />
     </section>

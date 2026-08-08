@@ -51,6 +51,8 @@ export interface VisualisationRequest {
   manifest?: { label: string; quantity: number }[];
   /** Items a previous attempt missed; the retry emphasises these. */
   emphasise?: string[];
+  /** Distinguishes a corrective re-render from the cached first attempt. */
+  nonce?: number;
 }
 
 export interface VisualisationResponse {
@@ -164,6 +166,7 @@ export function visualisationSignature(request: VisualisationRequest): string {
     ...request.itemImages.map((image) => `${image.base64.length}:${image.base64.slice(0, 96)}`),
     request.instruction,
     (request.emphasise ?? []).join(","),
+    String(request.nonce ?? 0),
   ];
   return `vis_${hashString(parts.join("|")).toString(36)}`;
 }

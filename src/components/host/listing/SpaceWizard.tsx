@@ -7,6 +7,7 @@ import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StepProgress } from "@/components/common/Progress";
 import { Alert } from "@/components/common/Alert";
+import { CoachMark } from "@/components/onboarding/CoachMark";
 import { toast } from "@/components/overlay/toast";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -197,6 +198,7 @@ export function SpaceWizard({ space, initialPhotos }: { space: Space; initialPho
 
   return (
     <div className="pb-28">
+      <CoachMark id="listing_create" className="mb-5" />
       <StepProgress steps={[...WIZARD_STEPS]} current={step} className="mb-8" />
 
       {error ? (

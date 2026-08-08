@@ -75,18 +75,46 @@ export interface Coverage {
   faithful: boolean;
 }
 
+/**
+ * Normalises a label the verifier reported so a duplicate of an allowed item
+ * ("extra cardboard box", "another suitcase", "2x boxes") is recognised as the
+ * allowed item rather than as an invented object. Only genuinely new objects —
+ * shoes, plants, shelving — survive this and count as hallucinations.
+ */
+export function normaliseReported(label: string): string {
+  return label
+    .trim()
+    .toLowerCase()
+    .replace(/^\d+\s*[x×]\s*/, "")
+    .replace(/\b(an?|the|one|two|three|four|five|extra|additional|another|second|third|duplicate|more|further|spare|other)\b/g, " ")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/\b(\w+?)e?s\b/g, "$1")
+    .trim();
+}
+
 /** Compares the labels a checker reported against the labels required. */
 export function coverageOf(
   required: string[],
   present: string[],
   unexpected: string[] = [],
+  allowedLabels: string[] = [],
 ): Coverage {
   const seen = new Set(present.map((label) => label.trim().toLowerCase()));
   const missing = required.filter((label) => !seen.has(label.trim().toLowerCase()));
-  const allowed = new Set(required.map((label) => label.trim().toLowerCase()));
+  const allowed = new Set([
+    ...required.map((label) => label.trim().toLowerCase()),
+    ...required.map((label) => normaliseReported(label)),
+    ...allowedLabels.map((label) => normaliseReported(label)),
+  ]);
   const invented = unexpected
     .map((label) => label.trim())
-    .filter((label) => label.length > 0 && !allowed.has(label.toLowerCase()));
+    .filter(
+      (label) =>
+        label.length > 0 &&
+        !allowed.has(label.toLowerCase()) &&
+        !allowed.has(normaliseReported(label)),
+    );
   return {
     expected: required.length,
     present: required.length - missing.length,
@@ -96,6 +124,7 @@ export function coverageOf(
     faithful: invented.length === 0,
   };
 }
+
 
 /** Reads the checker's JSON reply. Tolerates fenced or noisy output. */
 export function parsePresentLabels(text: string): string[] | null {

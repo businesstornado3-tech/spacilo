@@ -64,32 +64,54 @@ interface ErrorStateProps {
   title?: string;
   description?: string;
   onRetry?: () => void;
+  /**
+   * Picks branded recovery wording that explains what happened, why, and how
+   * to fix it. Explicit `title`/`description` still win.
+   */
+  variant?: RecoveryKind;
+  /** Label for the retry button; defaults to the variant's own wording. */
+  retryLabel?: string;
+  /** A safe way out when retrying isn't the answer (e.g. "Back to search"). */
+  secondaryAction?: React.ReactNode;
   className?: string;
 }
 
 export function ErrorState({
-  title = "Something went wrong",
-  description = "We couldn't load this right now. Please try again.",
+  title,
+  description,
   onRetry,
+  variant,
+  retryLabel,
+  secondaryAction,
   className,
 }: ErrorStateProps) {
+  const copy = variant ? recoveryCopy(variant) : null;
+  const heading = title ?? copy?.title ?? "Something went wrong";
+  const body =
+    description ?? copy?.description ?? "We couldn't load this right now. Please try again.";
+
   return (
     <div
       role="alert"
       className={cn(
-        "flex flex-col items-center rounded-2xl border border-destructive/25 bg-destructive-soft px-6 py-10 text-center",
+        "animate-fade flex flex-col items-center rounded-2xl border border-destructive/25 bg-destructive-soft px-6 py-10 text-center",
         className,
       )}
     >
       <span className="mb-4 grid size-12 place-items-center rounded-full bg-destructive text-destructive-foreground">
         <TriangleAlert className="size-6" aria-hidden="true" />
       </span>
-      <h3 className="type-h3 text-destructive-soft-foreground">{title}</h3>
-      <p className="mt-2 max-w-sm type-body-sm text-destructive-soft-foreground/85">{description}</p>
-      {onRetry ? (
-        <Button variant="secondary" className="mt-5" onClick={onRetry}>
-          Try again
-        </Button>
+      <h3 className="type-h3 text-destructive-soft-foreground">{heading}</h3>
+      <p className="mt-2 max-w-md type-body-sm text-destructive-soft-foreground/85">{body}</p>
+      {onRetry || secondaryAction ? (
+        <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+          {onRetry ? (
+            <Button variant="secondary" onClick={onRetry}>
+              {retryLabel ?? copy?.retryLabel ?? "Try again"}
+            </Button>
+          ) : null}
+          {secondaryAction}
+        </div>
       ) : null}
     </div>
   );

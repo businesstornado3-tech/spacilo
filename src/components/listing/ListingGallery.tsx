@@ -72,6 +72,7 @@ export function ListingGallery({ photoUrls, title, onOpen }: ListingGalleryProps
             alt={alt(0)}
             className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             fetchPriority="high"
+            decoding="async"
           />
           <span className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1.5 type-badge text-foreground shadow-card">
             <Expand className="size-3.5" aria-hidden="true" />
@@ -161,6 +162,8 @@ export function ListingGallery({ photoUrls, title, onOpen }: ListingGalleryProps
             <img
               src={photoUrls[index]}
               alt={alt(index)}
+              loading="lazy"
+              decoding="async"
               className="mx-auto max-h-full min-h-0 w-auto max-w-full rounded-xl object-contain transition-opacity duration-200"
             />
             {count > 1 ? <GalleryArrow direction="next" onClick={() => show(index + 1)} /> : null}

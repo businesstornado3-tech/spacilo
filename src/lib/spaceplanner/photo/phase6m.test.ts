@@ -1,9 +1,10 @@
 /**
- * Phase 6M — OpenAI renderer migration guarantees.
+ * Phase 6N — renderer provider rollback guarantees.
  *
  * These tests pin the architectural rules rather than the wording of a prompt:
- * the renderer is OpenAI, Gemini is gone from this path, the manifest is an
- * exhaustive whitelist, and an unverifiable render is never called verified.
+ * the renderer runs through the Lovable AI Gateway with no separately funded
+ * vendor account, the manifest is an exhaustive whitelist, and an unverifiable
+ * render is never called verified.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -12,7 +13,6 @@ import {
   buildRenderPrompt,
   coverageOf,
   verdictFor,
-  blobFromBase64,
 } from "@/routes/api/spaceplanner-visualise";
 
 const source = readFileSync("src/routes/api/spaceplanner-visualise.ts", "utf8");
@@ -33,28 +33,28 @@ const prompt = () =>
     hasItemPhotos: true,
   });
 
-describe("provider migration", () => {
-  it("renders through OpenAI, not the Lovable gateway", () => {
-    expect(source).toContain("https://api.openai.com/v1");
-    expect(source).toContain("/images/edits");
-    expect(source).toContain('const PROVIDER = "openai"');
+describe("provider rollback", () => {
+  it("renders through the Lovable AI Gateway", () => {
+    expect(source).toContain("https://ai.gateway.lovable.dev/v1");
+    expect(source).toContain("/images/generations");
+    expect(source).toContain('const PROVIDER = "lovable-ai-gateway"');
+    expect(source).toContain('"google/gemini-3-pro-image"');
   });
 
-  it("no longer references Gemini or the gateway anywhere in the render path", () => {
-    expect(source).not.toMatch(/gemini/i);
-    expect(source).not.toContain("ai.gateway.lovable.dev");
-    expect(source).not.toContain("LOVABLE_API_KEY");
+  it("no longer calls the OpenAI API directly from the render path", () => {
+    expect(source).not.toContain("api.openai.com");
+    expect(source).not.toContain("OPENAI_API_KEY");
   });
 
-  it("reads the API key server-side only and never falls back", () => {
-    expect(source).toContain('process.env["OPENAI_API_KEY"]');
-    expect(source).not.toMatch(/import\.meta\.env[^\n]*OPENAI/);
+  it("reads the gateway key server-side only and never falls back", () => {
+    expect(source).toContain('process.env["LOVABLE_API_KEY"]');
+    expect(source).not.toMatch(/import\.meta\.env[^\n]*LOVABLE_API_KEY/);
     expect(source).toContain('error: "not_configured"');
   });
 
   it("edits the user's own photograph rather than generating a new room", () => {
-    expect(source).toContain('form.append(\n          "image[]"');
-    expect(source).toContain('form.append("input_fidelity", "high")');
+    expect(source).toContain('{ type: "image_url", image_url: { url: space } }');
+    expect(source).toContain('modalities: ["image", "text"]');
   });
 
   it("reports provider, model and plan hash for diagnostics", () => {
@@ -63,13 +63,8 @@ describe("provider migration", () => {
     expect(source).toContain("planHash");
     expect(source).toContain("renderMs");
   });
-
-  it("converts base64 photographs into multipart blobs", () => {
-    const blob = blobFromBase64("aGVsbG8=", "image/png");
-    expect(blob.size).toBe(5);
-    expect(blob.type).toBe("image/png");
-  });
 });
+
 
 describe("zero invention", () => {
   it("gives the model an exhaustive per-unit whitelist", () => {

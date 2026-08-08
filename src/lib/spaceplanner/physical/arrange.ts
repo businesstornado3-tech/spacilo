@@ -29,6 +29,7 @@ import {
 } from "./space";
 import type {
   ArrangementEntry,
+  CorridorSide,
   PhysicalArrangement,
   PlacementZone,
   PlanningItem,

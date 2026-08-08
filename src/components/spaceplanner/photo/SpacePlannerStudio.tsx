@@ -47,6 +47,14 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     [source, stuff.objects],
   );
 
+  const spacePhoto = space.photos[0] ?? null;
+  const visual = useSpaceVisualisation({
+    result,
+    objects: stuff.objects,
+    spacePhoto,
+    itemPhotos: stuff.photos,
+  });
+
   React.useEffect(() => {
     if (result) {
       track("spaceplanner_fit_calculated", {
@@ -54,6 +62,18 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
       });
     }
   }, [result]);
+
+  // One automatic attempt per result on the results step; retry is explicit.
+  const attempted = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (step !== "result" || !result || !spacePhoto) return;
+    const signature = `${spacePhoto.id}:${result.itemCount}:${result.fitPercent}`;
+    if (attempted.current === signature) return;
+    attempted.current = signature;
+    void visual.generate();
+  }, [step, result, spacePhoto, visual]);
+
+
 
   const analyseStuff = async () => {
     track("spaceplanner_analysis_started", { props: { mode: "belongings" } });

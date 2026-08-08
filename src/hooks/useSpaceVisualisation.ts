@@ -206,6 +206,15 @@ export function useSpaceVisualisation(options: {
       const finalCoverage = response.coverage;
       setStage("checking");
       setCoverage(finalCoverage);
+      setDiagnostics({
+        provider: response.provider,
+        model: response.model,
+        diagnosticId: response.diagnosticId,
+        planHash: manifest.planHash,
+        renderMs: response.renderMs,
+      });
+
+
 
       // Only an image proven to contain belongings the user does not own is
       // withheld. A physically wrong but attractive image is worse than none.

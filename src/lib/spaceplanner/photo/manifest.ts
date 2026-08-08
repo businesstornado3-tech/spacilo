@@ -225,18 +225,30 @@ export function buildPlacementManifest(
 
   const walkway = arrangement.walkway;
 
-  return {
+  const base = {
     inventoryId: inventory.id,
     entries,
     roomFeatures: Object.freeze(roomFeatures.filter((feature) => feature.verified).map((feature) => Object.freeze({ ...feature }))),
     expectedUnits: entries.reduce((sum, entry) => sum + entry.quantity, 0),
+    placedUnits: arrangement.placedUnits,
     spaceWidthM: r2(result.space.width),
     spaceDepthM: r2(result.space.depth),
     spaceHeightM: r2(result.space.height),
     walkway: walkway
       ? { xM: r2(walkway.x), yM: r2(walkway.y), widthM: r2(walkway.w), depthM: r2(walkway.d) }
       : null,
-  };
+    corridorSide: arrangement.corridorSide,
+    strategy: arrangement.strategy,
+    qualityScore: Math.round(arrangement.score.total),
+    valid: arrangement.valid,
+    violations: Object.freeze(arrangement.violations.map((violation) => violation.message)),
+    unplaced: Object.freeze(
+      arrangement.unplaced.map((entry) => Object.freeze({ label: entry.label, reason: entry.reason })),
+    ),
+    planHash: "",
+  } satisfies PlacementManifest;
+
+  return { ...base, planHash: manifestHash(base) };
 }
 
 /**

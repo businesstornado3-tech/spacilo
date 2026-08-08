@@ -432,7 +432,13 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
         <div className="space-y-4">
           {result ? (
             <>
+              <PlannerProgress
+                steps={steps}
+                elapsedMs={visual.elapsedMs}
+                planReady={Boolean(manifest)}
+              />
               <SpacePlannerResult result={result}>
+
                 {spacePhoto ? (
                   <PhotoArrangement
                     photoUrl={spacePhoto.url}

@@ -56,10 +56,17 @@ export interface VisualisationRequest {
   nonce?: number;
 }
 
+/** How the server's own verification pass judged the returned image. */
+export type VerificationVerdict = "verified" | "incomplete" | "unfaithful" | "unverified";
+
 export interface VisualisationResponse {
   image: string;
   coverage: CoverageReport | null;
+  verification: VerificationVerdict;
+  /** Correlates this render with the server log line for support. */
+  diagnosticId: string | null;
 }
+
 
 /**
  * The rendering order sent to the image model.

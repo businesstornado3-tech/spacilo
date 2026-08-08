@@ -220,6 +220,12 @@ export function normaliseItems(raw: unknown, photoIds: string[]): DetectedItemPa
       confidence: clamp(num(record["confidence"], 0.6), 0.1, 0.99),
       photoIds: ids.length ? ids : photoIds.slice(0, 1),
       evidence: typeof record["evidence"] === "string" ? record["evidence"].slice(0, 240) : "",
+      components: Array.isArray(record["components"])
+        ? (record["components"] as unknown[])
+            .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
+            .slice(0, 8)
+            .map((part) => part.slice(0, 40))
+        : [],
     });
   });
   return out;

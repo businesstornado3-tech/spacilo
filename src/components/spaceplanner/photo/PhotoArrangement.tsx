@@ -87,6 +87,28 @@ function Overlay({
   );
 }
 
+/** Plain-language reason, by failure category. */
+function failureMessage(code?: string | null): string {
+  switch (code) {
+    case "timed_out":
+      return "The visual preview took longer than expected, so we stopped waiting.";
+    case "upstream_429":
+      return "The image service is busy right now.";
+    case "upstream_402":
+      return "The image service is temporarily unavailable.";
+    case "no_image_returned":
+    case "bad_upstream_payload":
+      return "The image service didn't return a picture this time.";
+    case "not_configured":
+    case "upstream_unreachable":
+      return "We couldn't reach the image service.";
+    case "inventory_not_fully_placeable":
+      return "There were no items the planner could place in this space.";
+    default:
+      return "We couldn't create the visual preview this time.";
+  }
+}
+
 export function PhotoArrangement({
   photoUrl,
   photoAlt = "The space you photographed",
@@ -98,10 +120,12 @@ export function PhotoArrangement({
   status = "idle",
   statusLabel,
   coverage = null,
+  errorCode = null,
   onRetry,
   className,
 }: PhotoArrangementProps) {
   const hasVisual = (status === "ready" || status === "incomplete") && Boolean(arrangedUrl);
+
   const [showArranged, setShowArranged] = React.useState(true);
   const [position, setPosition] = React.useState(100);
   const [showOverlay, setShowOverlay] = React.useState(false);

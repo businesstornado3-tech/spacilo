@@ -14,6 +14,7 @@ import * as React from "react";
 import { Play, Plus, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { track } from "@/lib/analytics/tracker";
 import { Button } from "@/components/ui/button";
 import { useInView } from "@/hooks/use-motion";
 import { useTwinExperience } from "@/hooks/useTwinExperience";

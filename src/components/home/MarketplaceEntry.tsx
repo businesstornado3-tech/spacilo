@@ -5,6 +5,8 @@
  * have a layout, now they need the space.
  */
 import { useNavigate } from "@tanstack/react-router";
+import { ShieldCheck } from "lucide-react";
+
 
 import heroPhoto from "@/assets/hero-storage.jpg";
 import { SearchControls } from "@/components/search/SearchControls";

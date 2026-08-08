@@ -15,7 +15,7 @@ import { isOverBudget, recordAiMetric } from "./metrics";
 import { promptStamp } from "./prompts";
 import { providersFor } from "./provider-manager";
 import { checkRateLimit } from "./rate-limit";
-import { submitAiJob, type AiJob, type AiPriorityAlias } from "./queue-types";
+import { submitAiJob, type AiJob } from "./queue";
 import { buildUsage, EMPTY_USAGE, estimateTokens } from "./usage";
 import { assertValid, type AiSchema } from "./validate";
 import type {
@@ -440,5 +440,3 @@ async function withTimeout<T>(work: Promise<T>, ms: number, signal?: AbortSignal
     if (signal && onAbort) signal.removeEventListener("abort", onAbort);
   }
 }
-
-export type { AiPriorityAlias };

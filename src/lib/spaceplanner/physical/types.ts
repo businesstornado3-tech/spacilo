@@ -10,6 +10,7 @@
  * the same convention the existing pack engine uses.
  */
 import type { WeightClass } from "../types";
+import type { QualityGateResult } from "./quality";
 
 export interface Rect {
   x: number;
@@ -143,6 +144,8 @@ export interface ArrangementScore {
   wallUse: number;
   verticalUse: number;
   grouping: number;
+  /** 0–100 consolidation objective. Higher means less scatter. */
+  antiScatter: number;
   penalties: number;
 }
 
@@ -166,4 +169,8 @@ export interface PhysicalArrangement {
   valid: boolean;
   violations: Violation[];
   score: ArrangementScore;
+  /** Which deterministic packing strategy produced this plan. */
+  strategy: string;
+  /** The arrangement-quality gate result for this plan. */
+  quality: QualityGateResult;
 }

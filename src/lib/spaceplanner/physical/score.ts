@@ -5,6 +5,7 @@
  * decided in `constraints.ts` and no score can overturn them. This is only
  * used to choose between plans that are all physically valid.
  */
+import { antiScatterReport } from "./quality";
 import { overlapArea, rectArea } from "./space";
 import type { ArrangementEntry, ArrangementScore, PlanningSpace, Rect, Violation } from "./types";
 
@@ -117,21 +118,38 @@ export function scoreArrangement({
     return placedUnits < expectedUnits ? pct((1 - used / bandArea) * 100) * (1 - capacityShare) : 0;
   })();
 
+  const scatter = antiScatterReport(space, entries);
+
   const penalties =
-    violations.length * 40 + scatteredCount(space, entries) * 12 + Math.round(wastedFloor * 0.2);
+    violations.length * 40 +
+    scatteredCount(space, entries) * 12 +
+    Math.max(0, scatter.clusters - 1) * 6 +
+    scatter.centreFloor * 8 +
+    Math.round(wastedFloor * 0.2);
 
   const total = Math.max(
     0,
     Math.round(
-      completeness * 0.3 +
-        access * 0.2 +
-        compact * 0.15 +
-        wall * 0.15 +
-        vertical * 0.08 +
-        grouping * 0.12 -
+      completeness * 0.28 +
+        access * 0.18 +
+        compact * 0.12 +
+        wall * 0.12 +
+        vertical * 0.06 +
+        grouping * 0.09 +
+        scatter.score * 0.15 -
         penalties,
     ),
   );
 
-  return { total, completeness, access, compactness: compact, wallUse: wall, verticalUse: vertical, grouping, penalties };
+  return {
+    total,
+    completeness,
+    access,
+    compactness: compact,
+    wallUse: wall,
+    verticalUse: vertical,
+    grouping,
+    antiScatter: scatter.score,
+    penalties,
+  };
 }

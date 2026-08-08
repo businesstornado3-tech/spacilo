@@ -85,6 +85,8 @@ export function buildVisualisationInstruction(
       dimensions,
       `EVERY item in this manifest must appear in the edited photograph, at the exact coordinates given:\n\n${formatManifestForModel(manifest)}`,
       "Items sharing a wall must sit shoulder to shoulder with no gaps between them. Nothing floats, nothing overlaps, nothing sits in the middle of the floor unless its coordinates say so.",
+      "Render the supplied placement manifest exactly. Do not move, rotate, resize, duplicate, remove, substitute or reinterpret objects. Do not scatter objects. Do not improve the arrangement independently. The placement manifest is authoritative.",
+      "Do not invent shelving, racking, cupboards, cabinets, drawers, hooks or storage boxes. Only the belongings listed, inside the room exactly as photographed.",
       excluded,
       volume,
     ]

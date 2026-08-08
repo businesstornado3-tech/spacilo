@@ -194,6 +194,31 @@ export function buildPlacementManifest(
 }
 
 /**
+ * The storage groups the plan formed, so the renderer draws blocks of
+ * belongings rather than objects dotted around the room.
+ */
+export function manifestGroups(manifest: PlacementManifest): { zone: string; labels: string[] }[] {
+  const zones = new Map<string, string[]>();
+  for (const entry of manifest.entries) {
+    for (const position of entry.positions) {
+      const list = zones.get(position.zone) ?? [];
+      if (!list.includes(entry.label)) list.push(entry.label);
+      zones.set(position.zone, list);
+    }
+  }
+  return [...zones.entries()]
+    .map(([zone, labels]) => ({ zone, labels }))
+    .sort((a, b) => a.zone.localeCompare(b.zone));
+}
+
+/** Total units the rendered image must contain — no more, no fewer. */
+export function manifestUnitCount(manifest: PlacementManifest): number {
+  return manifest.entries
+    .filter((entry) => entry.state !== "cannot be safely placed")
+    .reduce((sum, entry) => sum + entry.quantity, 0);
+}
+
+/**
  * Structured, model-facing manifest text.
  *
  * This is a rendering order, not a suggestion: exact metric coordinates in a
@@ -201,15 +226,24 @@ export function buildPlacementManifest(
  * model is a renderer; it is never asked where anything should go.
  */
 export function formatManifestForModel(manifest: PlacementManifest): string {
+  const groups = manifestGroups(manifest);
   const header = [
     "FLOOR COORDINATE FRAME: origin (0,0) is the REAR-LEFT corner of the room floor.",
     `X increases towards the right wall (0 → ${manifest.spaceWidthM}m). Y increases from the rear wall towards the entrance (0 → ${manifest.spaceDepthM}m). Z is height above the floor (0 → ${manifest.spaceHeightM}m).`,
+    `TOTAL OBJECTS TO DRAW: exactly ${manifestUnitCount(manifest)}. Not one more, not one fewer.`,
+    groups.length
+      ? `STORAGE GROUPS — draw each group as one contiguous block, items touching each other:\n${groups
+          .map((group) => `• ${group.zone}: ${group.labels.join(", ")}`)
+          .join("\n")}`
+      : "",
     manifest.walkway
       ? `KEEP CLEAR: the access corridor from x=${manifest.walkway.xM}m to x=${r2(manifest.walkway.xM + manifest.walkway.widthM)}m, y=${manifest.walkway.yM}m to y=${r2(manifest.walkway.yM + manifest.walkway.depthM)}m. Nothing may be drawn inside it.`
       : "",
+    "DO NOT INVENT STORAGE FURNITURE: no shelves, racks, cupboards, cabinets, hooks, pallets or storage boxes may be added. Only the objects listed below, in the room as photographed.",
   ]
     .filter(Boolean)
     .join("\n");
+
 
   const body = manifest.entries
     .map((entry, index) => {

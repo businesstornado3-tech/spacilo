@@ -187,6 +187,11 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
                 ? `The previous attempt did not show these items. They must be clearly visible this time: ${emphasise.join("; ")}.`
                 : "",
               "ARRANGEMENT RULES, in priority order: (1) draw each item at the exact coordinates given; (2) pack items against walls, shoulder to shoulder, with no gaps between neighbours; (3) never place an item in the middle of the open floor or spread items evenly across the room; (4) keep the stated access corridor completely empty; (5) respect perspective and scale, rest every item on the floor or on the item below with contact shadows; (6) no floating, clipped, duplicated or invented objects.",
+              "THE MANIFEST IS AUTHORITATIVE. Do not move, rotate, resize, duplicate, remove, substitute or reinterpret any object because another position would look better. A position you disagree with is still the position you must draw.",
+              "Do not add shelving, racks, cupboards, cabinets, drawers, hooks, pallets, crates or any storage furniture that is not already in the photograph.",
+              required.length
+                ? `The finished photograph must contain exactly ${required.length} distinct stored belongings from the list — no extra objects of any kind.`
+                : "",
               "Return only the edited photograph. No labels, no boxes, no outlines, no text overlays.",
 
             ]

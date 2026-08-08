@@ -199,8 +199,8 @@ describe("physical placement engine", () => {
 describe("phase 6H — consolidated arrangement", () => {
   const household = planningItemsFrom([
     object({ id: "ITEM-001", label: "Storage box", category: "boxes", quantity: 5, width: 50, depth: 40, height: 35 }),
-    object({ id: "ITEM-002", label: "Suitcase", category: "luggage", quantity: 2, width: 70, depth: 30, height: 50 }),
-    object({ id: "ITEM-003", label: "Rucksack", category: "luggage", width: 35, depth: 25, height: 50, weight: "light" }),
+    object({ id: "ITEM-002", label: "Suitcase", category: "leisure", quantity: 2, width: 70, depth: 30, height: 50 }),
+    object({ id: "ITEM-003", label: "Rucksack", category: "leisure", width: 35, depth: 25, height: 50, weight: "light" }),
     object({ id: "ITEM-004", label: "Armchair", category: "furniture", width: 90, depth: 85, height: 100, weight: "heavy" }),
   ]);
 

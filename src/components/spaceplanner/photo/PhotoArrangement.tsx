@@ -238,7 +238,7 @@ export function PhotoArrangement({
         </p>
       ) : null}
 
-      {status === "incomplete" || status === "failed" ? (
+      {status === "incomplete" ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {onRetry ? (
             <Button type="button" size="sm" variant="secondary" onClick={onRetry}>

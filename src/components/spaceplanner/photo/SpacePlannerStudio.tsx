@@ -248,12 +248,16 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
           {result ? (
             <>
               <SpacePlannerResult result={result}>
-                {space.photos[0] ? (
+                {spacePhoto ? (
                   <PhotoArrangement
-                    photoUrl={space.photos[0].url}
+                    photoUrl={spacePhoto.url}
                     space={result.space}
                     pack={result.plan.after}
-                    description={`Spacilo AI arranged ${result.itemCount} items into the space you photographed. Estimated fit ${result.fitPercent}%, with about ${result.spaceRemainingM3.toFixed(1)}m³ estimated to remain.`}
+                    arrangedUrl={visual.imageUrl}
+                    status={visual.status}
+                    statusLabel={visual.stageLabel}
+                    onRetry={() => void visual.generate()}
+                    description={`${result.itemCount} items shown in the space you photographed. Estimated fit ${result.fitPercent}%, with about ${result.spaceRemainingM3.toFixed(1)}m³ estimated to remain.`}
                   />
                 ) : (
                   <p className="type-body-sm text-muted-foreground">

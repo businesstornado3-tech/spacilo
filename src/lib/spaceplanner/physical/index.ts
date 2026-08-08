@@ -8,4 +8,5 @@ export * from "./space";
 export * from "./items";
 export * from "./constraints";
 export * from "./score";
+export * from "./quality";
 export * from "./arrange";

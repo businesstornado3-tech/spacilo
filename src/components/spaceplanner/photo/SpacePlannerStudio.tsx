@@ -80,7 +80,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
       usableVolumeM3: usable,
       usableAreaM2: result.space.width * result.space.depth,
       occupiedVolumeM3: result.spaceUsedM3,
-      spaceType: "storage_room",
+      spaceType: "storage-room",
     });
   }, [result]);
 
@@ -265,9 +265,9 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 onRotate={stuff.rotatePhoto}
                 onMove={stuff.movePhoto}
                 onReplace={stuff.replacePhoto}
-                onSelectRegion={
-                  stuff.scope === "selected" ? (id) => setSelectingStuff(id) : undefined
-                }
+                {...(stuff.scope === "selected"
+                  ? { onSelectRegion: (id: string) => setSelectingStuff(id) }
+                  : {})}
                 quality={stuff.quality}
                 canAddMore={stuff.canAddMore}
               />

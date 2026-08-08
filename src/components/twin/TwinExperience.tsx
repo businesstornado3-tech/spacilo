@@ -83,6 +83,14 @@ export function TwinExperience({
 
   const highlightIds = focusId ? [] : beat.highlightIds;
 
+  // One view per mount, recorded when the twin actually reaches the screen.
+  const viewed = React.useRef(false);
+  React.useEffect(() => {
+    if (!inView || viewed.current) return;
+    viewed.current = true;
+    track("digital_twin_viewed", { props: { space: space.id } });
+  }, [inView, space.id]);
+
   const addItem = (itemId: string) => {
     setEntries((current) => {
       const existing = current.find((entry) => entry.itemId === itemId);

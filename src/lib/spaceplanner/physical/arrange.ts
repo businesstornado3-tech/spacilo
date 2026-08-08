@@ -112,7 +112,21 @@ export const PACK_STRATEGIES: PackStrategy[] = [
     order: byFootprintDesc,
     orientations: (options) => options,
   },
+  {
+    id: "grouped-zones",
+    label: "Related belongings kept in the same zone",
+    // Fill the largest band first, but walk the items category by category so
+    // boxes end up with boxes and furniture with furniture.
+    bands: (bands) => [...bands].sort((a, b) => rectArea(b.rect) - rectArea(a.rect)),
+    order: (a, b) => {
+      const byCategory = a.item.category.localeCompare(b.item.category);
+      if (byCategory !== 0) return byCategory;
+      return byFootprintDesc(a, b);
+    },
+    orientations: (options) => options,
+  },
 ];
+
 
 function isCorner(band: BandState, x: number, space: PlanningSpace): boolean {
   const usable = space.usable;

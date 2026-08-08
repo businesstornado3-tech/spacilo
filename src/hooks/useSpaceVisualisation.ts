@@ -129,6 +129,8 @@ export function useSpaceVisualisation(options: {
     setError(null);
     setImageUrl(null);
     setCoverage(null);
+    setDiagnostics(null);
+
     setAttempt(1);
 
     // Elapsed time is surfaced so the wait is honest rather than a spinner

@@ -1,23 +1,37 @@
 /**
- * Spacilo AI SpacePlanner™ — visualisation endpoint.
+ * Spacilo AI SpacePlanner™ — visualisation endpoint (OpenAI renderer).
  *
- * Takes the user's OWN space photograph, photographs of their belongings and
- * the canonical placement manifest, and asks an image model to edit the space
- * photo so those exact belongings appear realistically placed inside it. The
- * space photograph is always the visual foundation: the model is instructed to
- * preserve the room, never to invent a new one.
+ * PROVIDER: OpenAI, called directly with the server-side `OPENAI_API_KEY`.
+ * The previous Google image provider is no longer part of this path — not as
+ * the renderer, not as a fallback, and not as the verifier.
  *
- * The returned image is then checked against the manifest, so the UI can say
- * honestly how many of the required items are actually represented. If the
- * model returns no image the route fails loudly rather than letting a
- * geometric overlay be presented as an AI visualisation.
+ * The deterministic physical planner remains the sole authority for the
+ * arrangement. This route receives an already-final PlacementManifest and asks
+ * OpenAI's image-edit model to draw exactly that manifest into the user's own
+ * space photograph. The returned image is then verified object-by-object
+ * against the manifest so the UI can say honestly whether the render is
+ * faithful, incomplete or unverifiable. A render failure never destroys the
+ * plan: the client still holds the manifest and shows the top-down diagram.
  */
 import { createFileRoute } from "@tanstack/react-router";
 
-const MODEL = "google/gemini-3-pro-image";
-const CHECK_MODEL = "google/gemini-3.6-flash";
+/** OpenAI image-edit model. Overridable, but always an OpenAI id. */
+const DEFAULT_IMAGE_MODEL = "gpt-image-2";
+/** Vision model used only to check the render. Not a renderer. */
+const DEFAULT_VERIFY_MODEL = "gpt-4.1-mini";
+const PROVIDER = "openai";
+const OPENAI = "https://api.openai.com/v1";
 const MAX_ITEM_PHOTOS = 3;
-const GATEWAY = "https://ai.gateway.lovable.dev/v1";
+/** gpt-image accepts long prompts; this keeps the manifest whole but bounded. */
+const MAX_PROMPT_CHARS = 24_000;
+
+function imageModel(): string {
+  return process.env["OPENAI_IMAGE_MODEL"]?.trim() || DEFAULT_IMAGE_MODEL;
+}
+
+function verifyModel(): string {
+  return process.env["OPENAI_VERIFY_MODEL"]?.trim() || DEFAULT_VERIFY_MODEL;
+}
 
 interface ManifestItem {
   id?: string;
@@ -32,6 +46,9 @@ interface VisualiseBody {
   manifest?: ManifestItem[];
   emphasise?: string[];
   roomFeatures?: { id?: string; label?: string; kind?: string; position?: string }[];
+  /** Carried through for diagnostics only. Never used to re-plan. */
+  planHash?: string;
+  inventoryHash?: string;
 }
 
 function dataUrl(image: { mimeType?: string; base64?: string }): string | null {
@@ -40,7 +57,17 @@ function dataUrl(image: { mimeType?: string; base64?: string }): string | null {
   return `data:${mime};base64,${image.base64}`;
 }
 
-/** Pulls the first image out of the gateway's OpenAI-compatible response. */
+/** base64 → Blob, so the photographs can be posted as multipart form data. */
+export function blobFromBase64(base64: string, mimeType: string): Blob {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return new Blob([bytes], { type: mimeType });
+}
+
+/** Pulls the first image out of the OpenAI images response. */
 export function extractImage(payload: unknown): string | null {
   const seen = new Set<unknown>();
   const walk = (node: unknown): string | null => {
@@ -89,7 +116,9 @@ export function normaliseReported(label: string): string {
     .replace(/\b(an?|the|one|two|three|four|five|extra|additional|another|second|third|duplicate|more|further|spare|other)\b/g, " ")
     .replace(/[^a-z0-9 ]/g, " ")
     .replace(/\s+/g, " ")
-    .replace(/\b(\w+?)e?s\b/g, "$1")
+    // Singular/plural must converge on one stem: "suitcase" and "suitcases"
+    // are the same object, so a duplicate is never read as an invention.
+    .replace(/\b\w+\b/g, (word) => word.replace(/(?:es|s)$/, "").replace(/e$/, ""))
     .trim();
 }
 
@@ -124,7 +153,6 @@ export function coverageOf(
     faithful: invented.length === 0,
   };
 }
-
 
 /** Reads the checker's JSON reply. Tolerates fenced or noisy output. */
 export function parsePresentLabels(text: string): string[] | null {
@@ -163,11 +191,23 @@ export function parseCheckReply(
   return present ? { present, unexpected: [] } : null;
 }
 
+export type Verdict = "verified" | "incomplete" | "unfaithful" | "unverified";
+
 /**
- * Render verification. Asks a vision model which required items it can see AND
- * which stored objects it can see that are NOT on the list — an invented
- * object is a critical failure, not a cosmetic one. Best effort: a verifier
- * that cannot answer returns null rather than a false accusation.
+ * Turns an observation into a verdict. An absent or unreadable coverage report
+ * is "unverified" — never silently promoted to "verified".
+ */
+export function verdictFor(coverage: Coverage | null): Verdict {
+  if (!coverage) return "unverified";
+  if (!coverage.faithful) return "unfaithful";
+  return coverage.complete ? "verified" : "incomplete";
+}
+
+/**
+ * Object-level render verification, on OpenAI. Asks which required units are
+ * visible AND which stored objects appear that are NOT on the list — an
+ * invented object is a critical failure, not a cosmetic one. Best effort: a
+ * verifier that cannot answer returns null rather than a false accusation.
  */
 async function checkCoverage(
   key: string,
@@ -175,14 +215,16 @@ async function checkCoverage(
   image: string,
   required: { id: string; label: string }[],
   roomFeatures: { id: string; label: string }[],
+  signal?: AbortSignal,
 ): Promise<Coverage | null> {
   if (required.length === 0) return null;
   try {
-    const response = await fetch(`${GATEWAY}/chat/completions`, {
+    const response = await fetch(`${OPENAI}/chat/completions`, {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      ...(signal ? { signal } : {}),
       body: JSON.stringify({
-        model: CHECK_MODEL,
+        model: verifyModel(),
         messages: [
           {
             role: "user",
@@ -212,19 +254,75 @@ async function checkCoverage(
       reply.unexpected,
       [...required.map((item) => item.label), ...roomFeatures.map((feature) => feature.label)],
     );
-
   } catch {
     return null;
   }
+}
+
+/**
+ * The rendering order. The manifest is restated as an exhaustive whitelist so
+ * the model has no room to infer belongings from visual priors.
+ */
+export function buildRenderPrompt(options: {
+  instruction: string;
+  manifest: ManifestItem[];
+  required: { id: string; label: string }[];
+  roomFeatures: { id: string; label: string }[];
+  emphasise: string[];
+  hasItemPhotos: boolean;
+}): string {
+  const { instruction, manifest, required, roomFeatures, emphasise, hasItemPhotos } = options;
+  const whitelist = manifest
+    .map((entry, index) => {
+      const label = typeof entry?.label === "string" ? entry.label.trim() : "";
+      if (!label) return "";
+      const quantity = typeof entry?.quantity === "number" && entry.quantity > 0 ? entry.quantity : 1;
+      const id = typeof entry?.id === "string" && entry.id ? entry.id : `item_${String(index + 1).padStart(2, "0")}`;
+      return `${id} = ${quantity} × ${label}`;
+    })
+    .filter(Boolean)
+    .join("\n");
+
+  return [
+    "You are a photo-realistic RENDERER, not a planner. A deterministic physical planning engine has already decided the entire arrangement. Your only job is to draw it.",
+    "Edit the FIRST image, which is a real photograph of a room or storage space. Keep it as the foundation: identical walls, floor, ceiling, doorway, windows, fixed furniture, camera position, perspective, lighting and colour. Do not redesign or regenerate the room.",
+    hasItemPhotos
+      ? "The remaining images are photographs of the user's real belongings. Render those exact objects, matching their appearance, materials and colours."
+      : "Render the described belongings into the photographed space.",
+    instruction.slice(0, 6000),
+    whitelist
+      ? `ALLOWED OBJECTS — exhaustive per-unit whitelist. Render every ID exactly once:\n${whitelist}`
+      : "",
+    "Do not add, remove, replace, duplicate, merge, substitute or infer any object. Any object not on the whitelist must not appear. No shoes, chairs, tables, extra boxes, extra bags, plants, tools, bicycles, shelving or decorative items.",
+    roomFeatures.length
+      ? `FIXED ROOM FEATURES — preserve these exactly where they are in the source photograph and never treat them as inventory: ${roomFeatures.map((feature) => `${feature.id}=${feature.label}`).join("; ")}.`
+      : "Preserve every source room feature, especially any television, radiator, door, window, fitted shelf, built-in furnishing and electrical fixture. Never remove, relocate, replace or cover them.",
+    emphasise.length
+      ? `The previous attempt did not show these items. They must be clearly visible this time: ${emphasise.join("; ")}.`
+      : "",
+    "ARRANGEMENT RULES, in priority order: (1) draw each item at the exact coordinates given; (2) pack items against walls, shoulder to shoulder, with no gaps between neighbours; (3) never place an item in the middle of the open floor or spread items evenly; (4) keep the stated access corridor completely empty; (5) respect perspective and scale, rest every item on the floor or on the item below with contact shadows; (6) nothing floating, clipped, duplicated or invented.",
+    "THE MANIFEST IS AUTHORITATIVE. Do not move, rotate, resize, duplicate, remove or reinterpret any object because another position would look better. A position you disagree with is still the position you must draw.",
+    required.length
+      ? `The finished photograph must contain exactly ${required.length} stored units from the list — no extra objects of any kind.`
+      : "",
+    "Return only the edited photograph. No labels, boxes, outlines or text overlays.",
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .slice(0, MAX_PROMPT_CHARS);
 }
 
 export const Route = createFileRoute("/api/spaceplanner-visualise")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const key = process.env["LOVABLE_API_KEY"];
+        const key = process.env["OPENAI_API_KEY"];
         if (!key) {
-          return Response.json({ error: "not_configured" }, { status: 503 });
+          // No silent fallback to another provider: report the misconfiguration.
+          return Response.json(
+            { error: "not_configured", provider: PROVIDER, detail: "OPENAI_API_KEY is not set" },
+            { status: 503 },
+          );
         }
 
         let body: VisualiseBody;
@@ -234,16 +332,17 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           return Response.json({ error: "bad_request" }, { status: 400 });
         }
 
-        const space = body.spaceImage ? dataUrl(body.spaceImage) : null;
-        if (!space) {
+        const spacePhoto = body.spaceImage;
+        const space = spacePhoto ? dataUrl(spacePhoto) : null;
+        if (!space || !spacePhoto?.base64) {
           return Response.json({ error: "missing_space_photo" }, { status: 400 });
         }
-        const items = (body.itemImages ?? [])
+        const itemPhotos = (body.itemImages ?? [])
           .slice(0, MAX_ITEM_PHOTOS)
-          .map(dataUrl)
-          .filter((url): url is string => Boolean(url));
+          .filter((photo): photo is { mimeType?: string; base64: string } => Boolean(photo?.base64));
 
-        const required = (body.manifest ?? [])
+        const manifest = body.manifest ?? [];
+        const required = manifest
           .flatMap((entry, index) => {
             const label = typeof entry?.label === "string" ? entry.label.trim() : "";
             if (!label) return [];
@@ -263,106 +362,111 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           .filter((label): label is string => typeof label === "string")
           .slice(0, 20);
 
-        const content: Record<string, unknown>[] = [
-          {
-            type: "text",
-            text: [
-              "You are a photo-realistic RENDERER. A physical planning engine has already decided the arrangement. Your only job is to draw it. You must not plan, re-plan, improve, tidy or reinterpret the layout.",
-              "Edit the FIRST image, which is a real photograph of a room or storage space.",
-              "Keep that photograph as the foundation: same walls, floor, doorway, camera angle, lighting and colour.",
-              "Do not generate a new room and do not change the existing contents.",
-              items.length
-                ? "The following images show the user's real belongings. Place those exact items into the photographed space, matching their appearance, materials and colours."
-                : "Place the described belongings into the photographed space.",
-              body.instruction?.slice(0, 6000) ?? "",
-              required.length
-                ? `ALLOWED OBJECTS — this is an exhaustive per-unit whitelist. Render every ID exactly once:\n${(body.manifest ?? [])
-                    .map((entry, index) => {
-                      const label = typeof entry?.label === "string" ? entry.label.trim() : "";
-                      const quantity =
-                        typeof entry?.quantity === "number" && entry.quantity > 0 ? entry.quantity : 1;
-                      const id = typeof entry?.id === "string" ? entry.id : `item_${String(index + 1).padStart(2, "0")}`;
-                      return label ? `${id} = ${quantity} × ${label}` : "";
-                    })
-                    .filter(Boolean)
-                    .join("\n")}`
-                : "",
-              required.length
-                ? "Do not add, remove, replace, duplicate, merge or invent any object. Any object that is not on the whitelist above must not appear. No shoes, chairs, tables, extra boxes, extra bags, plants, tools, bicycles or decorative items."
-                : "",
-              roomFeatures.length
-                ? `FIXED ROOM FEATURES — preserve these exactly where they are in the source image and never treat them as inventory: ${roomFeatures.map((feature) => `${feature.id}=${feature.label}`).join("; ")}.`
-                : "Preserve every source room feature, especially any television, radiator, door, window, fitted shelf, built-in furnishing and electrical fixture. Never remove, relocate, replace or cover them.",
-              emphasise.length
-                ? `The previous attempt did not show these items. They must be clearly visible this time: ${emphasise.join("; ")}.`
-                : "",
-              "ARRANGEMENT RULES, in priority order: (1) draw each item at the exact coordinates given; (2) pack items against walls, shoulder to shoulder, with no gaps between neighbours; (3) never place an item in the middle of the open floor or spread items evenly across the room; (4) keep the stated access corridor completely empty; (5) respect perspective and scale, rest every item on the floor or on the item below with contact shadows; (6) no floating, clipped, duplicated or invented objects.",
-              "THE MANIFEST IS AUTHORITATIVE. Do not move, rotate, resize, duplicate, remove, substitute or reinterpret any object because another position would look better. A position you disagree with is still the position you must draw.",
-              "Do not add shelving, racks, cupboards, cabinets, drawers, hooks, pallets, crates or any storage furniture that is not already in the photograph.",
-              required.length
-                ? `The finished photograph must contain exactly ${required.length} stored units from the list — no extra objects of any kind.`
-                : "",
-              "Return only the edited photograph. No labels, no boxes, no outlines, no text overlays.",
+        const model = imageModel();
+        const diagnosticId = `vis_${Date.now().toString(36)}`;
+        const prompt = buildRenderPrompt({
+          instruction: body.instruction ?? "",
+          manifest,
+          required,
+          roomFeatures,
+          emphasise,
+          hasItemPhotos: itemPhotos.length > 0,
+        });
 
-            ]
-              .filter(Boolean)
-              .join(" "),
-          },
-          { type: "image_url", image_url: { url: space } },
-          ...items.map((url) => ({ type: "image_url", image_url: { url } })),
-        ];
+        // Multipart image edit: the user's space photograph first, then their
+        // belongings as visual references. This is a true edit of the original
+        // photograph, not a fresh generation.
+        const form = new FormData();
+        form.append("model", model);
+        form.append("prompt", prompt);
+        form.append("n", "1");
+        form.append("size", "1024x1024");
+        form.append("quality", process.env["OPENAI_IMAGE_QUALITY"]?.trim() || "medium");
+        form.append("input_fidelity", "high");
+        form.append(
+          "image[]",
+          blobFromBase64(spacePhoto.base64, spacePhoto.mimeType || "image/jpeg"),
+          "space.jpg",
+        );
+        itemPhotos.forEach((photo, index) => {
+          form.append(
+            "image[]",
+            blobFromBase64(photo.base64, photo.mimeType || "image/jpeg"),
+            `item-${index + 1}.jpg`,
+          );
+        });
 
+        const startedRender = Date.now();
         let upstream: Response;
         try {
-          upstream = await fetch(`${GATEWAY}/images/generations`, {
+          upstream = await fetch(`${OPENAI}/images/edits`, {
             method: "POST",
-            headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-              model: MODEL,
-              messages: [{ role: "user", content }],
-              modalities: ["image", "text"],
-              stream: false,
-            }),
+            headers: { Authorization: `Bearer ${key}` },
+            body: form,
           });
         } catch {
-          return Response.json({ error: "upstream_unreachable" }, { status: 502 });
+          return Response.json(
+            { error: "upstream_unreachable", provider: PROVIDER, model, diagnosticId },
+            { status: 502 },
+          );
         }
 
         if (!upstream.ok) {
+          const detail = await upstream.text().catch(() => "");
+          console.error(
+            `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} upstream=${upstream.status} ${detail.slice(0, 400)}`,
+          );
           const status = upstream.status === 429 || upstream.status === 402 ? upstream.status : 502;
-          return Response.json({ error: `upstream_${upstream.status}` }, { status });
+          return Response.json(
+            { error: `upstream_${upstream.status}`, provider: PROVIDER, model, diagnosticId },
+            { status },
+          );
         }
 
         let payload: unknown;
         try {
           payload = await upstream.json();
         } catch {
-          return Response.json({ error: "bad_upstream_payload" }, { status: 502 });
+          return Response.json(
+            { error: "bad_upstream_payload", provider: PROVIDER, model, diagnosticId },
+            { status: 502 },
+          );
         }
 
         const image = extractImage(payload);
         if (!image) {
-          return Response.json({ error: "no_image_returned" }, { status: 502 });
+          return Response.json(
+            { error: "no_image_returned", provider: PROVIDER, model, diagnosticId },
+            { status: 502 },
+          );
         }
+        const renderMs = Date.now() - startedRender;
 
         const startedCheck = Date.now();
         const coverage = await checkCoverage(key, space, image, required, roomFeatures);
-        const diagnosticId = `vis_${Date.now().toString(36)}`;
+        const verifyMs = Date.now() - startedCheck;
         // Verification never withholds the image. The client decides whether a
         // render is presentable; the server reports honestly what it observed
         // and distinguishes "could not verify" from "verified as wrong".
-        const verification: "verified" | "incomplete" | "unfaithful" | "unverified" = !coverage
-          ? "unverified"
-          : !coverage.faithful
-            ? "unfaithful"
-            : coverage.complete
-              ? "verified"
-              : "incomplete";
-        console.log(
-          `[spaceplanner-visualise] ${diagnosticId} model=${MODEL} units=${required.length} verification=${verification} present=${coverage?.present ?? "?"}/${required.length} unexpected=${coverage?.unexpected.length ?? 0} checkMs=${Date.now() - startedCheck}`,
-        );
-        return Response.json({ image, model: MODEL, coverage, verification, diagnosticId });
+        const verification = verdictFor(coverage);
 
+        console.log(
+          `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} units=${required.length} verification=${verification} present=${coverage?.present ?? "?"}/${required.length} unexpected=${coverage?.unexpected.length ?? 0} renderMs=${renderMs} verifyMs=${verifyMs}`,
+        );
+
+        return Response.json({
+          image,
+          provider: PROVIDER,
+          model,
+          verifyModel: verifyModel(),
+          coverage,
+          verification,
+          diagnosticId,
+          planHash: body.planHash ?? null,
+          inventoryHash: body.inventoryHash ?? null,
+          renderMs,
+          verifyMs,
+        });
       },
     },
   },

@@ -40,6 +40,14 @@ export const RENDER_TIMEOUT_MS = 95_000;
 /** One render plus, at most, one corrective refinement. */
 export const MAX_RENDER_ATTEMPTS = 2;
 
+export interface RenderDiagnostics {
+  provider: string | null;
+  model: string | null;
+  diagnosticId: string | null;
+  planHash: string | null;
+  renderMs: number | null;
+}
+
 export interface UseSpaceVisualisation {
   status: VisualisationStatus;
   stage: VisualisationStage;
@@ -51,9 +59,12 @@ export interface UseSpaceVisualisation {
   imageUrl: string | null;
   coverage: CoverageReport | null;
   error: string | null;
+  /** Which service actually rendered, for support and verification. */
+  diagnostics: RenderDiagnostics | null;
   generate: () => Promise<void>;
   reset: () => void;
 }
+
 
 
 /** Prefers the render that is faithful first, then the most complete. */
@@ -79,6 +90,8 @@ export function useSpaceVisualisation(options: {
   const [error, setError] = React.useState<string | null>(null);
   const [attempt, setAttempt] = React.useState(0);
   const [elapsedMs, setElapsedMs] = React.useState(0);
+  const [diagnostics, setDiagnostics] = React.useState<RenderDiagnostics | null>(null);
+
   const run = React.useRef(0);
   const abort = React.useRef<AbortController | null>(null);
   const timer = React.useRef<ReturnType<typeof setInterval> | null>(null);
@@ -116,6 +129,8 @@ export function useSpaceVisualisation(options: {
     setError(null);
     setImageUrl(null);
     setCoverage(null);
+    setDiagnostics(null);
+
     setAttempt(1);
 
     // Elapsed time is surfaced so the wait is honest rather than a spinner
@@ -155,7 +170,11 @@ export function useSpaceVisualisation(options: {
         instruction: buildVisualisationInstruction(result, objects, manifest ?? undefined),
         manifest: renderItems,
         roomFeatures: manifest.roomFeatures,
+        // Diagnostics only. Retries resend the SAME plan — never a new one.
+        planHash: manifest.planHash,
+        inventoryHash: manifest.inventoryId,
       };
+
 
       let response = await render(payload);
       if (run.current !== token) return;
@@ -189,6 +208,15 @@ export function useSpaceVisualisation(options: {
       const finalCoverage = response.coverage;
       setStage("checking");
       setCoverage(finalCoverage);
+      setDiagnostics({
+        provider: response.provider,
+        model: response.model,
+        diagnosticId: response.diagnosticId,
+        planHash: manifest.planHash,
+        renderMs: response.renderMs,
+      });
+
+
 
       // Only an image proven to contain belongings the user does not own is
       // withheld. A physically wrong but attractive image is worse than none.
@@ -218,6 +246,8 @@ export function useSpaceVisualisation(options: {
     setStatus("idle");
     setImageUrl(null);
     setCoverage(null);
+    setDiagnostics(null);
+
     setError(null);
     setAttempt(0);
     setElapsedMs(0);
@@ -236,6 +266,8 @@ export function useSpaceVisualisation(options: {
     imageUrl,
     coverage,
     error,
+    diagnostics,
+
     generate,
     reset,
   };

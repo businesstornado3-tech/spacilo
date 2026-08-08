@@ -54,6 +54,9 @@ export interface VisualisationRequest {
   emphasise?: string[];
   /** Distinguishes a corrective re-render from the cached first attempt. */
   nonce?: number;
+  /** Diagnostics only. A retry sends the SAME hash — the plan never changes. */
+  planHash?: string;
+  inventoryHash?: string;
 }
 
 /** How the server's own verification pass judged the returned image. */
@@ -65,7 +68,12 @@ export interface VisualisationResponse {
   verification: VerificationVerdict;
   /** Correlates this render with the server log line for support. */
   diagnosticId: string | null;
+  /** Which service actually produced the image. */
+  provider: string | null;
+  model: string | null;
+  renderMs: number | null;
 }
+
 
 
 /**
@@ -223,6 +231,9 @@ export async function requestVisualisation(
         coverage?: CoverageReport;
         verification?: VerificationVerdict;
         diagnosticId?: unknown;
+        provider?: unknown;
+        model?: unknown;
+        renderMs?: unknown;
       }
     | null;
 
@@ -249,7 +260,11 @@ export async function requestVisualisation(
             ? "verified"
             : "incomplete"),
     diagnosticId: typeof payload.diagnosticId === "string" ? payload.diagnosticId : null,
+    provider: typeof payload.provider === "string" ? payload.provider : null,
+    model: typeof payload.model === "string" ? payload.model : null,
+    renderMs: typeof payload.renderMs === "number" ? payload.renderMs : null,
   };
+
   sessionCache.set(signature, result);
   return result;
 }

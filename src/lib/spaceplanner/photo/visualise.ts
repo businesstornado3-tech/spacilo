@@ -54,6 +54,9 @@ export interface VisualisationRequest {
   emphasise?: string[];
   /** Distinguishes a corrective re-render from the cached first attempt. */
   nonce?: number;
+  /** Diagnostics only. A retry sends the SAME hash — the plan never changes. */
+  planHash?: string;
+  inventoryHash?: string;
 }
 
 /** How the server's own verification pass judged the returned image. */
@@ -65,7 +68,12 @@ export interface VisualisationResponse {
   verification: VerificationVerdict;
   /** Correlates this render with the server log line for support. */
   diagnosticId: string | null;
+  /** Which service actually produced the image. */
+  provider: string | null;
+  model: string | null;
+  renderMs: number | null;
 }
+
 
 
 /**

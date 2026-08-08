@@ -50,7 +50,7 @@ export function HeroTwinTeaser({ className }: { className?: string }) {
   const lines = React.useMemo(() => toLines(TEASER_LINES), []);
   const space = SPACE_BY_ID.get("garage")!;
 
-  const { plan, beat, progress } = useTwinExperience({ lines, space, paused: !inView });
+  const { plan, state, beat, progress } = useTwinExperience({ lines, space, paused: !inView });
   const done = beat.kind === "final";
   const gain = floorGainPercent(plan);
 
@@ -65,13 +65,13 @@ export function HeroTwinTeaser({ className }: { className?: string }) {
       <div className="relative aspect-[4/3] w-full sm:aspect-[16/10]">
         {/* Presentation only — the hero is not an interactive surface. */}
         <div className="pointer-events-none absolute inset-0">
-          <TwinViewer bare scene={useSceneOf()} mode="isometric" />
+          <TwinViewer bare scene={state.scene} mode="isometric" />
         </div>
 
         <div className="pointer-events-none absolute inset-x-0 top-0 p-3 sm:p-4">
           <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-border/70 bg-background/85 px-3 py-1.5 backdrop-blur-sm">
             <Sparkles className="size-3.5 shrink-0 text-signal" aria-hidden="true" />
-            <p className="truncate type-label text-foreground">{STATUS[beat.kind] ?? STATUS.load}</p>
+            <p className="truncate type-label text-foreground">{STATUS[beat.kind] ?? STATUS['load']}</p>
           </div>
         </div>
 
@@ -104,9 +104,4 @@ export function HeroTwinTeaser({ className }: { className?: string }) {
       </p>
     </div>
   );
-}
-
-/** Kept separate so the viewer always renders the live engine scene. */
-function useSceneOf() {
-  throw new Error("placeholder");
 }

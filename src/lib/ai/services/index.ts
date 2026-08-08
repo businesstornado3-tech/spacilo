@@ -179,6 +179,162 @@ export const assistantAi = {
   },
 };
 
+/* --------------------------------------------------- suitability + rank */
+
+export const suitabilityAi = {
+  assess(input: SuitabilityInput, options: Options = {}): Promise<AiResponse<SuitabilityOutput>> {
+    return executeAi<SuitabilityInput, SuitabilityOutput>({
+      capability: "suitability",
+      promptId: "suitability.assess",
+      input,
+      ...options,
+    });
+  },
+};
+
+export const rankingAi = {
+  rankListings(input: RankingInput, options: Options = {}): Promise<AiResponse<RankingOutput>> {
+    return executeAi<RankingInput, RankingOutput>({
+      capability: "ranking",
+      promptId: "ranking.listings",
+      input,
+      ...options,
+    });
+  },
+};
+
+/* --------------------------------------------------------------- host AI */
+
+export const hostAi = {
+  priceGuidance(input: HostPricingInput, options: Options = {}): Promise<AiResponse<HostPricingOutput>> {
+    return executeAi<HostPricingInput, HostPricingOutput>({
+      capability: "host-pricing",
+      promptId: "pricing.host.guidance",
+      input,
+      ...options,
+    });
+  },
+  reviewListing(input: ListingQualityInput, options: Options = {}): Promise<AiResponse<ListingQualityOutput>> {
+    return executeAi<ListingQualityInput, ListingQualityOutput>({
+      capability: "listing-quality",
+      promptId: "listing.quality.review",
+      input,
+      ...options,
+    });
+  },
+  writeDescription(input: DescriptionInput, options: Options = {}): Promise<AiResponse<DescriptionOutput>> {
+    return executeAi<DescriptionInput, DescriptionOutput>({
+      capability: "description",
+      promptId: "listing.description.write",
+      input,
+      ...options,
+    });
+  },
+  insights(input: HostInsightsInput, options: Options = {}): Promise<AiResponse<HostInsightsOutput>> {
+    return executeAi<HostInsightsInput, HostInsightsOutput>({
+      capability: "host-insights",
+      promptId: "host.insights.build",
+      input,
+      ...options,
+    });
+  },
+};
+
+/* ---------------------------------------------------------- discovery AI */
+
+export const discoveryAi = {
+  /** Turns a plain-English query into marketplace filters. */
+  parseSearch(input: NlSearchInput, options: Options = {}): Promise<AiResponse<NlSearchOutput>> {
+    const { text } = sanitiseText(input.query);
+    return executeAi<NlSearchInput, NlSearchOutput>({
+      capability: "nl-search",
+      promptId: "search.nl.parse",
+      input: { ...input, query: text },
+      ...options,
+    });
+  },
+  seasonal(input: SeasonalInput = {}, options: Options = {}): Promise<AiResponse<SeasonalOutput>> {
+    return executeAi<SeasonalInput, SeasonalOutput>({
+      capability: "seasonal",
+      promptId: "seasonal.context",
+      input,
+      ...options,
+    });
+  },
+  trustSummary(input: TrustSummaryInput, options: Options = {}): Promise<AiResponse<TrustSummaryOutput>> {
+    return executeAi<TrustSummaryInput, TrustSummaryOutput>({
+      capability: "trust-summary",
+      promptId: "trust.summary.build",
+      input,
+      ...options,
+    });
+  },
+  helpSearch(input: HelpSearchInput, options: Options = {}): Promise<AiResponse<HelpSearchOutput>> {
+    const { text } = sanitiseText(input.question);
+    return executeAi<HelpSearchInput, HelpSearchOutput>({
+      capability: "help-search",
+      promptId: "help.search.match",
+      input: { ...input, question: text },
+      ...options,
+    });
+  },
+};
+
+/* ----------------------------------------------------------- guidance AI */
+
+export const guidanceAi = {
+  bookingAdvice(input: BookingAdviceInput, options: Options = {}): Promise<AiResponse<BookingAdvice>> {
+    return executeAi<BookingAdviceInput, BookingAdvice>({
+      capability: "booking-assistant",
+      promptId: "booking.assistant.advice",
+      input,
+      ...options,
+    });
+  },
+  reviewInventory(
+    input: InventoryAssistantInput,
+    options: Options = {},
+  ): Promise<AiResponse<InventoryAssistance>> {
+    return executeAi<InventoryAssistantInput, InventoryAssistance>({
+      capability: "inventory-assistant",
+      promptId: "inventory.assistant.review",
+      input,
+      ...options,
+    });
+  },
+  /** Draft replies. Nothing sends without the person approving it. */
+  suggestReplies(input: MessageAssistInput, options: Options = {}): Promise<AiResponse<MessageAssistOutput>> {
+    return executeAi<MessageAssistInput, MessageAssistOutput>({
+      capability: "message-assist",
+      promptId: "message.assist.suggest",
+      input,
+      ...options,
+    });
+  },
+  notifications(input: NotificationDigestInput, options: Options = {}): Promise<AiResponse<NotificationDigest>> {
+    return executeAi<NotificationDigestInput, NotificationDigest>({
+      capability: "notifications",
+      promptId: "notifications.rank",
+      input,
+      ...options,
+    });
+  },
+};
+
+/* -------------------------------------------------------------- fraud AI */
+
+/** Internal, staff-only. Observations for review — never a verdict, never shown to customers. */
+export const fraudAi = {
+  scoreSignals(input: FraudInput, options: Options = {}): Promise<AiResponse<FraudOutput>> {
+    return executeAi<FraudInput, FraudOutput>({
+      capability: "fraud",
+      promptId: "fraud.signals.score",
+      input,
+      ...options,
+    });
+  },
+};
+
 export const aiServices = {
   vision: visionAi,
   inventory: inventoryAi,
@@ -187,4 +343,11 @@ export const aiServices = {
   pricing: pricingAi,
   search: searchAi,
   assistant: assistantAi,
+  suitability: suitabilityAi,
+  ranking: rankingAi,
+  host: hostAi,
+  discovery: discoveryAi,
+  guidance: guidanceAi,
+  fraud: fraudAi,
 };
+

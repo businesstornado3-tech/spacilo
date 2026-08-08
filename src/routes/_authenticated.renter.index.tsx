@@ -12,6 +12,7 @@ import { ReviewPrompts } from "@/components/reviews/ReviewPrompts";
 import { useAuth } from "@/hooks/useAuth";
 import { useActiveInventory, useInventoryItems, useInventorySummary } from "@/hooks/useInventory";
 import { formatVolume } from "@/lib/inventory-model";
+import { SpacePlannerCard } from "@/components/spaceplanner/photo/SpacePlannerCard";
 import { RenterSpaceFitCard } from "@/components/spacefit/RenterSpaceFitCard";
 import { renterSpaceFitState } from "@/lib/spacefit-hub";
 
@@ -64,8 +65,9 @@ function RenterHomePage() {
       <ActionsNeeded audience="renter" />
       <ReviewPrompts audience="renter" />
 
-      <div className="mb-6">
+      <div className="mb-6 grid gap-4">
         <RenterSpaceFitCard state={spaceFit} />
+        <SpacePlannerCard mode="renter" />
       </div>
 
       <ul className="grid gap-4 sm:grid-cols-2">

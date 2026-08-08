@@ -15,6 +15,7 @@ import { pendingForHost } from "@/lib/storage-requests";
 import { formatM3, remainingVolume } from "@/lib/spaces";
 import { useMySpaces } from "@/hooks/useMySpaces";
 import { HostSpaceFitCard } from "@/components/host/spacefit/HostSpaceFitCard";
+import { SpacePlannerCard } from "@/components/spaceplanner/photo/SpacePlannerCard";
 import { hostSpaceFitState } from "@/lib/spacefit-hub";
 
 export const Route = createFileRoute("/_authenticated/host/")({
@@ -74,8 +75,9 @@ function HostDashboardPage() {
       <ActionsNeeded audience="host" />
       <ReviewPrompts audience="host" />
 
-      <div className="mb-6">
+      <div className="mb-6 grid gap-4">
         <HostSpaceFitCard state={spaceFit} />
+        <SpacePlannerCard mode="host" />
       </div>
       {pendingCount > 0 ? (
         <div className="mb-6 rounded-2xl border border-border bg-accent-soft p-5 shadow-card">

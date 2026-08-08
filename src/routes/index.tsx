@@ -5,6 +5,7 @@ import { canonicalUrl, publicRouteMeta } from "@/lib/seo/meta";
 import { MarketingLayout } from "@/components/layout/MarketingLayout";
 import { HeroSection } from "@/components/spaceplanner/HeroSection";
 import { SpaceFitEntry } from "@/components/home/SpaceFitEntry";
+import { SpacePlannerSection } from "@/components/home/SpacePlannerSection";
 import { MarketplaceEntry } from "@/components/home/MarketplaceEntry";
 import { SpacePlannerDemo } from "@/components/spaceplanner/SpacePlannerDemo";
 import { NearbySpaces } from "@/components/home/NearbySpaces";
@@ -55,6 +56,7 @@ function HomePage() {
     <MarketingLayout>
       <HeroSection />
       <SpaceFitEntry />
+      <SpacePlannerSection />
       <MarketplaceEntry />
       <SpacePlannerDemo />
       <NearbySpaces />

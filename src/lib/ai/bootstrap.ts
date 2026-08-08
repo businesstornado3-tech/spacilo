@@ -10,12 +10,14 @@ import { installGuidanceProviders } from "./providers/guidance";
 import { installHostProviders } from "./providers/host";
 import { installLocalAiProviders } from "./providers/local";
 import { installSuitabilityProviders } from "./providers/suitability";
+import { installVisionProProviders } from "./providers/vision-pro";
 
 let installed = false;
 
 export function installSpaciloAi(): void {
   if (installed) return;
   installLocalAiProviders();
+  installVisionProProviders();
   installSuitabilityProviders();
   installHostProviders();
   installDiscoveryProviders();

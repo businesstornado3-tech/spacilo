@@ -9,10 +9,11 @@
  * labelled as fit analysis, never as an AI visualisation.
  */
 import * as React from "react";
-import { AlertTriangle, MoveHorizontal, RefreshCw } from "lucide-react";
+import { AlertTriangle, Maximize2, MoveHorizontal, RefreshCw } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ImageLightbox } from "@/components/common/ImageLightbox";
 import { projectPlacements, toPoints, DEFAULT_FLOOR_QUAD, type FloorQuad } from "@/lib/spaceplanner/photo";
 import type { CoverageReport } from "@/lib/spaceplanner/photo/manifest";
 import type { PackResult, StorageSpace } from "@/lib/spaceplanner";
@@ -95,6 +96,7 @@ export function PhotoArrangement({
   const [showArranged, setShowArranged] = React.useState(true);
   const [position, setPosition] = React.useState(100);
   const [showOverlay, setShowOverlay] = React.useState(false);
+  const [zoomed, setZoomed] = React.useState(false);
 
   React.useEffect(() => {
     if (hasVisual) {
@@ -152,6 +154,15 @@ export function PhotoArrangement({
         <span className="absolute left-3 top-3 rounded-full bg-card/90 px-2.5 py-1 type-badge">
           {arranged ? "AI arranged" : "Original"}
         </span>
+
+        <button
+          type="button"
+          onClick={() => setZoomed(true)}
+          aria-label="Maximise and zoom this view"
+          className="absolute right-3 top-3 grid size-10 place-items-center rounded-full bg-card/90 text-foreground shadow-card transition-colors hover:bg-card"
+        >
+          <Maximize2 className="size-4" aria-hidden="true" />
+        </button>
 
         {arranged && position > 2 && position < 98 ? (
           <span
@@ -283,6 +294,13 @@ export function PhotoArrangement({
             ? `AI fit analysis — estimated positions, not a photo-realistic visualisation. ${description}`
             : description}
       </figcaption>
+      <ImageLightbox
+        open={zoomed}
+        onClose={() => setZoomed(false)}
+        src={arranged && arrangedUrl ? arrangedUrl : photoUrl}
+        alt={arranged ? description : photoAlt}
+        caption={arranged ? "AI arranged" : "Your original photo"}
+      />
     </figure>
   );
 }

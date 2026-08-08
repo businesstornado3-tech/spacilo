@@ -91,7 +91,8 @@ const DEFAULT_CONFIG: AiConfig = {
   capabilities: {
     vision: {
       kind: "vision",
-      providers: ["spacilo-vision", "spacilo-vision-mock"],
+      // Phase 6C production platform first; the legacy engine stays as fallback.
+      providers: ["spacilo-vision-pro", "spacilo-vision", "spacilo-vision-mock"],
       timeoutMs: 45_000,
       retries: 1,
       cacheTtlMs: 30 * MINUTE,
@@ -100,7 +101,7 @@ const DEFAULT_CONFIG: AiConfig = {
     },
     "space-analysis": {
       kind: "image-analysis",
-      providers: ["spacilo-space", "spacilo-space-mock"],
+      providers: ["spacilo-scene-pro", "spacilo-space", "spacilo-space-mock"],
       timeoutMs: 45_000,
       retries: 1,
       cacheTtlMs: 30 * MINUTE,

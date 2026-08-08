@@ -24,6 +24,7 @@ import { describeSelection, isFullPhoto, type PhotoSelection } from "./selection
 import type { AnalyseOptions, VisionProvider } from "./provider";
 import type {
   DetectedObject,
+  RoomFeature,
   SpaceScanResult,
   SpaceSuitability,
   VisionPhoto,
@@ -159,6 +160,31 @@ function positive(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
+function roomFeatures(value: unknown): RoomFeature[] {
+  if (!Array.isArray(value)) return [];
+  const kinds = new Set([
+    "television", "radiator", "door", "window", "shelving", "built_in_furniture",
+    "electrical_fixture", "other",
+  ]);
+  return value.flatMap((entry, index) => {
+    if (!entry || typeof entry !== "object") return [];
+    const record = entry as Record<string, unknown>;
+    const label = typeof record["label"] === "string" ? record["label"].trim() : "";
+    if (!label) return [];
+    const rawKind = typeof record["kind"] === "string" ? record["kind"] : "other";
+    return [{
+      id: `FEATURE-${String(index + 1).padStart(3, "0")}`,
+      label: label.slice(0, 80),
+      kind: (kinds.has(rawKind) ? rawKind : "other") as RoomFeature["kind"],
+      role: "fixed" as const,
+      mobility: "fixed" as const,
+      position: typeof record["position"] === "string" ? record["position"].slice(0, 160) : "source-derived",
+      confidence: Math.max(0.1, Math.min(0.99, positive(record["confidence"], 0.6))),
+      verified: false,
+    }];
+  });
+}
+
 export const aiVisionProvider: VisionProvider = {
   id: "spacilo-vision-ai",
   model: "gateway/two-stage",
@@ -225,6 +251,7 @@ export const aiVisionProvider: VisionProvider = {
             (entry): entry is string => typeof entry === "string",
           )
         : [],
+      features: roomFeatures(space["features"]),
       confidence: Math.max(0.2, Math.min(0.95, positive(space["confidence"], 0.6))),
       provider: "spacilo-vision-ai",
       analysedAt: Date.now(),

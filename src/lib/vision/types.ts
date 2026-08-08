@@ -83,6 +83,25 @@ export interface VisionResult {
 
 export type SpaceSuitability = "excellent" | "good" | "limited";
 
+export interface RoomFeature {
+  id: string;
+  label: string;
+  kind:
+    | "television"
+    | "radiator"
+    | "door"
+    | "window"
+    | "shelving"
+    | "built_in_furniture"
+    | "electrical_fixture"
+    | "other";
+  role: "fixed" | "room-feature";
+  mobility: "fixed";
+  position: string;
+  confidence: number;
+  verified: boolean;
+}
+
 /** Host-side scan. A room is not an item list, so it has its own shape. */
 export interface SpaceScanResult {
   /** Estimated usable floor area in m² (after access and obstacles). */
@@ -94,6 +113,8 @@ export interface SpaceScanResult {
   usableVolumeM3: number;
   suitability: SpaceSuitability;
   observations: string[];
+  /** Source-scene features that are not storage items and must be preserved. */
+  features?: RoomFeature[];
   confidence: number;
   provider: string;
   analysedAt: number;

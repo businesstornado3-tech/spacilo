@@ -10,7 +10,7 @@
  */
 import { hashString } from "@/lib/vision/hash";
 import { objectVolume } from "@/lib/vision/inventory";
-import type { DetectedObject } from "@/lib/vision/types";
+import type { DetectedObject, RoomFeature } from "@/lib/vision/types";
 import type { PhotoPlanResult } from "./plan";
 
 /** A confirmed, immutable-by-convention inventory. */
@@ -19,10 +19,21 @@ export interface CanonicalInventory {
   /** Stable across identical inventories; changes whenever the user edits. */
   signature: string;
   objects: DetectedObject[];
+  /** Stable one-row-per-physical-unit contract used by render verification. */
+  items: readonly InventoryContractItem[];
   /** Total units, counting quantities. */
   itemCount: number;
   distinctItems: number;
   confirmedAt: number;
+}
+
+export interface InventoryContractItem {
+  itemId: string;
+  sourceObjectId: string;
+  label: string;
+  category: string;
+  dimensions: Readonly<{ widthCm: number; depthCm: number; heightCm: number }>;
+  source: "ai" | "manual";
 }
 
 export function inventorySignature(objects: DetectedObject[]): string {
@@ -37,16 +48,29 @@ export function inventorySignature(objects: DetectedObject[]): string {
 
 /** Locks the reviewed inventory. Nothing downstream may add or drop items. */
 export function lockInventory(objects: DetectedObject[], now = Date.now()): CanonicalInventory {
-  const cleaned = objects.filter((object) => object.quantity > 0 && object.label.trim().length > 0);
+  const cleaned = objects
+    .filter((object) => object.quantity > 0 && object.label.trim().length > 0)
+    .map((object) => Object.freeze({ ...object, photoIds: [...object.photoIds] }));
   const signature = inventorySignature(cleaned);
-  return {
+  const items = cleaned.flatMap((object) =>
+    Array.from({ length: object.quantity }, (_, index) => Object.freeze({
+      itemId: `${object.id}_${String(index + 1).padStart(2, "0")}`,
+      sourceObjectId: object.id,
+      label: object.label,
+      category: object.category,
+      dimensions: Object.freeze({ widthCm: object.width, depthCm: object.depth, heightCm: object.height }),
+      source: object.source,
+    })),
+  );
+  return Object.freeze({
     id: signature,
     signature,
     objects: cleaned,
+    items: Object.freeze(items),
     itemCount: cleaned.reduce((sum, object) => sum + object.quantity, 0),
     distinctItems: cleaned.length,
     confirmedAt: now,
-  };
+  });
 }
 
 export type PlacementState =
@@ -93,6 +117,7 @@ export interface ManifestEntry {
 export interface PlacementManifest {
   inventoryId: string;
   entries: ManifestEntry[];
+  roomFeatures: readonly RoomFeature[];
   /** Total units the visualisation is expected to represent. */
   expectedUnits: number;
   /** Usable floor the plan was allowed to use, in metres. */
@@ -125,6 +150,7 @@ function describePlacement(x: number, y: number, result: PhotoPlanResult): strin
 export function buildPlacementManifest(
   inventory: CanonicalInventory,
   result: PhotoPlanResult,
+  roomFeatures: readonly RoomFeature[] = [],
 ): PlacementManifest {
   const arrangement = result.arrangement;
   const unplaced = new Set(arrangement.unplaced.map((entry) => entry.itemId));
@@ -183,6 +209,7 @@ export function buildPlacementManifest(
   return {
     inventoryId: inventory.id,
     entries,
+    roomFeatures: Object.freeze(roomFeatures.filter((feature) => feature.verified).map((feature) => Object.freeze({ ...feature }))),
     expectedUnits: entries.reduce((sum, entry) => sum + entry.quantity, 0),
     spaceWidthM: r2(result.space.width),
     spaceDepthM: r2(result.space.depth),
@@ -240,6 +267,11 @@ export function formatManifestForModel(manifest: PlacementManifest): string {
       ? `KEEP CLEAR: the access corridor from x=${manifest.walkway.xM}m to x=${r2(manifest.walkway.xM + manifest.walkway.widthM)}m, y=${manifest.walkway.yM}m to y=${r2(manifest.walkway.yM + manifest.walkway.depthM)}m. Nothing may be drawn inside it.`
       : "",
     "DO NOT INVENT STORAGE FURNITURE: no shelves, racks, cupboards, cabinets, hooks, pallets or storage boxes may be added. Only the objects listed below, in the room as photographed.",
+    manifest.roomFeatures.length
+      ? `FIXED ROOM FEATURES — preserve these exactly where they appear in the source photograph; they are NOT belongings and must never be moved, hidden, removed or counted as inventory:\n${manifest.roomFeatures
+          .map((feature) => `• ${feature.id}: ${feature.label} (${feature.kind}) at ${feature.position}`)
+          .join("\n")}`
+      : "PRESERVE ALL SOURCE ROOM FEATURES: do not remove, move, replace or cover any television, radiator, door, window, fitted shelving, built-in furniture or electrical fixture visible in the source photograph.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -284,6 +316,21 @@ export function requiredLabels(manifest: PlacementManifest): string[] {
   return manifest.entries
     .filter((entry) => entry.state !== "cannot be safely placed")
     .map((entry) => entry.label);
+}
+
+/** Exact one-entry-per-unit render contract. IDs remain distinct for duplicate labels. */
+export function requiredRenderItems(
+  manifest: PlacementManifest,
+): { id: string; label: string; quantity: 1 }[] {
+  return manifest.entries
+    .filter((entry) => entry.state !== "cannot be safely placed")
+    .flatMap((entry) =>
+      Array.from({ length: entry.quantity }, (_, index) => ({
+        id: `${entry.id}_${String(index + 1).padStart(2, "0")}`,
+        label: entry.label,
+        quantity: 1 as const,
+      })),
+    );
 }
 
 export interface CoverageReport {

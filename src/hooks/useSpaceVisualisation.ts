@@ -96,7 +96,17 @@ export function useSpaceVisualisation(options: {
   }, []);
 
   const generate = React.useCallback(async () => {
-    if (!result || !spacePhoto) return;
+    if (!result || !spacePhoto || !manifest) {
+      setError("verified_manifest_required");
+      setStatus("failed");
+      return;
+    }
+    const renderItems = manifestPayload(manifest);
+    if (renderItems.length !== manifest.expectedUnits) {
+      setError("inventory_not_fully_placeable");
+      setStatus("failed");
+      return;
+    }
     const token = ++run.current;
     abort.current?.abort();
     setStatus("working");
@@ -141,7 +151,8 @@ export function useSpaceVisualisation(options: {
         spaceImage: space,
         itemImages: items,
         instruction: buildVisualisationInstruction(result, objects, manifest ?? undefined),
-        ...(manifest ? { manifest: manifestPayload(manifest) } : {}),
+        manifest: renderItems,
+        roomFeatures: manifest.roomFeatures,
       };
 
       let response = await render(payload);
@@ -154,7 +165,12 @@ export function useSpaceVisualisation(options: {
       for (let pass = 1; pass < MAX_RENDER_ATTEMPTS; pass += 1) {
         setStage("checking");
         const coverageNow = response.coverage;
-        if (!coverageNow) break;
+        if (!coverageNow) {
+          setImageUrl(null);
+          setCoverage(null);
+          setStatus("rejected");
+          return;
+        }
         const missingItems = coverageNow.missing.length > 0;
         const invented = (coverageNow.unexpected?.length ?? 0) > 0;
         if (!missingItems && !invented) break;
@@ -172,8 +188,12 @@ export function useSpaceVisualisation(options: {
       }
 
       const finalCoverage = response.coverage;
-      const hallucinated = (finalCoverage?.unexpected?.length ?? 0) > 0;
-      if (hallucinated) {
+      const rejected =
+        !finalCoverage ||
+        !finalCoverage.complete ||
+        !finalCoverage.faithful ||
+        (finalCoverage.unexpected?.length ?? 0) > 0;
+      if (rejected) {
         // A physically wrong but attractive image is worse than no image.
         setStage("checking");
         setImageUrl(null);
@@ -185,7 +205,7 @@ export function useSpaceVisualisation(options: {
       setStage("checking");
       setImageUrl(response.image);
       setCoverage(response.coverage);
-      setStatus(response.coverage && !response.coverage.complete ? "incomplete" : "ready");
+      setStatus("ready");
     } catch (cause) {
       if (run.current !== token) return;
       const aborted = cause instanceof DOMException && cause.name === "AbortError";

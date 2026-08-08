@@ -51,16 +51,40 @@ export interface PhotoPlanResult {
 
 export const LOW_CONFIDENCE = 0.7;
 
-/** Detected belongings → planner inventory lines. */
+/**
+ * Confirmed belongings → planner inventory lines.
+ *
+ * The locked inventory is canonical: every confirmed item becomes its own
+ * line, keeping its own id, its own name and its own estimated dimensions.
+ * Nothing is collapsed into "medium boxes" and nothing is swapped for a
+ * catalogue lookalike, so the plan, the manifest and the visualisation all
+ * describe the same physical objects the user photographed.
+ */
 export function linesFromObjects(objects: DetectedObject[]): InventoryLine[] {
-  const quantities = toPlannerQuantities(objects);
-  return Object.entries(quantities)
-    .map(([id, quantity]) => {
-      const item = CATALOGUE_BY_ID.get(id);
-      return item ? { item, quantity } : null;
-    })
-    .filter((line): line is InventoryLine => line !== null && line.quantity > 0);
+  return objects
+    .filter((object) => object.quantity > 0 && object.label.trim().length > 0)
+    .map((object) => {
+      const catalogue = object.catalogueId ? CATALOGUE_BY_ID.get(object.catalogueId) : undefined;
+      const item: CatalogueItem = {
+        id: object.id,
+        name: object.label,
+        category: object.category,
+        icon: catalogue?.icon ?? "box",
+        width: Math.max(3, object.width),
+        depth: Math.max(3, object.depth),
+        height: Math.max(3, object.height),
+        fragile: object.fragile,
+        stackable: object.stackable,
+        maxStack: object.stackable ? (catalogue?.maxStack ?? 3) : 1,
+        weight: object.weight,
+        standsUpright: catalogue?.standsUpright ?? false,
+        frequentlyUsed: catalogue?.frequentlyUsed ?? false,
+        popular: false,
+      };
+      return { item, quantity: object.quantity };
+    });
 }
+
 
 /** A scanned space → the planner's metric space. */
 export function spaceFromScan(scan: SpaceScanResult, name = "Your space"): SpaceSource {

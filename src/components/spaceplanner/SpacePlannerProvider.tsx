@@ -9,6 +9,8 @@
  */
 import * as React from "react";
 
+import { track } from "@/lib/analytics/tracker";
+
 import {
   CATALOGUE_BY_ID,
   SPACE_BY_ID,
@@ -152,7 +154,7 @@ export function SpacePlannerProvider({
     setPhase("plan");
     setHasCompletedRun(true);
     track("planner_completed", {
-      props: { items: lines.length, fit: score ? Math.round(score.overall) : 0 },
+      props: { items: lines.length, fit: score ? Math.round(score.value) : 0 },
     });
     if (plan && score) onRunComplete?.(plan, score);
   }, [plan, score, onRunComplete, lines.length]);

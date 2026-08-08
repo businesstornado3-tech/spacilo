@@ -491,20 +491,29 @@ export function bestArrangement(
   items: PlanningItem[],
   space: PlanningSpace,
 ): PhysicalArrangement {
-  const spaces: PlanningSpace[] = [space];
+  const clearances = [space.walkwayClearanceM];
   const tighter = Math.max(ACCESS_DEFAULTS.minWalkwayM, space.walkwayClearanceM - 0.3);
-  if (tighter < space.walkwayClearanceM - 0.001) {
-    spaces.push({ ...space, walkwayClearanceM: tighter });
-  }
+  if (tighter < space.walkwayClearanceM - 0.001) clearances.push(tighter);
+
+  // Corridor variants matter more than the packing heuristic: a corridor down
+  // one side leaves a single contiguous block of belongings, which is exactly
+  // what the scattered results were missing.
+  const sides: CorridorSide[] = space.corridorSide
+    ? [space.corridorSide]
+    : ["left", "right", "centre"];
 
   let best: PhysicalArrangement | null = null;
 
-  for (const candidateSpace of spaces) {
-    for (const strategy of PACK_STRATEGIES) {
-      const plan = arrangeItems(items, candidateSpace, { strategy });
-      if (!best || betterPlan(plan, best)) best = plan;
-      // A complete, valid plan that clears the quality gate needs no more tries.
-      if (plan.valid && plan.unplaced.length === 0 && plan.quality.passes) return plan;
+  for (const walkwayClearanceM of clearances) {
+    for (const corridorSide of sides) {
+      const candidateSpace: PlanningSpace = { ...space, walkwayClearanceM, corridorSide };
+      for (const strategy of PACK_STRATEGIES) {
+        const plan = arrangeItems(items, candidateSpace, { strategy });
+        if (!best || betterPlan(plan, best)) best = plan;
+        // An excellent plan needs no more searching; a merely passing one is
+        // kept but still compared against the remaining variants.
+        if (plan.valid && plan.unplaced.length === 0 && plan.quality.score >= 90) return plan;
+      }
     }
     // Only widen the search to a tighter corridor when the preferred one failed
     // to place everything.
@@ -513,3 +522,4 @@ export function bestArrangement(
 
   return best ?? arrangeItems(items, space);
 }
+

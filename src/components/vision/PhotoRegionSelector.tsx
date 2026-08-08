@@ -44,7 +44,7 @@ export function PhotoRegionSelector({
   selection,
   onChange,
   title = "Select what you want to store",
-  hint = "Draw round the item, or tap it. Everything outside your selection is ignored.",
+  hint = "Press and drag round the item, or tap it, then confirm. Everything outside your selection is ignored.",
   wholeLabel = "Use the whole photo",
   className,
 }: {

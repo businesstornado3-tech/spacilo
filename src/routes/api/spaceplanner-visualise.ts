@@ -318,7 +318,7 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
       POST: async ({ request }) => {
         const key = process.env["OPENAI_API_KEY"];
         if (!key) {
-          // No silent Gemini fallback: an unconfigured renderer is reported.
+          // No silent fallback to another provider: report the misconfiguration.
           return Response.json(
             { error: "not_configured", provider: PROVIDER, detail: "OPENAI_API_KEY is not set" },
             { status: 503 },

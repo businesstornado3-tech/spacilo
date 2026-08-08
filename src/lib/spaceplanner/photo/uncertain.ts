@@ -14,17 +14,14 @@ export const IDENTITY_CONFIDENCE = 0.55;
 
 const GENERIC_BY_CATEGORY: Record<string, string> = {
   boxes: "Unidentified box",
-  luggage: "Unidentified case or bag",
-  bags: "Unidentified bag",
-  soft: "Unknown soft item",
   furniture: "Unidentified furniture item",
   appliances: "Unidentified appliance",
   electronics: "Unidentified electronic item",
-  sports: "Unidentified sports item",
-  garden: "Unidentified garden item",
-  tools: "Unidentified tool or toolbox",
+  leisure: "Unidentified leisure item",
+  seasonal: "Unknown soft or seasonal item",
   other: "Unidentified object",
 };
+
 
 export function genericLabelFor(category: string): string {
   return GENERIC_BY_CATEGORY[category] ?? GENERIC_BY_CATEGORY["other"]!;

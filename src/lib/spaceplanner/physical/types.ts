@@ -55,6 +55,9 @@ export interface Obstacle extends Rect {
 }
 
 /** The space the planner is allowed to work inside. */
+/** Where the access corridor runs across the usable floor. */
+export type CorridorSide = "centre" | "left" | "right";
+
 export interface PlanningSpace {
   id: string;
   name: string;

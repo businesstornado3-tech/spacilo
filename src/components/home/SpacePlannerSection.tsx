@@ -1,15 +1,21 @@
 /**
  * Homepage — Spacilo AI SpacePlanner™.
  *
- * The studio itself is code-split and only loaded once someone starts it, so
- * the homepage stays fast while the deeper AI capability sits one tap away.
+ * The section has to earn the tap, so it shows the product doing its job:
+ * two photographs in, one real arrangement out. The studio itself is
+ * code-split and only loaded once someone starts it, so the homepage stays
+ * fast while the deeper AI capability sits one tap away.
  */
 import * as React from "react";
-import { Camera, Sparkles } from "lucide-react";
+import { ArrowRight, Camera, Maximize2, Ruler, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/common/Reveal";
+import { ImageLightbox } from "@/components/common/ImageLightbox";
 import { track } from "@/lib/analytics/tracker";
+import stuffPhoto from "@/assets/spaceplanner/stuff.jpg";
+import spacePhoto from "@/assets/spaceplanner/space.jpg";
+import arrangedPhoto from "@/assets/spaceplanner/arranged.jpg";
 
 const SpacePlannerStudio = React.lazy(() =>
   import("@/components/spaceplanner/photo/SpacePlannerStudio").then((module) => ({
@@ -17,57 +23,144 @@ const SpacePlannerStudio = React.lazy(() =>
   })),
 );
 
+const INPUTS = [
+  { src: stuffPhoto, label: "1. Your stuff", alt: "Photograph of suitcases, boxes and bags to store" },
+  { src: spacePhoto, label: "2. The space", alt: "Photograph of an empty single garage" },
+] as const;
+
+const READOUTS = [
+  { label: "Space used", value: "38%" },
+  { label: "Room left", value: "62%" },
+  { label: "Walkway kept", value: "0.9m" },
+] as const;
+
 export function SpacePlannerSection() {
   const [started, setStarted] = React.useState(false);
+  const [zoomed, setZoomed] = React.useState(false);
 
   return (
     <section aria-labelledby="spaceplanner-heading" className="py-10 sm:py-14">
       <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
         <Reveal>
-          <div className="rounded-[2rem] border border-signal-soft bg-card p-5 shadow-card sm:p-8">
-            <p className="type-overline text-muted-foreground">Spacilo AI SpacePlanner™</p>
-            <h2 id="spaceplanner-heading" className="mt-2 text-balance type-h2">
-              Show us your stuff. Show us your space. We&apos;ll show you how it fits.
-            </h2>
-            <p className="mt-2.5 max-w-2xl type-body text-muted-foreground">
-              Take photos of your belongings and the space you&apos;re considering. Spacilo AI
-              analyses both and shows you how your belongings could fit, how much space you may
-              need, and how much room could remain.
-            </p>
+          <div className="overflow-hidden rounded-[2rem] border border-signal-soft bg-card shadow-card">
+            <div className="p-5 sm:p-8">
+              <p className="type-overline text-muted-foreground">Spacilo AI SpacePlanner™</p>
+              <h2 id="spaceplanner-heading" className="mt-2 text-balance type-h2">
+                Show us your stuff. Show us your space. We&apos;ll show you how it fits.
+              </h2>
+              <p className="mt-2.5 max-w-2xl type-body text-muted-foreground">
+                Take photos of your belongings and the space you&apos;re considering. Spacilo AI
+                analyses both and shows you how your belongings could fit, how much space you may
+                need, and how much room could remain.
+              </p>
 
-            {started ? (
-              <div className="mt-6">
-                <React.Suspense
-                  fallback={
-                    <p role="status" className="type-body-sm text-muted-foreground">
-                      Starting SpacePlanner…
-                    </p>
-                  }
-                >
-                  <SpacePlannerStudio />
-                </React.Suspense>
-              </div>
-            ) : (
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Button
-                  size="lg"
-                  onClick={() => {
-                    track("spaceplanner_started", { props: { from: "homepage" } });
-                    setStarted(true);
-                  }}
-                >
-                  <Camera aria-hidden="true" />
-                  Start SpacePlanner
-                </Button>
-                <span className="inline-flex items-center gap-1.5 type-badge text-muted-foreground">
-                  <Sparkles className="size-3.5" aria-hidden="true" />
-                  Estimates only — you review everything
-                </span>
-              </div>
-            )}
+              {started ? (
+                <div className="mt-6">
+                  <React.Suspense
+                    fallback={
+                      <p role="status" className="type-body-sm text-muted-foreground">
+                        Starting SpacePlanner…
+                      </p>
+                    }
+                  >
+                    <SpacePlannerStudio />
+                  </React.Suspense>
+                </div>
+              ) : (
+                <>
+                  {/* The journey, shown rather than described. */}
+                  <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,0.6fr)_auto_minmax(0,1fr)] lg:items-center">
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
+                      {INPUTS.map((input) => (
+                        <figure key={input.label} className="min-w-0">
+                          <img
+                            src={input.src}
+                            alt={input.alt}
+                            loading="lazy"
+                            width={1024}
+                            height={768}
+                            className="aspect-4/3 w-full rounded-xl border border-border object-cover"
+                          />
+                          <figcaption className="mt-1.5 type-badge text-muted-foreground">
+                            {input.label}
+                          </figcaption>
+                        </figure>
+                      ))}
+                    </div>
+
+                    <div
+                      aria-hidden="true"
+                      className="flex items-center justify-center gap-2 text-signal lg:flex-col"
+                    >
+                      <span className="h-px w-8 bg-signal-soft lg:h-8 lg:w-px" />
+                      <Sparkles className="size-4" />
+                      <ArrowRight className="size-4 lg:rotate-90" />
+                    </div>
+
+                    <figure className="min-w-0">
+                      <div className="relative">
+                        <img
+                          src={arrangedPhoto}
+                          alt="The same garage with the belongings arranged along both walls and a clear central walkway"
+                          loading="lazy"
+                          width={1200}
+                          height={869}
+                          className="w-full rounded-xl border border-border object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setZoomed(true)}
+                          className="absolute right-2 top-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-card/90 text-foreground shadow-card transition-opacity hover:opacity-80"
+                        >
+                          <Maximize2 className="size-4" aria-hidden="true" />
+                          <span className="sr-only">Enlarge the arranged space</span>
+                        </button>
+                      </div>
+                      <figcaption className="mt-1.5 type-badge text-signal">
+                        3. Arranged by Spacilo AI — in your actual space
+                      </figcaption>
+                    </figure>
+                  </div>
+
+                  <dl className="mt-5 grid grid-cols-3 gap-3">
+                    {READOUTS.map((readout) => (
+                      <div key={readout.label} className="rounded-xl bg-accent-soft/60 p-3">
+                        <dt className="type-badge text-muted-foreground">{readout.label}</dt>
+                        <dd className="mt-0.5 type-h3 tabular-nums">{readout.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+
+                  <div className="mt-6 flex flex-wrap items-center gap-3">
+                    <Button
+                      size="lg"
+                      onClick={() => {
+                        track("spaceplanner_started", { props: { from: "homepage" } });
+                        setStarted(true);
+                      }}
+                    >
+                      <Camera aria-hidden="true" />
+                      Start SpacePlanner
+                    </Button>
+                    <span className="inline-flex items-center gap-1.5 type-badge text-muted-foreground">
+                      <Ruler className="size-3.5" aria-hidden="true" />
+                      Example plan. Estimates only — you review everything
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </Reveal>
       </div>
+
+      <ImageLightbox
+        open={zoomed}
+        src={arrangedPhoto}
+        alt="The same garage with the belongings arranged along both walls and a clear central walkway"
+        caption="Example plan — belongings against the walls, walkway kept clear"
+        onClose={() => setZoomed(false)}
+      />
     </section>
   );
 }

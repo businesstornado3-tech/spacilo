@@ -120,12 +120,31 @@ export interface PlacementManifest {
   roomFeatures: readonly RoomFeature[];
   /** Total units the visualisation is expected to represent. */
   expectedUnits: number;
+  /** Units the deterministic engine actually placed. */
+  placedUnits: number;
   /** Usable floor the plan was allowed to use, in metres. */
   spaceWidthM: number;
   spaceDepthM: number;
   spaceHeightM: number;
   /** The access corridor no item may stand in, when the plan kept one. */
   walkway: { xM: number; yM: number; widthM: number; depthM: number } | null;
+  /** Which side of the room the access route was kept on. */
+  corridorSide: string;
+  /** The deterministic packing strategy that won. */
+  strategy: string;
+  /** 0–100 arrangement-quality score of the winning plan. */
+  qualityScore: number;
+  /** Whether every hard constraint passed. */
+  valid: boolean;
+  /** Hard-constraint failures, in plain words. Empty on a valid plan. */
+  violations: readonly string[];
+  /** Items the engine refused to place, with the reason. */
+  unplaced: readonly { label: string; reason: string }[];
+  /**
+   * Stable identity of this plan. Same inventory + same room always produces
+   * the same value; a render retry never changes it.
+   */
+  planHash: string;
 }
 
 const r2 = (value: number) => Math.round(value * 100) / 100;

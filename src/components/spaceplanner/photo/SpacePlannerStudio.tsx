@@ -29,6 +29,8 @@ import { useSpaceVisualisation } from "@/hooks/useSpaceVisualisation";
 import { useStableScroll } from "@/hooks/useStableScroll";
 import { InventoryLock } from "@/components/spaceplanner/photo/InventoryLock";
 import { SpacePlannerDiagnostics } from "@/components/spaceplanner/photo/SpacePlannerDiagnostics";
+import { PlannerProgress } from "@/components/spaceplanner/photo/PlannerProgress";
+import { ArrangementPlanDiagram } from "@/components/spaceplanner/photo/ArrangementPlanDiagram";
 import { buildPhotoPlan, spaceFromScan, type SpaceSource } from "@/lib/spaceplanner/photo";
 import { earningsFromPlan } from "@/lib/spaceplanner/photo/earnings";
 import { usableVolume } from "@/lib/spaceplanner/spaces";
@@ -37,8 +39,12 @@ import {
   lockInventory,
   type CanonicalInventory,
 } from "@/lib/spaceplanner/photo/manifest";
+import { generaliseUncertain } from "@/lib/spaceplanner/photo/uncertain";
+import { plannerSteps } from "@/lib/spaceplanner/photo/progress";
+import { verificationStatusOf } from "@/lib/spaceplanner/photo/diagnostics";
 import { track } from "@/lib/analytics/tracker";
 import { clearVisualisationCache } from "@/lib/spaceplanner/photo/visualise";
+
 
 type Step = "stuff" | "review" | "space" | "result";
 

@@ -146,9 +146,11 @@ const DETECT_SYSTEM = [
   "1. Never invent, assume or add an object that is not visible. An empty or unclear photo returns an empty list.",
   "2. Describe objects physically (shape, material, colour, approximate size against nearby references). Do not use catalogue names and do not guess contents.",
   "3. Count only what you can actually see. If several identical things are visible, say how many and how you counted them. If you cannot count them, say so and give the number you can see.",
-  "4. Do not group different objects together, and do not split one object into parts.",
-  "5. Say when something is partly hidden.",
-  "Reply as JSON: {\"observations\":[{\"ref\":\"A\",\"description\":\"...\",\"visibleCount\":1,\"countBasis\":\"...\",\"occluded\":false,\"sizeCue\":\"...\",\"confidence\":0.0}]}",
+  "4. Report WHOLE objects, not their parts. A cot, a sofa, a wardrobe or a pushchair is ONE object. Its rails, cushions, mattress, drawers, doors, wheels and handles are parts of it — put them in partOf, never in their own entry.",
+  "5. Do not group different objects together either. Two different things are two entries.",
+  "6. If the user has marked a region, only objects inside or overlapping that region count. Anything in the surrounding room is background — do not report it.",
+  "7. Say when something is partly hidden.",
+  "Reply as JSON: {\"observations\":[{\"ref\":\"A\",\"description\":\"...\",\"visibleCount\":1,\"countBasis\":\"...\",\"occluded\":false,\"sizeCue\":\"...\",\"partOf\":\"\",\"confidence\":0.0}]}",
 ].join("\n");
 
 const CLASSIFY_SYSTEM = [
@@ -157,14 +159,16 @@ const CLASSIFY_SYSTEM = [
   "Absolute rules:",
   "1. Never introduce an object that no observation mentions. Never drop one either, unless it is the same physical object already listed.",
   "2. The same physical object seen in more than one photograph is ONE item. Merge it and list every photo id it appeared in. Do not add the counts together when it is clearly the same object.",
-  "3. Quantity must be justified by the observations. State the basis in countBasis.",
-  "4. Give each item a plain, specific UK label describing what it actually is (for example 'Fabric storage bag', 'Three-drawer plastic unit'). Never label something you were not told about.",
-  "5. Size is an ESTIMATE in centimetres from the described size cues. Be cautious and realistic.",
-  "6. category must be one of: boxes, furniture, appliances, electronics, leisure, seasonal.",
-  "7. weight must be one of: light, medium, heavy.",
-  "8. confidence is 0-1 and must drop when the observation was uncertain or occluded.",
-  "Reply as JSON: {\"items\":[{\"id\":\"ITEM-001\",\"label\":\"...\",\"category\":\"boxes\",\"quantity\":1,\"countBasis\":\"...\",\"widthCm\":0,\"depthCm\":0,\"heightCm\":0,\"weight\":\"medium\",\"fragile\":false,\"stackable\":false,\"confidence\":0.0,\"photoIds\":[\"...\"],\"evidence\":\"...\"}]}",
+  "3. Report the PRIMARY object, not its components. If observations describe a cot with rails and a mattress, that is one item 'Cot' with components ['rails','mattress'] — never three items. Only list something separately when it can be stored on its own.",
+  "4. Quantity must be justified by the observations. State the basis in countBasis.",
+  "5. Give each item a plain, specific UK label describing what it actually is (for example 'Fabric storage bag', 'Three-drawer plastic unit'). Never label something you were not told about.",
+  "6. Size is an ESTIMATE in centimetres of the WHOLE assembled object, from the described size cues. Be cautious and realistic.",
+  "7. category must be one of: boxes, furniture, appliances, electronics, leisure, seasonal.",
+  "8. weight must be one of: light, medium, heavy.",
+  "9. confidence is 0-1 and must drop when the observation was uncertain or occluded.",
+  "Reply as JSON: {\"items\":[{\"id\":\"ITEM-001\",\"label\":\"...\",\"category\":\"boxes\",\"quantity\":1,\"countBasis\":\"...\",\"widthCm\":0,\"depthCm\":0,\"heightCm\":0,\"weight\":\"medium\",\"fragile\":false,\"stackable\":false,\"confidence\":0.0,\"photoIds\":[\"...\"],\"evidence\":\"...\",\"components\":[\"...\"]}]}",
 ].join("\n");
+
 
 const SPACE_SYSTEM = [
   "You estimate the usable storage geometry of a room from photographs for a UK storage marketplace.",

@@ -120,7 +120,7 @@ export const PACK_STRATEGIES: PackStrategy[] = [
     // boxes end up with boxes and furniture with furniture.
     bands: (bands) => [...bands].sort((a, b) => rectArea(b.rect) - rectArea(a.rect)),
     order: (a, b) => {
-      const byCategory = a.item.category.localeCompare(b.item.category);
+      const byCategory = (a.item.category ?? "").localeCompare(b.item.category ?? "");
       if (byCategory !== 0) return byCategory;
       return byFootprintDesc(a, b);
     },

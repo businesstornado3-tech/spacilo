@@ -73,7 +73,7 @@ export function BookingPanel({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <CoachMark id="booking_dates" />
+      <CoachMark id="booking" />
       <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           {typeof monthlyPricePence === "number" ? (

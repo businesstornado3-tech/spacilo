@@ -70,3 +70,60 @@ export function analyseRequestFit({
       : "This request may exceed the space currently available. Review the arrangement, or message the renter before deciding.",
   };
 }
+
+export interface VolumeFitResult {
+  fitPercent: number;
+  requiredM3: number;
+  availableM3: number;
+  remainingM3: number;
+  utilisationBefore: number;
+  utilisationAfter: number;
+  remainingPercent: number;
+  fits: boolean;
+  recommendation: string;
+}
+
+/**
+ * Fit analysis from stated volumes alone.
+ *
+ * Used where a request snapshot carries the renter's estimated requirement and
+ * the space's available capacity, but no photographs to arrange.
+ */
+export function analyseVolumeFit({
+  requiredM3,
+  availableM3,
+  totalCapacityM3,
+}: {
+  requiredM3: number;
+  availableM3: number;
+  totalCapacityM3?: number;
+}): VolumeFitResult {
+  const total = Math.max(availableM3, totalCapacityM3 ?? availableM3);
+  const required = Math.max(0, requiredM3);
+  const available = Math.max(0, availableM3);
+  const fits = required <= available;
+  const remaining = Math.round(Math.max(0, available - required) * 10) / 10;
+
+  const utilisationBefore = total > 0 ? Math.round(((total - available) / total) * 100) : 0;
+  const utilisationAfter =
+    total > 0 ? Math.min(100, Math.round(((total - available + required) / total) * 100)) : 100;
+
+  const ratio = available > 0 ? required / available : 2;
+  const fitPercent = fits
+    ? Math.max(60, Math.min(97, Math.round(100 - Math.max(0, ratio - 0.6) * 25)))
+    : Math.max(10, Math.round(100 / ratio) - 20);
+
+  return {
+    fitPercent,
+    requiredM3: Math.round(required * 10) / 10,
+    availableM3: Math.round(available * 10) / 10,
+    remainingM3: remaining,
+    utilisationBefore,
+    utilisationAfter,
+    remainingPercent: Math.max(0, 100 - utilisationAfter),
+    fits,
+    recommendation: fits
+      ? "This request appears to fit within the available space based on the information provided."
+      : "This request may exceed the capacity currently available. Review the details, or message the renter before deciding.",
+  };
+}

@@ -1,25 +1,35 @@
 /**
  * Spacilo AI SpacePlanner™ — visualisation endpoint.
  *
- * Takes the user's OWN space photograph plus photographs of their belongings
- * and asks an image model to edit the space photo so the belongings appear
- * realistically placed inside it. The space photograph is always the visual
- * foundation: the model is instructed to preserve the room, never to invent a
- * new one.
+ * Takes the user's OWN space photograph, photographs of their belongings and
+ * the canonical placement manifest, and asks an image model to edit the space
+ * photo so those exact belongings appear realistically placed inside it. The
+ * space photograph is always the visual foundation: the model is instructed to
+ * preserve the room, never to invent a new one.
  *
- * This is genuine image-to-image editing. If the model returns no image the
- * route fails loudly so the UI can say visualisation is unavailable rather
- * than presenting a geometric overlay as an AI visualisation.
+ * The returned image is then checked against the manifest, so the UI can say
+ * honestly how many of the required items are actually represented. If the
+ * model returns no image the route fails loudly rather than letting a
+ * geometric overlay be presented as an AI visualisation.
  */
 import { createFileRoute } from "@tanstack/react-router";
 
 const MODEL = "google/gemini-3-pro-image";
+const CHECK_MODEL = "google/gemini-3.6-flash";
 const MAX_ITEM_PHOTOS = 3;
+const GATEWAY = "https://ai.gateway.lovable.dev/v1";
+
+interface ManifestItem {
+  label?: string;
+  quantity?: number;
+}
 
 interface VisualiseBody {
   spaceImage?: { mimeType?: string; base64?: string };
   itemImages?: { mimeType?: string; base64?: string }[];
   instruction?: string;
+  manifest?: ManifestItem[];
+  emphasise?: string[];
 }
 
 function dataUrl(image: { mimeType?: string; base64?: string }): string | null {
@@ -52,6 +62,79 @@ export function extractImage(payload: unknown): string | null {
   return walk(payload);
 }
 
+export interface Coverage {
+  expected: number;
+  present: number;
+  missing: string[];
+  complete: boolean;
+}
+
+/** Compares the labels a checker reported against the labels required. */
+export function coverageOf(required: string[], present: string[]): Coverage {
+  const seen = new Set(present.map((label) => label.trim().toLowerCase()));
+  const missing = required.filter((label) => !seen.has(label.trim().toLowerCase()));
+  return {
+    expected: required.length,
+    present: required.length - missing.length,
+    missing,
+    complete: missing.length === 0 && required.length > 0,
+  };
+}
+
+/** Reads the checker's JSON reply. Tolerates fenced or noisy output. */
+export function parsePresentLabels(text: string): string[] | null {
+  const match = text.match(/\[[\s\S]*\]/);
+  if (!match) return null;
+  try {
+    const parsed = JSON.parse(match[0]) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    return parsed.filter((entry): entry is string => typeof entry === "string");
+  } catch {
+    return null;
+  }
+}
+
+/** Asks a vision model which of the required items it can see. Best effort. */
+async function checkCoverage(
+  key: string,
+  image: string,
+  required: string[],
+): Promise<Coverage | null> {
+  if (required.length === 0) return null;
+  try {
+    const response = await fetch(`${GATEWAY}/chat/completions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: CHECK_MODEL,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `Look at this photograph of a storage space. Which of the following items are visibly present in it? Items: ${required.join("; ")}. Reply with a JSON array of the item names you can see, exactly as written, and nothing else.`,
+              },
+              { type: "image_url", image_url: { url: image } },
+            ],
+          },
+        ],
+      }),
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json()) as {
+      choices?: { message?: { content?: unknown } }[];
+    };
+    const content = payload.choices?.[0]?.message?.content;
+    const text = typeof content === "string" ? content : "";
+    const present = parsePresentLabels(text);
+    if (!present) return null;
+    return coverageOf(required, present);
+  } catch {
+    return null;
+  }
+}
+
 export const Route = createFileRoute("/api/spaceplanner-visualise")({
   server: {
     handlers: {
@@ -77,6 +160,14 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           .map(dataUrl)
           .filter((url): url is string => Boolean(url));
 
+        const required = (body.manifest ?? [])
+          .map((entry) => (typeof entry?.label === "string" ? entry.label.trim() : ""))
+          .filter(Boolean)
+          .slice(0, 20);
+        const emphasise = (body.emphasise ?? [])
+          .filter((label): label is string => typeof label === "string")
+          .slice(0, 20);
+
         const content: Record<string, unknown>[] = [
           {
             type: "text",
@@ -87,7 +178,13 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
               items.length
                 ? "The following images show the user's real belongings. Place those exact items into the photographed space, matching their appearance, materials and colours."
                 : "Place the described belongings into the photographed space.",
-              body.instruction?.slice(0, 1200) ?? "",
+              body.instruction?.slice(0, 3000) ?? "",
+              required.length
+                ? `Every one of these items must be clearly visible in the edited photograph: ${required.join("; ")}.`
+                : "",
+              emphasise.length
+                ? `The previous attempt did not show these items. They must be clearly visible this time: ${emphasise.join("; ")}.`
+                : "",
               "Respect perspective and scale, rest every item flat on the floor with contact shadows, keep a clear walkway to the doorway, and avoid floating or clipped objects.",
               "Return only the edited photograph. No labels, no boxes, no outlines, no text overlays.",
             ]
@@ -100,7 +197,7 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
 
         let upstream: Response;
         try {
-          upstream = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+          upstream = await fetch(`${GATEWAY}/images/generations`, {
             method: "POST",
             headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -131,7 +228,8 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           return Response.json({ error: "no_image_returned" }, { status: 502 });
         }
 
-        return Response.json({ image, model: MODEL });
+        const coverage = await checkCoverage(key, image, required);
+        return Response.json({ image, model: MODEL, coverage });
       },
     },
   },

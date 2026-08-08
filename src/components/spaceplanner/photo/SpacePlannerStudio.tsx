@@ -500,7 +500,25 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 )}
               </SpacePlannerResult>
 
+              {manifest ? (
+                <details
+                  className="rounded-2xl border border-border bg-surface p-4"
+                  open={visual.status === "failed" || visual.status === "rejected"}
+                >
+                  <summary className="cursor-pointer type-label text-foreground">
+                    View arrangement plan
+                  </summary>
+                  <p className="mt-2 type-body-sm text-muted-foreground">
+                    {visual.status === "failed" || visual.status === "rejected"
+                      ? "Your SpacePlanner analysis is ready. We couldn't generate the photographic preview this time, but your fit and arrangement plan is available."
+                      : "Exactly where the planner decided each item goes — the same plan the visual preview renders."}
+                  </p>
+                  <ArrangementPlanDiagram manifest={manifest} className="mt-3" />
+                </details>
+              ) : null}
+
               {earnings ? <EarningsEstimateCard earnings={earnings} /> : null}
+
 
               <div className="flex flex-wrap gap-2">
                 {onExplore ? (

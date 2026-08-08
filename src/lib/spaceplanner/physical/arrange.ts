@@ -245,6 +245,7 @@ export function arrangeItems(
     usableVolumeM3,
     excludedFloorM2,
     walkwayFloorM2: round2(geometry.walkway ? rectArea(geometry.walkway) : 0),
+    corridorSide: space.corridorSide ?? "centre",
     utilisationPercent:
       usableVolumeM3 > 0 ? Math.min(100, Math.round((occupiedVolumeM3 / usableVolumeM3) * 100)) : 0,
     placedUnits,

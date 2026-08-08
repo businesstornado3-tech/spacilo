@@ -60,7 +60,7 @@ function dataUrl(image: { mimeType?: string; base64?: string }): string | null {
 }
 
 
-/** Pulls the first image out of the OpenAI images response. */
+/** Pulls the first image out of the gateway image response. */
 export function extractImage(payload: unknown): string | null {
   const seen = new Set<unknown>();
   const walk = (node: unknown): string | null => {
@@ -197,7 +197,7 @@ export function verdictFor(coverage: Coverage | null): Verdict {
 }
 
 /**
- * Object-level render verification, on OpenAI. Asks which required units are
+ * Object-level render verification, through the gateway. Asks which required units are
  * visible AND which stored objects appear that are NOT on the list — an
  * invented object is a critical failure, not a cosmetic one. Best effort: a
  * verifier that cannot answer returns null rather than a false accusation.

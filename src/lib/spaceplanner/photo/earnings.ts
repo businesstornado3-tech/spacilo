@@ -88,6 +88,47 @@ export function estimateEarningsFromCapacity({
   };
 }
 
+/**
+ * A finished SpacePlanner result → the host's estimated monthly earnings.
+ *
+ * Earnings follow *usable* capacity, never the raw cubic volume of the room:
+ * the analysis already accounts for access, obstacles and walkways, and the
+ * rentable share trims it further. Utilisation comes from the plan itself, so
+ * a space that is already half full is never priced as if it were empty.
+ */
+export function earningsFromPlan({
+  usableVolumeM3,
+  usableAreaM2,
+  occupiedVolumeM3 = 0,
+  spaceType,
+  postcode = "",
+}: {
+  usableVolumeM3: number;
+  usableAreaM2: number;
+  occupiedVolumeM3?: number;
+  spaceType: ValueSpaceType;
+  postcode?: string;
+}): EarningsEstimate {
+  const usable = Math.max(0, usableVolumeM3);
+  const utilisation = usable > 0 ? Math.min(100, (occupiedVolumeM3 / usable) * 100) : 0;
+  const rentableVolume = Math.round(usable * RENTABLE_SHARE * 10) / 10;
+  const area = Math.max(0, Math.round(usableAreaM2 * 10) / 10);
+
+  const capacity: CapacityEstimate = {
+    usableVolumeM3: Math.round(usable * 10) / 10,
+    rentableVolumeM3: rentableVolume,
+    usableAreaM2: area,
+    rentableAreaM2: Math.round(area * RENTABLE_SHARE * 10) / 10,
+    currentUtilisation: Math.round(utilisation),
+    potentialUtilisation: Math.max(
+      Math.round(utilisation),
+      Math.min(92, Math.round(utilisation + (100 - utilisation) * 0.45)),
+    ),
+  };
+
+  return estimateEarningsFromCapacity({ capacity, spaceType, postcode });
+}
+
 /** Practical, non-guaranteed ways a host could open up more rentable space. */
 export function improvementIdeas(capacity: CapacityEstimate, hasShelving: boolean): string[] {
   const ideas: string[] = [];

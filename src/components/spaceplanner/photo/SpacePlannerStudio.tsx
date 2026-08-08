@@ -1,11 +1,16 @@
 /**
  * SpacePlannerStudio — the homepage Spacilo AI SpacePlanner™ experience.
  *
- * Show us your stuff → show us your space → we show you how it fits. The
- * result is built on the user's own photograph; the Digital Twin remains the
- * deeper planning step afterwards, never a prerequisite.
+ * Show us your stuff → confirm what's yours → show us your space → we show you
+ * how it fits, what it's worth, and then draw it.
  *
- * Nothing heavy runs until someone starts a scan.
+ * Two principles drive the flow:
+ *   1. The USER decides what counts. Either they mark exactly what they want
+ *      to store (Mode A) or they ask for the whole photo (Mode B). Spacilo AI
+ *      never decides that for them.
+ *   2. Numbers first, pictures second. The analytical result — fit, capacity,
+ *      earning potential — appears as soon as it exists; the arranged image
+ *      renders afterwards, in the background, and never blocks anything.
  */
 import * as React from "react";
 import { ArrowRight, Boxes, Camera, CheckCircle2, Home, RefreshCw, Sparkles } from "lucide-react";
@@ -13,14 +18,19 @@ import { ArrowRight, Boxes, Camera, CheckCircle2, Home, RefreshCw, Sparkles } fr
 import { Button } from "@/components/ui/button";
 import { ScanUploader } from "@/components/vision/ScanUploader";
 import { PhotoGallery } from "@/components/vision/PhotoGallery";
+import { PhotoRegionSelector } from "@/components/vision/PhotoRegionSelector";
 import { VisionAnalysis } from "@/components/vision/VisionAnalysis";
 
 import { PhotoArrangement } from "@/components/spaceplanner/photo/PhotoArrangement";
 import { SpacePlannerResult } from "@/components/spaceplanner/photo/SpacePlannerResult";
+import { EarningsEstimateCard } from "@/components/spaceplanner/photo/EarningsEstimateCard";
 import { useVisionAI } from "@/hooks/useVisionAI";
 import { useSpaceVisualisation } from "@/hooks/useSpaceVisualisation";
+import { useStableScroll } from "@/hooks/useStableScroll";
 import { InventoryLock } from "@/components/spaceplanner/photo/InventoryLock";
 import { buildPhotoPlan, spaceFromScan, type SpaceSource } from "@/lib/spaceplanner/photo";
+import { earningsFromPlan } from "@/lib/spaceplanner/photo/earnings";
+import { usableVolume } from "@/lib/spaceplanner/spaces";
 import {
   buildPlacementManifest,
   lockInventory,
@@ -37,6 +47,11 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   const [manual, setManual] = React.useState({ width: "", depth: "", height: "" });
   /** The confirmed inventory. One source of truth for everything downstream. */
   const [inventory, setInventory] = React.useState<CanonicalInventory | null>(null);
+  /** Which photo the region selector is currently open on. */
+  const [selectingStuff, setSelectingStuff] = React.useState<string | null>(null);
+  const [selectingSpace, setSelectingSpace] = React.useState<string | null>(null);
+
+  const { anchor, hold } = useStableScroll(step);
 
   const manualSource = React.useMemo<SpaceSource | null>(() => {
     const width = Number(manual.width);
@@ -56,6 +71,18 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     () => (source && planObjects.length > 0 ? buildPhotoPlan(planObjects, source) : null),
     [source, planObjects],
   );
+
+  /** Earning potential follows usable capacity, never the raw room volume. */
+  const earnings = React.useMemo(() => {
+    if (!result) return null;
+    const usable = usableVolume(result.space);
+    return earningsFromPlan({
+      usableVolumeM3: usable,
+      usableAreaM2: result.space.width * result.space.depth,
+      occupiedVolumeM3: result.spaceUsedM3,
+      spaceType: "storage-room",
+    });
+  }, [result]);
 
   const manifest = React.useMemo(
     () => (inventory && result ? buildPlacementManifest(inventory, result) : null),
@@ -79,7 +106,9 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     }
   }, [result]);
 
-  // One automatic attempt per confirmed inventory + space; retry is explicit.
+  // The visual arrangement is deliberately asynchronous: the numbers above are
+  // already on screen by the time this starts. One attempt per confirmed
+  // inventory + space; retry is explicit.
   const attempted = React.useRef<string | null>(null);
   React.useEffect(() => {
     if (step !== "result" || !result || !spacePhoto) return;
@@ -90,9 +119,15 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   }, [step, result, spacePhoto, inventory, visual]);
 
   const analyseStuff = async () => {
-    track("spaceplanner_analysis_started", { props: { mode: "belongings" } });
+    track("spaceplanner_analysis_started", {
+      props: { mode: "belongings", scope: stuff.scope, photos: stuff.photos.length },
+    });
+    const startedAt = Date.now();
     await stuff.analyse();
-    track("spaceplanner_items_detected", { props: { count: stuff.photos.length } });
+    hold();
+    track("spaceplanner_items_detected", {
+      props: { count: stuff.photos.length, ms: Date.now() - startedAt },
+    });
     setInventory(null);
     setStep("review");
   };
@@ -109,6 +144,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   const analyseSpace = async () => {
     track("spaceplanner_analysis_started", { props: { mode: "space" } });
     await space.analyse();
+    hold();
     track("spaceplanner_space_detected", { props: { photos: space.photos.length } });
     setStep("result");
   };
@@ -121,8 +157,12 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     setStep("stuff");
   };
 
+  const stuffPhotoBeingSelected = stuff.photos.find((photo) => photo.id === selectingStuff) ?? null;
+  const spacePhotoBeingSelected = space.photos.find((photo) => photo.id === selectingSpace) ?? null;
+
   return (
     <div className="space-y-5">
+      <div ref={anchor} className="scroll-mt-24" />
       <nav aria-label="SpacePlanner steps" className="flex flex-wrap gap-2">
         {(
           [
@@ -158,21 +198,77 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
             />
           ) : (
             <>
+              <fieldset className="rounded-2xl border border-border bg-surface p-4">
+                <legend className="px-1 type-label">What should Spacilo AI look at?</legend>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(
+                    [
+                      ["selected", "Only what I select"],
+                      ["whole", "Everything in the photo"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={stuff.scope === value}
+                      onClick={() => stuff.setScope(value)}
+                      className={
+                        "rounded-full px-3 py-1.5 type-badge transition-colors " +
+                        (stuff.scope === value
+                          ? "bg-signal text-signal-foreground"
+                          : "bg-card text-muted-foreground")
+                      }
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 type-body-xs text-muted-foreground">
+                  {stuff.scope === "selected"
+                    ? "Draw round each item you want to store. Anything you don't select is ignored."
+                    : "Spacilo AI will list everything it can see, including things around your belongings."}
+                </p>
+              </fieldset>
+
               <ScanUploader
                 onFiles={(files) => {
                   track("spaceplanner_image_uploaded", { props: { mode: "belongings" } });
                   stuff.addFiles(files);
+                  hold();
                 }}
                 rejected={stuff.rejected}
                 disabled={!stuff.canAddMore}
                 title="Show Spacilo AI your belongings"
                 hint="Photograph the whole item where possible — one clear photo per item, or per group of similar items."
               />
+
+              {stuffPhotoBeingSelected ? (
+                <PhotoRegionSelector
+                  photoId={stuffPhotoBeingSelected.id}
+                  photoUrl={stuffPhotoBeingSelected.url}
+                  rotation={stuffPhotoBeingSelected.rotation}
+                  selection={
+                    stuff.selections.find(
+                      (entry) => entry.photoId === stuffPhotoBeingSelected.id,
+                    ) ?? null
+                  }
+                  onChange={(selection) => {
+                    stuff.setSelection(selection, stuffPhotoBeingSelected.id);
+                    if (selection) setSelectingStuff(null);
+                  }}
+                />
+              ) : null}
+
               <PhotoGallery
                 photos={stuff.photos}
                 onRemove={stuff.removePhoto}
                 onRotate={stuff.rotatePhoto}
                 onMove={stuff.movePhoto}
+                onReplace={stuff.replacePhoto}
+                {...(stuff.scope === "selected"
+                  ? { onSelectRegion: (id: string) => setSelectingStuff(id) }
+                  : {})}
+                quality={stuff.quality}
                 canAddMore={stuff.canAddMore}
               />
               {stuff.photos.length > 0 ? (
@@ -225,17 +321,42 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 onFiles={(files) => {
                   track("spaceplanner_image_uploaded", { props: { mode: "space" } });
                   space.addFiles(files);
+                  hold();
                 }}
                 rejected={space.rejected}
                 disabled={!space.canAddMore}
                 title="Now show us the space"
                 hint="Capture the full space from a corner or doorway. Keep walls, floor and access points visible."
               />
+
+              {spacePhotoBeingSelected ? (
+                <PhotoRegionSelector
+                  photoId={spacePhotoBeingSelected.id}
+                  photoUrl={spacePhotoBeingSelected.url}
+                  rotation={spacePhotoBeingSelected.rotation}
+                  selection={
+                    space.selections.find(
+                      (entry) => entry.photoId === spacePhotoBeingSelected.id,
+                    ) ?? null
+                  }
+                  title="Mark the area you'd actually use for storage"
+                  hint="Draw round the usable area only — leave out walkways, doorways, boilers and anything fixed in place."
+                  wholeLabel="Use the whole space"
+                  onChange={(selection) => {
+                    space.setSelection(selection, spacePhotoBeingSelected.id);
+                    if (selection) setSelectingSpace(null);
+                  }}
+                />
+              ) : null}
+
               <PhotoGallery
                 photos={space.photos}
                 onRemove={space.removePhoto}
                 onRotate={space.rotatePhoto}
                 onMove={space.movePhoto}
+                onReplace={space.replacePhoto}
+                onSelectRegion={(id) => setSelectingSpace(id)}
+                quality={space.quality}
                 canAddMore={space.canAddMore}
               />
               {space.photos.length > 0 ? (
@@ -304,6 +425,8 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                   </p>
                 )}
               </SpacePlannerResult>
+
+              {earnings ? <EarningsEstimateCard earnings={earnings} /> : null}
 
               <div className="flex flex-wrap gap-2">
                 {onExplore ? (

@@ -5,13 +5,30 @@
  * never knows which engine produced them. Swapping the simulation for a real
  * API is a registration change, not a redesign.
  */
+import type { PhotoSelection } from "./selection";
 import type { SpaceScanResult, VisionPhoto, VisionResult } from "./types";
+
+/** How much of each photograph the user asked us to look at. */
+export type InventoryMode = "selected" | "whole";
+
+export interface AnalyseOptions {
+  /** "selected" analyses only the regions the user marked. */
+  mode?: InventoryMode;
+  /** One selection per photo id, when the user marked regions. */
+  selections?: PhotoSelection[];
+  /** Called as each real pipeline stage begins, for honest progress. */
+  onStage?: (stage: string) => void;
+}
 
 export interface VisionProvider {
   readonly id: string;
   readonly model: string;
-  analyseBelongings(photos: VisionPhoto[]): Promise<VisionResult>;
-  analyseSpace(photos: VisionPhoto[], spaceType?: string): Promise<SpaceScanResult>;
+  analyseBelongings(photos: VisionPhoto[], options?: AnalyseOptions): Promise<VisionResult>;
+  analyseSpace(
+    photos: VisionPhoto[],
+    spaceType?: string,
+    options?: AnalyseOptions,
+  ): Promise<SpaceScanResult>;
 }
 
 export type VisionProviderId = "spacilo-vision-ai" | "simulation" | (string & {});

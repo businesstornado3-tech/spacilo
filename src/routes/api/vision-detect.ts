@@ -30,10 +30,16 @@ interface InputImage {
   id?: string;
   mimeType?: string;
   base64?: string;
+  /** Plain description of the region the user selected, when they selected one. */
+  region?: string;
+  /** The user's own words for what they selected. */
+  hint?: string;
 }
 
 interface DetectBody {
   task?: "belongings" | "space";
+  /** "selected" = only what the user marked. "whole" = everything visible. */
+  mode?: "selected" | "whole";
   images?: InputImage[];
   spaceType?: string | null;
 }
@@ -45,6 +51,7 @@ interface Observation {
   countBasis?: string;
   occluded?: boolean;
   sizeCue?: string;
+  partOf?: string;
   confidence?: number;
 }
 
@@ -63,7 +70,10 @@ export interface DetectedItemPayload {
   confidence: number;
   photoIds: string[];
   evidence: string;
+  /** Parts of this object that are not separate items (rails, cushions…). */
+  components: string[];
 }
+
 
 function dataUrl(image: InputImage): string | null {
   if (!image?.base64) return null;
@@ -136,9 +146,11 @@ const DETECT_SYSTEM = [
   "1. Never invent, assume or add an object that is not visible. An empty or unclear photo returns an empty list.",
   "2. Describe objects physically (shape, material, colour, approximate size against nearby references). Do not use catalogue names and do not guess contents.",
   "3. Count only what you can actually see. If several identical things are visible, say how many and how you counted them. If you cannot count them, say so and give the number you can see.",
-  "4. Do not group different objects together, and do not split one object into parts.",
-  "5. Say when something is partly hidden.",
-  "Reply as JSON: {\"observations\":[{\"ref\":\"A\",\"description\":\"...\",\"visibleCount\":1,\"countBasis\":\"...\",\"occluded\":false,\"sizeCue\":\"...\",\"confidence\":0.0}]}",
+  "4. Report WHOLE objects, not their parts. A cot, a sofa, a wardrobe or a pushchair is ONE object. Its rails, cushions, mattress, drawers, doors, wheels and handles are parts of it — put them in partOf, never in their own entry.",
+  "5. Do not group different objects together either. Two different things are two entries.",
+  "6. If the user has marked a region, only objects inside or overlapping that region count. Anything in the surrounding room is background — do not report it.",
+  "7. Say when something is partly hidden.",
+  "Reply as JSON: {\"observations\":[{\"ref\":\"A\",\"description\":\"...\",\"visibleCount\":1,\"countBasis\":\"...\",\"occluded\":false,\"sizeCue\":\"...\",\"partOf\":\"\",\"confidence\":0.0}]}",
 ].join("\n");
 
 const CLASSIFY_SYSTEM = [
@@ -147,14 +159,16 @@ const CLASSIFY_SYSTEM = [
   "Absolute rules:",
   "1. Never introduce an object that no observation mentions. Never drop one either, unless it is the same physical object already listed.",
   "2. The same physical object seen in more than one photograph is ONE item. Merge it and list every photo id it appeared in. Do not add the counts together when it is clearly the same object.",
-  "3. Quantity must be justified by the observations. State the basis in countBasis.",
-  "4. Give each item a plain, specific UK label describing what it actually is (for example 'Fabric storage bag', 'Three-drawer plastic unit'). Never label something you were not told about.",
-  "5. Size is an ESTIMATE in centimetres from the described size cues. Be cautious and realistic.",
-  "6. category must be one of: boxes, furniture, appliances, electronics, leisure, seasonal.",
-  "7. weight must be one of: light, medium, heavy.",
-  "8. confidence is 0-1 and must drop when the observation was uncertain or occluded.",
-  "Reply as JSON: {\"items\":[{\"id\":\"ITEM-001\",\"label\":\"...\",\"category\":\"boxes\",\"quantity\":1,\"countBasis\":\"...\",\"widthCm\":0,\"depthCm\":0,\"heightCm\":0,\"weight\":\"medium\",\"fragile\":false,\"stackable\":false,\"confidence\":0.0,\"photoIds\":[\"...\"],\"evidence\":\"...\"}]}",
+  "3. Report the PRIMARY object, not its components. If observations describe a cot with rails and a mattress, that is one item 'Cot' with components ['rails','mattress'] — never three items. Only list something separately when it can be stored on its own.",
+  "4. Quantity must be justified by the observations. State the basis in countBasis.",
+  "5. Give each item a plain, specific UK label describing what it actually is (for example 'Fabric storage bag', 'Three-drawer plastic unit'). Never label something you were not told about.",
+  "6. Size is an ESTIMATE in centimetres of the WHOLE assembled object, from the described size cues. Be cautious and realistic.",
+  "7. category must be one of: boxes, furniture, appliances, electronics, leisure, seasonal.",
+  "8. weight must be one of: light, medium, heavy.",
+  "9. confidence is 0-1 and must drop when the observation was uncertain or occluded.",
+  "Reply as JSON: {\"items\":[{\"id\":\"ITEM-001\",\"label\":\"...\",\"category\":\"boxes\",\"quantity\":1,\"countBasis\":\"...\",\"widthCm\":0,\"depthCm\":0,\"heightCm\":0,\"weight\":\"medium\",\"fragile\":false,\"stackable\":false,\"confidence\":0.0,\"photoIds\":[\"...\"],\"evidence\":\"...\",\"components\":[\"...\"]}]}",
 ].join("\n");
+
 
 const SPACE_SYSTEM = [
   "You estimate the usable storage geometry of a room from photographs for a UK storage marketplace.",
@@ -206,6 +220,12 @@ export function normaliseItems(raw: unknown, photoIds: string[]): DetectedItemPa
       confidence: clamp(num(record["confidence"], 0.6), 0.1, 0.99),
       photoIds: ids.length ? ids : photoIds.slice(0, 1),
       evidence: typeof record["evidence"] === "string" ? record["evidence"].slice(0, 240) : "",
+      components: Array.isArray(record["components"])
+        ? (record["components"] as unknown[])
+            .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
+            .slice(0, 8)
+            .map((part) => part.slice(0, 40))
+        : [],
     });
   });
   return out;
@@ -227,14 +247,27 @@ export const Route = createFileRoute("/api/vision-detect")({
 
         const images = (body.images ?? [])
           .slice(0, MAX_IMAGES)
-          .map((image, index) => ({ id: image.id ?? `photo-${index + 1}`, url: dataUrl(image) }))
-          .filter((image): image is { id: string; url: string } => Boolean(image.url));
+          .map((image, index) => ({
+            id: image.id ?? `photo-${index + 1}`,
+            url: dataUrl(image),
+            region: typeof image.region === "string" ? image.region.slice(0, 200) : "",
+            hint: typeof image.hint === "string" ? image.hint.slice(0, 80) : "",
+          }))
+          .filter((image): image is { id: string; url: string; region: string; hint: string } =>
+            Boolean(image.url),
+          );
         if (images.length === 0) {
           return Response.json({ error: "no_images" }, { status: 400 });
         }
 
+        const selected = body.mode === "selected";
+
         try {
           if (body.task === "space") {
+            const regions = images
+              .map((image) => image.region)
+              .filter(Boolean)
+              .join("; ");
             const result = await chat(
               key,
               [
@@ -242,6 +275,10 @@ export const Route = createFileRoute("/api/vision-detect")({
                   type: "text",
                   text: `Estimate the usable storage geometry of this space from the photographs.${
                     body.spaceType ? ` The host describes it as: ${body.spaceType}.` : ""
+                  }${
+                    regions
+                      ? ` The host has marked the area they are willing to let out: ${regions}. Estimate only that area, and exclude walls, doorways, walkways and fixed furniture outside it.`
+                      : ""
                   }`,
                 },
                 ...images.map((image) => ({
@@ -258,12 +295,17 @@ export const Route = createFileRoute("/api/vision-detect")({
           /* Stage 1 — per-photograph detection, in parallel. */
           const observations = await Promise.all(
             images.map(async (image) => {
+              const scope = selected
+                ? `The user has marked exactly what they want to store: ${
+                    image.region || "the region shown"
+                  }${image.hint ? ` — they describe it as "${image.hint}"` : ""}. Report ONLY objects inside that region. Everything else in the photograph is background and must be ignored.`
+                : "Report every distinct whole object in this photograph of someone's belongings.";
               const reply = await chat(
                 key,
                 [
                   {
                     type: "text",
-                    text: "List every distinct physical object you can actually see in this photograph of someone's belongings. Report nothing you cannot see.",
+                    text: `${scope} Report whole objects, not their parts, and report nothing you cannot actually see.`,
                   },
                   { type: "image_url", image_url: { url: image.url } },
                 ],
@@ -272,9 +314,14 @@ export const Route = createFileRoute("/api/vision-detect")({
               const list = Array.isArray(reply?.["observations"])
                 ? (reply["observations"] as Observation[])
                 : [];
-              return { photoId: image.id, observations: list.slice(0, 30) };
+              return {
+                photoId: image.id,
+                ...(image.hint ? { userHint: image.hint } : {}),
+                observations: list.slice(0, 30).filter((entry) => !entry.partOf),
+              };
             }),
           );
+
 
           const totalObservations = observations.reduce(
             (sum, entry) => sum + entry.observations.length,
@@ -295,7 +342,11 @@ export const Route = createFileRoute("/api/vision-detect")({
             [
               {
                 type: "text",
-                text: `These observations come from ${images.length} photograph(s) of one person's belongings. Merge the same physical object across photographs, then classify each distinct item.\n\n${JSON.stringify(
+                text: `These observations come from ${images.length} photograph(s) of one person's belongings.${
+                  selected
+                    ? " The user marked exactly what they want to store, so every observation is in scope and nothing outside it exists."
+                    : ""
+                } Merge the same physical object across photographs, report primary objects with their components, then classify each distinct item.\n\n${JSON.stringify(
                   observations,
                 )}`,
               },

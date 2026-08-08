@@ -10,3 +10,7 @@ export * from "./provider";
 export * from "./inventory";
 export * from "./space-value";
 export * from "./stages";
+export * from "./selection";
+export * from "./crop";
+export * from "./detection-cache";
+export * from "./photo-quality";

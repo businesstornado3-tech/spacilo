@@ -1,6 +1,7 @@
 import { TriangleAlert, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { recoveryCopy, type RecoveryKind } from "@/lib/errors/recovery";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/common/Skeletons";
 

@@ -40,6 +40,14 @@ export const RENDER_TIMEOUT_MS = 95_000;
 /** One render plus, at most, one corrective refinement. */
 export const MAX_RENDER_ATTEMPTS = 2;
 
+export interface RenderDiagnostics {
+  provider: string | null;
+  model: string | null;
+  diagnosticId: string | null;
+  planHash: string | null;
+  renderMs: number | null;
+}
+
 export interface UseSpaceVisualisation {
   status: VisualisationStatus;
   stage: VisualisationStage;
@@ -51,9 +59,12 @@ export interface UseSpaceVisualisation {
   imageUrl: string | null;
   coverage: CoverageReport | null;
   error: string | null;
+  /** Which service actually rendered, for support and verification. */
+  diagnostics: RenderDiagnostics | null;
   generate: () => Promise<void>;
   reset: () => void;
 }
+
 
 
 /** Prefers the render that is faithful first, then the most complete. */

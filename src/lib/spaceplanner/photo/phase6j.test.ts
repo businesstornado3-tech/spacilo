@@ -35,10 +35,10 @@ const object = (patch: Partial<DetectedObject> & { id: string; label: string }):
   }) as DetectedObject;
 
 const inventoryObjects = [
-  object({ id: "ITEM-001", label: "Large grey suitcase", category: "luggage", width: 75, depth: 35, height: 80 }),
-  object({ id: "ITEM-002", label: "Blue suitcase", category: "luggage", width: 65, depth: 30, height: 70 }),
-  object({ id: "ITEM-003", label: "Black backpack", category: "bags", width: 35, depth: 25, height: 50 }),
-  object({ id: "ITEM-004", label: "Black duffel bag", category: "bags", width: 60, depth: 30, height: 35 }),
+  object({ id: "ITEM-001", label: "Large grey suitcase", category: "leisure", width: 75, depth: 35, height: 80 }),
+  object({ id: "ITEM-002", label: "Blue suitcase", category: "leisure", width: 65, depth: 30, height: 70 }),
+  object({ id: "ITEM-003", label: "Black backpack", category: "seasonal", width: 35, depth: 25, height: 50 }),
+  object({ id: "ITEM-004", label: "Black duffel bag", category: "seasonal", width: 60, depth: 30, height: 35 }),
   object({ id: "ITEM-005", label: "Cardboard box", category: "boxes", quantity: 1, width: 50, depth: 40, height: 40 }),
 ];
 
@@ -89,17 +89,17 @@ describe("Phase 6J — item conservation", () => {
 
 describe("Phase 6J — uncertain identity (the shoe bug)", () => {
   it("refuses to keep a specific identity below the confidence floor", () => {
-    const uncertain = [object({ id: "ITEM-009", label: "Shoes", category: "soft", confidence: 0.31 })];
+    const uncertain = [object({ id: "ITEM-009", label: "Shoes", category: "seasonal", confidence: 0.31 })];
     const cleaned = generaliseUncertain(uncertain);
-    expect(cleaned[0]!.label).toBe(genericLabelFor("soft"));
+    expect(cleaned[0]!.label).toBe(genericLabelFor("seasonal"));
     expect(cleaned[0]!.label.toLowerCase()).not.toContain("shoe");
     expect(identitiesAreVerified(cleaned)).toBe(true);
   });
 
   it("leaves confident detections and the user's own words untouched", () => {
     const kept = generaliseUncertain([
-      object({ id: "ITEM-010", label: "Blue suitcase", category: "luggage", confidence: 0.92 }),
-      object({ id: "ITEM-011", label: "Nan's mirror", category: "other", confidence: 0.1, source: "manual" }),
+      object({ id: "ITEM-010", label: "Blue suitcase", category: "leisure", confidence: 0.92 }),
+      object({ id: "ITEM-011", label: "Nan's mirror", category: "boxes", confidence: 0.1, source: "manual" }),
     ]);
     expect(kept.map((entry) => entry.label)).toEqual(["Blue suitcase", "Nan's mirror"]);
   });

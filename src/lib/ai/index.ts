@@ -73,4 +73,67 @@ export {
 export { enqueueAi, executeAi, streamAi, type AiRequest } from "./core/orchestrator";
 export * from "./services";
 export { installLocalAiProviders } from "./providers/local";
+export type {
+  RankedListing,
+  RankingInput,
+  RankingListing,
+  RankingOutput,
+  RenterPreferences,
+  SuitabilityAssessment,
+  SuitabilityImprovement,
+  SuitabilityInput,
+  SuitabilityInventory,
+  SuitabilitySpace,
+  SuitabilityVerdict,
+} from "./providers/suitability";
+export type {
+  DescriptionDraft,
+  DescriptionInput,
+  DescriptionOutput,
+  DescriptionTone,
+  HostInsight,
+  HostInsightsInput,
+  HostInsightsOutput,
+  HostPricingGuidance,
+  HostPricingInput,
+  HostPricingMarket,
+  HostPricingSpace,
+  ListingQualityInput,
+  ListingQualityIssue,
+  ListingQualityReview,
+} from "./providers/host";
+export type {
+  HelpArticle,
+  HelpMatch,
+  HelpSearchInput,
+  HelpSearchOutput,
+  NlSearchInput,
+  NlSearchOutput,
+  SearchFilters,
+  SearchIntent,
+  SeasonalInput,
+  SeasonalOutput,
+  SeasonalTheme,
+  TrustPoint,
+  TrustSummaryInput,
+  TrustSummaryOutput,
+} from "./providers/discovery";
+export type {
+  BookingAdvice,
+  BookingAdviceInput,
+  ForgottenItem,
+  InventoryAssistance,
+  InventoryAssistantInput,
+  MessageAssistInput,
+  MessageAssistOutput,
+  MessageScenario,
+  MessageSuggestion,
+  NotificationCandidate,
+  NotificationDigest,
+  NotificationDigestInput,
+  SmartNotificationKind,
+  VehicleSize,
+} from "./providers/guidance";
+export type { FraudAssessment, FraudInput, FraudOutput, FraudSignal, FraudSignalCode, FraudSubject } from "./providers/fraud";
 export { installSpaciloAi, isAiInstalled } from "./bootstrap";
+

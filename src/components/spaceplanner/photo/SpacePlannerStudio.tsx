@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ScanUploader } from "@/components/vision/ScanUploader";
 import { PhotoGallery } from "@/components/vision/PhotoGallery";
 import { VisionAnalysis } from "@/components/vision/VisionAnalysis";
-import { DetectedInventory } from "@/components/vision/DetectedInventory";
+
 import { PhotoArrangement } from "@/components/spaceplanner/photo/PhotoArrangement";
 import { SpacePlannerResult } from "@/components/spaceplanner/photo/SpacePlannerResult";
 import { useVisionAI } from "@/hooks/useVisionAI";
@@ -229,7 +229,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 rejected={space.rejected}
                 disabled={!space.canAddMore}
                 title="Now show us the space"
-                hint="A garage, spare room, loft or unit — include the door or access route."
+                hint="Capture the full space from a corner or doorway. Keep walls, floor and access points visible."
               />
               <PhotoGallery
                 photos={space.photos}
@@ -294,6 +294,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                     arrangedUrl={visual.imageUrl}
                     status={visual.status}
                     statusLabel={visual.stageLabel}
+                    coverage={visual.coverage}
                     onRetry={() => void visual.generate()}
                     description={`${result.itemCount} items shown in the space you photographed. Estimated fit ${result.fitPercent}%, with about ${result.spaceRemainingM3.toFixed(1)}m³ estimated to remain.`}
                   />

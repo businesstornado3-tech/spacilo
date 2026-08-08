@@ -18,6 +18,7 @@ import { DetectedInventory } from "@/components/vision/DetectedInventory";
 import { PhotoArrangement } from "@/components/spaceplanner/photo/PhotoArrangement";
 import { SpacePlannerResult } from "@/components/spaceplanner/photo/SpacePlannerResult";
 import { useVisionAI } from "@/hooks/useVisionAI";
+import { useSpaceVisualisation } from "@/hooks/useSpaceVisualisation";
 import { buildPhotoPlan, spaceFromScan, type SpaceSource } from "@/lib/spaceplanner/photo";
 import { track } from "@/lib/analytics/tracker";
 
@@ -46,6 +47,14 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     [source, stuff.objects],
   );
 
+  const spacePhoto = space.photos[0] ?? null;
+  const visual = useSpaceVisualisation({
+    result,
+    objects: stuff.objects,
+    spacePhoto,
+    itemPhotos: stuff.photos,
+  });
+
   React.useEffect(() => {
     if (result) {
       track("spaceplanner_fit_calculated", {
@@ -53,6 +62,18 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
       });
     }
   }, [result]);
+
+  // One automatic attempt per result on the results step; retry is explicit.
+  const attempted = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (step !== "result" || !result || !spacePhoto) return;
+    const signature = `${spacePhoto.id}:${result.itemCount}:${result.fitPercent}`;
+    if (attempted.current === signature) return;
+    attempted.current = signature;
+    void visual.generate();
+  }, [step, result, spacePhoto, visual]);
+
+
 
   const analyseStuff = async () => {
     track("spaceplanner_analysis_started", { props: { mode: "belongings" } });
@@ -227,12 +248,16 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
           {result ? (
             <>
               <SpacePlannerResult result={result}>
-                {space.photos[0] ? (
+                {spacePhoto ? (
                   <PhotoArrangement
-                    photoUrl={space.photos[0].url}
+                    photoUrl={spacePhoto.url}
                     space={result.space}
                     pack={result.plan.after}
-                    description={`Spacilo AI arranged ${result.itemCount} items into the space you photographed. Estimated fit ${result.fitPercent}%, with about ${result.spaceRemainingM3.toFixed(1)}m³ estimated to remain.`}
+                    arrangedUrl={visual.imageUrl}
+                    status={visual.status}
+                    statusLabel={visual.stageLabel}
+                    onRetry={() => void visual.generate()}
+                    description={`${result.itemCount} items shown in the space you photographed. Estimated fit ${result.fitPercent}%, with about ${result.spaceRemainingM3.toFixed(1)}m³ estimated to remain.`}
                   />
                 ) : (
                   <p className="type-body-sm text-muted-foreground">

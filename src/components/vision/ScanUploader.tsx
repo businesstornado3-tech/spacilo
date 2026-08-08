@@ -104,7 +104,7 @@ export function ScanUploader({
         className="sr-only"
         aria-label="Browse photos"
         onChange={(event) => {
-          if (event.target.files?.length) onFiles(event.target.files);
+          if (event.target.files?.length) accept(event.target.files, "browse");
           event.target.value = "";
         }}
       />

@@ -14,7 +14,7 @@ export interface VisionProvider {
   analyseSpace(photos: VisionPhoto[], spaceType?: string): Promise<SpaceScanResult>;
 }
 
-export type VisionProviderId = "simulation" | (string & {});
+export type VisionProviderId = "spacilo-vision-ai" | "simulation" | (string & {});
 
 let override: VisionProvider | null = null;
 
@@ -24,11 +24,15 @@ export function registerVisionProvider(provider: VisionProvider | null): void {
 }
 
 /**
- * Lazily resolves the active provider. The simulation is code-split so the
- * planner and homepage stay fast until someone actually scans something.
+ * Lazily resolves the active provider. The production engine analyses the
+ * user's real photographs; it is code-split so nothing is downloaded until
+ * someone actually scans. The simulation remains available for tests and
+ * offline demos, but is never the default — a fabricated inventory must never
+ * be presented as a real detection.
  */
 export async function getVisionProvider(): Promise<VisionProvider> {
   if (override) return override;
-  const { simulationVisionProvider } = await import("./simulation-provider");
-  return simulationVisionProvider;
+  const { aiVisionProvider } = await import("./ai-provider");
+  return aiVisionProvider;
 }
+

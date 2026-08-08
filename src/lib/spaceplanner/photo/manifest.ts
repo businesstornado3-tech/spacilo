@@ -9,6 +9,7 @@
  * the inventory for itself.
  */
 import { hashString } from "@/lib/vision/hash";
+import { manifestHash } from "./diagnostics";
 import { objectVolume } from "@/lib/vision/inventory";
 import type { DetectedObject, RoomFeature } from "@/lib/vision/types";
 import type { PhotoPlanResult } from "./plan";

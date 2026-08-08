@@ -490,7 +490,9 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                         : visual.stageLabel
                     }
                     coverage={visual.coverage}
+                    errorCode={visual.error}
                     onRetry={() => void visual.generate()}
+
                     description={`${result.itemCount} items shown in the space you photographed. Estimated fit ${result.fitPercent}%, with about ${result.spaceRemainingM3.toFixed(1)}m³ estimated to remain.`}
                   />
                 ) : (

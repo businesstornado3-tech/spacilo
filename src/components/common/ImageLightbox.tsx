@@ -155,7 +155,9 @@ export function ImageLightbox({
       className="fixed inset-0 z-50 flex flex-col bg-scene-ink/95"
     >
       <div className="flex items-center justify-between gap-2 p-3">
-        <p className="min-w-0 truncate type-body-sm text-scene-ink-foreground">{caption ?? alt}</p>
+        <p className="min-w-0 truncate rounded-full bg-card/90 px-3 py-1.5 type-body-sm text-foreground">
+          {caption ?? alt}
+        </p>
         <div className="flex shrink-0 items-center gap-1">
           <ZoomButton label="Zoom out" onClick={() => centreZoom(1 / 1.4)}>
             <Minus className="size-4" aria-hidden="true" />
@@ -198,8 +200,10 @@ export function ImageLightbox({
         />
       </div>
 
-      <p className="p-3 text-center type-body-xs text-scene-ink-foreground/70">
-        Pinch, scroll or double-tap to zoom. Drag to pan.
+      <p className="p-3 text-center type-body-xs">
+        <span className="rounded-full bg-card/80 px-3 py-1 text-muted-foreground">
+          Pinch, scroll or double-tap to zoom. Drag to pan.
+        </span>
       </p>
     </div>
   );

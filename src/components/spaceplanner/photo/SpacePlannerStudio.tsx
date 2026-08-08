@@ -28,6 +28,7 @@ import { useVisionAI } from "@/hooks/useVisionAI";
 import { useSpaceVisualisation } from "@/hooks/useSpaceVisualisation";
 import { useStableScroll } from "@/hooks/useStableScroll";
 import { InventoryLock } from "@/components/spaceplanner/photo/InventoryLock";
+import { SpacePlannerDiagnostics } from "@/components/spaceplanner/photo/SpacePlannerDiagnostics";
 import { buildPhotoPlan, spaceFromScan, type SpaceSource } from "@/lib/spaceplanner/photo";
 import { earningsFromPlan } from "@/lib/spaceplanner/photo/earnings";
 import { usableVolume } from "@/lib/spaceplanner/spaces";
@@ -471,6 +472,16 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
           )}
         </div>
       ) : null}
+
+      <SpacePlannerDiagnostics
+        photoCount={stuff.photos.length + space.photos.length}
+        detectedCount={stuff.objects.reduce((sum, object) => sum + object.quantity, 0)}
+        inventory={inventory}
+        roomReady={Boolean(source)}
+        manifest={manifest}
+        visualStatus={visual.status}
+        coverage={visual.coverage}
+      />
     </div>
   );
 }

@@ -213,8 +213,45 @@ export function PhotoArrangement({
         </div>
       ) : null}
 
+      {hasVisual && coverage ? (
+        <p
+          className="mt-3 flex items-start gap-2 type-body-sm"
+          aria-live="polite"
+        >
+          {coverage.complete ? (
+            <>
+              <span className="rounded-full bg-signal-soft px-2 py-0.5 type-badge text-signal-soft-foreground">
+                {coverage.present} of {coverage.expected} items included
+              </span>
+              <span className="text-muted-foreground">Based on your photos.</span>
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
+              <span>
+                Visualisation could not reliably include every item
+                {coverage.missing.length ? ` (${coverage.missing.join(", ")})` : ""}. Your fit
+                analysis is unaffected.
+              </span>
+            </>
+          )}
+        </p>
+      ) : null}
+
+      {status === "incomplete" || status === "failed" ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {onRetry ? (
+            <Button type="button" size="sm" variant="secondary" onClick={onRetry}>
+              <RefreshCw aria-hidden="true" />
+              Retry visualisation
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+
       {status === "failed" ? (
         <div className="mt-3 rounded-2xl border border-border bg-surface p-3">
+
           <p className="flex items-start gap-2 type-body-sm">
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
             We couldn&apos;t create the visual arrangement this time. Your fit analysis below is

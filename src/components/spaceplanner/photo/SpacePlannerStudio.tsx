@@ -37,6 +37,7 @@ import {
   type CanonicalInventory,
 } from "@/lib/spaceplanner/photo/manifest";
 import { track } from "@/lib/analytics/tracker";
+import { clearVisualisationCache } from "@/lib/spaceplanner/photo/visualise";
 
 type Step = "stuff" | "review" | "space" | "result";
 
@@ -65,7 +66,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     ? spaceFromScan(space.spaceScan)
     : manualSource;
 
-  const planObjects = inventory?.objects ?? stuff.objects;
+  const planObjects = inventory?.objects ?? [];
 
   const result = React.useMemo(
     () => (source && planObjects.length > 0 ? buildPhotoPlan(planObjects, source) : null),
@@ -85,8 +86,15 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   }, [result]);
 
   const manifest = React.useMemo(
-    () => (inventory && result ? buildPlacementManifest(inventory, result) : null),
-    [inventory, result],
+    () =>
+      inventory && result
+        ? buildPlacementManifest(
+            inventory,
+            result,
+            (space.spaceScan?.features ?? []).map((feature) => ({ ...feature, verified: true })),
+          )
+        : null,
+    [inventory, result, space.spaceScan],
   );
 
   const spacePhoto = space.photos[0] ?? null;
@@ -111,12 +119,12 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   // inventory + space; retry is explicit.
   const attempted = React.useRef<string | null>(null);
   React.useEffect(() => {
-    if (step !== "result" || !result || !spacePhoto) return;
+    if (step !== "result" || !inventory || !manifest || !result || !spacePhoto) return;
     const signature = `${spacePhoto.id}:${inventory?.signature ?? result.itemCount}:${result.fitPercent}`;
     if (attempted.current === signature) return;
     attempted.current = signature;
     void visual.generate();
-  }, [step, result, spacePhoto, inventory, visual]);
+  }, [step, result, spacePhoto, inventory, manifest, visual]);
 
   const analyseStuff = async () => {
     track("spaceplanner_analysis_started", {
@@ -154,6 +162,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     space.reset();
     setInventory(null);
     setManual({ width: "", depth: "", height: "" });
+    clearVisualisationCache();
     setStep("stuff");
   };
 
@@ -175,11 +184,21 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
           <button
             key={id}
             type="button"
-            onClick={() => setStep(id)}
+            onClick={() => {
+              if (id === "stuff" || (id === "review" && stuff.objects.length > 0)) setStep(id);
+              else if (id === "space" && inventory) setStep(id);
+              else if (id === "result" && inventory && source) setStep(id);
+            }}
+            disabled={
+              (id === "review" && stuff.objects.length === 0) ||
+              (id === "space" && !inventory) ||
+              (id === "result" && (!inventory || !source))
+            }
             aria-current={step === id ? "step" : undefined}
             className={
               "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 type-badge " +
-              (step === id ? "bg-signal text-signal-foreground" : "bg-surface text-muted-foreground")
+               (step === id ? "bg-signal text-signal-foreground" : "bg-surface text-muted-foreground") +
+               " disabled:cursor-not-allowed disabled:opacity-45"
             }
           >
             <Icon className="size-3.5" aria-hidden="true" />

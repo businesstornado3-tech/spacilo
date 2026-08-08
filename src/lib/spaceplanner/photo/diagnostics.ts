@@ -88,11 +88,15 @@ export function serialiseManifest(manifest: PlacementManifest): string {
       ].join("|"),
     )
     .join("\n");
+  const features = manifest.roomFeatures
+    .map((feature) => `${feature.id}|${feature.label}|${feature.kind}|${feature.position}`)
+    .sort()
+    .join("\n");
   return `${manifest.inventoryId}\n${manifest.spaceWidthM}x${manifest.spaceDepthM}x${manifest.spaceHeightM}\n${
     manifest.walkway
       ? `${manifest.walkway.xM},${manifest.walkway.yM},${manifest.walkway.widthM},${manifest.walkway.depthM}`
       : "no-walkway"
-  }\n${entries}`;
+  }\n${features}\n${entries}`;
 }
 
 /** Reads the verification outcome from a coverage report. */

@@ -267,6 +267,11 @@ export function formatManifestForModel(manifest: PlacementManifest): string {
       ? `KEEP CLEAR: the access corridor from x=${manifest.walkway.xM}m to x=${r2(manifest.walkway.xM + manifest.walkway.widthM)}m, y=${manifest.walkway.yM}m to y=${r2(manifest.walkway.yM + manifest.walkway.depthM)}m. Nothing may be drawn inside it.`
       : "",
     "DO NOT INVENT STORAGE FURNITURE: no shelves, racks, cupboards, cabinets, hooks, pallets or storage boxes may be added. Only the objects listed below, in the room as photographed.",
+    manifest.roomFeatures.length
+      ? `FIXED ROOM FEATURES — preserve these exactly where they appear in the source photograph; they are NOT belongings and must never be moved, hidden, removed or counted as inventory:\n${manifest.roomFeatures
+          .map((feature) => `• ${feature.id}: ${feature.label} (${feature.kind}) at ${feature.position}`)
+          .join("\n")}`
+      : "PRESERVE ALL SOURCE ROOM FEATURES: do not remove, move, replace or cover any television, radiator, door, window, fitted shelving, built-in furniture or electrical fixture visible in the source photograph.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -311,6 +316,21 @@ export function requiredLabels(manifest: PlacementManifest): string[] {
   return manifest.entries
     .filter((entry) => entry.state !== "cannot be safely placed")
     .map((entry) => entry.label);
+}
+
+/** Exact one-entry-per-unit render contract. IDs remain distinct for duplicate labels. */
+export function requiredRenderItems(
+  manifest: PlacementManifest,
+): { id: string; label: string; quantity: 1 }[] {
+  return manifest.entries
+    .filter((entry) => entry.state !== "cannot be safely placed")
+    .flatMap((entry) =>
+      Array.from({ length: entry.quantity }, (_, index) => ({
+        id: `${entry.id}_${String(index + 1).padStart(2, "0")}`,
+        label: entry.label,
+        quantity: 1 as const,
+      })),
+    );
 }
 
 export interface CoverageReport {

@@ -10,7 +10,7 @@
 import type { PhotoPlanResult } from "./plan";
 import {
   formatManifestForModel,
-  requiredLabels,
+  requiredRenderItems,
   type CoverageReport,
   type PlacementManifest,
 } from "./manifest";
@@ -48,7 +48,8 @@ export interface VisualisationRequest {
   itemImages: VisualisationImage[];
   instruction: string;
   /** Structured manifest the image must satisfy. */
-  manifest?: { label: string; quantity: number }[];
+  manifest?: { id: string; label: string; quantity: number }[];
+  roomFeatures?: { id: string; label: string; kind: string; position: string }[];
   /** Items a previous attempt missed; the retry emphasises these. */
   emphasise?: string[];
   /** Distinguishes a corrective re-render from the cached first attempt. */
@@ -148,11 +149,10 @@ function describeSpot(x: number, y: number, result: PhotoPlanResult): string {
 
 
 /** Manifest → the compact list the endpoint validates against. */
-export function manifestPayload(manifest: PlacementManifest): { label: string; quantity: number }[] {
-  return requiredLabels(manifest).map((label) => {
-    const entry = manifest.entries.find((candidate) => candidate.label === label)!;
-    return { label: entry.label, quantity: entry.quantity };
-  });
+export function manifestPayload(
+  manifest: PlacementManifest,
+): { id: string; label: string; quantity: number }[] {
+  return requiredRenderItems(manifest);
 }
 
 /**
@@ -161,9 +161,8 @@ export function manifestPayload(manifest: PlacementManifest): { label: string; q
  */
 export function visualisationSignature(request: VisualisationRequest): string {
   const parts = [
-    request.spaceImage.base64.slice(0, 256),
-    String(request.spaceImage.base64.length),
-    ...request.itemImages.map((image) => `${image.base64.length}:${image.base64.slice(0, 96)}`),
+    request.spaceImage.base64,
+    ...request.itemImages.map((image) => image.base64),
     request.instruction,
     (request.emphasise ?? []).join(","),
     String(request.nonce ?? 0),

@@ -247,14 +247,27 @@ export const Route = createFileRoute("/api/vision-detect")({
 
         const images = (body.images ?? [])
           .slice(0, MAX_IMAGES)
-          .map((image, index) => ({ id: image.id ?? `photo-${index + 1}`, url: dataUrl(image) }))
-          .filter((image): image is { id: string; url: string } => Boolean(image.url));
+          .map((image, index) => ({
+            id: image.id ?? `photo-${index + 1}`,
+            url: dataUrl(image),
+            region: typeof image.region === "string" ? image.region.slice(0, 200) : "",
+            hint: typeof image.hint === "string" ? image.hint.slice(0, 80) : "",
+          }))
+          .filter((image): image is { id: string; url: string; region: string; hint: string } =>
+            Boolean(image.url),
+          );
         if (images.length === 0) {
           return Response.json({ error: "no_images" }, { status: 400 });
         }
 
+        const selected = body.mode === "selected";
+
         try {
           if (body.task === "space") {
+            const regions = images
+              .map((image) => image.region)
+              .filter(Boolean)
+              .join("; ");
             const result = await chat(
               key,
               [
@@ -262,6 +275,10 @@ export const Route = createFileRoute("/api/vision-detect")({
                   type: "text",
                   text: `Estimate the usable storage geometry of this space from the photographs.${
                     body.spaceType ? ` The host describes it as: ${body.spaceType}.` : ""
+                  }${
+                    regions
+                      ? ` The host has marked the area they are willing to let out: ${regions}. Estimate only that area, and exclude walls, doorways, walkways and fixed furniture outside it.`
+                      : ""
                   }`,
                 },
                 ...images.map((image) => ({
@@ -278,12 +295,17 @@ export const Route = createFileRoute("/api/vision-detect")({
           /* Stage 1 — per-photograph detection, in parallel. */
           const observations = await Promise.all(
             images.map(async (image) => {
+              const scope = selected
+                ? `The user has marked exactly what they want to store: ${
+                    image.region || "the region shown"
+                  }${image.hint ? ` — they describe it as "${image.hint}"` : ""}. Report ONLY objects inside that region. Everything else in the photograph is background and must be ignored.`
+                : "Report every distinct whole object in this photograph of someone's belongings.";
               const reply = await chat(
                 key,
                 [
                   {
                     type: "text",
-                    text: "List every distinct physical object you can actually see in this photograph of someone's belongings. Report nothing you cannot see.",
+                    text: `${scope} Report whole objects, not their parts, and report nothing you cannot actually see.`,
                   },
                   { type: "image_url", image_url: { url: image.url } },
                 ],
@@ -292,9 +314,14 @@ export const Route = createFileRoute("/api/vision-detect")({
               const list = Array.isArray(reply?.["observations"])
                 ? (reply["observations"] as Observation[])
                 : [];
-              return { photoId: image.id, observations: list.slice(0, 30) };
+              return {
+                photoId: image.id,
+                ...(image.hint ? { userHint: image.hint } : {}),
+                observations: list.slice(0, 30).filter((entry) => !entry.partOf),
+              };
             }),
           );
+
 
           const totalObservations = observations.reduce(
             (sum, entry) => sum + entry.observations.length,

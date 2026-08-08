@@ -38,7 +38,7 @@ export function CoachMark({ id, className }: { id: OnboardingHintId; className?:
       <p className="min-w-0 flex-1 type-body-sm text-primary-soft-foreground">{copy}</p>
       <button
         type="button"
-        onClick={dismiss}
+        onClick={handleDismiss}
         aria-label="Dismiss tip"
         className="-m-1 grid size-8 shrink-0 place-items-center rounded-lg text-primary-soft-foreground/70 transition-colors hover:bg-primary/10 hover:text-primary-soft-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >

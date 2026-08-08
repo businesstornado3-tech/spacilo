@@ -289,3 +289,42 @@ describe("image optimisation", () => {
     expect(scaleFor(800, 600, 1280)).toBe(1);
   });
 });
+
+describe("the deterministic plan controls the visualisation", () => {
+  const inventory = lockInventory([crib, suitcases]);
+  const plan = buildPhotoPlan(inventory.objects, source)!;
+  const manifest = buildPlacementManifest(inventory, plan);
+
+  it("takes its positions from the validated physical arrangement", () => {
+    const placed = manifest.entries.filter((entry) => entry.positions.length > 0);
+    expect(placed.length).toBeGreaterThan(0);
+    for (const entry of placed) {
+      for (const position of entry.positions) {
+        const match = plan.arrangement.entries.find(
+          (candidate) => candidate.itemId === entry.id && candidate.x === position.xM,
+        );
+        expect(match).toBeTruthy();
+      }
+    }
+  });
+
+  it("carries the room frame and the access corridor", () => {
+    expect(manifest.spaceWidthM).toBe(3);
+    expect(manifest.spaceDepthM).toBe(5);
+    const text = formatManifestForModel(manifest);
+    expect(text).toContain("FLOOR COORDINATE FRAME");
+    expect(text).toContain("Exact position 1: rear-left corner at x=");
+  });
+
+  it("tells the renderer it is a renderer, not a planner", () => {
+    const instruction = buildVisualisationInstruction(plan, inventory.objects, manifest);
+    expect(instruction).toContain("YOU ARE A RENDERER, NOT A PLANNER");
+    expect(instruction).toContain("shoulder to shoulder");
+  });
+
+  it("does not send a second, looser placement description alongside the manifest", () => {
+    const instruction = buildVisualisationInstruction(plan, inventory.objects, manifest);
+    expect(instruction).not.toContain("Belongings to place:");
+    expect(instruction).not.toContain("towards the back of the room");
+  });
+});

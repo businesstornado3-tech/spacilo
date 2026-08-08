@@ -10,6 +10,7 @@ import { Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOnboardingHint } from "@/hooks/useOnboardingHint";
 import { usePrefersReducedMotion } from "@/hooks/use-motion";
+import { track } from "@/lib/analytics/tracker";
 import type { OnboardingHintId } from "@/lib/onboarding/hints";
 
 export function CoachMark({ id, className }: { id: OnboardingHintId; className?: string }) {
@@ -17,6 +18,12 @@ export function CoachMark({ id, className }: { id: OnboardingHintId; className?:
   const reduced = usePrefersReducedMotion();
 
   if (!visible) return null;
+
+  const handleDismiss = () => {
+    dismiss();
+    track("onboarding_hint_dismissed", { props: { hint: id } });
+  };
+
 
   return (
     <div

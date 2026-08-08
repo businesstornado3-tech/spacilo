@@ -518,7 +518,8 @@ export function bestArrangement(
     }
     // Only widen the search to a tighter corridor when the preferred one failed
     // to place everything.
-    if (best && best.valid && best.unplaced.length === 0) return best;
+    const settled: PhysicalArrangement | null = best;
+    if (settled && settled.valid && settled.unplaced.length === 0) return settled;
   }
 
   return best ?? arrangeItems(items, space);

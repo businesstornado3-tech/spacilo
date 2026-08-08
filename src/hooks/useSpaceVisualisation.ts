@@ -77,22 +77,33 @@ export function useSpaceVisualisation(options: {
       let response = await requestVisualisation(payload);
       if (run.current !== token) return;
 
-      setStage("checking");
-      // One controlled refinement when the check says items are missing.
-      if (response.coverage && !response.coverage.complete && response.coverage.missing.length) {
+      // Render verification gate: the returned image is checked against the
+      // manifest and regenerated while items are missing, up to a hard limit.
+      // A partial render is a failure to fix, not a result to present.
+      const MAX_ATTEMPTS = 3;
+      for (let attempt = 1; attempt < MAX_ATTEMPTS; attempt += 1) {
+        setStage("checking");
+        const coverageNow = response.coverage;
+        if (!coverageNow || coverageNow.complete || coverageNow.missing.length === 0) break;
+
+        setStage("rendering");
         const retry = await requestVisualisation({
           ...payload,
-          emphasise: response.coverage.missing,
+          emphasise: coverageNow.missing,
         });
         if (run.current !== token) return;
-        if (!retry.coverage || retry.coverage.complete || retry.coverage.present > response.coverage.present) {
+        // Keep whichever attempt represented more of the confirmed inventory.
+        if (!retry.coverage || retry.coverage.present >= coverageNow.present) {
           response = retry;
         }
+        if (response.coverage?.complete) break;
       }
 
+      setStage("checking");
       setImageUrl(response.image);
       setCoverage(response.coverage);
       setStatus(response.coverage && !response.coverage.complete ? "incomplete" : "ready");
+
     } catch (cause) {
       if (run.current !== token) return;
       setError(cause instanceof Error ? cause.message : "unknown");

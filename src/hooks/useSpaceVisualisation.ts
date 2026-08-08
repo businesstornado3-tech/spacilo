@@ -62,16 +62,56 @@ export function useSpaceVisualisation(options: {
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
   const [coverage, setCoverage] = React.useState<CoverageReport | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [attempt, setAttempt] = React.useState(0);
+  const [elapsedMs, setElapsedMs] = React.useState(0);
   const run = React.useRef(0);
+  const abort = React.useRef<AbortController | null>(null);
+  const timer = React.useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopClock = React.useCallback(() => {
+    if (timer.current) {
+      clearInterval(timer.current);
+      timer.current = null;
+    }
+  }, []);
+
+  React.useEffect(() => () => {
+    if (timer.current) clearInterval(timer.current);
+    abort.current?.abort();
+  }, []);
 
   const generate = React.useCallback(async () => {
     if (!result || !spacePhoto) return;
     const token = ++run.current;
+    abort.current?.abort();
     setStatus("working");
     setStage("planning");
     setError(null);
     setImageUrl(null);
     setCoverage(null);
+    setAttempt(1);
+
+    // Elapsed time is surfaced so the wait is honest rather than a spinner
+    // with no end in sight.
+    const startedAt = Date.now();
+    setElapsedMs(0);
+    stopClock();
+    timer.current = setInterval(() => {
+      if (run.current !== token) return;
+      setElapsedMs(Date.now() - startedAt);
+    }, 1000);
+
+    /** One render request, abandoned rather than left hanging. */
+    const render = async (body: Parameters<typeof requestVisualisation>[0]) => {
+      const controller = new AbortController();
+      abort.current = controller;
+      const guard = setTimeout(() => controller.abort(), RENDER_TIMEOUT_MS);
+      try {
+        return await requestVisualisation(body, fetch, { signal: controller.signal });
+      } finally {
+        clearTimeout(guard);
+      }
+    };
 
     try {
       // Prepare every photograph at once rather than one after another.
@@ -89,23 +129,21 @@ export function useSpaceVisualisation(options: {
         ...(manifest ? { manifest: manifestPayload(manifest) } : {}),
       };
 
-      let response = await requestVisualisation(payload);
+      let response = await render(payload);
       if (run.current !== token) return;
 
       // Render verification gate: the returned image is checked against the
-      // manifest and regenerated while items are missing, up to a hard limit.
-      // A partial render is a failure to fix, not a result to present.
-      const MAX_ATTEMPTS = 3;
-      for (let attempt = 1; attempt < MAX_ATTEMPTS; attempt += 1) {
+      // manifest and, if items are missing, one corrective refinement is
+      // attempted. More attempts than that cost minutes and rarely help, so
+      // an incomplete render is reported honestly instead.
+      for (let pass = 1; pass < MAX_RENDER_ATTEMPTS; pass += 1) {
         setStage("checking");
         const coverageNow = response.coverage;
         if (!coverageNow || coverageNow.complete || coverageNow.missing.length === 0) break;
 
+        setAttempt(pass + 1);
         setStage("rendering");
-        const retry = await requestVisualisation({
-          ...payload,
-          emphasise: coverageNow.missing,
-        });
+        const retry = await render({ ...payload, emphasise: coverageNow.missing });
         if (run.current !== token) return;
         // Keep whichever attempt represented more of the confirmed inventory.
         if (!retry.coverage || retry.coverage.present >= coverageNow.present) {
@@ -118,25 +156,43 @@ export function useSpaceVisualisation(options: {
       setImageUrl(response.image);
       setCoverage(response.coverage);
       setStatus(response.coverage && !response.coverage.complete ? "incomplete" : "ready");
-
     } catch (cause) {
       if (run.current !== token) return;
-      setError(cause instanceof Error ? cause.message : "unknown");
+      const aborted = cause instanceof DOMException && cause.name === "AbortError";
+      setError(aborted ? "timed_out" : cause instanceof Error ? cause.message : "unknown");
       setStatus("failed");
+    } finally {
+      if (run.current === token) stopClock();
     }
-  }, [result, objects, manifest, spacePhoto, itemPhotos]);
+  }, [result, objects, manifest, spacePhoto, itemPhotos, stopClock]);
 
   const reset = React.useCallback(() => {
     run.current += 1;
+    abort.current?.abort();
+    stopClock();
     setStatus("idle");
     setImageUrl(null);
     setCoverage(null);
     setError(null);
-  }, []);
+    setAttempt(0);
+    setElapsedMs(0);
+  }, [stopClock]);
 
   const stageLabel =
     VISUALISATION_STAGES.find((entry) => entry.id === stage)?.label ??
     VISUALISATION_STAGES[0]!.label;
 
-  return { status, stage, stageLabel, imageUrl, coverage, error, generate, reset };
+  return {
+    status,
+    stage,
+    stageLabel,
+    attempt,
+    elapsedMs,
+    imageUrl,
+    coverage,
+    error,
+    generate,
+    reset,
+  };
+
 }

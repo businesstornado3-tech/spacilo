@@ -30,6 +30,3 @@ export function HeroVisual({ children, className }: HeroVisualProps) {
     </div>
   );
 }
-    </div>
-  );
-}

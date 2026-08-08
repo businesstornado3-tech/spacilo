@@ -46,6 +46,42 @@ export function capacityFromSpace(
   };
 }
 
+/**
+ * Capacity from a validated physical arrangement.
+ *
+ * Preferred over `capacityFromSpace` wherever a plan exists: it uses the floor
+ * the host actually approved, minus the access route and anything excluded, so
+ * the earnings range reflects lettable space rather than raw cubic metres.
+ */
+export function capacityFromArrangement(arrangement: {
+  usableVolumeM3: number;
+  usableFloorM2: number;
+  walkwayFloorM2: number;
+  excludedFloorM2: number;
+  utilisationPercent: number;
+}): CapacityEstimate {
+  const netArea = Math.max(
+    0,
+    arrangement.usableFloorM2 - arrangement.walkwayFloorM2 - arrangement.excludedFloorM2,
+  );
+  const areaShare = arrangement.usableFloorM2 > 0 ? netArea / arrangement.usableFloorM2 : 0;
+  const usable = Math.max(0, arrangement.usableVolumeM3 * areaShare);
+  const current = Math.round(arrangement.utilisationPercent);
+
+  return {
+    usableVolumeM3: Math.round(usable * 10) / 10,
+    rentableVolumeM3: Math.round(usable * RENTABLE_SHARE * 10) / 10,
+    usableAreaM2: Math.round(netArea * 10) / 10,
+    rentableAreaM2: Math.round(netArea * RENTABLE_SHARE * 10) / 10,
+    currentUtilisation: current,
+    potentialUtilisation: Math.max(
+      current,
+      Math.min(92, Math.round(current + (100 - current) * 0.45)),
+    ),
+  };
+}
+
+
 export interface EarningsEstimate {
   capacity: CapacityEstimate;
   value: SpaceValueEstimate;

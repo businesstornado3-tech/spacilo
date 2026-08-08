@@ -60,12 +60,15 @@ export function PhotoRegionSelector({
 }) {
   const [tool, setTool] = React.useState<Exclude<SelectionShape, "full">>("rect");
   const [draft, setDraft] = React.useState<PhotoSelection | null>(null);
+  /** Drawn but not yet committed. Nothing leaves this component until confirmed. */
+  const [pending, setPending] = React.useState<PhotoSelection | null>(null);
   const frame = React.useRef<HTMLDivElement>(null);
   const origin = React.useRef<Point | null>(null);
   const trail = React.useRef<Point[]>([]);
   const moved = React.useRef(false);
 
-  const shown = draft ?? selection;
+  const shown = draft ?? pending ?? selection;
+
 
   const toPoint = (event: React.PointerEvent): Point => {
     const box = frame.current?.getBoundingClientRect();

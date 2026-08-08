@@ -3,16 +3,20 @@
  * arranged inside it.
  *
  * The photo is the foundation: walls, floor, door and everything already in
- * the room stay exactly as photographed. Spacilo AI only draws the proposed
- * arrangement on top, in perspective, so the result reads as "that is my
- * space, and those are my things" rather than a generic 3D room.
+ * the room stay exactly as photographed. When Spacilo AI has produced a real
+ * edited photograph it is shown as "AI arranged". When it has not, the panel
+ * says so plainly and offers a retry — the geometric fit overlay is only ever
+ * labelled as fit analysis, never as an AI visualisation.
  */
 import * as React from "react";
-import { MoveHorizontal } from "lucide-react";
+import { AlertTriangle, MoveHorizontal, RefreshCw } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { projectPlacements, toPoints, DEFAULT_FLOOR_QUAD, type FloorQuad } from "@/lib/spaceplanner/photo";
 import type { PackResult, StorageSpace } from "@/lib/spaceplanner";
+
+export type ArrangementStatus = "idle" | "working" | "ready" | "failed";
 
 export interface PhotoArrangementProps {
   /** The user's own photograph of the space. */
@@ -23,6 +27,11 @@ export interface PhotoArrangementProps {
   quad?: FloorQuad;
   /** Text alternative describing the arrangement for assistive technology. */
   description: string;
+  /** The AI-edited photograph, when one has genuinely been produced. */
+  arrangedUrl?: string | null;
+  status?: ArrangementStatus;
+  statusLabel?: string;
+  onRetry?: () => void;
   className?: string;
 }
 
@@ -51,12 +60,12 @@ function Overlay({
         <g key={box.key}>
           <polygon
             points={toPoints(box.front)}
-            className="fill-[var(--color-signal)]/55 stroke-[var(--color-signal)]"
+            className="fill-[var(--color-signal)]/35 stroke-[var(--color-signal)]"
             strokeWidth={0.25}
           />
           <polygon
             points={toPoints(box.top)}
-            className="fill-[var(--color-signal)]/80 stroke-[var(--color-signal)]"
+            className="fill-[var(--color-signal)]/55 stroke-[var(--color-signal)]"
             strokeWidth={0.25}
           />
         </g>
@@ -72,10 +81,25 @@ export function PhotoArrangement({
   pack,
   quad = DEFAULT_FLOOR_QUAD,
   description,
+  arrangedUrl = null,
+  status = "idle",
+  statusLabel,
+  onRetry,
   className,
 }: PhotoArrangementProps) {
+  const hasVisual = status === "ready" && Boolean(arrangedUrl);
   const [showArranged, setShowArranged] = React.useState(true);
   const [position, setPosition] = React.useState(100);
+  const [showOverlay, setShowOverlay] = React.useState(false);
+
+  React.useEffect(() => {
+    if (hasVisual) {
+      setShowArranged(true);
+      setPosition(100);
+    }
+  }, [hasVisual]);
+
+  const arranged = hasVisual && showArranged;
 
   return (
     <figure className={cn("min-w-0", className)}>
@@ -87,20 +111,45 @@ export function PhotoArrangement({
           decoding="async"
           className="block aspect-[4/3] w-full object-cover"
         />
-        {showArranged ? (
+
+        {arranged ? (
           <div
             className="absolute inset-0"
             style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
           >
+            <img
+              src={arrangedUrl ?? ""}
+              alt={description}
+              decoding="async"
+              className="block size-full object-cover"
+            />
+          </div>
+        ) : null}
+
+        {!hasVisual && showOverlay ? (
+          <div className="absolute inset-0">
             <Overlay space={space} pack={pack} quad={quad} />
           </div>
         ) : null}
 
+        {status === "working" ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="absolute inset-0 grid place-items-center bg-scene-ink/45 px-4 text-center"
+          >
+            <span className="max-w-[18rem] rounded-2xl bg-card/95 px-4 py-3 type-body-sm">
+              <span className="mx-auto mb-2 block size-5 animate-spin rounded-full border-2 border-signal border-t-transparent" />
+              {statusLabel ?? "Creating your SpacePlanner visualisation…"}
+            </span>
+          </div>
+        ) : null}
+
         <span className="absolute left-3 top-3 rounded-full bg-card/90 px-2.5 py-1 type-badge">
-          {showArranged ? "AI arranged" : "Original"}
+          {arranged ? "AI arranged" : "Original"}
         </span>
 
-        {showArranged && position > 2 && position < 98 ? (
+        {arranged && position > 2 && position < 98 ? (
           <span
             className="pointer-events-none absolute inset-y-0 w-px bg-signal"
             style={{ left: `${position}%` }}
@@ -113,48 +162,86 @@ export function PhotoArrangement({
         ) : null}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        <div className="inline-flex rounded-full bg-surface p-1" role="group" aria-label="Compare original and AI arranged">
-          <button
-            type="button"
-            onClick={() => setShowArranged(false)}
-            aria-pressed={!showArranged}
-            className={cn(
-              "rounded-full px-3 py-1.5 type-badge",
-              !showArranged && "bg-card shadow-card",
-            )}
+      {hasVisual ? (
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <div
+            className="inline-flex rounded-full bg-surface p-1"
+            role="group"
+            aria-label="Compare original and AI arranged"
           >
-            Original
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowArranged(true)}
-            aria-pressed={showArranged}
-            className={cn(
-              "rounded-full px-3 py-1.5 type-badge",
-              showArranged && "bg-card shadow-card",
-            )}
-          >
-            AI arranged
-          </button>
+            <button
+              type="button"
+              onClick={() => setShowArranged(false)}
+              aria-pressed={!showArranged}
+              className={cn(
+                "rounded-full px-3 py-1.5 type-badge",
+                !showArranged && "bg-card shadow-card",
+              )}
+            >
+              Original
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowArranged(true)}
+              aria-pressed={showArranged}
+              className={cn(
+                "rounded-full px-3 py-1.5 type-badge",
+                showArranged && "bg-card shadow-card",
+              )}
+            >
+              AI arranged
+            </button>
+          </div>
+
+          <label className="min-w-[10rem] flex-1">
+            <span className="sr-only">Reveal the AI arrangement</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={position}
+              disabled={!showArranged}
+              onChange={(event) => setPosition(Number(event.target.value))}
+              className="h-11 w-full accent-[var(--color-signal)]"
+              aria-label="Reveal the AI arrangement across your photo"
+            />
+          </label>
         </div>
+      ) : null}
 
-        <label className="min-w-[10rem] flex-1">
-          <span className="sr-only">Reveal the AI arrangement</span>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={position}
-            disabled={!showArranged}
-            onChange={(event) => setPosition(Number(event.target.value))}
-            className="h-11 w-full accent-[var(--color-signal)]"
-            aria-label="Reveal the AI arrangement across your photo"
-          />
-        </label>
-      </div>
+      {status === "failed" ? (
+        <div className="mt-3 rounded-2xl border border-border bg-surface p-3">
+          <p className="flex items-start gap-2 type-body-sm">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
+            We couldn&apos;t create the visual arrangement this time. Your fit analysis below is
+            unaffected.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {onRetry ? (
+              <Button type="button" size="sm" variant="secondary" onClick={onRetry}>
+                <RefreshCw aria-hidden="true" />
+                Retry visualisation
+              </Button>
+            ) : null}
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowOverlay((current) => !current)}
+            >
+              {showOverlay ? "Hide fit analysis overlay" : "Show fit analysis overlay"}
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
-      <figcaption className="mt-2 type-body-xs text-muted-foreground">{description}</figcaption>
+      <figcaption className="mt-2 type-body-xs text-muted-foreground">
+        {hasVisual
+          ? `AI visualisation. ${description}`
+          : showOverlay
+            ? `AI fit analysis — estimated positions, not a photo-realistic visualisation. ${description}`
+            : description}
+      </figcaption>
     </figure>
   );
 }

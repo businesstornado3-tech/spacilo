@@ -212,7 +212,7 @@ async function checkCoverage(
 ): Promise<Coverage | null> {
   if (required.length === 0) return null;
   try {
-    const response = await fetch(`${OPENAI}/chat/completions`, {
+    const response = await fetch(`${GATEWAY}/chat/completions`, {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       ...(signal ? { signal } : {}),

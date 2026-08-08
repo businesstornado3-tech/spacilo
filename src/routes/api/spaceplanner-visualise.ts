@@ -1,36 +1,36 @@
 /**
- * Spacilo AI SpacePlanner™ — visualisation endpoint (OpenAI renderer).
+ * Spacilo AI SpacePlanner™ — visualisation endpoint (Lovable AI Gateway).
  *
- * PROVIDER: OpenAI, called directly with the server-side `OPENAI_API_KEY`.
- * The previous Google image provider is no longer part of this path — not as
- * the renderer, not as a fallback, and not as the verifier.
+ * PROVIDER: Google's image model through the Lovable AI Gateway, using the
+ * platform's own `LOVABLE_API_KEY`. No separately funded vendor account is
+ * required for SpacePlanner visualisation.
  *
  * The deterministic physical planner remains the sole authority for the
  * arrangement. This route receives an already-final PlacementManifest and asks
- * OpenAI's image-edit model to draw exactly that manifest into the user's own
- * space photograph. The returned image is then verified object-by-object
- * against the manifest so the UI can say honestly whether the render is
- * faithful, incomplete or unverifiable. A render failure never destroys the
- * plan: the client still holds the manifest and shows the top-down diagram.
+ * the image model to draw exactly that manifest into the user's own space
+ * photograph. The returned image is then verified object-by-object against the
+ * manifest so the UI can say honestly whether the render is faithful,
+ * incomplete or unverifiable. A render failure never destroys the plan: the
+ * client still holds the manifest and shows the top-down diagram.
  */
 import { createFileRoute } from "@tanstack/react-router";
 
-/** OpenAI image-edit model. Overridable, but always an OpenAI id. */
-const DEFAULT_IMAGE_MODEL = "gpt-image-2";
+/** Image model used to draw the manifest. Renderer only, never a planner. */
+const DEFAULT_IMAGE_MODEL = "google/gemini-3-pro-image";
 /** Vision model used only to check the render. Not a renderer. */
-const DEFAULT_VERIFY_MODEL = "gpt-4.1-mini";
-const PROVIDER = "openai";
-const OPENAI = "https://api.openai.com/v1";
+const DEFAULT_VERIFY_MODEL = "google/gemini-3.6-flash";
+const PROVIDER = "lovable-ai-gateway";
+const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const MAX_ITEM_PHOTOS = 3;
-/** gpt-image accepts long prompts; this keeps the manifest whole but bounded. */
+/** The model accepts long prompts; this keeps the manifest whole but bounded. */
 const MAX_PROMPT_CHARS = 24_000;
 
 function imageModel(): string {
-  return process.env["OPENAI_IMAGE_MODEL"]?.trim() || DEFAULT_IMAGE_MODEL;
+  return process.env["SPACEPLANNER_IMAGE_MODEL"]?.trim() || DEFAULT_IMAGE_MODEL;
 }
 
 function verifyModel(): string {
-  return process.env["OPENAI_VERIFY_MODEL"]?.trim() || DEFAULT_VERIFY_MODEL;
+  return process.env["SPACEPLANNER_VERIFY_MODEL"]?.trim() || DEFAULT_VERIFY_MODEL;
 }
 
 interface ManifestItem {
@@ -49,6 +49,8 @@ interface VisualiseBody {
   /** Carried through for diagnostics only. Never used to re-plan. */
   planHash?: string;
   inventoryHash?: string;
+  /** Varies the retry request without changing the plan. */
+  nonce?: number;
 }
 
 function dataUrl(image: { mimeType?: string; base64?: string }): string | null {
@@ -57,17 +59,8 @@ function dataUrl(image: { mimeType?: string; base64?: string }): string | null {
   return `data:${mime};base64,${image.base64}`;
 }
 
-/** base64 → Blob, so the photographs can be posted as multipart form data. */
-export function blobFromBase64(base64: string, mimeType: string): Blob {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
-  }
-  return new Blob([bytes], { type: mimeType });
-}
 
-/** Pulls the first image out of the OpenAI images response. */
+/** Pulls the first image out of the gateway image response. */
 export function extractImage(payload: unknown): string | null {
   const seen = new Set<unknown>();
   const walk = (node: unknown): string | null => {
@@ -204,7 +197,7 @@ export function verdictFor(coverage: Coverage | null): Verdict {
 }
 
 /**
- * Object-level render verification, on OpenAI. Asks which required units are
+ * Object-level render verification, through the gateway. Asks which required units are
  * visible AND which stored objects appear that are NOT on the list — an
  * invented object is a critical failure, not a cosmetic one. Best effort: a
  * verifier that cannot answer returns null rather than a false accusation.
@@ -219,7 +212,7 @@ async function checkCoverage(
 ): Promise<Coverage | null> {
   if (required.length === 0) return null;
   try {
-    const response = await fetch(`${OPENAI}/chat/completions`, {
+    const response = await fetch(`${GATEWAY}/chat/completions`, {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       ...(signal ? { signal } : {}),
@@ -316,11 +309,11 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const key = process.env["OPENAI_API_KEY"];
+        const key = process.env["LOVABLE_API_KEY"];
         if (!key) {
           // No silent fallback to another provider: report the misconfiguration.
           return Response.json(
-            { error: "not_configured", provider: PROVIDER, detail: "OPENAI_API_KEY is not set" },
+            { error: "not_configured", provider: PROVIDER, detail: "LOVABLE_API_KEY is not set" },
             { status: 503 },
           );
         }
@@ -339,7 +332,8 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         }
         const itemPhotos = (body.itemImages ?? [])
           .slice(0, MAX_ITEM_PHOTOS)
-          .filter((photo): photo is { mimeType?: string; base64: string } => Boolean(photo?.base64));
+          .map(dataUrl)
+          .filter((url): url is string => Boolean(url));
 
         const manifest = body.manifest ?? [];
         const required = manifest
@@ -373,38 +367,30 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           hasItemPhotos: itemPhotos.length > 0,
         });
 
-        // Multipart image edit: the user's space photograph first, then their
-        // belongings as visual references. This is a true edit of the original
-        // photograph, not a fresh generation.
-        const form = new FormData();
-        form.append("model", model);
-        form.append("prompt", prompt);
-        form.append("n", "1");
-        form.append("size", "1024x1024");
-        form.append("quality", process.env["OPENAI_IMAGE_QUALITY"]?.trim() || "medium");
-        form.append("input_fidelity", "high");
-        form.append(
-          "image[]",
-          blobFromBase64(spacePhoto.base64, spacePhoto.mimeType || "image/jpeg"),
-          "space.jpg",
-        );
-        itemPhotos.forEach((photo, index) => {
-          form.append(
-            "image[]",
-            blobFromBase64(photo.base64, photo.mimeType || "image/jpeg"),
-            `item-${index + 1}.jpg`,
-          );
-        });
+        // Image-to-image edit through the gateway: the user's space photograph
+        // first, then their belongings as visual references. The source photo
+        // is the foundation, not a fresh generation.
+        const content: Record<string, unknown>[] = [
+          { type: "text", text: prompt },
+          { type: "image_url", image_url: { url: space } },
+          ...itemPhotos.map((url) => ({ type: "image_url", image_url: { url } })),
+        ];
 
         const startedRender = Date.now();
         let upstream: Response;
         try {
-          upstream = await fetch(`${OPENAI}/images/edits`, {
+          upstream = await fetch(`${GATEWAY}/images/generations`, {
             method: "POST",
-            headers: { Authorization: `Bearer ${key}` },
-            body: form,
+            headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model,
+              messages: [{ role: "user", content }],
+              modalities: ["image", "text"],
+              stream: false,
+            }),
           });
         } catch {
+
           return Response.json(
             { error: "upstream_unreachable", provider: PROVIDER, model, diagnosticId },
             { status: 502 },

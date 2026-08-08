@@ -113,8 +113,9 @@ export function PhotoRegionSelector({
     if (!origin.current) return;
     const point = toPoint(event);
 
-    // Tap-to-select: no drag, so propose a boundary around the tap and let the
-    // user adjust it rather than making them draw precisely on a small screen.
+    // Nothing is ever committed by a gesture. A tap proposes a boundary and a
+    // drag draws one; either way the user reviews it and presses Confirm. That
+    // is what stops a stray touch on a phone locking in the wrong area.
     if (!moved.current) {
       const half = TAP_BOX / 2;
       const proposal = rectSelection(
@@ -123,8 +124,9 @@ export function PhotoRegionSelector({
         { x: point.x + half, y: point.y + half },
       );
       origin.current = null;
+      trail.current = [];
       setDraft(null);
-      onChange(proposal);
+      setPending(proposal);
       return;
     }
 
@@ -132,8 +134,15 @@ export function PhotoRegionSelector({
     origin.current = null;
     trail.current = [];
     setDraft(null);
-    onChange(isUsableSelection(next) ? next : null);
+    setPending(isUsableSelection(next) ? next : null);
   };
+
+  const confirm = () => {
+    if (!pending) return;
+    onChange(pending);
+    setPending(null);
+  };
+
 
   const outline = shown && !isFullPhoto(shown) ? shown : null;
   const box = outline ? boundingBox(outline) : null;

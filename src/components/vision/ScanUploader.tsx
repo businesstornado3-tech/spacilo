@@ -9,6 +9,8 @@ import * as React from "react";
 import { Camera, ImagePlus, UploadCloud } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { CoachMark } from "@/components/onboarding/CoachMark";
+import { track } from "@/lib/analytics/tracker";
 import { cn } from "@/lib/utils";
 import { ACCEPT_ATTRIBUTE, MAX_SCAN_PHOTOS } from "@/lib/vision";
 

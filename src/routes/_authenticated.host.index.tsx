@@ -15,6 +15,7 @@ import { pendingForHost } from "@/lib/storage-requests";
 import { formatM3, remainingVolume } from "@/lib/spaces";
 import { useMySpaces } from "@/hooks/useMySpaces";
 import { HostSpaceFitCard } from "@/components/host/spacefit/HostSpaceFitCard";
+import { SpacePlannerCard } from "@/components/spaceplanner/photo/SpacePlannerCard";
 import { hostSpaceFitState } from "@/lib/spacefit-hub";
 
 export const Route = createFileRoute("/_authenticated/host/")({

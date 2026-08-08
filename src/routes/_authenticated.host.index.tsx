@@ -75,8 +75,9 @@ function HostDashboardPage() {
       <ActionsNeeded audience="host" />
       <ReviewPrompts audience="host" />
 
-      <div className="mb-6">
+      <div className="mb-6 grid gap-4">
         <HostSpaceFitCard state={spaceFit} />
+        <SpacePlannerCard mode="host" />
       </div>
       {pendingCount > 0 ? (
         <div className="mb-6 rounded-2xl border border-border bg-accent-soft p-5 shadow-card">

@@ -1,6 +1,6 @@
 import { CheckCircle2, Circle, CircleAlert, LoaderCircle } from "lucide-react";
 
-import type { VisualisationStatus } from "@/hooks/useSpaceVisualisation";
+import type { RenderDiagnostics, VisualisationStatus } from "@/hooks/useSpaceVisualisation";
 import { manifestHash, verificationStatusOf } from "@/lib/spaceplanner/photo/diagnostics";
 import type {
   CanonicalInventory,
@@ -25,6 +25,7 @@ export function SpacePlannerDiagnostics({
   manifest,
   visualStatus,
   coverage,
+  render,
 }: {
   photoCount: number;
   detectedCount: number;
@@ -33,6 +34,8 @@ export function SpacePlannerDiagnostics({
   manifest: PlacementManifest | null;
   visualStatus: VisualisationStatus;
   coverage: CoverageReport | null;
+  /** Which service produced the image, for support and provider verification. */
+  render?: RenderDiagnostics | null;
 }) {
   const renderWorking = visualStatus === "working";
   const renderFailed = visualStatus === "failed" || visualStatus === "rejected";
@@ -75,6 +78,10 @@ export function SpacePlannerDiagnostics({
         <div><dt>Arrangement score</dt><dd className="font-medium text-foreground">{manifest ? `${manifest.qualityScore}/100` : "—"}</dd></div>
         <div><dt>Access corridor</dt><dd className="font-medium text-foreground">{manifest?.corridorSide ?? "—"}</dd></div>
         <div><dt>Hard constraints</dt><dd className="font-medium text-foreground">{manifest ? (manifest.valid ? "all passed" : `${manifest.violations.length} failed`) : "—"}</dd></div>
+        <div><dt>Render provider</dt><dd className="font-medium text-foreground">{render?.provider ?? "—"}</dd></div>
+        <div><dt>Render model</dt><dd className="font-medium text-foreground">{render?.model ?? "—"}</dd></div>
+        <div><dt>Render time</dt><dd className="font-medium text-foreground">{render?.renderMs ? `${(render.renderMs / 1000).toFixed(1)}s` : "—"}</dd></div>
+        <div><dt>Diagnostic ID</dt><dd className="font-medium text-foreground">{render?.diagnosticId ?? "—"}</dd></div>
         <div><dt>Verification</dt><dd className="font-medium text-foreground">{verified.replace("_", " ")}</dd></div>
         {manifest && manifest.unplaced.length > 0 ? (
           <div className="sm:col-span-2">

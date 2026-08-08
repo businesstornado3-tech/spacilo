@@ -18,6 +18,7 @@ import { DetectedInventory } from "@/components/vision/DetectedInventory";
 import { PhotoArrangement } from "@/components/spaceplanner/photo/PhotoArrangement";
 import { SpacePlannerResult } from "@/components/spaceplanner/photo/SpacePlannerResult";
 import { useVisionAI } from "@/hooks/useVisionAI";
+import { useSpaceVisualisation } from "@/hooks/useSpaceVisualisation";
 import { buildPhotoPlan, spaceFromScan, type SpaceSource } from "@/lib/spaceplanner/photo";
 import { track } from "@/lib/analytics/tracker";
 

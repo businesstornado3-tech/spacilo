@@ -217,7 +217,13 @@ export async function requestVisualisation(
 
 
   const payload = (await response.json().catch(() => null)) as
-    | { image?: unknown; error?: unknown; coverage?: CoverageReport }
+    | {
+        image?: unknown;
+        error?: unknown;
+        coverage?: CoverageReport;
+        verification?: VerificationVerdict;
+        diagnosticId?: unknown;
+      }
     | null;
 
   if (!response.ok) {
@@ -229,10 +235,22 @@ export async function requestVisualisation(
     throw new VisualisationError("no_image_returned");
   }
 
+  const coverage = payload.coverage ?? null;
   const result: VisualisationResponse = {
     image: payload.image,
-    coverage: payload.coverage ?? null,
+    coverage,
+    verification:
+      payload.verification ??
+      (!coverage
+        ? "unverified"
+        : !coverage.faithful
+          ? "unfaithful"
+          : coverage.complete
+            ? "verified"
+            : "incomplete"),
+    diagnosticId: typeof payload.diagnosticId === "string" ? payload.diagnosticId : null,
   };
   sessionCache.set(signature, result);
   return result;
 }
+

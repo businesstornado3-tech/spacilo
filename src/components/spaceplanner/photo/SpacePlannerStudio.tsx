@@ -182,22 +182,34 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 </Button>
               ) : null}
               {stuff.objects.length > 0 ? (
-                <>
-                  <DetectedInventory
-                    objects={stuff.objects}
-                    actions={stuff.editor}
-                    onAdd={stuff.editor.add}
-                  />
-                  <Button type="button" variant="secondary" size="lg" onClick={() => setStep("space")}>
-                    Now show us the space
-                    <ArrowRight aria-hidden="true" />
-                  </Button>
-                </>
+                <Button type="button" variant="secondary" size="lg" onClick={() => setStep("review")}>
+                  See what Spacilo AI found
+                  <ArrowRight aria-hidden="true" />
+                </Button>
               ) : null}
             </>
           )}
         </div>
       ) : null}
+
+      {step === "review" ? (
+        <div className="space-y-4" aria-live="polite">
+          {stuff.objects.length > 0 ? (
+            <InventoryLock
+              objects={stuff.objects}
+              actions={stuff.editor}
+              onAdd={stuff.editor.add}
+              onConfirm={confirmInventory}
+              onRetake={() => setStep("stuff")}
+            />
+          ) : (
+            <p className="type-body-sm text-muted-foreground">
+              Add photos of your belongings and run Spacilo AI to build your inventory.
+            </p>
+          )}
+        </div>
+      ) : null}
+
 
       {step === "space" ? (
         <div className="space-y-4" aria-live="polite">

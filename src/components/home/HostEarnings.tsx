@@ -8,7 +8,9 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { track } from "@/lib/analytics/tracker";
 import { Reveal } from "@/components/common/Reveal";
+import { CoachMark } from "@/components/onboarding/CoachMark";
 import { HostEntryButton } from "@/components/home/HostEntryButton";
 import {
   DEMAND_BANDS,
@@ -80,23 +82,47 @@ export function EarningsEstimator() {
   const [kind, setKind] = React.useState<EarningSpaceKind>("garage");
   const [size, setSize] = React.useState<SizeBandId>("medium");
   const [demand, setDemand] = React.useState<DemandBandId>("town");
+  const [touched, setTouched] = React.useState(false);
+  const started = React.useRef(false);
 
   const range = estimateEarnings({ kind, size, demand });
 
+  /** Records the first interaction, then the settled estimate. */
+  const noteInteraction = () => {
+    if (!started.current) {
+      started.current = true;
+      track("earnings_estimate_started");
+    }
+    setTouched(true);
+  };
+
+  React.useEffect(() => {
+    if (!touched) return;
+    const timer = window.setTimeout(() => {
+      track("earnings_estimate_completed", { props: { kind, size, demand } });
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [touched, kind, size, demand]);
+
   return (
-    <div className="mt-6 grid gap-5 rounded-3xl border border-border bg-card p-5 shadow-card lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:items-center sm:p-6">
+    <div className="mt-6 grid gap-5 rounded-3xl border border-border bg-card p-5 shadow-card sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:items-center">
       <div className="min-w-0">
         <h3 className="type-h4">Estimate my earnings</h3>
         <p className="mt-1 type-body-sm text-muted-foreground">
           Three quick choices — no account, no address.
         </p>
 
+        <CoachMark id="earnings_estimator" className="mt-3" />
+
         <ChoiceRow label="Space type">
           {EARNING_EXAMPLES.map((example) => (
             <Chip
               key={example.kind}
               active={kind === example.kind}
-              onClick={() => setKind(example.kind)}
+              onClick={() => {
+                setKind(example.kind);
+                noteInteraction();
+              }}
             >
               {example.label}
             </Chip>
@@ -105,7 +131,14 @@ export function EarningsEstimator() {
 
         <ChoiceRow label="Approximate size">
           {SIZE_BANDS.map((band) => (
-            <Chip key={band.id} active={size === band.id} onClick={() => setSize(band.id)}>
+            <Chip
+              key={band.id}
+              active={size === band.id}
+              onClick={() => {
+                setSize(band.id);
+                noteInteraction();
+              }}
+            >
               {band.label}
               <span className="text-muted-foreground"> · {band.hint}</span>
             </Chip>
@@ -114,7 +147,14 @@ export function EarningsEstimator() {
 
         <ChoiceRow label="Location">
           {DEMAND_BANDS.map((band) => (
-            <Chip key={band.id} active={demand === band.id} onClick={() => setDemand(band.id)}>
+            <Chip
+              key={band.id}
+              active={demand === band.id}
+              onClick={() => {
+                setDemand(band.id);
+                noteInteraction();
+              }}
+            >
               {band.label}
             </Chip>
           ))}

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { bookingKeys, changeRequestKeys, useBooking } from "@/hooks/useBookings";
 import { useBookingPayments } from "@/hooks/usePayments";
 import { formatDate, formatPrice } from "@/lib/format";
+import { track } from "@/lib/analytics/tracker";
 
 const description = "We're confirming your payment with our payment provider.";
 
@@ -53,6 +54,12 @@ function PaymentReturnPage() {
   const failed = extensionId
     ? extensionPayment?.status === "failed" || extensionPayment?.status === "expired"
     : (payments ?? []).some((p) => p.status === "failed" || p.status === "expired");
+
+  // The verified webhook — not the redirect — is what marks a payment complete.
+  useEffect(() => {
+    if (!confirmed) return;
+    track("payment_completed", { props: { kind: extensionId ? "extension" : "booking" } });
+  }, [confirmed, extensionId]);
 
   // Keep the booking query in step with the polled payment rows.
   useEffect(() => {

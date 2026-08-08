@@ -9,6 +9,8 @@ import * as React from "react";
 import { Camera, ImagePlus, UploadCloud } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { CoachMark } from "@/components/onboarding/CoachMark";
+import { track } from "@/lib/analytics/tracker";
 import { cn } from "@/lib/utils";
 import { ACCEPT_ATTRIBUTE, MAX_SCAN_PHOTOS } from "@/lib/vision";
 
@@ -30,16 +32,27 @@ export function ScanUploader({
   const fileRef = React.useRef<HTMLInputElement>(null);
   const cameraRef = React.useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = React.useState(false);
+  const announced = React.useRef(false);
+
+  /** Passes files straight through; records the milestone once per mount. */
+  const accept = (files: FileList | File[], source: "drop" | "browse" | "camera") => {
+    if (!announced.current) {
+      announced.current = true;
+      track("vision_upload_started", { props: { source } });
+    }
+    onFiles(files);
+  };
 
   const handleDrop = (event: React.DragEvent) => {
     event.preventDefault();
     setDragging(false);
     if (disabled) return;
-    if (event.dataTransfer.files?.length) onFiles(event.dataTransfer.files);
+    if (event.dataTransfer.files?.length) accept(event.dataTransfer.files, "drop");
   };
 
   return (
     <div className={className}>
+      <CoachMark id="vision_upload" className="mb-3" />
       <div
         onDragOver={(event) => {
           event.preventDefault();
@@ -91,7 +104,7 @@ export function ScanUploader({
         className="sr-only"
         aria-label="Browse photos"
         onChange={(event) => {
-          if (event.target.files?.length) onFiles(event.target.files);
+          if (event.target.files?.length) accept(event.target.files, "browse");
           event.target.value = "";
         }}
       />
@@ -104,7 +117,7 @@ export function ScanUploader({
         className="sr-only"
         aria-label="Take a photo"
         onChange={(event) => {
-          if (event.target.files?.length) onFiles(event.target.files);
+          if (event.target.files?.length) accept(event.target.files, "camera");
           event.target.value = "";
         }}
       />

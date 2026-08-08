@@ -12,6 +12,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { CoachMark } from "@/components/onboarding/CoachMark";
 import { Alert } from "@/components/common/Alert";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -76,6 +77,7 @@ function PlannerWorkspacePage() {
       title="My planner"
       description="Your saved inventories and every plan Spacilo AI has run for you."
     >
+      <CoachMark id="planner" className="mb-4" />
       {open ? (
         <PlannerWorkspace
           inventory={open}

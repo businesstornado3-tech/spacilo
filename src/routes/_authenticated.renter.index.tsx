@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/common/States";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ActionsNeeded } from "@/components/bookings/ActionsNeeded";
+import { CoachMark } from "@/components/onboarding/CoachMark";
 import { ReviewPrompts } from "@/components/reviews/ReviewPrompts";
 import { useAuth } from "@/hooks/useAuth";
 import { useActiveInventory, useInventoryItems, useInventorySummary } from "@/hooks/useInventory";
@@ -59,6 +60,7 @@ function RenterHomePage() {
       title={firstName ? `Hi, ${firstName}` : "Hi there"}
       description="What do you need space for?"
     >
+      <CoachMark id="renter_dashboard" className="mb-4" />
       <ActionsNeeded audience="renter" />
       <ReviewPrompts audience="renter" />
 

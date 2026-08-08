@@ -10,6 +10,7 @@ import { ShieldCheck } from "lucide-react";
 
 import heroPhoto from "@/assets/hero-storage.jpg";
 import { SearchControls } from "@/components/search/SearchControls";
+import { CoachMark } from "@/components/onboarding/CoachMark";
 import { track } from "@/lib/analytics/tracker";
 
 export function MarketplaceEntry() {
@@ -55,6 +56,7 @@ export function MarketplaceEntry() {
         </div>
 
         <div className="rounded-3xl border border-border bg-card p-4 shadow-card sm:p-5 lg:col-start-1 lg:row-start-2">
+          <CoachMark id="home_search" className="mb-3" />
           <SearchControls
             submitLabel="Search nearby"
             onSubmit={({ location, radius }) => {

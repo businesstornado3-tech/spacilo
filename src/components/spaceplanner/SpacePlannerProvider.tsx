@@ -9,6 +9,8 @@
  */
 import * as React from "react";
 
+import { track } from "@/lib/analytics/tracker";
+
 import {
   CATALOGUE_BY_ID,
   SPACE_BY_ID,
@@ -143,13 +145,19 @@ export function SpacePlannerProvider({
     setPhase("build");
   }, []);
 
-  const run = React.useCallback(() => setPhase("thinking"), []);
+  const run = React.useCallback(() => {
+    setPhase("thinking");
+    track("planner_started", { props: { items: lines.length } });
+  }, [lines.length]);
 
   const completeRun = React.useCallback(() => {
     setPhase("plan");
     setHasCompletedRun(true);
+    track("planner_completed", {
+      props: { items: lines.length, fit: score ? Math.round(score.value) : 0 },
+    });
     if (plan && score) onRunComplete?.(plan, score);
-  }, [plan, score, onRunComplete]);
+  }, [plan, score, onRunComplete, lines.length]);
 
   const itemTypeCount = lines.length;
 

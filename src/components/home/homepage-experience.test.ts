@@ -80,7 +80,13 @@ describe("hero delivers the three messages", () => {
   it("shows the transformation, not a static illustration", () => {
     expect(hero).toContain("HeroVisual");
     const visual = readFileSync("src/components/spaceplanner/HeroVisual.tsx", "utf8");
-    expect(visual).toContain("HeroGarageAnimation");
+    expect(visual).toContain("HeroTwin");
+
+    // Marketing hero: a cinematic teaser, never the interactive twin controls.
+    const teaser = readFileSync("src/components/twin/HeroTwinTeaser.tsx", "utf8");
+    for (const control of ["Replay", "Before", "After", "onSelect", "Add:"]) {
+      expect(teaser).not.toContain(control);
+    }
   });
 });
 

@@ -25,7 +25,7 @@ import { PhotoArrangement } from "@/components/spaceplanner/photo/PhotoArrangeme
 import { SpacePlannerResult } from "@/components/spaceplanner/photo/SpacePlannerResult";
 import { EarningsEstimateCard } from "@/components/spaceplanner/photo/EarningsEstimateCard";
 import { useVisionAI } from "@/hooks/useVisionAI";
-import { useSpaceVisualisation } from "@/hooks/useSpaceVisualisation";
+import { isVisualisationWorking, useSpaceVisualisation } from "@/hooks/useSpaceVisualisation";
 import { useStableScroll } from "@/hooks/useStableScroll";
 import { InventoryLock } from "@/components/spaceplanner/photo/InventoryLock";
 import { SpacePlannerDiagnostics } from "@/components/spaceplanner/photo/SpacePlannerDiagnostics";

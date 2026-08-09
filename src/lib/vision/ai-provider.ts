@@ -16,11 +16,9 @@ import type { ItemCategory, WeightClass } from "@/lib/spaceplanner/types";
 import { validDimensionCm } from "./canonical";
 import { prepareSelection } from "./crop";
 import {
-  detectionCacheKey,
   readDetectionCache,
   readSpaceCache,
   recordTiming,
-  spaceCacheKey,
   writeDetectionCache,
   writeSpaceCache,
 } from "./detection-cache";

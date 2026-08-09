@@ -30,13 +30,13 @@ const INPUTS = [
     src: stuffPhoto,
     step: "1",
     label: "Your stuff",
-    alt: "Two sage suitcases, a navy duffel bag, labelled boxes, woven baskets and folded bedding",
+    alt: "A TV on an oak stand with two sage suitcases, a navy holdall, a backpack, cardboard boxes, baskets and folded bedding",
   },
   {
     src: spacePhoto,
     step: "2",
     label: "Your space",
-    alt: "An empty white single garage photographed from the door",
+    alt: "An empty, clean white single garage photographed from the open door",
   },
 ] as const;
 
@@ -47,7 +47,7 @@ const READOUTS = [
 ] as const;
 
 const ARRANGED_ALT =
-  "The same garage with the same belongings consolidated against the left wall and a clear walkway to the rear";
+  "The same garage with the same belongings arranged efficiently: TV on its stand, suitcases grouped, boxes stacked, bags and bedding consolidated on top, and a clear walkway to the rear";
 
 export function SpacePlannerSection() {
   const [started, setStarted] = React.useState(false);

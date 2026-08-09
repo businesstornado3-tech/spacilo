@@ -296,10 +296,84 @@ export function normaliseItems(raw: unknown, photoIds: string[]): DetectedItemPa
             .slice(0, 8)
             .map((part) => part.slice(0, 40))
         : [],
+      mountingType: MOUNTINGS.includes(String(record["mountingType"]))
+        ? String(record["mountingType"])
+        : "floor",
+      ...(typeof record["colour"] === "string" && record["colour"].trim()
+        ? { colour: record["colour"].trim().slice(0, 30) }
+        : {}),
+      ...(typeof record["material"] === "string" && record["material"].trim()
+        ? { material: record["material"].trim().slice(0, 30) }
+        : {}),
     });
   });
   return out;
 }
+
+/**
+ * Phase 6V — deterministic cross-photograph merge.
+ *
+ * The same physical object photographed twice used to be merged by a second
+ * model call. It is merged here instead: identical labels with comparable
+ * dimensions are one object, and the photo ids are unioned rather than the
+ * counts added. Deterministic, instant, and it cannot invent anything.
+ */
+export function mergeAcrossPhotos(groups: DetectedItemPayload[][]): DetectedItemPayload[] {
+  const out: DetectedItemPayload[] = [];
+  const stem = (label: string) =>
+    label
+      .toLowerCase()
+      .replace(/[^a-z0-9 ]+/g, " ")
+      .split(/\s+/)
+      .filter(Boolean)
+      .sort()
+      .join(" ");
+  const comparable = (a: DetectedItemPayload, b: DetectedItemPayload) => {
+    const ratio = (x: number, y: number) => Math.max(x, y) / Math.max(1, Math.min(x, y));
+    return (
+      ratio(a.widthCm, b.widthCm) < 1.6 &&
+      ratio(a.depthCm, b.depthCm) < 1.6 &&
+      ratio(a.heightCm, b.heightCm) < 1.6
+    );
+  };
+
+  groups.forEach((group) => {
+    group.forEach((item) => {
+      const existing = out.find(
+        (candidate) =>
+          stem(candidate.label) === stem(item.label) &&
+          candidate.category === item.category &&
+          comparable(candidate, item),
+      );
+      if (!existing) {
+        out.push({ ...item, photoIds: [...item.photoIds] });
+        return;
+      }
+      // Same object, another angle: union the photos, keep the larger count
+      // rather than adding the two together, and keep the better evidence.
+      existing.photoIds = Array.from(new Set([...existing.photoIds, ...item.photoIds]));
+      existing.quantity = Math.max(existing.quantity, item.quantity);
+      if (item.confidence > existing.confidence) {
+        existing.confidence = item.confidence;
+        if (item.evidence) existing.evidence = item.evidence;
+      }
+    });
+  });
+
+  // Ids must stay unique after merging.
+  const used = new Set<string>();
+  return out.map((item) => {
+    let id = item.id;
+    let suffix = 2;
+    while (used.has(id)) {
+      id = `${item.id}-${suffix}`;
+      suffix += 1;
+    }
+    used.add(id);
+    return { ...item, id };
+  });
+}
+
 
 export const Route = createFileRoute("/api/vision-detect")({
   server: {

@@ -57,12 +57,15 @@ interface VisualiseBody {
   manifest?: ManifestItem[];
   emphasise?: string[];
   roomFeatures?: { id?: string; label?: string; kind?: string; position?: string }[];
+  /** Support relationships the deterministic plan asserted. Verified, not hinted. */
+  supports?: { itemId?: string; itemLabel?: string; baseId?: string; baseLabel?: string }[];
   /** Carried through for diagnostics only. Never used to re-plan. */
   planHash?: string;
   inventoryHash?: string;
   /** Varies the retry request without changing the plan. */
   nonce?: number;
 }
+
 
 function dataUrl(image: { mimeType?: string; base64?: string }): string | null {
   if (!image?.base64) return null;

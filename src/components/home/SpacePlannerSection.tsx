@@ -57,7 +57,7 @@ export function SpacePlannerSection() {
     <section
       id="spaceplanner"
       aria-labelledby="spaceplanner-preview-heading"
-      className="scroll-mt-20 py-10 sm:py-14"
+      className="scroll-mt-20 pb-10 pt-2 sm:pb-14 sm:pt-4"
     >
       <div className="mx-auto w-full max-w-5xl px-4 sm:px-6">
         <Reveal>

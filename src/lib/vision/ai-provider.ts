@@ -49,6 +49,7 @@ interface ApiItem {
   widthCm: number;
   depthCm: number;
   heightCm: number;
+  volumeM3?: number;
   weight: string;
   fragile: boolean;
   stackable: boolean;
@@ -56,6 +57,7 @@ interface ApiItem {
   photoIds: string[];
   evidence?: string;
   components?: string[];
+  sourceDetectionId?: string;
 }
 
 const CATEGORIES: ItemCategory[] = [

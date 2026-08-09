@@ -13,7 +13,11 @@ import { manifestHash } from "./diagnostics";
 import { objectVolume } from "@/lib/vision/inventory";
 import type { DetectedObject, RoomFeature } from "@/lib/vision/types";
 import type { PhotoPlanResult } from "./plan";
-import { categoriseVerification, type CategorisedVerification } from "./verification";
+import {
+  categoriseVerification,
+  type CategorisedVerification,
+  type ExpectedSupport,
+} from "./verification";
 
 /** A confirmed, immutable-by-convention inventory. */
 export interface CanonicalInventory {

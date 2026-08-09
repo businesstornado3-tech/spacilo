@@ -193,10 +193,21 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
+/** A stable, non-index-derived id for an item. */
+function slugId(label: string, fallback: string): string {
+  const slug = label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  return slug ? `ITEM-${slug}` : fallback;
+}
+
 /** Keeps only items the observations can support, and normalises them. */
 export function normaliseItems(raw: unknown, photoIds: string[]): DetectedItemPayload[] {
   const list = Array.isArray(raw) ? raw : [];
   const out: DetectedItemPayload[] = [];
+  const used = new Set<string>();
   list.forEach((entry, index) => {
     if (!entry || typeof entry !== "object") return;
     const record = entry as Record<string, unknown>;
@@ -209,16 +220,38 @@ export function normaliseItems(raw: unknown, photoIds: string[]): DetectedItemPa
       : [];
     const category = typeof record["category"] === "string" ? record["category"] : "";
     const weight = typeof record["weight"] === "string" ? record["weight"] : "";
+
+    // Identity comes from the model's own id, or from the name — never from
+    // the array position, so dropping one item cannot renumber the rest.
+    const reported = typeof record["id"] === "string" ? record["id"].trim() : "";
+    const positional = `ITEM-${String(index + 1).padStart(3, "0")}`;
+    let id = reported || slugId(label, positional);
+    let suffix = 2;
+    while (used.has(id)) {
+      id = `${reported || slugId(label, positional)}-${suffix}`;
+      suffix += 1;
+    }
+    used.add(id);
+
+    // Dimensions are validated one by one, so a missing value can never be
+    // filled by the next field along.
+    const widthCm = clamp(Math.round(num(record["widthCm"], 40)), 3, 400);
+    const depthCm = clamp(Math.round(num(record["depthCm"], 40)), 3, 400);
+    const heightCm = clamp(Math.round(num(record["heightCm"], 40)), 3, 300);
+
     out.push({
-      id: `ITEM-${String(index + 1).padStart(3, "0")}`,
+      id,
+      sourceDetectionId: reported || id,
       label: label.slice(0, 60),
       category: CATEGORIES.includes(category) ? category : "boxes",
       quantity: clamp(Math.round(num(record["quantity"], 1)), 1, 99),
       countBasis:
         typeof record["countBasis"] === "string" ? record["countBasis"].slice(0, 160) : "",
-      widthCm: clamp(Math.round(num(record["widthCm"], 40)), 3, 400),
-      depthCm: clamp(Math.round(num(record["depthCm"], 40)), 3, 400),
-      heightCm: clamp(Math.round(num(record["heightCm"], 40)), 3, 300),
+      widthCm,
+      depthCm,
+      heightCm,
+      // Calculated here so every consumer sees the same cubic metres.
+      volumeM3: (widthCm * depthCm * heightCm) / 1_000_000,
       weight: WEIGHTS.includes(weight) ? weight : "medium",
       fragile: record["fragile"] === true,
       stackable: record["stackable"] === true,

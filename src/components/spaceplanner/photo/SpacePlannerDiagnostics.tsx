@@ -52,6 +52,8 @@ function TimingRow({
       </span>
     </span>
   );
+}
+
 
 
 export function SpacePlannerDiagnostics({

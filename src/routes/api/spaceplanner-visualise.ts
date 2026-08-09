@@ -325,8 +325,11 @@ export function buildRenderPrompt(options: {
   roomFeatures: { id: string; label: string }[];
   emphasise: string[];
   hasItemPhotos: boolean;
+  supports?: readonly ExpectedSupport[];
 }): string {
   const { instruction, manifest, required, roomFeatures, emphasise, hasItemPhotos } = options;
+  const supports = options.supports ?? [];
+
   const whitelist = manifest
     .map((entry, index) => {
       const label = typeof entry?.label === "string" ? entry.label.trim() : "";

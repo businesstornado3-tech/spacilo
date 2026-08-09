@@ -359,7 +359,13 @@ export function buildRenderPrompt(options: {
       ? `The previous attempt did not show these items. They must be clearly visible this time: ${emphasise.join("; ")}.`
       : "",
     "ARRANGEMENT RULES, in priority order: (1) draw each item at the exact coordinates given; (2) pack items against walls, shoulder to shoulder, with no gaps between neighbours; (3) never place an item in the middle of the open floor or spread items evenly; (4) keep the stated access corridor completely empty; (5) respect perspective and scale, rest every item on the floor or on the item below with contact shadows; (6) nothing floating, clipped, duplicated or invented.",
+    supports.length
+      ? `SUPPORT RELATIONSHIPS — these objects are stacked on top of another object and must NOT be drawn on the floor: ${supports
+          .map((support) => `${support.itemLabel} rests on top of ${support.baseLabel}`)
+          .join("; ")}. Draw each one in contact with its base, with a contact shadow.`
+      : "",
     "THE MANIFEST IS AUTHORITATIVE. Do not move, rotate, resize, duplicate, remove or reinterpret any object because another position would look better. A position you disagree with is still the position you must draw.",
+
     required.length
       ? `The finished photograph must contain exactly ${required.length} stored units from the list — no extra objects of any kind.`
       : "",

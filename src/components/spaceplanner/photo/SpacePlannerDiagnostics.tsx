@@ -29,6 +29,31 @@ function StageIcon({ state }: { state: StageState }) {
   return <Circle className="size-4 text-muted-foreground" aria-hidden="true" />;
 }
 
+/** One measured stage. Unmeasured stages read "—", never "0s". */
+function TimingRow({
+  label,
+  ms,
+  verdict,
+}: {
+  label: string;
+  ms: number | null;
+  verdict?: BudgetVerdict;
+}) {
+  return (
+    <span className="flex items-center justify-between gap-2">
+      <span>{label}</span>
+      <span className="font-medium text-foreground">
+        {formatMs(ms)}
+        {verdict && verdict.state !== "unknown" ? (
+          <span className={verdict.state === "over" ? "ml-1 text-warning" : "ml-1 text-success"}>
+            {verdict.state === "over" ? `over by ${formatMs(verdict.overBy)}` : "within target"}
+          </span>
+        ) : null}
+      </span>
+    </span>
+  );
+
+
 export function SpacePlannerDiagnostics({
   photoCount,
   detectedCount,

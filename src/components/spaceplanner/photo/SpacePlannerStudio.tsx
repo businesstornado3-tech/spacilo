@@ -532,25 +532,35 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
               </SpacePlannerResult>
 
               {manifest ? (
-                visual.status === "failed" || visual.status === "rejected" ? (
+                // Phase 6T — the measured plan is the primary deliverable. It
+                // is shown outright unless a render has actually passed
+                // verification, so nobody waits on an image to see their plan.
+                visual.status !== "verified" ? (
                   <section className="rounded-2xl border border-border bg-surface p-4">
                     <h4 className="type-h4">Your arrangement plan is ready</h4>
                     <p className="mt-1 type-body-sm text-muted-foreground">
-                      The photographic preview didn&apos;t come out accurately this time, so
-                      we&apos;re showing the plan itself — the same positions the planner decided,
-                      drawn to scale.
+                      {isVisualisationWorking(visual.status)
+                        ? "These are the positions the planner decided, drawn to scale. The photographic preview is still rendering."
+                        : visual.status === "idle"
+                          ? "These are the positions the planner decided, drawn to scale."
+                          : "The photographic preview didn't come out accurately this time, so we're showing the plan itself — the same positions the planner decided, drawn to scale."}
                     </p>
                     <ArrangementPlanDiagram manifest={manifest} className="mt-3" />
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="mt-3"
-                      onClick={() => void visual.generate()}
-                    >
-                      <RefreshCw aria-hidden="true" />
-                      Try the visual preview again
-                    </Button>
+                    {isVisualisationWorking(visual.status) ? null : (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="mt-3"
+                        onClick={() => void visual.generate()}
+                      >
+                        <RefreshCw aria-hidden="true" />
+                        {visual.status === "idle"
+                          ? "Create a visual preview"
+                          : "Try the visual preview again"}
+                      </Button>
+                    )}
                   </section>
+
                 ) : (
                   <details className="rounded-2xl border border-border bg-surface p-4">
                     <summary className="cursor-pointer type-label text-foreground">

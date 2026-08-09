@@ -82,8 +82,16 @@ const byHeightDesc = (a: StackCandidate, b: StackCandidate): number => {
   return byFootprintDesc(a, b);
 };
 
-/** The four heuristics, always attempted in this order. */
+/** The deterministic strategies, always attempted in this order. */
 export const PACK_STRATEGIES: PackStrategy[] = [
+  {
+    id: "candidate-search",
+    label: "Scored candidate search (deterministic optimiser)",
+    bands: (bands) => bands,
+    order: placementOrder,
+    orientations: (options) => options,
+    search: true,
+  },
   {
     id: "wall-first",
     label: "Largest and heaviest against the walls",

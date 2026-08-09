@@ -76,6 +76,10 @@ export interface DetectedItemPayload {
   components: string[];
   /** The detector's own identity for this object. Never index-derived. */
   sourceDetectionId: string;
+  /** floor | wall_mounted | tabletop | stackable_unit. */
+  mountingType: string;
+  colour?: string;
+  material?: string;
 }
 
 

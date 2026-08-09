@@ -204,9 +204,34 @@ export interface CategoryReport {
   unexpected: string[];
 }
 
+/**
+ * Phase 6T — one support relationship the manifest asserts and the render must
+ * therefore show: "ITEM-009 is resting on the top surface of ITEM-007".
+ */
+export interface ExpectedSupport {
+  itemId: string;
+  itemLabel: string;
+  baseId: string;
+  baseLabel: string;
+}
+
+/** What the verifier says it can see about one supported object. */
+export interface SupportObservation {
+  /** The supported object, by id or label. */
+  item: string;
+  /** What it is resting on, by id or label. "floor" is a valid answer. */
+  restingOn: string;
+}
+
 export interface CategorisedVerification {
   userInventory: CategoryReport;
   roomFeatures: CategoryReport;
+  /**
+   * Support relationships the manifest asserted that the render did not show —
+   * a bottle the plan put on a box that was drawn on the floor. Positional
+   * drift, not a hallucination, but still not a faithful render.
+   */
+  supportIssues: string[];
   /**
    * True only when every user belonging is present and nothing was invented.
    * Room-feature drift is reported but never withholds a render — the room
@@ -222,6 +247,14 @@ export interface VerifierReply {
   unexpected: string[];
   /** Room features the verifier says vanished or changed. Never fatal. */
   missingFeatures?: string[];
+  /**
+   * Phase 6T — EVERY stored object the verifier can see, described in its own
+   * words. Classified here against the whitelists, so a hallucination is
+   * caught by our own logic rather than by asking the model to police itself.
+   */
+  objects?: string[];
+  /** What each supported object was actually drawn resting on. */
+  supports?: SupportObservation[];
 }
 
 /**
@@ -234,7 +267,10 @@ export function categoriseVerification(input: {
   reply: VerifierReply;
   /** Labels that are legitimate belongings but not separately required. */
   itemAliases?: readonly string[];
+  /** Support relationships the deterministic plan asserted. */
+  expectedSupports?: readonly ExpectedSupport[];
 }): CategorisedVerification {
+
   const { items, features, reply } = input;
   const whitelists = { items, features, ...(input.itemAliases ? { itemAliases: input.itemAliases } : {}) };
 

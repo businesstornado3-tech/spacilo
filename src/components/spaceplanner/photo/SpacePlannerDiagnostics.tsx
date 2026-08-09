@@ -37,8 +37,9 @@ export function SpacePlannerDiagnostics({
   /** Which service produced the image, for support and provider verification. */
   render?: RenderDiagnostics | null;
 }) {
-  const renderWorking = visualStatus === "working";
-  const renderFailed = visualStatus === "failed" || visualStatus === "rejected";
+  const renderWorking = isVisualisationWorking(visualStatus);
+  const renderFailed =
+    visualStatus === "failed" || visualStatus === "unfaithful" || visualStatus === "unverified";
   const verified = verificationStatusOf(coverage);
   const stages: { label: string; state: StageState }[] = [
     { label: "Photos", state: photoCount > 0 ? "passed" : "waiting" },
@@ -49,13 +50,14 @@ export function SpacePlannerDiagnostics({
     { label: "Placement manifest", state: manifest ? "passed" : "waiting" },
     {
       label: "Render",
-      state: renderFailed ? "failed" : visualStatus === "ready" ? "passed" : renderWorking ? "working" : "waiting",
+      state: renderFailed ? "failed" : visualStatus === "verified" ? "passed" : renderWorking ? "working" : "waiting",
     },
     {
       label: "Render verification",
       state: verified === "passed" ? "passed" : verified === "rejected" || verified === "incomplete" ? "failed" : renderWorking ? "working" : "waiting",
     },
   ];
+
 
   return (
     <details className="rounded-lg border border-border bg-surface p-4">

@@ -140,14 +140,14 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
         inventoryLocked: Boolean(inventory),
         planReady: Boolean(manifest),
         constraintsClear: Boolean(result && result.arrangement.violations.length === 0),
-        render:
-          visual.status === "working"
-            ? "working"
-            : visual.status === "ready"
-              ? "ready"
-              : visual.status === "failed" || visual.status === "rejected"
-                ? "failed"
-                : "idle",
+        render: isVisualisationWorking(visual.status)
+          ? "working"
+          : visual.status === "verified"
+            ? "ready"
+            : visual.status === "idle"
+              ? "idle"
+              : "failed",
+
         verification: verificationStatusOf(visual.coverage),
       }),
     [

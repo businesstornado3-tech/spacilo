@@ -81,8 +81,17 @@ export function SpacePlannerDiagnostics({
         <div><dt>Render provider</dt><dd className="font-medium text-foreground">{render?.provider ?? "—"}</dd></div>
         <div><dt>Render model</dt><dd className="font-medium text-foreground">{render?.model ?? "—"}</dd></div>
         <div><dt>Render time</dt><dd className="font-medium text-foreground">{render?.renderMs ? `${(render.renderMs / 1000).toFixed(1)}s` : "—"}</dd></div>
+        <div><dt>Photo prep time</dt><dd className="font-medium text-foreground">{render?.prepareMs ? `${(render.prepareMs / 1000).toFixed(1)}s` : "—"}</dd></div>
+        <div><dt>Total visualisation time</dt><dd className="font-medium text-foreground">{render?.totalMs ? `${(render.totalMs / 1000).toFixed(1)}s` : "—"}</dd></div>
         <div><dt>Diagnostic ID</dt><dd className="font-medium text-foreground">{render?.diagnosticId ?? "—"}</dd></div>
         <div><dt>Verification</dt><dd className="font-medium text-foreground">{verified.replace("_", " ")}</dd></div>
+        {coverage?.featureNotes?.length ? (
+          <div className="sm:col-span-2">
+            <dt>Room-feature drift (not a rejection)</dt>
+            <dd className="font-medium text-foreground">{coverage.featureNotes.join("; ")}</dd>
+          </div>
+        ) : null}
+
         {manifest && manifest.unplaced.length > 0 ? (
           <div className="sm:col-span-2">
             <dt>Not placed</dt>

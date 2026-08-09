@@ -509,7 +509,7 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
   }
 
 
-  return [...current.map((entry) => entry.entry), ...stacked.map((entry) => entry.entry)];
+  return placed.map((entry) => entry.entry);
 }
 
 

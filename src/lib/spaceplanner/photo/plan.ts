@@ -115,9 +115,25 @@ export function linesFromObjects(objects: DetectedObject[]): InventoryLine[] {
 
 /** A scanned space → the planner's metric space. */
 export function spaceFromScan(scan: SpaceScanResult, name = "Your space"): SpaceSource {
+  // Phase 6Q — the planner's space is the ROOM. The marked storage area is
+  // carried separately as the usable rectangle, so a narrow marked strip can
+  // no longer shrink the walls a television has to hang on.
+  const roomWidthM = Math.max(scan.widthM, scan.roomWidthM ?? scan.widthM);
+  const roomDepthM = Math.max(scan.depthM, scan.roomDepthM ?? scan.depthM);
+  const subArea = roomWidthM > scan.widthM + 0.01 || roomDepthM > scan.depthM + 0.01;
   return {
-    widthM: scan.widthM,
-    depthM: scan.depthM,
+    widthM: roomWidthM,
+    depthM: roomDepthM,
+    ...(subArea
+      ? {
+          usable: {
+            x: round2((roomWidthM - scan.widthM) / 2),
+            y: round2(roomDepthM - scan.depthM),
+            w: round2(scan.widthM),
+            d: round2(scan.depthM),
+          },
+        }
+      : {}),
     heightM: scan.ceilingHeightM,
     name,
     confidence: scan.confidence,
@@ -141,6 +157,7 @@ export function toStorageSpace(source: SpaceSource): StorageSpace {
   };
 }
 
+const round2 = (value: number) => Math.round(value * 100) / 100;
 const round1 = (value: number) => Math.round(value * 10) / 10;
 const pct = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
 

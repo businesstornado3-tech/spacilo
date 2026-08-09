@@ -13,7 +13,14 @@ import { cn } from "@/lib/utils";
 import { ConfidenceBadge } from "@/components/vision/ConfidenceBadge";
 import { formatVolume, formatWeight } from "@/lib/spaceplanner/library";
 import type { WeightClass } from "@/lib/spaceplanner/types";
-import { needsReview, objectVolume, objectWeightKg, type DetectedObject } from "@/lib/vision";
+import {
+  confidenceTier,
+  confidenceTierCopy,
+  needsReview,
+  objectVolume,
+  objectWeightKg,
+  type DetectedObject,
+} from "@/lib/vision";
 
 export interface DetectedObjectActions {
   update: (id: string, patch: Partial<DetectedObject>) => void;

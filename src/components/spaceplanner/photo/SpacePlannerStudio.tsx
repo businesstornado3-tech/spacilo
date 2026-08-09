@@ -138,6 +138,43 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     itemPhotos: stuff.photos,
   });
 
+  // Phase 6U — time-to-arrangement is measured from the moment the space scan
+  // starts to the moment a validated manifest exists: the honest answer to
+  // "how long until I can see my plan?".
+  const arrangementStartRef = React.useRef<number | null>(null);
+  const [timeToArrangementMs, setTimeToArrangementMs] = React.useState<number | null>(null);
+  React.useEffect(() => {
+    if (space.status === "analysing") {
+      arrangementStartRef.current = Date.now();
+      setTimeToArrangementMs(null);
+    }
+  }, [space.status]);
+  React.useEffect(() => {
+    if (manifest && arrangementStartRef.current !== null) {
+      setTimeToArrangementMs((current) =>
+        current === null ? Date.now() - arrangementStartRef.current! : current,
+      );
+    }
+  }, [manifest]);
+
+  const timings = React.useMemo(
+    () =>
+      mergeTimings(EMPTY_TIMINGS, {
+        detectionMs: stuff.timings.detectionMs,
+        classificationMs: stuff.timings.classificationMs,
+        inventoryReadyMs: stuff.timings.readyMs,
+        spaceAnalysisMs: space.timings.readyMs,
+        planMs: planRun.ms,
+        manifestValidationMs: manifestRun.ms,
+        timeToArrangementMs,
+        renderMs: visual.diagnostics?.renderMs ?? null,
+        verifyMs: visual.diagnostics?.verifyMs ?? null,
+        totalMs: visual.diagnostics?.totalMs ?? null,
+      }),
+    [stuff.timings, space.timings, planRun.ms, manifestRun.ms, timeToArrangementMs, visual.diagnostics],
+  );
+
+
   /** Ten real pipeline stages, derived from state that genuinely exists. */
   const steps = React.useMemo(
     () =>

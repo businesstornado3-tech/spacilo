@@ -465,6 +465,7 @@ export function coverageFrom(
     missing: userInventory.missing,
     unexpected: userInventory.unexpected,
     featureNotes: roomFeatures.unexpected,
+    supportIssues: categories.supportIssues,
     complete: userInventory.missing.length === 0 && required.length > 0,
     faithful: userInventory.unexpected.length === 0,
     categories,

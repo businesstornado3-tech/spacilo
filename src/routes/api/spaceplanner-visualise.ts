@@ -283,6 +283,8 @@ async function checkCoverage(
                     : "",
                   'Reply JSON only, exactly: {"objects":["short description of every stored object you can see"],"present":["ITEM-1"],"unexpected":["short description"],"missingFeatures":["FEATURE-1"],"supports":[{"item":"short description","restingOn":"floor or the object it stands on"}]}.',
                   '"objects" is an INDEPENDENT list: describe every portable/stored object in the generated photograph before you look at any whitelist. Do not omit small objects such as shoes, bottles, toys, bags or cushions.',
+                  '"objects" MUST BE QUANTITY-ACCURATE: list each physical unit separately, or prefix the count ("2x cardboard box"). Two identical suitcases are two entries, never one.',
+
                   '"present" lists the USER_INVENTORY_WHITELIST ids you can clearly see, counting duplicate units separately.',
                   '"unexpected" lists ONLY stored objects visible in the generated photograph that are on NEITHER whitelist — for example shoes, bags, chairs, plants, tools, extra boxes. Never put a room feature or a whitelisted item in this list.',
                   '"missingFeatures" lists ROOM_FEATURE_WHITELIST ids that disappeared, moved, changed or became covered. Room features always go here, never in "unexpected".',

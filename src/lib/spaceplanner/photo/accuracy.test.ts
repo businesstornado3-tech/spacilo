@@ -48,7 +48,11 @@ describe("detection payload", () => {
       ],
       ["photo-1", "photo-2"],
     );
-    expect(items.map((item) => item.id)).toEqual(["ITEM-001", "ITEM-002"]);
+    // Phase 6O: identity comes from the item itself, not its array position.
+    expect(items.map((item) => item.id)).toEqual([
+      "ITEM-fabric-storage-bag",
+      "ITEM-three-drawer-unit",
+    ]);
     expect(items[0]!.photoIds).toEqual(["photo-1"]);
   });
 

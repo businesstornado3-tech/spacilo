@@ -64,6 +64,8 @@ export interface DetectedItemPayload {
   widthCm: number;
   depthCm: number;
   heightCm: number;
+  /** Derived from the dimensions above, never taken from the model. */
+  volumeM3: number;
   weight: string;
   fragile: boolean;
   stackable: boolean;
@@ -72,6 +74,8 @@ export interface DetectedItemPayload {
   evidence: string;
   /** Parts of this object that are not separate items (rails, cushions…). */
   components: string[];
+  /** The detector's own identity for this object. Never index-derived. */
+  sourceDetectionId: string;
 }
 
 
@@ -144,7 +148,8 @@ const DETECT_SYSTEM = [
   "You report ONLY what is physically visible in the photograph in front of you.",
   "Absolute rules:",
   "1. Never invent, assume or add an object that is not visible. An empty or unclear photo returns an empty list.",
-  "2. Describe objects physically (shape, material, colour, approximate size against nearby references). Do not use catalogue names and do not guess contents.",
+  "2. NAME what you see. If an object is recognisable as an everyday thing, say what it is in plain UK English with its distinguishing features: 'large blue wheeled suitcase', 'black backpack', 'black-framed table', 'large wall-mounted screen', 'cardboard box', 'plastic storage crate'. A shape-and-colour description such as 'small dark tapered object' is a LAST RESORT, used only when the object genuinely cannot be identified — and then say why in the description.",
+  "2b. Do not go the other way either: no brands, no models, no exact identities the image cannot support, and never guess what is inside a closed container.",
   "3. Count only what you can actually see. If several identical things are visible, say how many and how you counted them. If you cannot count them, say so and give the number you can see.",
   "4. Report WHOLE objects, not their parts. A cot, a sofa, a wardrobe or a pushchair is ONE object. Its rails, cushions, mattress, drawers, doors, wheels and handles are parts of it — put them in partOf, never in their own entry.",
   "5. Do not group different objects together either. Two different things are two entries.",
@@ -161,11 +166,12 @@ const CLASSIFY_SYSTEM = [
   "2. The same physical object seen in more than one photograph is ONE item. Merge it and list every photo id it appeared in. Do not add the counts together when it is clearly the same object.",
   "3. Report the PRIMARY object, not its components. If observations describe a cot with rails and a mattress, that is one item 'Cot' with components ['rails','mattress'] — never three items. Only list something separately when it can be stored on its own.",
   "4. Quantity must be justified by the observations. State the basis in countBasis.",
-  "5. Give each item a plain, specific UK label describing what it actually is (for example 'Fabric storage bag', 'Three-drawer plastic unit'). Never label something you were not told about.",
-  "6. Size is an ESTIMATE in centimetres of the WHOLE assembled object, from the described size cues. Be cautious and realistic.",
+  "5. Give each item a useful, human-readable UK label naming the object and its distinguishing feature: 'Large blue wheeled case', 'Large grey wheeled case', 'Black backpack', 'Black-framed table', 'Large wall-mounted screen', 'Cardboard box'. Keep it under about six words.",
+  "5b. Only fall back to a shape-and-colour label ('Small dark tapered object') when the observation genuinely could not identify the thing. When you do, set confidence below 0.6 so a person is asked to confirm it. Never invent a brand or an identity the observation does not support.",
+  "6. Size is an ESTIMATE in centimetres of the WHOLE assembled object, from the described size cues. Be cautious and realistic. Every one of widthCm, depthCm and heightCm must be a positive number — never 0, never omitted, never copied from another dimension to fill a gap.",
   "7. category must be one of: boxes, furniture, appliances, electronics, leisure, seasonal.",
   "8. weight must be one of: light, medium, heavy.",
-  "9. confidence is 0-1 and must drop when the observation was uncertain or occluded.",
+  "9. confidence is 0-1 and must drop when the observation was uncertain or occluded. Below 0.6 means 'not identified'.",
   "Reply as JSON: {\"items\":[{\"id\":\"ITEM-001\",\"label\":\"...\",\"category\":\"boxes\",\"quantity\":1,\"countBasis\":\"...\",\"widthCm\":0,\"depthCm\":0,\"heightCm\":0,\"weight\":\"medium\",\"fragile\":false,\"stackable\":false,\"confidence\":0.0,\"photoIds\":[\"...\"],\"evidence\":\"...\",\"components\":[\"...\"]}]}",
 ].join("\n");
 
@@ -189,10 +195,21 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
+/** A stable, non-index-derived id for an item. */
+function slugId(label: string, fallback: string): string {
+  const slug = label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  return slug ? `ITEM-${slug}` : fallback;
+}
+
 /** Keeps only items the observations can support, and normalises them. */
 export function normaliseItems(raw: unknown, photoIds: string[]): DetectedItemPayload[] {
   const list = Array.isArray(raw) ? raw : [];
   const out: DetectedItemPayload[] = [];
+  const used = new Set<string>();
   list.forEach((entry, index) => {
     if (!entry || typeof entry !== "object") return;
     const record = entry as Record<string, unknown>;
@@ -205,16 +222,38 @@ export function normaliseItems(raw: unknown, photoIds: string[]): DetectedItemPa
       : [];
     const category = typeof record["category"] === "string" ? record["category"] : "";
     const weight = typeof record["weight"] === "string" ? record["weight"] : "";
+
+    // Identity comes from the model's own id, or from the name — never from
+    // the array position, so dropping one item cannot renumber the rest.
+    const reported = typeof record["id"] === "string" ? record["id"].trim() : "";
+    const positional = `ITEM-${String(index + 1).padStart(3, "0")}`;
+    let id = reported || slugId(label, positional);
+    let suffix = 2;
+    while (used.has(id)) {
+      id = `${reported || slugId(label, positional)}-${suffix}`;
+      suffix += 1;
+    }
+    used.add(id);
+
+    // Dimensions are validated one by one, so a missing value can never be
+    // filled by the next field along.
+    const widthCm = clamp(Math.round(num(record["widthCm"], 40)), 3, 400);
+    const depthCm = clamp(Math.round(num(record["depthCm"], 40)), 3, 400);
+    const heightCm = clamp(Math.round(num(record["heightCm"], 40)), 3, 300);
+
     out.push({
-      id: `ITEM-${String(index + 1).padStart(3, "0")}`,
+      id,
+      sourceDetectionId: reported || id,
       label: label.slice(0, 60),
       category: CATEGORIES.includes(category) ? category : "boxes",
       quantity: clamp(Math.round(num(record["quantity"], 1)), 1, 99),
       countBasis:
         typeof record["countBasis"] === "string" ? record["countBasis"].slice(0, 160) : "",
-      widthCm: clamp(Math.round(num(record["widthCm"], 40)), 3, 400),
-      depthCm: clamp(Math.round(num(record["depthCm"], 40)), 3, 400),
-      heightCm: clamp(Math.round(num(record["heightCm"], 40)), 3, 300),
+      widthCm,
+      depthCm,
+      heightCm,
+      // Calculated here so every consumer sees the same cubic metres.
+      volumeM3: (widthCm * depthCm * heightCm) / 1_000_000,
       weight: WEIGHTS.includes(weight) ? weight : "medium",
       fragile: record["fragile"] === true,
       stackable: record["stackable"] === true,

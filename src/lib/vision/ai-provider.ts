@@ -13,6 +13,7 @@
  */
 import type { ItemCategory, WeightClass } from "@/lib/spaceplanner/types";
 
+import { validDimensionCm } from "./canonical";
 import { prepareSelection } from "./crop";
 import {
   detectionCacheKey,
@@ -49,6 +50,7 @@ interface ApiItem {
   widthCm: number;
   depthCm: number;
   heightCm: number;
+  volumeM3?: number;
   weight: string;
   fragile: boolean;
   stackable: boolean;
@@ -56,6 +58,7 @@ interface ApiItem {
   photoIds: string[];
   evidence?: string;
   components?: string[];
+  sourceDetectionId?: string;
 }
 
 const CATEGORIES: ItemCategory[] = [
@@ -75,16 +78,22 @@ function weight(value: string): WeightClass {
   return value === "light" || value === "heavy" ? value : "medium";
 }
 
-/** API item → the shared detected-object shape. Identity is preserved. */
+/**
+ * API item → the shared detected-object shape.
+ *
+ * Every field is read by name from its own key, so a missing value stays
+ * missing instead of pulling the next field into its place, and the item's id
+ * travels with it unchanged.
+ */
 export function toDetectedObject(item: ApiItem): DetectedObject {
   return {
     id: item.id,
     label: item.label,
     category: category(item.category),
     confidence: item.confidence,
-    width: item.widthCm,
-    depth: item.depthCm,
-    height: item.heightCm,
+    width: validDimensionCm(item.widthCm) ?? 0,
+    depth: validDimensionCm(item.depthCm) ?? 0,
+    height: validDimensionCm(item.heightCm) ?? 0,
     weight: weight(item.weight),
     quantity: Math.max(1, Math.round(item.quantity)),
     fragile: Boolean(item.fragile),
@@ -94,6 +103,7 @@ export function toDetectedObject(item: ApiItem): DetectedObject {
     catalogueId: null,
     photoIds: item.photoIds,
     source: "ai",
+    sourceDetectionId: item.sourceDetectionId ?? item.id,
     ...(item.countBasis ? { countBasis: item.countBasis } : {}),
     ...(item.evidence ? { evidence: item.evidence } : {}),
     ...(item.components?.length ? { components: item.components } : {}),

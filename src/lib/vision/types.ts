@@ -71,6 +71,8 @@ export interface DetectedObject {
   components?: string[];
   /** The user's own selection this object came from, when they marked one. */
   selectionId?: string;
+  /** The detector's own identity for this object. Never index-derived. */
+  sourceDetectionId?: string | null;
 }
 
 export interface VisionResult {

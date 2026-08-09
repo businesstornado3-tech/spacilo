@@ -13,7 +13,14 @@ import { cn } from "@/lib/utils";
 import { ConfidenceBadge } from "@/components/vision/ConfidenceBadge";
 import { formatVolume, formatWeight } from "@/lib/spaceplanner/library";
 import type { WeightClass } from "@/lib/spaceplanner/types";
-import { needsReview, objectVolume, objectWeightKg, type DetectedObject } from "@/lib/vision";
+import {
+  confidenceTier,
+  confidenceTierCopy,
+  needsReview,
+  objectVolume,
+  objectWeightKg,
+  type DetectedObject,
+} from "@/lib/vision";
 
 export interface DetectedObjectActions {
   update: (id: string, patch: Partial<DetectedObject>) => void;
@@ -36,6 +43,7 @@ export function DetectedObjectCard({
 }) {
   const [open, setOpen] = React.useState(false);
   const review = needsReview(object);
+  const tier = confidenceTier(object.confidence);
 
   return (
     <li
@@ -75,9 +83,16 @@ export function DetectedObjectCard({
         </div>
       </div>
 
-      {review ? (
-        <p className="mt-2 rounded-lg bg-warning-soft px-2.5 py-1.5 type-body-xs text-warning-soft-foreground">
-          Spacilo AI isn&apos;t sure about this one — please confirm or correct it.
+      {object.source === "ai" && tier !== "confident" ? (
+        <p
+          className={cn(
+            "mt-2 rounded-lg px-2.5 py-1.5 type-body-xs",
+            tier === "unsure"
+              ? "bg-destructive-soft text-destructive-soft-foreground"
+              : "bg-warning-soft text-warning-soft-foreground",
+          )}
+        >
+          {confidenceTierCopy(tier)}.
         </p>
       ) : null}
 

@@ -15,6 +15,15 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 
+import {
+  categoriseVerification,
+  normaliseLabel,
+  type CategorisedVerification,
+  type VerifierReply,
+  type WhitelistEntry,
+} from "@/lib/spaceplanner/photo/verification";
+
+
 /** Image model used to draw the manifest. Renderer only, never a planner. */
 const DEFAULT_IMAGE_MODEL = "google/gemini-3-pro-image";
 /** Vision model used only to check the render. Not a renderer. */

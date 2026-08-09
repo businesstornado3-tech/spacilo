@@ -17,14 +17,14 @@ import { ImageLightbox } from "@/components/common/ImageLightbox";
 import { projectPlacements, toPoints, DEFAULT_FLOOR_QUAD, type FloorQuad } from "@/lib/spaceplanner/photo";
 import type { CoverageReport } from "@/lib/spaceplanner/photo/manifest";
 import type { PackResult, StorageSpace } from "@/lib/spaceplanner";
+import {
+  isVisualisationWorking,
+  showsRenderedImage,
+  type VisualisationStatus,
+} from "@/hooks/useSpaceVisualisation";
 
-export type ArrangementStatus =
-  | "idle"
-  | "working"
-  | "ready"
-  | "incomplete"
-  | "rejected"
-  | "failed";
+export type ArrangementStatus = VisualisationStatus;
+
 
 export interface PhotoArrangementProps {
   /** The user's own photograph of the space. */
@@ -124,7 +124,8 @@ export function PhotoArrangement({
   onRetry,
   className,
 }: PhotoArrangementProps) {
-  const hasVisual = (status === "ready" || status === "incomplete") && Boolean(arrangedUrl);
+  // Phase 6T — the rendered photograph appears for exactly one state.
+  const hasVisual = showsRenderedImage(status) && Boolean(arrangedUrl);
 
   const [showArranged, setShowArranged] = React.useState(true);
   const [position, setPosition] = React.useState(100);
@@ -171,7 +172,7 @@ export function PhotoArrangement({
           </div>
         ) : null}
 
-        {status === "working" ? (
+        {isVisualisationWorking(status) ? (
           <div
             role="status"
             aria-live="polite"
@@ -304,13 +305,29 @@ export function PhotoArrangement({
         </p>
       ) : null}
 
-      {status === "rejected" ? (
+      {status === "unfaithful" || status === "unverified" ? (
         <div className="mt-3 rounded-2xl border border-warning-soft bg-warning-soft p-3 text-warning-soft-foreground">
           <p className="flex items-start gap-2 type-body-sm">
             <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            The visual preview showed belongings that are not in your inventory
-            {coverage?.unexpected?.length ? ` (${coverage.unexpected.join(", ")})` : ""}, so we
-            rejected it rather than show you something inaccurate. Your plan below is unaffected.
+            {status === "unverified" ? (
+              <>
+                We couldn&apos;t check the visual preview against your inventory, so we&apos;re not
+                showing it. Your measured plan below is unaffected.
+              </>
+            ) : coverage?.supportIssues?.length ? (
+              <>
+                The visual preview didn&apos;t follow the plan ({coverage.supportIssues.join(" ")}),
+                so we set it aside rather than show you something inaccurate. Your plan below is
+                unaffected.
+              </>
+            ) : (
+              <>
+                The visual preview showed belongings that are not in your inventory
+                {coverage?.unexpected?.length ? ` (${coverage.unexpected.join(", ")})` : ""}, so we
+                rejected it rather than show you something inaccurate. Your plan below is
+                unaffected.
+              </>
+            )}
           </p>
           {onRetry ? (
             <Button type="button" size="sm" variant="secondary" className="mt-2" onClick={onRetry}>
@@ -320,6 +337,7 @@ export function PhotoArrangement({
           ) : null}
         </div>
       ) : null}
+
 
       {status === "failed" ? (
         <div className="mt-3 rounded-2xl border border-border bg-surface p-3">

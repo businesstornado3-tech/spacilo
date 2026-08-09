@@ -1,6 +1,10 @@
 import { CheckCircle2, Circle, CircleAlert, LoaderCircle } from "lucide-react";
 
-import type { RenderDiagnostics, VisualisationStatus } from "@/hooks/useSpaceVisualisation";
+import {
+  isVisualisationWorking,
+  type RenderDiagnostics,
+  type VisualisationStatus,
+} from "@/hooks/useSpaceVisualisation";
 import { manifestHash, verificationStatusOf } from "@/lib/spaceplanner/photo/diagnostics";
 import type {
   CanonicalInventory,
@@ -37,8 +41,9 @@ export function SpacePlannerDiagnostics({
   /** Which service produced the image, for support and provider verification. */
   render?: RenderDiagnostics | null;
 }) {
-  const renderWorking = visualStatus === "working";
-  const renderFailed = visualStatus === "failed" || visualStatus === "rejected";
+  const renderWorking = isVisualisationWorking(visualStatus);
+  const renderFailed =
+    visualStatus === "failed" || visualStatus === "unfaithful" || visualStatus === "unverified";
   const verified = verificationStatusOf(coverage);
   const stages: { label: string; state: StageState }[] = [
     { label: "Photos", state: photoCount > 0 ? "passed" : "waiting" },
@@ -49,13 +54,14 @@ export function SpacePlannerDiagnostics({
     { label: "Placement manifest", state: manifest ? "passed" : "waiting" },
     {
       label: "Render",
-      state: renderFailed ? "failed" : visualStatus === "ready" ? "passed" : renderWorking ? "working" : "waiting",
+      state: renderFailed ? "failed" : visualStatus === "verified" ? "passed" : renderWorking ? "working" : "waiting",
     },
     {
       label: "Render verification",
       state: verified === "passed" ? "passed" : verified === "rejected" || verified === "incomplete" ? "failed" : renderWorking ? "working" : "waiting",
     },
   ];
+
 
   return (
     <details className="rounded-lg border border-border bg-surface p-4">
@@ -82,15 +88,25 @@ export function SpacePlannerDiagnostics({
         <div><dt>Render model</dt><dd className="font-medium text-foreground">{render?.model ?? "—"}</dd></div>
         <div><dt>Render time</dt><dd className="font-medium text-foreground">{render?.renderMs ? `${(render.renderMs / 1000).toFixed(1)}s` : "—"}</dd></div>
         <div><dt>Photo prep time</dt><dd className="font-medium text-foreground">{render?.prepareMs ? `${(render.prepareMs / 1000).toFixed(1)}s` : "—"}</dd></div>
+        <div><dt>Verification time</dt><dd className="font-medium text-foreground">{render?.verifyMs ? `${(render.verifyMs / 1000).toFixed(1)}s` : "—"}</dd></div>
         <div><dt>Total visualisation time</dt><dd className="font-medium text-foreground">{render?.totalMs ? `${(render.totalMs / 1000).toFixed(1)}s` : "—"}</dd></div>
         <div><dt>Diagnostic ID</dt><dd className="font-medium text-foreground">{render?.diagnosticId ?? "—"}</dd></div>
+        <div><dt>Image state</dt><dd className="font-medium text-foreground">{visualStatus}</dd></div>
         <div><dt>Verification</dt><dd className="font-medium text-foreground">{verified.replace("_", " ")}</dd></div>
+        <div><dt>Inventory reference</dt><dd className="break-all font-mono text-foreground">{render?.inventoryHash ?? "—"}</dd></div>
+        {coverage?.supportIssues?.length ? (
+          <div className="sm:col-span-2">
+            <dt>Support drift (render rejected)</dt>
+            <dd className="font-medium text-foreground">{coverage.supportIssues.join("; ")}</dd>
+          </div>
+        ) : null}
         {coverage?.featureNotes?.length ? (
           <div className="sm:col-span-2">
             <dt>Room-feature drift (not a rejection)</dt>
             <dd className="font-medium text-foreground">{coverage.featureNotes.join("; ")}</dd>
           </div>
         ) : null}
+
 
         {manifest && manifest.unplaced.length > 0 ? (
           <div className="sm:col-span-2">

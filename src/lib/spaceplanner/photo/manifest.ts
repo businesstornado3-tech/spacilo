@@ -13,7 +13,11 @@ import { manifestHash } from "./diagnostics";
 import { objectVolume } from "@/lib/vision/inventory";
 import type { DetectedObject, RoomFeature } from "@/lib/vision/types";
 import type { PhotoPlanResult } from "./plan";
-import { categoriseVerification, type CategorisedVerification } from "./verification";
+import {
+  categoriseVerification,
+  type CategorisedVerification,
+  type ExpectedSupport,
+} from "./verification";
 
 /** A confirmed, immutable-by-convention inventory. */
 export interface CanonicalInventory {
@@ -100,7 +104,17 @@ export interface ManifestPosition {
   zone: string;
   /** True when this unit hangs on a wall rather than standing on the floor. */
   mounted: boolean;
+  /**
+   * Phase 6T — the item whose top surface physically carries this unit, or
+   * null when it stands on the floor. This is the manifest ASSERTING a physical
+   * relationship, not a textual hint: the renderer must draw it, and render
+   * verification checks for it.
+   */
+  supportSurfaceId: string | null;
+  /** How the unit is carried. "FLOOR" when it stands on the ground. */
+  supportType: "FLOOR" | "TOP_SURFACE" | "WALL";
 }
+
 
 export interface ManifestEntry {
   id: string;
@@ -194,7 +208,10 @@ export function buildPlacementManifest(
       orientation: entry.orientation,
       zone: entry.zone,
       mounted: entry.mounted,
+      supportSurfaceId: entry.supportedBy ?? null,
+      supportType: entry.mounted ? "WALL" : entry.supportedBy ? "TOP_SURFACE" : "FLOOR",
     }));
+
 
     const first = placed[0];
     const state: PlacementState =
@@ -282,6 +299,29 @@ export function manifestUnitCount(manifest: PlacementManifest): number {
 }
 
 /**
+ * Phase 6T — every "this object rests on that object" relationship the
+ * deterministic plan asserted. The renderer must draw them and render
+ * verification checks for them.
+ */
+export function manifestSupports(manifest: PlacementManifest): ExpectedSupport[] {
+  const labelOf = new Map(manifest.entries.map((entry) => [entry.id, entry.label]));
+  const supports: ExpectedSupport[] = [];
+  for (const entry of manifest.entries) {
+    for (const position of entry.positions) {
+      if (!position.supportSurfaceId) continue;
+      supports.push({
+        itemId: entry.id,
+        itemLabel: entry.label,
+        baseId: position.supportSurfaceId,
+        baseLabel: labelOf.get(position.supportSurfaceId) ?? position.supportSurfaceId,
+      });
+    }
+  }
+  return supports;
+}
+
+
+/**
  * Structured, model-facing manifest text.
  *
  * This is a rendering order, not a suggestion: exact metric coordinates in a
@@ -336,8 +376,17 @@ export function formatManifestForModel(manifest: PlacementManifest): string {
           lines.push(
             `Exact position ${i + 1}: rear-left corner at x=${position.xM}m, y=${position.yM}m; footprint ${position.widthM}m × ${position.depthM}m; base ${position.baseHeightM}m above the floor; total height ${position.heightM}m; ${position.units} unit(s)${position.units > 1 ? " stacked vertically in one column" : ""}; rotated ${position.rotationDeg}°; ${position.zone} zone.`,
           );
+          if (position.supportSurfaceId) {
+            const base = manifest.entries.find((candidate) => candidate.id === position.supportSurfaceId);
+            lines.push(
+              `SUPPORT: this unit is NOT on the floor. It rests on the top surface of ${position.supportSurfaceId}${base ? ` (${base.label})` : ""}. Draw it standing on that object, in contact with it, with a contact shadow. Drawing it on the floor is wrong.`,
+            );
+          } else if (position.mounted) {
+            lines.push("SUPPORT: this unit is fixed to the wall and does not touch the floor.");
+          }
         }
       }
+
 
       lines.push("Priority: preserve the recognisable appearance of the user's actual object");
       return lines.join("\n");
@@ -389,6 +438,12 @@ export interface CoverageReport {
    * Reported for honesty; never a reason to withhold the render.
    */
   featureNotes?: string[];
+  /**
+   * Phase 6T — support relationships the plan asserted that the render failed
+   * to show (a box the plan put on a suitcase, drawn on the floor). Positional
+   * drift: the image is not faithful to the plan, so it is not displayed.
+   */
+  supportIssues?: string[];
   /** Full per-category breakdown from the categorised verifier. */
   categories?: CategorisedVerification;
 }
@@ -410,6 +465,7 @@ export function coverageFrom(
     missing: userInventory.missing,
     unexpected: userInventory.unexpected,
     featureNotes: roomFeatures.unexpected,
+    supportIssues: categories.supportIssues,
     complete: userInventory.missing.length === 0 && required.length > 0,
     faithful: userInventory.unexpected.length === 0,
     categories,

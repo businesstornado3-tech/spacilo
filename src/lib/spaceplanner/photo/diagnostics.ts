@@ -82,8 +82,14 @@ export function serialiseManifest(manifest: PlacementManifest): string {
               position.rotationDeg,
               position.orientation,
               position.zone,
+              // Phase 6T — the support relationship is part of the plan's
+              // identity: the same footprints stacked differently is a
+              // different plan and must hash differently.
+              position.supportSurfaceId ?? "floor",
+              position.supportType,
             ].join(","),
           )
+
           .join(";"),
       ].join("|"),
     )

@@ -17,18 +17,46 @@ import {
   type VisualisationStage,
 } from "@/lib/spaceplanner/photo/visualise";
 import { prepareImage } from "@/lib/spaceplanner/photo/image-optimise";
-import type { CoverageReport, PlacementManifest } from "@/lib/spaceplanner/photo/manifest";
+import {
+  manifestSupports,
+  type CoverageReport,
+  type PlacementManifest,
+} from "@/lib/spaceplanner/photo/manifest";
 import type { PhotoPlanResult } from "@/lib/spaceplanner/photo";
 import type { DetectedObject, VisionPhoto } from "@/lib/vision/types";
 
+/**
+ * Phase 6T — the strict image state machine.
+ *
+ * Exactly one state shows the rendered photograph: "verified". Every other
+ * outcome — an invented object, a missing item, a checker that could not
+ * answer, a timeout — falls back to the measured arrangement plan. There is no
+ * path from "we could not check it" to "here is your arrangement".
+ */
 export type VisualisationStatus =
   | "idle"
-  | "working"
-  | "ready"
+  | "preparing"
+  | "rendering"
+  | "verifying"
+  /** Checked and faithful. THE ONLY STATE THAT DISPLAYS AN IMAGE. */
+  | "verified"
+  /** Contained objects the user does not own, or contradicted the plan. */
+  | "unfaithful"
+  /** Faithful, but did not show every planned item. */
   | "incomplete"
-  /** A render that contained objects the user does not own. Never shown. */
-  | "rejected"
+  /** The render arrived but could not be checked. Never displayed. */
+  | "unverified"
   | "failed";
+
+/** True while the pipeline is still doing work. */
+export function isVisualisationWorking(status: VisualisationStatus): boolean {
+  return status === "preparing" || status === "rendering" || status === "verifying";
+}
+
+/** True only for the one state permitted to display the rendered image. */
+export function showsRenderedImage(status: VisualisationStatus): boolean {
+  return status === "verified";
+}
 
 /**
  * Hard ceiling on one render request. A visual preview that has not arrived
@@ -45,9 +73,13 @@ export interface RenderDiagnostics {
   model: string | null;
   diagnosticId: string | null;
   planHash: string | null;
+  /** The inventory the image was rendered for. Guards against stale images. */
+  inventoryHash: string | null;
   renderMs: number | null;
   /** Milliseconds spent optimising the photographs before the render call. */
   prepareMs?: number | null;
+  /** Milliseconds spent on render verification. */
+  verifyMs?: number | null;
   /** Wall-clock time from pressing generate to a decided verdict. */
   totalMs?: number | null;
 }
@@ -68,6 +100,7 @@ export interface UseSpaceVisualisation {
   generate: () => Promise<void>;
   reset: () => void;
 }
+
 
 
 
@@ -128,7 +161,7 @@ export function useSpaceVisualisation(options: {
     }
     const token = ++run.current;
     abort.current?.abort();
-    setStatus("working");
+    setStatus("preparing");
     setStage("planning");
     setError(null);
     setImageUrl(null);
@@ -170,39 +203,47 @@ export function useSpaceVisualisation(options: {
       const prepareMs = Date.now() - preparedAt;
 
       setStage("rendering");
+      setStatus("rendering");
       const payload = {
         spaceImage: space,
         itemImages: items,
         instruction: buildVisualisationInstruction(result, objects, manifest ?? undefined),
         manifest: renderItems,
         roomFeatures: manifest.roomFeatures,
-        // Diagnostics only. Retries resend the SAME plan — never a new one.
+        supports: manifestSupports(manifest),
+        // Part of the cache key AND of the diagnostics. Retries resend the
+        // SAME plan — never a new one.
         planHash: manifest.planHash,
         inventoryHash: manifest.inventoryId,
       };
 
-
+      const renderedAt = Date.now();
       let response = await render(payload);
       if (run.current !== token) return;
+      const renderWallMs = Date.now() - renderedAt;
 
       // Render verification gate. A render is only accepted when it shows
-      // every confirmed item AND invents nothing. One corrective pass is
-      // attempted with the same manifest — the planner is never asked to
-      // replan — and after that the result is reported honestly.
+      // every confirmed item, invents nothing, and honours every support
+      // relationship the plan asserted. One corrective pass is attempted with
+      // the same manifest — the planner is never asked to replan.
+      const verifiedAt = Date.now();
       for (let pass = 1; pass < MAX_RENDER_ATTEMPTS; pass += 1) {
         setStage("checking");
+        setStatus("verifying");
         const coverageNow = response.coverage;
         // An unverifiable render is not a wrong render: the checker simply
-        // could not answer. It is shown, flagged as unverified.
+        // could not answer. It is not shown either way.
         if (!coverageNow) break;
         // Room-feature drift is deliberately NOT a retry trigger: redrawing
         // the room's own door slightly differently is not a plan failure.
         const missingItems = coverageNow.missing.length > 0;
         const invented = (coverageNow.unexpected?.length ?? 0) > 0;
-        if (!missingItems && !invented) break;
+        const drifted = (coverageNow.supportIssues?.length ?? 0) > 0;
+        if (!missingItems && !invented && !drifted) break;
 
         setAttempt(pass + 1);
         setStage("rendering");
+        setStatus("rendering");
         const retry = await render({
           ...payload,
           nonce: pass,
@@ -210,38 +251,56 @@ export function useSpaceVisualisation(options: {
         });
         if (run.current !== token) return;
         if (!retry.coverage || betterRender(retry.coverage, coverageNow)) response = retry;
-        if (response.coverage?.complete && (response.coverage.unexpected?.length ?? 0) === 0) break;
+        if (
+          response.coverage?.complete &&
+          (response.coverage.unexpected?.length ?? 0) === 0 &&
+          (response.coverage.supportIssues?.length ?? 0) === 0
+        ) {
+          break;
+        }
       }
 
       const finalCoverage = response.coverage;
       setStage("checking");
+      setStatus("verifying");
       setCoverage(finalCoverage);
       setDiagnostics({
         provider: response.provider,
         model: response.model,
         diagnosticId: response.diagnosticId,
         planHash: manifest.planHash,
-        renderMs: response.renderMs,
+        inventoryHash: manifest.inventoryId,
+        renderMs: response.renderMs ?? renderWallMs,
         prepareMs,
+        verifyMs: Date.now() - verifiedAt,
         totalMs: Date.now() - startedAt,
       });
 
-
-
-      // FAIL-CLOSED (Phase 6Q). An image that contains an object the user does
-      // not own — a stray shoe, a packet of wipes — is a false record of their
-      // belongings, so it is never shown, whatever else it got right. The user
-      // is given the measured arrangement plan instead. Retries are capped at
-      // MAX_RENDER_ATTEMPTS so a hallucinating renderer cannot burn credit.
+      // FAIL-CLOSED (Phase 6T). Only a render that was actually checked AND
+      // passed every check is shown. An invented object, a plan contradiction,
+      // a missing item or a checker that could not answer all fall back to the
+      // measured arrangement plan — the image is discarded, not downgraded.
       const inventedFinal = (finalCoverage?.unexpected?.length ?? 0) > 0;
-      if (response.verification === "unfaithful" || inventedFinal) {
+      const driftedFinal = (finalCoverage?.supportIssues?.length ?? 0) > 0;
+      if (response.verification === "unfaithful" || inventedFinal || driftedFinal) {
         setImageUrl(null);
-        setStatus("rejected");
+        setStatus("unfaithful");
+        return;
+      }
+      if (!finalCoverage || response.verification === "unverified") {
+        setImageUrl(null);
+        setStatus("unverified");
+        return;
+      }
+      if (response.verification === "incomplete" || !finalCoverage.complete) {
+        setImageUrl(null);
+        setStatus("incomplete");
         return;
       }
 
       setImageUrl(response.image);
-      setStatus(response.verification === "incomplete" ? "incomplete" : "ready");
+      setStatus("verified");
+
     } catch (cause) {
       if (run.current !== token) return;
       const aborted = cause instanceof DOMException && cause.name === "AbortError";

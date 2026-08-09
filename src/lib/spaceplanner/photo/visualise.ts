@@ -50,6 +50,8 @@ export interface VisualisationRequest {
   /** Structured manifest the image must satisfy. */
   manifest?: { id: string; label: string; quantity: number }[];
   roomFeatures?: readonly { id: string; label: string; kind: string; position: string }[];
+  /** Support relationships the plan asserted; rendered and then verified. */
+  supports?: readonly { itemId: string; itemLabel: string; baseId: string; baseLabel: string }[];
   /** Items a previous attempt missed; the retry emphasises these. */
   emphasise?: string[];
   /** Distinguishes a corrective re-render from the cached first attempt. */
@@ -58,6 +60,7 @@ export interface VisualisationRequest {
   planHash?: string;
   inventoryHash?: string;
 }
+
 
 /** How the server's own verification pass judged the returned image. */
 export type VerificationVerdict = "verified" | "incomplete" | "unfaithful" | "unverified";
@@ -173,9 +176,17 @@ export function manifestPayload(
 /**
  * Deterministic request signature. Same photos, same inventory, same plan →
  * same key, so a repeated request can reuse the previous image.
+ *
+ * Phase 6T — the plan and inventory hashes are part of the key. An image is
+ * only ever reused for the exact plan and exact inventory it was rendered for,
+ * so a re-plan can never be illustrated with a previous run's picture.
  */
 export function visualisationSignature(request: VisualisationRequest): string {
   const parts = [
+    request.planHash ?? "no-plan",
+    request.inventoryHash ?? "no-inventory",
+    (request.manifest ?? []).map((entry) => `${entry.id}x${entry.quantity}`).join(","),
+    (request.supports ?? []).map((support) => `${support.itemId}>${support.baseId}`).join(","),
     request.spaceImage.base64,
     ...request.itemImages.map((image) => image.base64),
     request.instruction,
@@ -184,6 +195,7 @@ export function visualisationSignature(request: VisualisationRequest): string {
   ];
   return `vis_${hashString(parts.join("|")).toString(36)}`;
 }
+
 
 /**
  * Per-session, in-memory only. Never persisted and never shared between
@@ -254,11 +266,12 @@ export async function requestVisualisation(
       payload.verification ??
       (!coverage
         ? "unverified"
-        : !coverage.faithful
+        : !coverage.faithful || (coverage.supportIssues?.length ?? 0) > 0
           ? "unfaithful"
           : coverage.complete
             ? "verified"
             : "incomplete"),
+
     diagnosticId: typeof payload.diagnosticId === "string" ? payload.diagnosticId : null,
     provider: typeof payload.provider === "string" ? payload.provider : null,
     model: typeof payload.model === "string" ? payload.model : null,

@@ -204,9 +204,34 @@ export interface CategoryReport {
   unexpected: string[];
 }
 
+/**
+ * Phase 6T — one support relationship the manifest asserts and the render must
+ * therefore show: "ITEM-009 is resting on the top surface of ITEM-007".
+ */
+export interface ExpectedSupport {
+  itemId: string;
+  itemLabel: string;
+  baseId: string;
+  baseLabel: string;
+}
+
+/** What the verifier says it can see about one supported object. */
+export interface SupportObservation {
+  /** The supported object, by id or label. */
+  item: string;
+  /** What it is resting on, by id or label. "floor" is a valid answer. */
+  restingOn: string;
+}
+
 export interface CategorisedVerification {
   userInventory: CategoryReport;
   roomFeatures: CategoryReport;
+  /**
+   * Support relationships the manifest asserted that the render did not show —
+   * a bottle the plan put on a box that was drawn on the floor. Positional
+   * drift, not a hallucination, but still not a faithful render.
+   */
+  supportIssues: string[];
   /**
    * True only when every user belonging is present and nothing was invented.
    * Room-feature drift is reported but never withholds a render — the room
@@ -222,6 +247,14 @@ export interface VerifierReply {
   unexpected: string[];
   /** Room features the verifier says vanished or changed. Never fatal. */
   missingFeatures?: string[];
+  /**
+   * Phase 6T — EVERY stored object the verifier can see, described in its own
+   * words. Classified here against the whitelists, so a hallucination is
+   * caught by our own logic rather than by asking the model to police itself.
+   */
+  objects?: string[];
+  /** What each supported object was actually drawn resting on. */
+  supports?: SupportObservation[];
 }
 
 /**
@@ -234,7 +267,10 @@ export function categoriseVerification(input: {
   reply: VerifierReply;
   /** Labels that are legitimate belongings but not separately required. */
   itemAliases?: readonly string[];
+  /** Support relationships the deterministic plan asserted. */
+  expectedSupports?: readonly ExpectedSupport[];
 }): CategorisedVerification {
+
   const { items, features, reply } = input;
   const whitelists = { items, features, ...(input.itemAliases ? { itemAliases: input.itemAliases } : {}) };
 
@@ -273,6 +309,19 @@ export function categoriseVerification(input: {
     if (text) featureIssues.push(text);
   }
 
+  // Phase 6T — INDEPENDENT hallucination detection. The verifier is asked to
+  // describe every stored object it can see; each description is classified
+  // here against the two whitelists. Anything matching neither is an invention,
+  // whether or not the model chose to flag it itself. This is what makes a
+  // hallucinated pair of shoes impossible to smuggle through by simply not
+  // being listed as "unexpected".
+  for (const entry of reply.objects ?? []) {
+    const text = entry.trim();
+    if (!text) continue;
+    const category = classifyReported(text, whitelists);
+    if (category === "unexpected") inventedItems.push(text);
+  }
+
   const itemIds = items.map((entry) => entry.id);
   const featureIds = features.map((entry) => entry.id);
   const missingFeatures = featureIds.filter((id) => !presentFeatureIds.has(canonicalId(id)));
@@ -291,12 +340,67 @@ export function categoriseVerification(input: {
     unexpected: dedupe(featureIssues),
   };
 
+  const supportIssues = supportDrift(input.expectedSupports ?? [], reply.supports ?? []);
+
   return {
     userInventory,
     roomFeatures,
-    verified: userInventory.missing.length === 0 && userInventory.unexpected.length === 0,
+    supportIssues,
+    verified:
+      userInventory.missing.length === 0 &&
+      userInventory.unexpected.length === 0 &&
+      supportIssues.length === 0,
   };
 }
+
+/** True when a reported "resting on" answer names the floor rather than an object. */
+export function meansFloor(value: string): boolean {
+  const label = normaliseLabel(value);
+  return /^(floor|ground|nothing|non|concret floor|room floor|the floor)$/.test(label) || label === "";
+}
+
+/** Does a free-text reference point at this whitelist entry? */
+function refersTo(reference: string, id: string, label: string): boolean {
+  const ids = new Set([canonicalId(reference), ...idsIn(reference)]);
+  if (ids.has(canonicalId(id))) return true;
+  const text = normaliseLabel(reference);
+  const target = normaliseLabel(label);
+  if (!text || !target) return false;
+  return text === target || containsLabel(text, target) || containsLabel(target, text);
+}
+
+/**
+ * Phase 6T positional verification. Every support relationship the manifest
+ * asserted is checked against what the verifier says it can see. Pixel-perfect
+ * coordinates are never required — only the relationship: elevated on the named
+ * base, versus sitting on the floor or on something else.
+ */
+export function supportDrift(
+  expected: readonly ExpectedSupport[],
+  observations: readonly SupportObservation[],
+): string[] {
+  const issues: string[] = [];
+  for (const support of expected) {
+    const observation = observations.find((entry) =>
+      refersTo(entry.item, support.itemId, support.itemLabel),
+    );
+    // No observation is not evidence of drift: the verifier simply did not say.
+    if (!observation) continue;
+    if (meansFloor(observation.restingOn)) {
+      issues.push(
+        `${support.itemLabel} should be resting on ${support.baseLabel}, but was drawn on the floor.`,
+      );
+      continue;
+    }
+    if (!refersTo(observation.restingOn, support.baseId, support.baseLabel)) {
+      issues.push(
+        `${support.itemLabel} should be resting on ${support.baseLabel}, but was drawn on ${observation.restingOn.trim()}.`,
+      );
+    }
+  }
+  return dedupe(issues);
+}
+
 
 function matchId(reported: string, whitelist: readonly WhitelistEntry[]): string | null {
   const ids = new Set([canonicalId(reported), ...idsIn(reported)]);

@@ -19,9 +19,11 @@ import {
   categoriseVerification,
   normaliseLabel,
   type CategorisedVerification,
+  type ExpectedSupport,
   type VerifierReply,
   type WhitelistEntry,
 } from "@/lib/spaceplanner/photo/verification";
+
 
 
 /** Image model used to draw the manifest. Renderer only, never a planner. */
@@ -55,12 +57,15 @@ interface VisualiseBody {
   manifest?: ManifestItem[];
   emphasise?: string[];
   roomFeatures?: { id?: string; label?: string; kind?: string; position?: string }[];
+  /** Support relationships the deterministic plan asserted. Verified, not hinted. */
+  supports?: { itemId?: string; itemLabel?: string; baseId?: string; baseLabel?: string }[];
   /** Carried through for diagnostics only. Never used to re-plan. */
   planHash?: string;
   inventoryHash?: string;
   /** Varies the retry request without changing the plan. */
   nonce?: number;
 }
+
 
 function dataUrl(image: { mimeType?: string; base64?: string }): string | null {
   if (!image?.base64) return null;
@@ -108,6 +113,11 @@ export interface Coverage {
    * door is not the user owning a belonging they do not have.
    */
   featureNotes: string[];
+  /**
+   * Support relationships the plan asserted that the render did not show.
+   * Positional drift: the image contradicts the plan, so it is not displayed.
+   */
+  supportIssues: string[];
   complete: boolean;
   /** False only when the renderer invented BELONGINGS. */
   faithful: boolean;
@@ -129,6 +139,7 @@ export function coverageOf(
   features: WhitelistEntry[] | string[],
   reply?: VerifierReply | string[],
   allowedLabels: string[] = [],
+  expectedSupports: readonly ExpectedSupport[] = [],
 ): Coverage {
   // Legacy call shape (required, present, unexpected, allowedLabels) is still
   // supported so existing verification suites keep exercising this logic.
@@ -146,6 +157,7 @@ export function coverageOf(
     reply: verifierReply,
     ...(legacy && allowedLabels.length ? { itemAliases: allowedLabels } : {}),
     ...(!legacy ? { itemAliases: whitelist.map((entry) => entry.label) } : {}),
+    ...(expectedSupports.length ? { expectedSupports } : {}),
   });
   const { userInventory, roomFeatures } = categories;
   return {
@@ -154,11 +166,13 @@ export function coverageOf(
     missing: userInventory.missing,
     unexpected: userInventory.unexpected,
     featureNotes: roomFeatures.unexpected,
+    supportIssues: categories.supportIssues,
     complete: userInventory.missing.length === 0 && userInventory.expected.length > 0,
     faithful: userInventory.unexpected.length === 0,
     categories,
   };
 }
+
 
 /** Reads the checker's JSON reply. Tolerates fenced or noisy output. */
 export function parsePresentLabels(text: string): string[] | null {
@@ -174,8 +188,9 @@ export function parsePresentLabels(text: string): string[] | null {
 }
 
 /**
- * Reads the verifier's reply as {present, unexpected, missingFeatures}. Falls
- * back to the older bare-array form so a terse model reply is still usable.
+ * Reads the verifier's reply as {present, unexpected, missingFeatures, objects,
+ * supports}. Falls back to the older bare-array form so a terse model reply is
+ * still usable.
  */
 export function parseCheckReply(text: string): VerifierReply | null {
   const object = text.match(/\{[\s\S]*\}/);
@@ -187,8 +202,18 @@ export function parseCheckReply(text: string): VerifierReply | null {
       const present = strings(parsed["present"]);
       const unexpected = strings(parsed["unexpected"]);
       const missingFeatures = strings(parsed["missingFeatures"]);
-      if (present.length || unexpected.length || missingFeatures.length) {
-        return { present, unexpected, missingFeatures };
+      const objects = strings(parsed["objects"]);
+      const supports = Array.isArray(parsed["supports"])
+        ? (parsed["supports"] as unknown[]).flatMap((entry) => {
+            if (!entry || typeof entry !== "object") return [];
+            const record = entry as Record<string, unknown>;
+            const item = typeof record["item"] === "string" ? record["item"] : "";
+            const restingOn = typeof record["restingOn"] === "string" ? record["restingOn"] : "";
+            return item ? [{ item, restingOn }] : [];
+          })
+        : [];
+      if (present.length || unexpected.length || missingFeatures.length || objects.length) {
+        return { present, unexpected, missingFeatures, objects, supports };
       }
     } catch {
       /* fall through to the array form */
@@ -203,12 +228,18 @@ export type Verdict = "verified" | "incomplete" | "unfaithful" | "unverified";
 /**
  * Turns an observation into a verdict. An absent or unreadable coverage report
  * is "unverified" — never silently promoted to "verified".
+ *
+ * Phase 6T: support drift is a contradiction of the deterministic plan, so a
+ * render that puts a supported object on the floor is unfaithful, exactly like
+ * an invented object. THE PLAN WINS.
  */
 export function verdictFor(coverage: Coverage | null): Verdict {
   if (!coverage) return "unverified";
   if (!coverage.faithful) return "unfaithful";
+  if ((coverage.supportIssues?.length ?? 0) > 0) return "unfaithful";
   return coverage.complete ? "verified" : "incomplete";
 }
+
 
 /**
  * Object-level render verification, through the gateway.
@@ -225,6 +256,7 @@ async function checkCoverage(
   required: { id: string; label: string }[],
   roomFeatures: { id: string; label: string }[],
   signal?: AbortSignal,
+  expectedSupports: readonly ExpectedSupport[] = [],
 ): Promise<Coverage | null> {
   if (required.length === 0) return null;
   try {
@@ -244,11 +276,20 @@ async function checkCoverage(
                   "Compare the SOURCE room photograph (first image) with the GENERATED photograph (second image).",
                   `USER_INVENTORY_WHITELIST — belongings that must appear, one entry per unit: ${required.map((item) => `${item.id}=${item.label}`).join("; ")}.`,
                   `ROOM_FEATURE_WHITELIST — parts of the building that must be preserved and are NEVER belongings: ${roomFeatures.map((feature) => `${feature.id}=${feature.label}`).join("; ") || "every fixed fixture visible in the source photograph (doors, doorways, windows, radiators, sockets, fitted units)"}.`,
-                  'Reply JSON only, exactly: {"present":["ITEM-1"],"unexpected":["short description"],"missingFeatures":["FEATURE-1"]}.',
+                  expectedSupports.length
+                    ? `EXPECTED_SUPPORTS — the plan places these objects ON TOP OF another object, never on the floor: ${expectedSupports
+                        .map((support) => `${support.itemLabel} on ${support.baseLabel}`)
+                        .join("; ")}.`
+                    : "",
+                  'Reply JSON only, exactly: {"objects":["short description of every stored object you can see"],"present":["ITEM-1"],"unexpected":["short description"],"missingFeatures":["FEATURE-1"],"supports":[{"item":"short description","restingOn":"floor or the object it stands on"}]}.',
+                  '"objects" is an INDEPENDENT list: describe every portable/stored object in the generated photograph before you look at any whitelist. Do not omit small objects such as shoes, bottles, toys, bags or cushions.',
                   '"present" lists the USER_INVENTORY_WHITELIST ids you can clearly see, counting duplicate units separately.',
                   '"unexpected" lists ONLY stored objects visible in the generated photograph that are on NEITHER whitelist — for example shoes, bags, chairs, plants, tools, extra boxes. Never put a room feature or a whitelisted item in this list.',
                   '"missingFeatures" lists ROOM_FEATURE_WHITELIST ids that disappeared, moved, changed or became covered. Room features always go here, never in "unexpected".',
-                ].join(" "),
+                  '"supports" reports, for each EXPECTED_SUPPORTS entry, what that object is actually standing on in the generated photograph. Answer "floor" when it stands on the ground.',
+                ]
+                  .filter(Boolean)
+                  .join(" "),
               },
               { type: "image_url", image_url: { url: sourceImage } },
               { type: "image_url", image_url: { url: image } },
@@ -265,7 +306,8 @@ async function checkCoverage(
     const text = typeof content === "string" ? content : "";
     const reply = parseCheckReply(text);
     if (!reply) return null;
-    return coverageOf(required, roomFeatures, reply);
+    return coverageOf(required, roomFeatures, reply, [], expectedSupports);
+
   } catch {
 
     return null;
@@ -283,8 +325,11 @@ export function buildRenderPrompt(options: {
   roomFeatures: { id: string; label: string }[];
   emphasise: string[];
   hasItemPhotos: boolean;
+  supports?: readonly ExpectedSupport[];
 }): string {
   const { instruction, manifest, required, roomFeatures, emphasise, hasItemPhotos } = options;
+  const supports = options.supports ?? [];
+
   const whitelist = manifest
     .map((entry, index) => {
       const label = typeof entry?.label === "string" ? entry.label.trim() : "";
@@ -314,7 +359,13 @@ export function buildRenderPrompt(options: {
       ? `The previous attempt did not show these items. They must be clearly visible this time: ${emphasise.join("; ")}.`
       : "",
     "ARRANGEMENT RULES, in priority order: (1) draw each item at the exact coordinates given; (2) pack items against walls, shoulder to shoulder, with no gaps between neighbours; (3) never place an item in the middle of the open floor or spread items evenly; (4) keep the stated access corridor completely empty; (5) respect perspective and scale, rest every item on the floor or on the item below with contact shadows; (6) nothing floating, clipped, duplicated or invented.",
+    supports.length
+      ? `SUPPORT RELATIONSHIPS — these objects are stacked on top of another object and must NOT be drawn on the floor: ${supports
+          .map((support) => `${support.itemLabel} rests on top of ${support.baseLabel}`)
+          .join("; ")}. Draw each one in contact with its base, with a contact shadow.`
+      : "",
     "THE MANIFEST IS AUTHORITATIVE. Do not move, rotate, resize, duplicate, remove or reinterpret any object because another position would look better. A position you disagree with is still the position you must draw.",
+
     required.length
       ? `The finished photograph must contain exactly ${required.length} stored units from the list — no extra objects of any kind.`
       : "",
@@ -375,6 +426,19 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         const emphasise = (body.emphasise ?? [])
           .filter((label): label is string => typeof label === "string")
           .slice(0, 20);
+        const supports: ExpectedSupport[] = (body.supports ?? []).flatMap((support) => {
+          const itemLabel = typeof support?.itemLabel === "string" ? support.itemLabel.trim() : "";
+          const baseLabel = typeof support?.baseLabel === "string" ? support.baseLabel.trim() : "";
+          if (!itemLabel || !baseLabel) return [];
+          return [
+            {
+              itemId: support.itemId?.trim() || itemLabel,
+              itemLabel,
+              baseId: support.baseId?.trim() || baseLabel,
+              baseLabel,
+            },
+          ];
+        });
 
         const model = imageModel();
         const diagnosticId = `vis_${Date.now().toString(36)}`;
@@ -385,7 +449,9 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           roomFeatures,
           emphasise,
           hasItemPhotos: itemPhotos.length > 0,
+          supports,
         });
+
 
         // Image-to-image edit through the gateway: the user's space photograph
         // first, then their belongings as visual references. The source photo
@@ -449,7 +515,15 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         const renderMs = Date.now() - startedRender;
 
         const startedCheck = Date.now();
-        const coverage = await checkCoverage(key, space, image, required, roomFeatures);
+        const coverage = await checkCoverage(
+          key,
+          space,
+          image,
+          required,
+          roomFeatures,
+          undefined,
+          supports,
+        );
         const verifyMs = Date.now() - startedCheck;
         // Verification never withholds the image. The client decides whether a
         // render is presentable; the server reports honestly what it observed

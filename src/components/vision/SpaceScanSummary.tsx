@@ -4,12 +4,13 @@
  * Estimates only: usable area, dimensions, suitability and indicative income.
  * The host always sets their own price.
  */
-import { Sparkles } from "lucide-react";
+import { AlertTriangle, Sparkles } from "lucide-react";
 
 import { DimensionCard } from "@/components/vision/DimensionCard";
 import { ConfidenceBadge } from "@/components/vision/ConfidenceBadge";
 import { formatMoney, type SpaceValueEstimate } from "@/lib/vision";
 import type { SpaceScanResult } from "@/lib/vision";
+import { validateRoomGeometry } from "@/lib/spaceplanner/room-geometry";
 
 const SUITABILITY_COPY: Record<SpaceScanResult["suitability"], string> = {
   excellent: "Excellent for household storage",
@@ -24,6 +25,19 @@ export function SpaceScanSummary({
   scan: SpaceScanResult;
   estimate: SpaceValueEstimate;
 }) {
+  // Phase 6Q — measurements from photographs are estimates. When they look
+  // physically implausible the user is told, rather than being handed a plan
+  // built on a room that cannot exist.
+  const geometry = validateRoomGeometry({
+    roomWidthM: scan.roomWidthM ?? scan.widthM,
+    roomDepthM: scan.roomDepthM ?? scan.depthM,
+    roomHeightM: scan.ceilingHeightM,
+    usableWidthM: scan.widthM,
+    usableDepthM: scan.depthM,
+    basis: scan.usableIsSubArea ? "photo-usable-area" : "photo-room",
+    confidence: scan.confidence,
+  });
+
   return (
     <section
       aria-label="Space scan result"
@@ -65,6 +79,30 @@ export function SpaceScanSummary({
           </li>
         ))}
       </ul>
+
+      {geometry.issues.length > 0 ? (
+        <div
+          role="status"
+          className="mt-4 rounded-xl border border-warning/40 bg-warning-soft p-3"
+        >
+          <p className="inline-flex items-center gap-2 type-label text-warning-soft-foreground">
+            <AlertTriangle className="size-4" aria-hidden="true" />
+            Check these measurements
+          </p>
+          <ul className="mt-1 space-y-1">
+            {geometry.issues.map((issue) => (
+              <li key={issue.code} className="type-body-sm text-warning-soft-foreground">
+                {issue.message}
+              </li>
+            ))}
+          </ul>
+          {geometry.needsConfirmation ? (
+            <p className="mt-2 type-body-sm text-warning-soft-foreground">
+              Enter the room's real dimensions to get an accurate plan.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <ConfidenceBadge confidence={scan.confidence} />

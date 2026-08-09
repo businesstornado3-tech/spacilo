@@ -16,6 +16,7 @@ import { ACCEPT_ATTRIBUTE, MAX_SCAN_PHOTOS } from "@/lib/vision";
 
 export function ScanUploader({
   onFiles,
+  onInteract,
   disabled = false,
   rejected = 0,
   title = "Show Spacilo AI your belongings",
@@ -23,6 +24,8 @@ export function ScanUploader({
   className,
 }: {
   onFiles: (files: FileList | File[]) => void;
+  /** Fired the moment a picker/camera opens, before the browser can move the page. */
+  onInteract?: () => void;
   disabled?: boolean;
   rejected?: number;
   title?: string;
@@ -43,6 +46,12 @@ export function ScanUploader({
     onFiles(files);
   };
 
+  /** Records the reading position before the OS picker takes over the screen. */
+  const open = (input: HTMLInputElement | null) => {
+    onInteract?.();
+    input?.click();
+  };
+
   const handleDrop = (event: React.DragEvent) => {
     event.preventDefault();
     setDragging(false);
@@ -60,6 +69,7 @@ export function ScanUploader({
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
+        onDragOverCapture={() => onInteract?.()}
         className={cn(
           "rounded-2xl border-2 border-dashed p-5 text-center transition-colors sm:p-7",
           dragging ? "border-primary bg-primary-soft/40" : "border-border bg-card",
@@ -71,14 +81,14 @@ export function ScanUploader({
         <p className="mx-auto mt-1 max-w-sm type-body-sm text-muted-foreground">{hint}</p>
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <Button type="button" onClick={() => cameraRef.current?.click()} disabled={disabled}>
+          <Button type="button" onClick={() => open(cameraRef.current)} disabled={disabled}>
             <Camera aria-hidden="true" />
             Take photos
           </Button>
           <Button
             type="button"
             variant="outline"
-            onClick={() => fileRef.current?.click()}
+            onClick={() => open(fileRef.current)}
             disabled={disabled}
           >
             <ImagePlus aria-hidden="true" />
@@ -101,7 +111,8 @@ export function ScanUploader({
         type="file"
         accept={ACCEPT_ATTRIBUTE}
         multiple
-        className="sr-only"
+        tabIndex={-1}
+        className="pointer-events-none fixed left-0 top-0 size-px opacity-0"
         aria-label="Browse photos"
         onChange={(event) => {
           if (event.target.files?.length) accept(event.target.files, "browse");
@@ -114,7 +125,8 @@ export function ScanUploader({
         accept="image/*"
         capture="environment"
         multiple
-        className="sr-only"
+        tabIndex={-1}
+        className="pointer-events-none fixed left-0 top-0 size-px opacity-0"
         aria-label="Take a photo"
         onChange={(event) => {
           if (event.target.files?.length) accept(event.target.files, "camera");

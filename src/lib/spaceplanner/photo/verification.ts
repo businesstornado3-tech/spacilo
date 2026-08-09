@@ -346,11 +346,13 @@ export function categoriseVerification(input: {
     userInventory,
     roomFeatures,
     supportIssues,
+    quantities: quantities.checks,
     verified:
       userInventory.missing.length === 0 &&
       userInventory.unexpected.length === 0 &&
       supportIssues.length === 0,
   };
+
 }
 
 /** True when a reported "resting on" answer names the floor rather than an object. */

@@ -50,6 +50,8 @@ export interface VisualisationRequest {
   /** Structured manifest the image must satisfy. */
   manifest?: { id: string; label: string; quantity: number }[];
   roomFeatures?: readonly { id: string; label: string; kind: string; position: string }[];
+  /** Support relationships the plan asserted; rendered and then verified. */
+  supports?: readonly { itemId: string; itemLabel: string; baseId: string; baseLabel: string }[];
   /** Items a previous attempt missed; the retry emphasises these. */
   emphasise?: string[];
   /** Distinguishes a corrective re-render from the cached first attempt. */
@@ -58,6 +60,7 @@ export interface VisualisationRequest {
   planHash?: string;
   inventoryHash?: string;
 }
+
 
 /** How the server's own verification pass judged the returned image. */
 export type VerificationVerdict = "verified" | "incomplete" | "unfaithful" | "unverified";

@@ -62,6 +62,11 @@ export interface PackStrategy {
   bands: (bands: BandState[]) => BandState[];
   order: (a: StackCandidate, b: StackCandidate) => number;
   orientations: (options: OrientationOption[]) => OrientationOption[];
+  /**
+   * Phase 6Q: when true the strategy ignores bands and cursors entirely and
+   * uses the deterministic candidate-search optimiser instead.
+   */
+  search?: boolean;
 }
 
 const byFootprintDesc = (a: StackCandidate, b: StackCandidate): number => {

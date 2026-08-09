@@ -100,7 +100,17 @@ export interface ManifestPosition {
   zone: string;
   /** True when this unit hangs on a wall rather than standing on the floor. */
   mounted: boolean;
+  /**
+   * Phase 6T — the item whose top surface physically carries this unit, or
+   * null when it stands on the floor. This is the manifest ASSERTING a physical
+   * relationship, not a textual hint: the renderer must draw it, and render
+   * verification checks for it.
+   */
+  supportSurfaceId: string | null;
+  /** How the unit is carried. "FLOOR" when it stands on the ground. */
+  supportType: "FLOOR" | "TOP_SURFACE" | "WALL";
 }
+
 
 export interface ManifestEntry {
   id: string;

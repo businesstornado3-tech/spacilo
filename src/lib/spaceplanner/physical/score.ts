@@ -103,6 +103,7 @@ export function scoreArrangement({
   const access = walkwayClear ? 100 : 0;
   const compact = pct(compactness(entries) * 100);
   const wall = pct(wallContactRatio(space, entries) * 100);
+  const volumeUse = usableVolumeM3 > 0 ? pct((occupiedVolumeM3 / usableVolumeM3) * 100) : 0;
   const stacked = entries.filter((entry) => entry.units > 1 || entry.layer > 0).length;
   const vertical = entries.length > 0 ? pct((stacked / entries.length) * 100) : 0;
   const grouping = pct(groupingRatio(entries) * 100);
@@ -133,7 +134,8 @@ export function scoreArrangement({
       completeness * 0.28 +
         access * 0.18 +
         compact * 0.12 +
-        wall * 0.12 +
+        wall * 0.09 +
+        volumeUse * 0.03 +
         vertical * 0.06 +
         grouping * 0.09 +
         scatter.score * 0.15 -
@@ -147,6 +149,7 @@ export function scoreArrangement({
     access,
     compactness: compact,
     wallUse: wall,
+    volumeUse,
     verticalUse: vertical,
     grouping,
     antiScatter: scatter.score,

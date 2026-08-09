@@ -12,6 +12,9 @@ import type { Orientation, PlanningItem } from "./types";
 
 /** Soft goods that may genuinely lose a little volume when packed. */
 const COMPRESSIBLE = /bag|duvet|bedding|pillow|cushion|clothes|clothing|linen|sack|holdall/i;
+/** Things that hang on a wall and must never be planned as floor-standing. */
+const WALL_MOUNTED =
+  /\b(wall[- ]?mounted|wall[- ]?hung|tv|television|flat[- ]?screen|screen|monitor|wall art|picture frame|framed (?:print|picture|photo)|wall clock|wall shelf)\b/i;
 /** Flat, rigid things that are safely stored stood on edge. */
 const UPRIGHT = /mattress|table ?top|door|board|panel|painting|mirror|rug|carpet|headboard/i;
 
@@ -31,6 +34,7 @@ export function planningItemFrom(object: DetectedObject): PlanningItem {
     fragile: object.fragile,
     compressible: COMPRESSIBLE.test(object.label),
     allowUpright: UPRIGHT.test(object.label),
+    wallMounted: WALL_MOUNTED.test(object.label),
     components: object.components ?? [],
     confidence: object.confidence,
     dimensionBasis: object.source === "manual" ? "confirmed" : "estimated",
@@ -132,10 +136,34 @@ export function stacksFor(items: PlanningItem[], ceilingM: number): StackCandida
 const BULK_RANK: Record<WeightClass, number> = { heavy: 0, medium: 1, light: 2 };
 
 /**
- * Placement order: heavy and bulky first so they take the walls and corners,
- * light items last so they cluster around what is already there.
+ * How much freedom the planner has with an object, 0 = none.
+ *
+ * A heavy, rigid, floor-dominant object has almost no valid positions, so it
+ * must be placed before anything the engine can tuck in later. Purely a
+ * function of the canonical record — no randomness, no model involvement.
+ */
+export function placementFlexibility(item: PlanningItem): number {
+  let score = 0;
+  if (item.stackable) score += 2;
+  if (item.compressible) score += 1;
+  if (item.allowUpright) score += 1;
+  if (item.weight === "light") score += 2;
+  else if (item.weight === "medium") score += 1;
+  const footprintM2 = (item.widthCm * item.depthCm) / 10_000;
+  if (footprintM2 < 0.15) score += 3;
+  else if (footprintM2 < 0.35) score += 2;
+  else if (footprintM2 < 0.8) score += 1;
+  return score;
+}
+
+/**
+ * Placement order: the least flexible, floor-dominant objects first — big
+ * suitcases, cases and furniture take the walls and corners before anything
+ * small or stackable is considered.
  */
 export function placementOrder(a: StackCandidate, b: StackCandidate): number {
+  const byFlexibility = placementFlexibility(a.item) - placementFlexibility(b.item);
+  if (byFlexibility !== 0) return byFlexibility;
   const byWeight = BULK_RANK[a.item.weight] - BULK_RANK[b.item.weight];
   if (byWeight !== 0) return byWeight;
   const areaA = a.item.widthCm * a.item.depthCm;

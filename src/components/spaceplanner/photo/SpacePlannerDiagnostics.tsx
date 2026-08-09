@@ -134,7 +134,10 @@ export function SpacePlannerDiagnostics({
         <div className="sm:col-span-2 border-t border-border pt-3">
           <dt className="type-label text-foreground">Measured performance</dt>
           <dd className="mt-2 grid gap-1 sm:grid-cols-2">
+            <TimingRow label="Photo preparation" ms={timings.photoPrepMs} />
             <TimingRow label="Detection" ms={timings.detectionMs} />
+            <TimingRow label="Cross-photo merge" ms={timings.mergeMs} />
+            <TimingRow label="Refinement" ms={timings.refineMs} />
             <TimingRow label="Classification" ms={timings.classificationMs} />
             <TimingRow label="Inventory ready" ms={timings.inventoryReadyMs} verdict={budgets.belongings} />
             <TimingRow label="Space analysis" ms={timings.spaceAnalysisMs} verdict={budgets.space} />
@@ -144,6 +147,14 @@ export function SpacePlannerDiagnostics({
             <TimingRow label="Render" ms={timings.renderMs} />
             <TimingRow label="Verification" ms={timings.verifyMs} />
             <TimingRow label="Total" ms={timings.totalMs} />
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-muted-foreground">Vision calls</dt>
+              <dd className="font-medium text-foreground">
+                {timings.scanCalls === null
+                  ? "—"
+                  : `${timings.scanCalls} scan${timings.scanCalls === 1 ? "" : "s"}, ${timings.refineCalls ?? 0} refine`}
+              </dd>
+            </div>
           </dd>
         </div>
         <div>

@@ -51,7 +51,42 @@ export function writeDetectionCache(key: string, objects: DetectedObject[]): voi
 
 export function clearDetectionCache(): void {
   store.clear();
+  spaceStore.clear();
 }
+
+/* ------------------------------------------------------------------ */
+/* Room model cache (Phase 6V)                                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Analysing the same room photograph twice is pure waste. The validated room
+ * model is kept per session, keyed by the photographs, the marked region and
+ * the declared space type — so changing only the belongings re-uses the room,
+ * and changing the room photo invalidates it.
+ */
+const spaceStore = new Map<string, unknown>();
+
+export function spaceCacheKey(input: CacheKeyInput & { spaceType?: string }): string {
+  return `space:${input.spaceType ?? ""}#${detectionCacheKey(input)}`;
+}
+
+export function readSpaceCache<T>(key: string): T | null {
+  const hit = spaceStore.get(key);
+  if (hit === undefined) return null;
+  spaceStore.delete(key);
+  spaceStore.set(key, hit);
+  return hit as T;
+}
+
+export function writeSpaceCache(key: string, value: unknown): void {
+  spaceStore.set(key, value);
+  while (spaceStore.size > MAX_ENTRIES) {
+    const oldest = spaceStore.keys().next().value;
+    if (oldest === undefined) break;
+    spaceStore.delete(oldest);
+  }
+}
+
 
 /* ------------------------------------------------------------------ */
 /* Timing                                                              */

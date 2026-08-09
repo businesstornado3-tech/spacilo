@@ -73,3 +73,55 @@ export async function prepareImage(
     return original;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Phase 6V — prepare once, reuse everywhere                           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The same photograph used to be decoded, downscaled and re-encoded once for
+ * analysis and again for visualisation. It is now prepared once per
+ * (url, maxEdge) and reused, which removes a full decode/encode cycle — and a
+ * base64 copy of the whole image — from every later stage.
+ *
+ * In-memory and per-session only: photographs of someone's belongings are
+ * never persisted.
+ */
+const preparedCache = new Map<string, Promise<PreparedImage>>();
+const PREPARED_CACHE_MAX = 16;
+
+export function preparedCacheKey(url: string, maxEdge = MAX_EDGE_PX): string {
+  return `${maxEdge}#${url}`;
+}
+
+export function prepareImageOnce(
+  url: string,
+  maxEdge = MAX_EDGE_PX,
+  fetchImpl: typeof fetch = fetch,
+): Promise<PreparedImage> {
+  const key = preparedCacheKey(url, maxEdge);
+  const hit = preparedCache.get(key);
+  if (hit) return hit;
+
+  const pending = prepareImage(url, maxEdge, fetchImpl).catch((cause: unknown) => {
+    // A failed preparation must never be cached as a result.
+    preparedCache.delete(key);
+    throw cause;
+  });
+  preparedCache.set(key, pending);
+  while (preparedCache.size > PREPARED_CACHE_MAX) {
+    const oldest = preparedCache.keys().next().value;
+    if (oldest === undefined) break;
+    preparedCache.delete(oldest);
+  }
+  return pending;
+}
+
+/** Number of images currently held ready. Used by diagnostics and tests. */
+export function preparedCacheSize(): number {
+  return preparedCache.size;
+}
+
+export function clearPreparedCache(): void {
+  preparedCache.clear();
+}

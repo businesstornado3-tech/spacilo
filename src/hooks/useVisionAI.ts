@@ -30,6 +30,7 @@ import {
   type SpaceScanResult,
   type VisionPhoto,
   type VisionStage,
+  type VisionStageTimings,
 } from "@/lib/vision";
 
 export type VisionMode = "belongings" | "space";
@@ -81,6 +82,11 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
     /** Wall clock from pressing analyse to a usable result on screen. */
     readyMs: number | null;
   }>({ detectionMs: null, classificationMs: null, readyMs: null });
+  /**
+   * Phase 6V — what the analysis itself actually cost, stage by stage, as
+   * measured by the client and the endpoint. Null until a scan has run.
+   */
+  const [serverTimings, setServerTimings] = React.useState<VisionStageTimings | null>(null);
 
 
   const stages: VisionStage[] = mode === "space" ? SPACE_STAGES : BELONGINGS_STAGES;
@@ -197,6 +203,7 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
     setError(null);
     setElapsedMs(0);
     setTimings({ detectionMs: null, classificationMs: null, readyMs: null });
+    setServerTimings(null);
 
     const startedAt = Date.now();
     // Gentle drift so the stage list still moves while a call is in flight.
@@ -228,8 +235,12 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
         setSpaceScan(result as SpaceScanResult);
         setObjects([]);
       } else {
-        const merged = mergeDetections((result as { objects: DetectedObject[] }).objects);
+        const belongings = result as { objects: DetectedObject[]; timings?: VisionStageTimings };
+        const merged = mergeDetections(belongings.objects);
+        // Show the inventory the moment it exists; nothing below this line
+        // blocks it appearing.
         setObjects(merged);
+        if (belongings.timings) setServerTimings(belongings.timings);
         onComplete?.(merged);
       }
       const classificationMs = Date.now() - classifyAt;
@@ -278,6 +289,7 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
     quality,
     elapsedMs,
     timings,
+    serverTimings,
 
     rotatePhoto,
     movePhoto,

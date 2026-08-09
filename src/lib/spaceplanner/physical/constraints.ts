@@ -129,8 +129,13 @@ export function validateArrangement(input: ValidationInput): ValidationResult {
       });
     }
 
-    // C. inside the user-approved usable area.
-    if (!contains(space.usable, entry)) {
+    // C. inside the user-approved usable area. A wall-mounted object hangs on
+    // a wall of the ROOM and consumes no storage floor, so it is bounded by the
+    // room, not by the storage footprint the user marked.
+    const bounds = entry.mounted
+      ? { x: 0, y: 0, w: space.widthM, d: space.depthM }
+      : space.usable;
+    if (!contains(bounds, entry)) {
       violations.push({
         code: "outside_usable_area",
         itemId: entry.itemId,
@@ -173,7 +178,10 @@ export function validateArrangement(input: ValidationInput): ValidationResult {
         message: `${entry.label} would stand higher than the safe stacking height.`,
       });
     }
-    if (entry.w > space.usable.w + 0.001 || entry.d > space.usable.d + 0.001) {
+    if (
+      !entry.mounted &&
+      (entry.w > space.usable.w + 0.001 || entry.d > space.usable.d + 0.001)
+    ) {
       violations.push({
         code: "unsupported_orientation",
         itemId: entry.itemId,

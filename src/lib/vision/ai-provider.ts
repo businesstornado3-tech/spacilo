@@ -249,9 +249,16 @@ export const aiVisionProvider: VisionProvider = {
     const depthM = positive(space["depthM"], 3);
     const ceilingHeightM = positive(space["ceilingHeightM"], 2.3);
     const usableAreaM2 = positive(space["usableAreaM2"], widthM * depthM * 0.8);
+    // Phase 6Q — the room is tracked separately from the marked storage area.
+    // Never let the room read smaller than the area it is meant to contain.
+    const roomWidthM = Math.max(widthM, positive(space["roomWidthM"], widthM));
+    const roomDepthM = Math.max(depthM, positive(space["roomDepthM"], depthM));
     return {
       widthM,
       depthM,
+      roomWidthM,
+      roomDepthM,
+      usableIsSubArea: roomWidthM > widthM + 0.01 || roomDepthM > depthM + 0.01,
       ceilingHeightM,
       usableAreaM2,
       usableVolumeM3: positive(space["usableVolumeM3"], usableAreaM2 * ceilingHeightM * 0.8),

@@ -218,9 +218,13 @@ export function useSpaceVisualisation(options: {
 
 
 
-      // Only an image proven to contain belongings the user does not own is
-      // withheld. A physically wrong but attractive image is worse than none.
-      if (response.verification === "unfaithful") {
+      // FAIL-CLOSED (Phase 6Q). An image that contains an object the user does
+      // not own — a stray shoe, a packet of wipes — is a false record of their
+      // belongings, so it is never shown, whatever else it got right. The user
+      // is given the measured arrangement plan instead. Retries are capped at
+      // MAX_RENDER_ATTEMPTS so a hallucinating renderer cannot burn credit.
+      const inventedFinal = (finalCoverage?.unexpected?.length ?? 0) > 0;
+      if (response.verification === "unfaithful" || inventedFinal) {
         setImageUrl(null);
         setStatus("rejected");
         return;

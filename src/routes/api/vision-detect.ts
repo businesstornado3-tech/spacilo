@@ -4,22 +4,24 @@
  * CORE PRINCIPLE: never invent the user's inventory. Everything returned here
  * must be traceable to something visible in the photographs supplied.
  *
- * The work is deliberately split into two stages, exactly as the product
- * requires:
+ * Phase 6V — the pipeline is now ONE structured vision pass per photograph,
+ * with every photograph analysed in parallel:
  *
- *   Stage 1 — DETECTION. Each photograph is described on its own, in physical
- *             terms only ("a fabric storage bag, roughly knee height"). The
- *             model is forbidden from naming catalogue items, guessing at
- *             things it cannot see, or padding the list.
- *   Stage 2 — CLASSIFICATION + DEDUPLICATION. A single text pass reads every
- *             observation together, merges the same physical object seen from
- *             more than one angle, assigns stable ITEM-nnn identities, and
- *             only then attaches storage semantics (category, size estimate,
- *             weight class, fragility, stackability).
+ *   Pass 1 — SCAN. Each photograph returns whole objects with their identity,
+ *            category, quantity, count basis, estimated dimensions, mounting
+ *            type and confidence, in a single schema-validated reply. It used
+ *            to take two sequential model calls; it now takes one.
+ *   Local  — MERGE. The same physical object photographed twice is merged
+ *            deterministically in code (label stem + comparable dimensions),
+ *            with no model call and no chance of invention.
+ *   Pass 2 — REFINE, only for objects below the confidence floor, and only in
+ *            the photograph they came from. Confident objects are never
+ *            reclassified.
  *
- * Counts are evidence-based: the classifier may only report a quantity it can
- * justify from the observations, and must say what the count was based on.
+ * Counts stay evidence-based, dimensions are validated field by field, and
+ * volume is always calculated here rather than trusted from the model.
  */
+
 import { createFileRoute } from "@tanstack/react-router";
 
 const MODEL = "openai/gpt-5.6-sol";

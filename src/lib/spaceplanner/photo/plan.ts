@@ -20,6 +20,7 @@ import {
   type Rect,
 } from "../physical";
 import type { CatalogueItem, InventoryLine, SpacePlan, StorageSpace } from "../types";
+import { canonicaliseInventory } from "@/lib/vision/canonical";
 import type { DetectedObject, SpaceScanResult } from "@/lib/vision/types";
 
 export interface SpaceSource {

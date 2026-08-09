@@ -185,23 +185,42 @@ export function scoreCandidate(input: CandidateScoreInput): number {
 
   const isolated = placed.length > 0 && neighbour <= 0 && walls <= 0 ? 1 : 0;
 
+  // Phase 6X — explicit anti-scatter term. Distance from the centroid of what
+  // is already placed, so an object that could sit against the existing block
+  // never wanders to the far side of the room for a marginally better wall
+  // score. Zero for the first object, which has nothing to be far from.
+  let scatter = 0;
+  if (placed.length > 0) {
+    let cx = 0;
+    let cy = 0;
+    for (const other of placed) {
+      cx += other.entry.x + other.entry.w / 2;
+      cy += other.entry.y + other.entry.d / 2;
+    }
+    cx /= placed.length;
+    cy /= placed.length;
+    scatter = Math.hypot(rect.x + rect.w / 2 - cx, rect.y + rect.d / 2 - cy);
+  }
+
   return round2(
     walls * 9 +
       corner * 7 +
-      neighbour * 11 +
+      neighbour * 13 +
       sameCategory * 4 +
       sameClass * 3 +
       sameZone * 6 +
       relatedContact * 16 +
       relatedProximity * 9 +
       (cls === "SMALL_ITEM" ? neighbour * 6 : 0) -
-      growth * 14 -
+      growth * 18 -
       gaps * 5 -
       gravity * 2.5 -
-      isolated * 25 -
+      scatter * 4 -
+      isolated * 34 -
       (rotationDeg === 90 ? 0.4 : 0),
   );
 }
+
 
 
 /** Total arrangement objective, used by the improvement pass only. */

@@ -91,7 +91,30 @@ export function relationMap(items: PlanningItem[]): Map<string, Set<string>> {
 /* -------------------------------------------------- support surfaces */
 
 /** Objects whose top face is a usable surface. */
-const SURFACE = /stand|table|desk|shelf|cabinet|sideboard|console|bench|drawer|unit|box|crate|tote|carton|container|suitcase|case\b|trunk/i;
+const SURFACE = /stand|table|desk|shelf|cabinet|sideboard|console|bench|drawer|unit|box|crate|tote|carton|container|trunk/i;
+
+/**
+ * Phase 6X — objects that are NEVER a support surface, whatever their label or
+ * stackable flag says.
+ *
+ * The forensic audit found plans stacking a television on a suitcase and a
+ * monitor on a cardboard box. Both are physically unsound, both looked absurd,
+ * and both made the renderer draw the item on the floor instead — which the
+ * verifier then correctly rejected as support drift. Excluding them at the
+ * planning stage removes the whole failure chain.
+ */
+const UNSAFE_BASE =
+  /suitcase|case\b|luggage|holdall|duffel|duffle|backpack|rucksack|bag\b|sack|cushion|pillow|duvet|bedding|blanket|clothes|clothing|linen|rug|mattress|bean ?bag|laundry|basket/i;
+
+/** Soft, wheeled, curved or otherwise unstable objects carry nothing. */
+export function isSafeSupportSurface(item: PlanningItem): boolean {
+  if (item.fragile) return false;
+  if (item.compressible) return false;
+  if (UNSAFE_BASE.test(item.label)) return false;
+  // An unidentified object cannot be trusted to hold anything up.
+  if (typeof item.confidence === "number" && item.confidence < 0.6) return false;
+  return SURFACE.test(item.label) || item.stackable === true;
+}
 
 /** Heaviest thing a class of base may carry, as a share of its own footprint. */
 export const MAX_SUPPORTED_FOOTPRINT_SHARE = 0.9;
@@ -107,9 +130,7 @@ export function canSupport(
   ceilingM: number,
 ): boolean {
   if (base.item.id === top.item.id) return false;
-  if (base.item.fragile) return false;
-  if (!SURFACE.test(base.item.label) && !base.item.stackable) return false;
-  if (base.item.compressible) return false;
+  if (!isSafeSupportSurface(base.item)) return false;
   if (base.topHeightM <= 0.05) return false;
   if (base.topHeightM > MAX_SUPPORT_BASE_HEIGHT_M) return false;
   if (base.topHeightM + top.heightM > ceilingM + 0.001) return false;
@@ -120,6 +141,24 @@ export function canSupport(
   if (top.d > base.d * MAX_SUPPORTED_FOOTPRINT_SHARE + 0.001) return false;
   return true;
 }
+
+/**
+ * Phase 6X — is a support relationship worth asking an image model to draw?
+ *
+ * Some supports are obvious and reliably rendered (a television on its stand,
+ * a lamp on a table). Others — a crate on top of another crate of a different
+ * kind, a small object on a closed carton — are routinely drawn on the floor
+ * instead, and every one of those cost a whole render attempt. Those are still
+ * planned and still measured; the render prompt just asks for the item
+ * ADJACENT to its base rather than on it, and verification does not treat the
+ * difference as drift.
+ */
+const RENDERABLE_BASE = /stand|table|desk|shelf|shelving|cabinet|sideboard|console|bench|drawer|unit/i;
+
+export function isRenderableSupport(baseLabel: string): boolean {
+  return RENDERABLE_BASE.test(baseLabel);
+}
+
 
 /**
  * Items that should be lifted off the floor whenever a surface exists: small

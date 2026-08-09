@@ -9,6 +9,7 @@
  * the inventory for itself.
  */
 import { hashString } from "@/lib/vision/hash";
+import { isRenderableSupport } from "../physical/relations";
 import { manifestHash } from "./diagnostics";
 import { objectVolume } from "@/lib/vision/inventory";
 import type { DetectedObject, RoomFeature } from "@/lib/vision/types";
@@ -309,6 +310,11 @@ export function manifestSupports(manifest: PlacementManifest): ExpectedSupport[]
   for (const entry of manifest.entries) {
     for (const position of entry.positions) {
       if (!position.supportSurfaceId) continue;
+      // Phase 6X — only supports an image model reliably draws are verified.
+      // The rest are planned and measured, but asked for as adjacency, so a
+      // renderer limitation never fails an otherwise correct image.
+      const baseLabelForCheck = labelOf.get(position.supportSurfaceId) ?? position.supportSurfaceId;
+      if (!isRenderableSupport(baseLabelForCheck)) continue;
       supports.push({
         itemId: entry.id,
         itemLabel: entry.label,
@@ -378,8 +384,11 @@ export function formatManifestForModel(manifest: PlacementManifest): string {
           );
           if (position.supportSurfaceId) {
             const base = manifest.entries.find((candidate) => candidate.id === position.supportSurfaceId);
+            const baseLabel = base?.label ?? position.supportSurfaceId;
             lines.push(
-              `SUPPORT: this unit is NOT on the floor. It rests on the top surface of ${position.supportSurfaceId}${base ? ` (${base.label})` : ""}. Draw it standing on that object, in contact with it, with a contact shadow. Drawing it on the floor is wrong.`,
+              isRenderableSupport(baseLabel)
+                ? `SUPPORT: this unit is NOT on the floor. It rests on the top surface of ${position.supportSurfaceId} (${baseLabel}). Draw it standing on that object, in contact with it, with a contact shadow. Drawing it on the floor is wrong.`
+                : `SUPPORT: draw this unit immediately ADJACENT to ${position.supportSurfaceId} (${baseLabel}), touching it, as one tidy pair.`,
             );
           } else if (position.mounted) {
             lines.push("SUPPORT: this unit is fixed to the wall and does not touch the floor.");

@@ -16,14 +16,13 @@ import type { ItemCategory, WeightClass } from "@/lib/spaceplanner/types";
 import { validDimensionCm } from "./canonical";
 import { prepareSelection } from "./crop";
 import {
-  detectionCacheKey,
   readDetectionCache,
   readSpaceCache,
   recordTiming,
-  spaceCacheKey,
   writeDetectionCache,
   writeSpaceCache,
 } from "./detection-cache";
+import { analysisFingerprint } from "./fingerprint";
 import { describeSelection, isFullPhoto, type PhotoSelection } from "./selection";
 import type { AnalyseOptions, VisionProvider } from "./provider";
 import type {
@@ -122,15 +121,28 @@ function selectionFor(
   return selections?.find((selection) => selection.photoId === photo.id) ?? null;
 }
 
-async function postPhotos(
+interface PreparedPhoto {
+  id: string;
+  mimeType: string;
+  base64: string;
+  region?: string;
+  hint?: string;
+}
+
+/**
+ * Phase 6X — decode, rotate, crop and encode every photograph once.
+ *
+ * Split out from the request itself so the cache can be keyed on the prepared
+ * BYTES rather than on the blob identity of the upload. Re-uploading the same
+ * picture now hits the cache instead of paying for another model call.
+ */
+async function prepareImages(
   photos: VisionPhoto[],
-  task: "belongings" | "space",
-  spaceType?: string,
   options?: AnalyseOptions,
-): Promise<{ payload: Record<string, unknown>; prepareMs: number; requestMs: number }> {
+): Promise<{ prepared: PreparedPhoto[]; prepareMs: number }> {
   options?.onStage?.("reading");
   const startedPrepare = Date.now();
-  const prepared = await Promise.all(
+  const prepared = (await Promise.all(
     photos.map(async (photo) => {
       const selection = selectionFor(photo, options?.selections);
       return {
@@ -141,10 +153,18 @@ async function postPhotos(
           : {}),
       };
     }),
-  );
+  )) as PreparedPhoto[];
   const prepareMs = Date.now() - startedPrepare;
   recordTiming("prepare", prepareMs);
+  return { prepared, prepareMs };
+}
 
+async function postPrepared(
+  prepared: PreparedPhoto[],
+  task: "belongings" | "space",
+  spaceType?: string,
+  options?: AnalyseOptions,
+): Promise<{ payload: Record<string, unknown>; requestMs: number }> {
   options?.onStage?.(task === "space" ? "space" : "finding");
   const started = Date.now();
   const response = await fetch(DETECT_URL, {
@@ -165,7 +185,26 @@ async function postPhotos(
     const reason = typeof payload?.["error"] === "string" ? String(payload["error"]) : "failed";
     throw new VisionUnavailableError(reason);
   }
-  return { payload, prepareMs, requestMs };
+  return { payload, requestMs };
+}
+
+/** Cache key for an analysis, taken from the prepared image content. */
+function preparedCacheKey(
+  prepared: PreparedPhoto[],
+  task: "belongings" | "space",
+  options?: AnalyseOptions,
+  spaceType?: string,
+): string {
+  return analysisFingerprint({
+    task,
+    mode: options?.mode ?? "whole",
+    ...(spaceType ? { spaceType } : {}),
+    photos: prepared.map((photo) => ({
+      id: photo.id,
+      base64: photo.base64,
+      ...(photo.region ? { region: photo.region } : {}),
+    })),
+  });
 }
 
 /** Reads the server's measured stage costs without inventing any of them. */
@@ -233,15 +272,9 @@ export const aiVisionProvider: VisionProvider = {
     photos: VisionPhoto[],
     options?: AnalyseOptions,
   ): Promise<VisionResult> {
-    const key = detectionCacheKey({
-      photos: photos.map((photo) => ({
-        id: photo.id,
-        sizeBytes: photo.sizeBytes,
-        rotation: photo.rotation,
-      })),
-      selections: options?.selections ?? [],
-      mode: options?.mode ?? "whole",
-    });
+    // Phase 6X — prepare first, then key the cache on the image content.
+    const { prepared, prepareMs } = await prepareImages(photos, options);
+    const key = preparedCacheKey(prepared, "belongings", options);
     const cached = readDetectionCache(key);
     if (cached) {
       options?.onStage?.("estimating");
@@ -256,12 +289,7 @@ export const aiVisionProvider: VisionProvider = {
       };
     }
 
-    const { payload, prepareMs, requestMs } = await postPhotos(
-      photos,
-      "belongings",
-      undefined,
-      options,
-    );
+    const { payload, requestMs } = await postPrepared(prepared, "belongings", undefined, options);
     options?.onStage?.("estimating");
     const items = Array.isArray(payload["items"]) ? (payload["items"] as ApiItem[]) : [];
     const objects = items.map(toDetectedObject);
@@ -282,23 +310,15 @@ export const aiVisionProvider: VisionProvider = {
     options?: AnalyseOptions,
   ): Promise<SpaceScanResult> {
     // Phase 6V — an unchanged room photograph is never re-analysed.
-    const cacheKey = spaceCacheKey({
-      photos: photos.map((photo) => ({
-        id: photo.id,
-        sizeBytes: photo.sizeBytes,
-        rotation: photo.rotation,
-      })),
-      selections: options?.selections ?? [],
-      mode: options?.mode ?? "whole",
-      ...(spaceType ? { spaceType } : {}),
-    });
+    const { prepared } = await prepareImages(photos, options);
+    const cacheKey = preparedCacheKey(prepared, "space", options, spaceType);
     const cachedSpace = readSpaceCache<SpaceScanResult>(cacheKey);
     if (cachedSpace) {
       options?.onStage?.("space");
       return cachedSpace;
     }
 
-    const { payload } = await postPhotos(photos, "space", spaceType, options);
+    const { payload } = await postPrepared(prepared, "space", spaceType, options);
     const space = (payload["space"] ?? {}) as Record<string, unknown>;
     const widthM = positive(space["widthM"], 3);
     const depthM = positive(space["depthM"], 3);

@@ -21,14 +21,38 @@ import type { CoverageReport, PlacementManifest } from "@/lib/spaceplanner/photo
 import type { PhotoPlanResult } from "@/lib/spaceplanner/photo";
 import type { DetectedObject, VisionPhoto } from "@/lib/vision/types";
 
+/**
+ * Phase 6T — the strict image state machine.
+ *
+ * Exactly one state shows the rendered photograph: "verified". Every other
+ * outcome — an invented object, a missing item, a checker that could not
+ * answer, a timeout — falls back to the measured arrangement plan. There is no
+ * path from "we could not check it" to "here is your arrangement".
+ */
 export type VisualisationStatus =
   | "idle"
-  | "working"
-  | "ready"
+  | "preparing"
+  | "rendering"
+  | "verifying"
+  /** Checked and faithful. THE ONLY STATE THAT DISPLAYS AN IMAGE. */
+  | "verified"
+  /** Contained objects the user does not own, or contradicted the plan. */
+  | "unfaithful"
+  /** Faithful, but did not show every planned item. */
   | "incomplete"
-  /** A render that contained objects the user does not own. Never shown. */
-  | "rejected"
+  /** The render arrived but could not be checked. Never displayed. */
+  | "unverified"
   | "failed";
+
+/** True while the pipeline is still doing work. */
+export function isVisualisationWorking(status: VisualisationStatus): boolean {
+  return status === "preparing" || status === "rendering" || status === "verifying";
+}
+
+/** True only for the one state permitted to display the rendered image. */
+export function showsRenderedImage(status: VisualisationStatus): boolean {
+  return status === "verified";
+}
 
 /**
  * Hard ceiling on one render request. A visual preview that has not arrived
@@ -45,9 +69,13 @@ export interface RenderDiagnostics {
   model: string | null;
   diagnosticId: string | null;
   planHash: string | null;
+  /** The inventory the image was rendered for. Guards against stale images. */
+  inventoryHash: string | null;
   renderMs: number | null;
   /** Milliseconds spent optimising the photographs before the render call. */
   prepareMs?: number | null;
+  /** Milliseconds spent on render verification. */
+  verifyMs?: number | null;
   /** Wall-clock time from pressing generate to a decided verdict. */
   totalMs?: number | null;
 }
@@ -68,6 +96,7 @@ export interface UseSpaceVisualisation {
   generate: () => Promise<void>;
   reset: () => void;
 }
+
 
 
 

@@ -108,9 +108,21 @@ export interface RoomFeature {
 export interface SpaceScanResult {
   /** Estimated usable floor area in m² (after access and obstacles). */
   usableAreaM2: number;
+  /**
+   * Width/depth of the area available for storage. When the user marked a
+   * region these describe THAT region, not the whole room.
+   */
   widthM: number;
   depthM: number;
   ceilingHeightM: number;
+  /**
+   * Phase 6Q — the whole room, wall to wall, always reported separately from
+   * the marked storage area. Wall-mounted items hang on these walls.
+   */
+  roomWidthM?: number;
+  roomDepthM?: number;
+  /** True when widthM/depthM describe a marked sub-area rather than the room. */
+  usableIsSubArea?: boolean;
   /** Estimated usable storage volume in m³. */
   usableVolumeM3: number;
   suitability: SpaceSuitability;

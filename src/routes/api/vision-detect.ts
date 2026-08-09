@@ -181,7 +181,9 @@ const SPACE_SYSTEM = [
   "Estimate cautiously from visible references (doors, bricks, floorboards, sockets). Never state a measurement as fact.",
   "Report obstacles, access limitations and anything that reduces usable space.",
   "Identify fixed room features that must remain visually unchanged: wall-mounted televisions, radiators, doors, windows, fitted shelving, built-in furniture and electrical fixtures. These are room features, never storage belongings.",
-  "Reply as JSON: {\"widthM\":0,\"depthM\":0,\"ceilingHeightM\":0,\"usableAreaM2\":0,\"usableVolumeM3\":0,\"suitability\":\"good\",\"observations\":[\"...\"],\"features\":[{\"label\":\"Wall-mounted TV\",\"kind\":\"television\",\"position\":\"rear wall, centred\",\"confidence\":0.0}],\"confidence\":0.0}",
+  "Report TWO separate measurements. (1) roomWidthM/roomDepthM: the WHOLE room, wall to wall, even when only part of it is being used for storage. (2) widthM/depthM: the floor area actually available for storage. If the user marked a region, widthM/depthM describe that region only and roomWidthM/roomDepthM still describe the whole room.",
+  "Never report the marked region as the room. A room is almost never narrower than 1.5m — if your room figure is smaller than that, re-check it and lower your confidence.",
+  "Reply as JSON: {\"roomWidthM\":0,\"roomDepthM\":0,\"widthM\":0,\"depthM\":0,\"ceilingHeightM\":0,\"usableAreaM2\":0,\"usableVolumeM3\":0,\"suitability\":\"good\",\"observations\":[\"...\"],\"features\":[{\"label\":\"Wall-mounted TV\",\"kind\":\"television\",\"position\":\"rear wall, centred\",\"confidence\":0.0}],\"confidence\":0.0}",
 ].join("\n");
 
 const CATEGORIES = ["boxes", "furniture", "appliances", "electronics", "leisure", "seasonal"];

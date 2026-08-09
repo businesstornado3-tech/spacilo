@@ -113,6 +113,11 @@ export interface Coverage {
    * door is not the user owning a belonging they do not have.
    */
   featureNotes: string[];
+  /**
+   * Support relationships the plan asserted that the render did not show.
+   * Positional drift: the image contradicts the plan, so it is not displayed.
+   */
+  supportIssues: string[];
   complete: boolean;
   /** False only when the renderer invented BELONGINGS. */
   faithful: boolean;

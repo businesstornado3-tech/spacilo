@@ -150,6 +150,7 @@ describe("Phase 6I — render verification rejects hallucinations", () => {
     expect(parseCheckReply('{"present":["TV"],"unexpected":["Lamp"]}')).toEqual({
       present: ["TV"],
       unexpected: ["Lamp"],
+      missingFeatures: [],
     });
   });
 

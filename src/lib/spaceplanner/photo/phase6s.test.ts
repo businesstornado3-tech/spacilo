@@ -109,7 +109,7 @@ describe("categoriseVerification", () => {
       reply: { present: [...allPresent, "FEATURE-001", "window"], unexpected: [] },
     });
     expect(report.userInventory.unexpected).toEqual([]);
-    expect(report.roomFeatures.found).toContain("FEATURE001");
+    expect(report.roomFeatures.found).toContain("FEATURE-001");
   });
 });
 

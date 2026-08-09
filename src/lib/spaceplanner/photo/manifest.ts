@@ -349,8 +349,17 @@ export function formatManifestForModel(manifest: PlacementManifest): string {
           lines.push(
             `Exact position ${i + 1}: rear-left corner at x=${position.xM}m, y=${position.yM}m; footprint ${position.widthM}m × ${position.depthM}m; base ${position.baseHeightM}m above the floor; total height ${position.heightM}m; ${position.units} unit(s)${position.units > 1 ? " stacked vertically in one column" : ""}; rotated ${position.rotationDeg}°; ${position.zone} zone.`,
           );
+          if (position.supportSurfaceId) {
+            const base = manifest.entries.find((candidate) => candidate.id === position.supportSurfaceId);
+            lines.push(
+              `SUPPORT: this unit is NOT on the floor. It rests on the top surface of ${position.supportSurfaceId}${base ? ` (${base.label})` : ""}. Draw it standing on that object, in contact with it, with a contact shadow. Drawing it on the floor is wrong.`,
+            );
+          } else if (position.mounted) {
+            lines.push("SUPPORT: this unit is fixed to the wall and does not touch the floor.");
+          }
         }
       }
+
 
       lines.push("Priority: preserve the recognisable appearance of the user's actual object");
       return lines.join("\n");

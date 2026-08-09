@@ -10,6 +10,7 @@ import type {
   CanonicalInventory,
   CoverageReport,
   PlacementManifest,
+} from "@/lib/spaceplanner/photo/manifest";
 import {
   EMPTY_TIMINGS,
   budgetReport,
@@ -17,7 +18,7 @@ import {
   type BudgetVerdict,
   type PipelineTimings,
 } from "@/lib/spaceplanner/photo/timings";
-} from "@/lib/spaceplanner/photo/manifest";
+
 
 type StageState = "waiting" | "working" | "passed" | "failed";
 

@@ -513,10 +513,11 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                     arrangedUrl={visual.imageUrl}
                     status={visual.status}
                     statusLabel={
-                      visual.status === "working"
+                      isVisualisationWorking(visual.status)
                         ? `${visual.stageLabel}${visual.attempt > 1 ? " (refining)" : ""} · ${Math.round(visual.elapsedMs / 1000)}s`
                         : visual.stageLabel
                     }
+
                     coverage={visual.coverage}
                     errorCode={visual.error}
                     onRetry={() => void visual.generate()}

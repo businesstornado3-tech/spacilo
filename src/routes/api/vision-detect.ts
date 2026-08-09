@@ -166,11 +166,12 @@ const CLASSIFY_SYSTEM = [
   "2. The same physical object seen in more than one photograph is ONE item. Merge it and list every photo id it appeared in. Do not add the counts together when it is clearly the same object.",
   "3. Report the PRIMARY object, not its components. If observations describe a cot with rails and a mattress, that is one item 'Cot' with components ['rails','mattress'] — never three items. Only list something separately when it can be stored on its own.",
   "4. Quantity must be justified by the observations. State the basis in countBasis.",
-  "5. Give each item a plain, specific UK label describing what it actually is (for example 'Fabric storage bag', 'Three-drawer plastic unit'). Never label something you were not told about.",
-  "6. Size is an ESTIMATE in centimetres of the WHOLE assembled object, from the described size cues. Be cautious and realistic.",
+  "5. Give each item a useful, human-readable UK label naming the object and its distinguishing feature: 'Large blue wheeled case', 'Large grey wheeled case', 'Black backpack', 'Black-framed table', 'Large wall-mounted screen', 'Cardboard box'. Keep it under about six words.",
+  "5b. Only fall back to a shape-and-colour label ('Small dark tapered object') when the observation genuinely could not identify the thing. When you do, set confidence below 0.6 so a person is asked to confirm it. Never invent a brand or an identity the observation does not support.",
+  "6. Size is an ESTIMATE in centimetres of the WHOLE assembled object, from the described size cues. Be cautious and realistic. Every one of widthCm, depthCm and heightCm must be a positive number — never 0, never omitted, never copied from another dimension to fill a gap.",
   "7. category must be one of: boxes, furniture, appliances, electronics, leisure, seasonal.",
   "8. weight must be one of: light, medium, heavy.",
-  "9. confidence is 0-1 and must drop when the observation was uncertain or occluded.",
+  "9. confidence is 0-1 and must drop when the observation was uncertain or occluded. Below 0.6 means 'not identified'.",
   "Reply as JSON: {\"items\":[{\"id\":\"ITEM-001\",\"label\":\"...\",\"category\":\"boxes\",\"quantity\":1,\"countBasis\":\"...\",\"widthCm\":0,\"depthCm\":0,\"heightCm\":0,\"weight\":\"medium\",\"fragile\":false,\"stackable\":false,\"confidence\":0.0,\"photoIds\":[\"...\"],\"evidence\":\"...\",\"components\":[\"...\"]}]}",
 ].join("\n");
 

@@ -515,7 +515,15 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         const renderMs = Date.now() - startedRender;
 
         const startedCheck = Date.now();
-        const coverage = await checkCoverage(key, space, image, required, roomFeatures);
+        const coverage = await checkCoverage(
+          key,
+          space,
+          image,
+          required,
+          roomFeatures,
+          undefined,
+          supports,
+        );
         const verifyMs = Date.now() - startedCheck;
         // Verification never withholds the image. The client decides whether a
         // render is presentable; the server reports honestly what it observed

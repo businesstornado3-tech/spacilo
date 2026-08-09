@@ -336,33 +336,48 @@ function bestCandidate(candidates: Candidate[]): Candidate | null {
 
 /**
  * Places every floor object by candidate search, largest classes first, then
- * runs the improvement pass. Wall-mounted objects are handled separately by
- * the wall-run planner and never appear here.
+ * consolidates the small items onto real surfaces and runs the improvement
+ * pass. Wall-mounted objects are handled separately by the wall-run planner
+ * and never appear here.
+ *
+ * Phase 6R: objects that prefer a surface (small items, light low-footprint
+ * objects) are deliberately held back to the end. They are put ON something —
+ * a TV stand, a box, a suitcase — before they are ever given floor of their
+ * own, which is what removes the scattered look from real plans.
  */
 export function searchPlacements(input: SearchInput): ArrangementEntry[] {
   const { space, ceiling, blockers, unplacedUnits } = input;
   const floorItems = input.items.filter((item) => classifyItem(item) !== "WALL_MOUNTED");
+  const relations = relationMap(input.items);
   const ordered = [...floorItems].sort(classPlacementOrder);
-  const stacks: StackCandidate[] = [];
+  const structural: StackCandidate[] = [];
+  const surfaceSeeking: StackCandidate[] = [];
   for (const item of ordered) {
-    stacks.push(...stacksFor([item], ceiling));
+    const stacks = stacksFor([item], ceiling);
+    if (prefersSurface(item)) surfaceSeeking.push(...stacks);
+    else structural.push(...stacks);
   }
 
   const placed: Placed[] = [];
   let key = 0;
 
-  for (const stack of stacks) {
+  const place = (stack: StackCandidate): boolean => {
     const cls = classifyItem(stack.item);
     const unitHeight = Math.max(0.05, Math.round(stack.item.heightCm) / 100);
     const options = orientationsFor(stack.item, ceiling).filter(
       (option) => stackedHeight(option, stack.units, unitHeight) <= ceiling + EPS,
     );
-    const candidates = candidatesFor(stack, cls, options, space, blockers, placed);
+    const candidates = candidatesFor(
+      stack,
+      cls,
+      options,
+      space,
+      blockers,
+      placed,
+      relations.get(stack.item.id),
+    );
     const winner = bestCandidate(candidates);
-    if (!winner) {
-      unplacedUnits.set(stack.item.id, (unplacedUnits.get(stack.item.id) ?? 0) + stack.units);
-      continue;
-    }
+    if (!winner) return false;
     const height = stackedHeight(winner.option, stack.units, unitHeight);
     placed.push({
       item: stack.item,
@@ -382,6 +397,7 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
         rotationDeg: winner.option.rotationDeg,
         orientation: winner.option.orientation,
         zone: zoneFor(winner.rect, space.usable),
+        storageZone: storageZoneFor(stack.item),
         supportsItemIds: [],
         supportedBy: null,
         // Small items are consolidated into one labelled zone rather than
@@ -394,10 +410,108 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
       },
     });
     key += 1;
+    return true;
+  };
+
+  for (const stack of structural) {
+    if (!place(stack)) {
+      unplacedUnits.set(stack.item.id, (unplacedUnits.get(stack.item.id) ?? 0) + stack.units);
+    }
   }
 
-  return improvePlacements(placed, space, blockers, ceiling).map((entry) => entry.entry);
+  // Improve the structural block BEFORE anything is stood on top of it, so a
+  // supported object never has to chase a base that later moves.
+  let current = improvePlacements(placed, space, blockers, ceiling);
+
+  // 3D consolidation: put the small stuff on a surface if one exists.
+  const surfaceUse = new Map<string, number>();
+  const stacked: Placed[] = [];
+  for (const stack of surfaceSeeking) {
+    const unitHeight = Math.max(0.05, Math.round(stack.item.heightCm) / 100);
+    const w = round2(Math.round(stack.item.widthCm) / 100);
+    const d = round2(Math.round(stack.item.depthCm) / 100);
+    const heightM = round2(stackedHeight({ w, d, h: unitHeight, rotationDeg: 0, orientation: "flat" }, stack.units, unitHeight));
+
+    // Deterministic base choice: lowest usable surface first, then by id.
+    const bases = current
+      .filter((candidate) => candidate.entry.layer === 0 && !candidate.entry.mounted)
+      .filter((candidate) =>
+        canSupport(
+          {
+            item: candidate.item,
+            w: candidate.entry.w,
+            d: candidate.entry.d,
+            topHeightM: candidate.entry.heightM,
+          },
+          { item: stack.item, w, d, heightM },
+          ceiling,
+        ),
+      )
+      .sort(
+        (a, b) =>
+          a.entry.heightM - b.entry.heightM ||
+          a.entry.itemId.localeCompare(b.entry.itemId) ||
+          a.entry.key.localeCompare(b.entry.key),
+      );
+
+    const base = bases.find((candidate) => {
+      const used = surfaceUse.get(candidate.entry.key) ?? 0;
+      return used + w <= candidate.entry.w * 0.9 + EPS && d <= candidate.entry.d * 0.9 + EPS;
+    });
+
+    if (base) {
+      const used = surfaceUse.get(base.entry.key) ?? 0;
+      surfaceUse.set(base.entry.key, round2(used + w + 0.02));
+      base.entry.supportsItemIds.push(stack.item.id);
+      stacked.push({
+        item: stack.item,
+        cls: classifyItem(stack.item),
+        entry: {
+          key: `stack-${key}-${stack.item.id}`,
+          itemId: stack.item.id,
+          label: stack.item.label,
+          units: stack.units,
+          x: round2(base.entry.x + used),
+          y: base.entry.y,
+          w,
+          d,
+          heightM,
+          baseHeightM: base.entry.heightM,
+          layer: base.entry.layer + 1,
+          rotationDeg: 0,
+          orientation: "flat",
+          zone: base.entry.zone,
+          storageZone: storageZoneFor(stack.item),
+          supportsItemIds: [],
+          supportedBy: base.entry.itemId,
+          groupId: `group-on-${base.entry.itemId}`,
+          fragile: stack.item.fragile,
+          weight: stack.item.weight,
+          confidence: stack.item.confidence,
+          mounted: false,
+        },
+      });
+      key += 1;
+      continue;
+    }
+
+    // No surface could carry it: fall back to a scored floor position, which
+    // the small-item rule already forces to join the existing block.
+    placed.length = 0;
+    placed.push(...current, ...stacked);
+    if (!place(stack)) {
+      unplacedUnits.set(stack.item.id, (unplacedUnits.get(stack.item.id) ?? 0) + stack.units);
+    }
+    const added = placed[placed.length - 1];
+    current = placed.filter((entry) => entry.entry.layer === 0);
+    stacked.length = 0;
+    stacked.push(...placed.filter((entry) => entry.entry.layer > 0));
+    if (added && added.entry.layer === 0 && !current.includes(added)) current.push(added);
+  }
+
+  return [...current.map((entry) => entry.entry), ...stacked.map((entry) => entry.entry)];
 }
+
 
 /**
  * Deterministic improvement pass: each object in turn is lifted out and

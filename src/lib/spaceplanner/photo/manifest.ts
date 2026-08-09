@@ -9,6 +9,7 @@
  * the inventory for itself.
  */
 import { hashString } from "@/lib/vision/hash";
+import { isRenderableSupport } from "../physical/relations";
 import { manifestHash } from "./diagnostics";
 import { objectVolume } from "@/lib/vision/inventory";
 import type { DetectedObject, RoomFeature } from "@/lib/vision/types";

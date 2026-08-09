@@ -17,6 +17,7 @@
 import { validateArrangement, walkwayIsClear } from "./constraints";
 import { orientationsFor, placementOrder, stacksFor, type OrientationOption, type StackCandidate } from "./items";
 import { arrangementQuality } from "./quality";
+import { searchPlacements } from "./optimise";
 import { scoreArrangement } from "./score";
 import {
   ACCESS_DEFAULTS,

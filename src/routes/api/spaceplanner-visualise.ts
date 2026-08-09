@@ -256,6 +256,7 @@ async function checkCoverage(
   required: { id: string; label: string }[],
   roomFeatures: { id: string; label: string }[],
   signal?: AbortSignal,
+  expectedSupports: readonly ExpectedSupport[] = [],
 ): Promise<Coverage | null> {
   if (required.length === 0) return null;
   try {
@@ -275,11 +276,20 @@ async function checkCoverage(
                   "Compare the SOURCE room photograph (first image) with the GENERATED photograph (second image).",
                   `USER_INVENTORY_WHITELIST — belongings that must appear, one entry per unit: ${required.map((item) => `${item.id}=${item.label}`).join("; ")}.`,
                   `ROOM_FEATURE_WHITELIST — parts of the building that must be preserved and are NEVER belongings: ${roomFeatures.map((feature) => `${feature.id}=${feature.label}`).join("; ") || "every fixed fixture visible in the source photograph (doors, doorways, windows, radiators, sockets, fitted units)"}.`,
-                  'Reply JSON only, exactly: {"present":["ITEM-1"],"unexpected":["short description"],"missingFeatures":["FEATURE-1"]}.',
+                  expectedSupports.length
+                    ? `EXPECTED_SUPPORTS — the plan places these objects ON TOP OF another object, never on the floor: ${expectedSupports
+                        .map((support) => `${support.itemLabel} on ${support.baseLabel}`)
+                        .join("; ")}.`
+                    : "",
+                  'Reply JSON only, exactly: {"objects":["short description of every stored object you can see"],"present":["ITEM-1"],"unexpected":["short description"],"missingFeatures":["FEATURE-1"],"supports":[{"item":"short description","restingOn":"floor or the object it stands on"}]}.',
+                  '"objects" is an INDEPENDENT list: describe every portable/stored object in the generated photograph before you look at any whitelist. Do not omit small objects such as shoes, bottles, toys, bags or cushions.',
                   '"present" lists the USER_INVENTORY_WHITELIST ids you can clearly see, counting duplicate units separately.',
                   '"unexpected" lists ONLY stored objects visible in the generated photograph that are on NEITHER whitelist — for example shoes, bags, chairs, plants, tools, extra boxes. Never put a room feature or a whitelisted item in this list.',
                   '"missingFeatures" lists ROOM_FEATURE_WHITELIST ids that disappeared, moved, changed or became covered. Room features always go here, never in "unexpected".',
-                ].join(" "),
+                  '"supports" reports, for each EXPECTED_SUPPORTS entry, what that object is actually standing on in the generated photograph. Answer "floor" when it stands on the ground.',
+                ]
+                  .filter(Boolean)
+                  .join(" "),
               },
               { type: "image_url", image_url: { url: sourceImage } },
               { type: "image_url", image_url: { url: image } },
@@ -296,7 +306,8 @@ async function checkCoverage(
     const text = typeof content === "string" ? content : "";
     const reply = parseCheckReply(text);
     if (!reply) return null;
-    return coverageOf(required, roomFeatures, reply);
+    return coverageOf(required, roomFeatures, reply, [], expectedSupports);
+
   } catch {
 
     return null;

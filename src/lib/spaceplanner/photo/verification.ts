@@ -152,7 +152,12 @@ function looksArchitectural(label: string): boolean {
  */
 export function classifyReported(
   reported: string,
-  whitelists: { items: readonly WhitelistEntry[]; features: readonly WhitelistEntry[] },
+  whitelists: {
+    items: readonly WhitelistEntry[];
+    features: readonly WhitelistEntry[];
+    /** Extra labels that count as user belongings without being required. */
+    itemAliases?: readonly string[];
+  },
 ): ObjectCategory {
   const raw = reported.trim();
   if (!raw) return "unexpected";
@@ -170,6 +175,8 @@ export function classifyReported(
 
   const label = normaliseLabel(raw);
   if (!label) return "room_feature"; // a bare state word describes nothing new
+  const aliases = (whitelists.itemAliases ?? []).map(normaliseLabel).filter(Boolean);
+  if (aliases.some((alias) => alias === label || containsLabel(label, alias))) return "user_item";
   if (whitelists.items.some((entry) => normaliseLabel(entry.label) === label)) return "user_item";
   if (whitelists.features.some((entry) => normaliseLabel(entry.label) === label)) return "room_feature";
 
@@ -225,9 +232,11 @@ export function categoriseVerification(input: {
   items: readonly WhitelistEntry[];
   features: readonly WhitelistEntry[];
   reply: VerifierReply;
+  /** Labels that are legitimate belongings but not separately required. */
+  itemAliases?: readonly string[];
 }): CategorisedVerification {
   const { items, features, reply } = input;
-  const whitelists = { items, features };
+  const whitelists = { items, features, ...(input.itemAliases ? { itemAliases: input.itemAliases } : {}) };
 
   const presentItemIds = new Set<string>();
   const presentFeatureIds = new Set<string>();

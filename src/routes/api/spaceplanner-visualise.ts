@@ -125,11 +125,28 @@ export function normaliseReported(label: string): string {
  * whitelists. This is the single place a report becomes a verdict.
  */
 export function coverageOf(
-  items: WhitelistEntry[],
-  features: WhitelistEntry[],
-  reply: VerifierReply,
+  items: WhitelistEntry[] | string[],
+  features: WhitelistEntry[] | string[],
+  reply?: VerifierReply | string[],
+  allowedLabels: string[] = [],
 ): Coverage {
-  const categories = categoriseVerification({ items, features, reply });
+  // Legacy call shape (required, present, unexpected, allowedLabels) is still
+  // supported so existing verification suites keep exercising this logic.
+  const legacy = typeof (features as unknown[])[0] === "string" || Array.isArray(reply);
+  const whitelist: WhitelistEntry[] = legacy
+    ? (items as string[]).map((id) => ({ id, label: id }))
+    : (items as WhitelistEntry[]);
+  const featureList: WhitelistEntry[] = legacy ? [] : (features as WhitelistEntry[]);
+  const verifierReply: VerifierReply = legacy
+    ? { present: (features as string[]) ?? [], unexpected: (reply as string[]) ?? [] }
+    : ((reply as VerifierReply) ?? { present: [], unexpected: [] });
+  const categories = categoriseVerification({
+    items: whitelist,
+    features: featureList,
+    reply: verifierReply,
+    ...(legacy && allowedLabels.length ? { itemAliases: allowedLabels } : {}),
+    ...(!legacy ? { itemAliases: whitelist.map((entry) => entry.label) } : {}),
+  });
   const { userInventory, roomFeatures } = categories;
   return {
     expected: userInventory.expected.length,

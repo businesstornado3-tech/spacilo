@@ -17,6 +17,11 @@ import { ImageLightbox } from "@/components/common/ImageLightbox";
 import { projectPlacements, toPoints, DEFAULT_FLOOR_QUAD, type FloorQuad } from "@/lib/spaceplanner/photo";
 import type { CoverageReport } from "@/lib/spaceplanner/photo/manifest";
 import type { PackResult, StorageSpace } from "@/lib/spaceplanner";
+import {
+  isVisualisationWorking,
+  showsRenderedImage,
+  type VisualisationStatus,
+} from "@/hooks/useSpaceVisualisation";
 
 export type ArrangementStatus = VisualisationStatus;
 

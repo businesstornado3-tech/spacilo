@@ -16,6 +16,7 @@
  */
 import { classifyItem, classPlacementOrder, type PhysicalClass } from "./classify";
 import { orientationsFor, stacksFor, type OrientationOption, type StackCandidate } from "./items";
+import { canSupport, prefersSurface, relationMap, storageZoneFor } from "./relations";
 import { contains, intersects, rectArea } from "./space";
 import type {
   ArrangementEntry,
@@ -24,6 +25,7 @@ import type {
   PlanningSpace,
   Rect,
 } from "./types";
+
 
 const round2 = (value: number) => Math.round(value * 100) / 100;
 const EPS = 0.001;

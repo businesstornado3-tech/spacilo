@@ -46,6 +46,10 @@ export interface RenderDiagnostics {
   diagnosticId: string | null;
   planHash: string | null;
   renderMs: number | null;
+  /** Milliseconds spent optimising the photographs before the render call. */
+  prepareMs?: number | null;
+  /** Wall-clock time from pressing generate to a decided verdict. */
+  totalMs?: number | null;
 }
 
 export interface UseSpaceVisualisation {
@@ -157,11 +161,13 @@ export function useSpaceVisualisation(options: {
 
     try {
       // Prepare every photograph at once rather than one after another.
+      const preparedAt = Date.now();
       const [space, ...items] = await Promise.all([
         prepareImage(spacePhoto.url),
         ...itemPhotos.slice(0, 3).map((photo) => prepareImage(photo.url)),
       ]);
       if (run.current !== token || !space) return;
+      const prepareMs = Date.now() - preparedAt;
 
       setStage("rendering");
       const payload = {
@@ -189,6 +195,8 @@ export function useSpaceVisualisation(options: {
         // An unverifiable render is not a wrong render: the checker simply
         // could not answer. It is shown, flagged as unverified.
         if (!coverageNow) break;
+        // Room-feature drift is deliberately NOT a retry trigger: redrawing
+        // the room's own door slightly differently is not a plan failure.
         const missingItems = coverageNow.missing.length > 0;
         const invented = (coverageNow.unexpected?.length ?? 0) > 0;
         if (!missingItems && !invented) break;
@@ -214,6 +222,8 @@ export function useSpaceVisualisation(options: {
         diagnosticId: response.diagnosticId,
         planHash: manifest.planHash,
         renderMs: response.renderMs,
+        prepareMs,
+        totalMs: Date.now() - startedAt,
       });
 
 

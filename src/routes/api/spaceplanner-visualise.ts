@@ -426,6 +426,19 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         const emphasise = (body.emphasise ?? [])
           .filter((label): label is string => typeof label === "string")
           .slice(0, 20);
+        const supports: ExpectedSupport[] = (body.supports ?? []).flatMap((support) => {
+          const itemLabel = typeof support?.itemLabel === "string" ? support.itemLabel.trim() : "";
+          const baseLabel = typeof support?.baseLabel === "string" ? support.baseLabel.trim() : "";
+          if (!itemLabel || !baseLabel) return [];
+          return [
+            {
+              itemId: support.itemId?.trim() || itemLabel,
+              itemLabel,
+              baseId: support.baseId?.trim() || baseLabel,
+              baseLabel,
+            },
+          ];
+        });
 
         const model = imageModel();
         const diagnosticId = `vis_${Date.now().toString(36)}`;
@@ -436,7 +449,9 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           roomFeatures,
           emphasise,
           hasItemPhotos: itemPhotos.length > 0,
+          supports,
         });
+
 
         // Image-to-image edit through the gateway: the user's space photograph
         // first, then their belongings as visual references. The source photo

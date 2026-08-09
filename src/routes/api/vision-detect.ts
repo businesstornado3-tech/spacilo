@@ -24,7 +24,19 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 
-const MODEL = "openai/gpt-5.6-sol";
+/**
+ * Phase 6X — belongings detection runs on the fast multimodal model.
+ *
+ * The previous reasoning model spent 21–51s and 2,400–3,900 output tokens on a
+ * single photograph, which was the largest user-visible wait in the whole
+ * product. Nothing about the safety pipeline changed: the reply is still
+ * schema-validated by `normaliseItems`, volume is still calculated here, and
+ * the deterministic merge still happens in code.
+ */
+export const SCAN_MODEL = "google/gemini-3.6-flash";
+/** Room geometry is the same kind of visual estimate; same fast model. */
+export const SPACE_MODEL = "google/gemini-3.6-flash";
+const MODEL = SCAN_MODEL;
 const GATEWAY = "https://ai.gateway.lovable.dev/v1";
 const MAX_IMAGES = 8;
 
@@ -105,12 +117,13 @@ async function chat(
   key: string,
   content: unknown,
   system: string,
+  model: string = MODEL,
 ): Promise<Record<string, unknown> | null> {
   const response = await fetch(`${GATEWAY}/chat/completions`, {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: MODEL,
+      model,
       messages: [
         { role: "system", content: system },
         { role: "user", content },

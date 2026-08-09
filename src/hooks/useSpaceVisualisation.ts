@@ -157,7 +157,7 @@ export function useSpaceVisualisation(options: {
     }
     const token = ++run.current;
     abort.current?.abort();
-    setStatus("working");
+    setStatus("preparing");
     setStage("planning");
     setError(null);
     setImageUrl(null);

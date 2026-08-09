@@ -277,6 +277,8 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
     setScope,
     quality,
     elapsedMs,
+    timings,
+
     rotatePhoto,
     movePhoto,
     rejected,

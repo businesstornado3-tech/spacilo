@@ -187,25 +187,34 @@ export function arrangeItems(
   const floorItems = items.filter((item) => !item.wallMounted);
   const mountedItems = items.filter((item) => item.wallMounted);
 
-  const stacks = stacksFor(floorItems, ceiling).sort(strategy.order);
   const entries: ArrangementEntry[] = [];
   const unplacedUnits = new Map<string, number>();
   const placedFloor: Rect[] = [];
   let key = 0;
 
-  for (const stack of stacks) {
-    const placed = placeStack(stack, bands, blockers, placedFloor, space, ceiling, key, strategy);
-    if (placed) {
-      entries.push(placed);
-      placedFloor.push({ x: placed.x, y: placed.y, w: placed.w, d: placed.d });
-      key += 1;
-    } else {
-      unplacedUnits.set(stack.item.id, (unplacedUnits.get(stack.item.id) ?? 0) + stack.units);
+  if (strategy.search) {
+    // Phase 6Q: deterministic candidate-search optimisation, not first fit.
+    entries.push(
+      ...searchPlacements({ items: floorItems, space, ceiling, blockers, unplacedUnits }),
+    );
+    key = entries.length;
+  } else {
+    const stacks = stacksFor(floorItems, ceiling).sort(strategy.order);
+    for (const stack of stacks) {
+      const placed = placeStack(stack, bands, blockers, placedFloor, space, ceiling, key, strategy);
+      if (placed) {
+        entries.push(placed);
+        placedFloor.push({ x: placed.x, y: placed.y, w: placed.w, d: placed.d });
+        key += 1;
+      } else {
+        unplacedUnits.set(stack.item.id, (unplacedUnits.get(stack.item.id) ?? 0) + stack.units);
+      }
     }
   }
 
   // Close every gap the row cursor left behind, then lift fragile items clear.
-  const compacted = compactEntries(entries, space, blockers);
+  // The search engine has already optimised positions, so it is not re-slid.
+  const compacted = strategy.search ? entries : compactEntries(entries, space, blockers);
   const mounted = mountWallItems(mountedItems, space, ceiling, key, unplacedUnits);
   const lifted = [...protectFragile(compacted, ceiling), ...mounted];
 

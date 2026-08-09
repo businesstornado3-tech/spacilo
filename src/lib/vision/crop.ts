@@ -9,7 +9,11 @@
  * Lasso and ellipse selections are masked, not just cropped, so surrounding
  * clutter inside the bounding box is suppressed too.
  */
-import { prepareImage, scaleFor, type PreparedImage } from "@/lib/spaceplanner/photo/image-optimise";
+import {
+  prepareImageOnce,
+  scaleFor,
+  type PreparedImage,
+} from "@/lib/spaceplanner/photo/image-optimise";
 
 import {
   boundingBox,
@@ -50,9 +54,9 @@ export async function prepareSelection(
   selection: PhotoSelection | null,
   fetchImpl: typeof fetch = fetch,
 ): Promise<PreparedImage> {
-  if (!selection || isFullPhoto(selection)) return prepareImage(url, MAX_CROP_EDGE_PX, fetchImpl);
+  if (!selection || isFullPhoto(selection)) return prepareImageOnce(url, MAX_CROP_EDGE_PX, fetchImpl);
   if (typeof createImageBitmap !== "function" || typeof document === "undefined") {
-    return prepareImage(url, MAX_CROP_EDGE_PX, fetchImpl);
+    return prepareImageOnce(url, MAX_CROP_EDGE_PX, fetchImpl);
   }
 
   try {
@@ -77,7 +81,7 @@ export async function prepareSelection(
     const context = canvas.getContext("2d");
     if (!context) {
       bitmap.close?.();
-      return prepareImage(url, MAX_CROP_EDGE_PX, fetchImpl);
+      return prepareImageOnce(url, MAX_CROP_EDGE_PX, fetchImpl);
     }
 
     context.drawImage(bitmap, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
@@ -121,9 +125,9 @@ export async function prepareSelection(
       canvas.toBlob(resolve, "image/jpeg", 0.84),
     );
     bitmap.close?.();
-    if (!encoded) return prepareImage(url, MAX_CROP_EDGE_PX, fetchImpl);
+    if (!encoded) return prepareImageOnce(url, MAX_CROP_EDGE_PX, fetchImpl);
     return { mimeType: "image/jpeg", base64: await toBase64(encoded) };
   } catch {
-    return prepareImage(url, MAX_CROP_EDGE_PX, fetchImpl);
+    return prepareImageOnce(url, MAX_CROP_EDGE_PX, fetchImpl);
   }
 }

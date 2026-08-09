@@ -16,7 +16,7 @@ import {
   VISUALISATION_STAGES,
   type VisualisationStage,
 } from "@/lib/spaceplanner/photo/visualise";
-import { prepareImage } from "@/lib/spaceplanner/photo/image-optimise";
+import { prepareImageOnce } from "@/lib/spaceplanner/photo/image-optimise";
 import {
   manifestSupports,
   type CoverageReport,
@@ -196,8 +196,8 @@ export function useSpaceVisualisation(options: {
       // Prepare every photograph at once rather than one after another.
       const preparedAt = Date.now();
       const [space, ...items] = await Promise.all([
-        prepareImage(spacePhoto.url),
-        ...itemPhotos.slice(0, 3).map((photo) => prepareImage(photo.url)),
+        prepareImageOnce(spacePhoto.url),
+        ...itemPhotos.slice(0, 3).map((photo) => prepareImageOnce(photo.url)),
       ]);
       if (run.current !== token || !space) return;
       const prepareMs = Date.now() - preparedAt;

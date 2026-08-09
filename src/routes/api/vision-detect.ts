@@ -250,7 +250,12 @@ export function normaliseItems(raw: unknown, photoIds: string[]): DetectedItemPa
 
     // Identity comes from the model's own id, or from the name — never from
     // the array position, so dropping one item cannot renumber the rest.
-    const reported = typeof record["id"] === "string" ? record["id"].trim() : "";
+    const reported =
+      typeof record["id"] === "string"
+        ? record["id"].trim()
+        : typeof record["detectionId"] === "string"
+          ? slugId(record["detectionId"].trim(), "")
+          : "";
     const positional = `ITEM-${String(index + 1).padStart(3, "0")}`;
     let id = reported || slugId(label, positional);
     let suffix = 2;

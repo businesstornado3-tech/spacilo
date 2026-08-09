@@ -64,6 +64,8 @@ export interface DetectedItemPayload {
   widthCm: number;
   depthCm: number;
   heightCm: number;
+  /** Derived from the dimensions above, never taken from the model. */
+  volumeM3: number;
   weight: string;
   fragile: boolean;
   stackable: boolean;
@@ -72,6 +74,8 @@ export interface DetectedItemPayload {
   evidence: string;
   /** Parts of this object that are not separate items (rails, cushions…). */
   components: string[];
+  /** The detector's own identity for this object. Never index-derived. */
+  sourceDetectionId: string;
 }
 
 

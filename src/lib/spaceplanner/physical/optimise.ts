@@ -421,19 +421,26 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
 
   // Improve the structural block BEFORE anything is stood on top of it, so a
   // supported object never has to chase a base that later moves.
-  let current = improvePlacements(placed, space, blockers, ceiling);
+  const improved = improvePlacements(placed, space, blockers, ceiling);
+  placed.length = 0;
+  placed.push(...improved);
 
   // 3D consolidation: put the small stuff on a surface if one exists.
   const surfaceUse = new Map<string, number>();
-  const stacked: Placed[] = [];
   for (const stack of surfaceSeeking) {
     const unitHeight = Math.max(0.05, Math.round(stack.item.heightCm) / 100);
     const w = round2(Math.round(stack.item.widthCm) / 100);
     const d = round2(Math.round(stack.item.depthCm) / 100);
-    const heightM = round2(stackedHeight({ w, d, h: unitHeight, rotationDeg: 0, orientation: "flat" }, stack.units, unitHeight));
+    const heightM = round2(
+      stackedHeight(
+        { w, d, h: unitHeight, rotationDeg: 0, orientation: "flat" },
+        stack.units,
+        unitHeight,
+      ),
+    );
 
     // Deterministic base choice: lowest usable surface first, then by id.
-    const bases = current
+    const base = placed
       .filter((candidate) => candidate.entry.layer === 0 && !candidate.entry.mounted)
       .filter((candidate) =>
         canSupport(
@@ -452,18 +459,17 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
           a.entry.heightM - b.entry.heightM ||
           a.entry.itemId.localeCompare(b.entry.itemId) ||
           a.entry.key.localeCompare(b.entry.key),
-      );
-
-    const base = bases.find((candidate) => {
-      const used = surfaceUse.get(candidate.entry.key) ?? 0;
-      return used + w <= candidate.entry.w * 0.9 + EPS && d <= candidate.entry.d * 0.9 + EPS;
-    });
+      )
+      .find((candidate) => {
+        const used = surfaceUse.get(candidate.entry.key) ?? 0;
+        return used + w <= candidate.entry.w * 0.9 + EPS && d <= candidate.entry.d * 0.9 + EPS;
+      });
 
     if (base) {
       const used = surfaceUse.get(base.entry.key) ?? 0;
       surfaceUse.set(base.entry.key, round2(used + w + 0.02));
       base.entry.supportsItemIds.push(stack.item.id);
-      stacked.push({
+      placed.push({
         item: stack.item,
         cls: classifyItem(stack.item),
         entry: {
@@ -497,17 +503,11 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
 
     // No surface could carry it: fall back to a scored floor position, which
     // the small-item rule already forces to join the existing block.
-    placed.length = 0;
-    placed.push(...current, ...stacked);
     if (!place(stack)) {
       unplacedUnits.set(stack.item.id, (unplacedUnits.get(stack.item.id) ?? 0) + stack.units);
     }
-    const added = placed[placed.length - 1];
-    current = placed.filter((entry) => entry.entry.layer === 0);
-    stacked.length = 0;
-    stacked.push(...placed.filter((entry) => entry.entry.layer > 0));
-    if (added && added.entry.layer === 0 && !current.includes(added)) current.push(added);
   }
+
 
   return [...current.map((entry) => entry.entry), ...stacked.map((entry) => entry.entry)];
 }

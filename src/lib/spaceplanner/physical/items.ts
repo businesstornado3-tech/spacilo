@@ -52,7 +52,7 @@ export function planningItemFrom(object: DetectedObject): PlanningItem {
     fragile: object.fragile,
     compressible: COMPRESSIBLE.test(object.label),
     allowUpright: UPRIGHT.test(object.label),
-    wallMounted: WALL_MOUNTED.test(object.label),
+    wallMounted: isWallMountedLabel(object.label),
     components: object.components ?? [],
     confidence: object.confidence,
     dimensionBasis: object.source === "manual" ? "confirmed" : "estimated",

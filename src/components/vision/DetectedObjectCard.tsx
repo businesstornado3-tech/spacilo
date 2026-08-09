@@ -75,9 +75,16 @@ export function DetectedObjectCard({
         </div>
       </div>
 
-      {review ? (
-        <p className="mt-2 rounded-lg bg-warning-soft px-2.5 py-1.5 type-body-xs text-warning-soft-foreground">
-          Spacilo AI isn&apos;t sure about this one — please confirm or correct it.
+      {object.source === "ai" && tier !== "confident" ? (
+        <p
+          className={cn(
+            "mt-2 rounded-lg px-2.5 py-1.5 type-body-xs",
+            tier === "unsure"
+              ? "bg-destructive-soft text-destructive-soft-foreground"
+              : "bg-warning-soft text-warning-soft-foreground",
+          )}
+        >
+          {confidenceTierCopy(tier)}.
         </p>
       ) : null}
 

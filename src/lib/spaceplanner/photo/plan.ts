@@ -82,28 +82,33 @@ export const LOW_CONFIDENCE = 0.7;
  * describe the same physical objects the user photographed.
  */
 export function linesFromObjects(objects: DetectedObject[]): InventoryLine[] {
-  return objects
-    .filter((object) => object.quantity > 0 && object.label.trim().length > 0)
-    .map((object) => {
-      const catalogue = object.catalogueId ? CATALOGUE_BY_ID.get(object.catalogueId) : undefined;
-      const item: CatalogueItem = {
-        id: object.id,
-        name: object.label,
-        category: object.category,
-        icon: catalogue?.icon ?? "box",
-        width: Math.max(3, object.width),
-        depth: Math.max(3, object.depth),
-        height: Math.max(3, object.height),
-        fragile: object.fragile,
-        stackable: object.stackable,
-        maxStack: object.stackable ? (catalogue?.maxStack ?? 3) : 1,
-        weight: object.weight,
-        standsUpright: catalogue?.standsUpright ?? false,
-        frequentlyUsed: catalogue?.frequentlyUsed ?? false,
-        popular: false,
-      };
-      return { item, quantity: object.quantity };
-    });
+  // Phase 6O: nothing reaches the deterministic engine without passing the
+  // canonical validation gate first — positive numeric centimetres, a stable
+  // id and a name, with volume derived rather than trusted.
+  const { items } = canonicaliseInventory(objects);
+  const byId = new Map(objects.map((object) => [object.id, object]));
+
+  return items.map((canonical) => {
+    const source = byId.get(canonical.id);
+    const catalogue = source?.catalogueId ? CATALOGUE_BY_ID.get(source.catalogueId) : undefined;
+    const item: CatalogueItem = {
+      id: canonical.id,
+      name: canonical.name,
+      category: canonical.category,
+      icon: catalogue?.icon ?? "box",
+      width: Math.max(3, canonical.widthCm),
+      depth: Math.max(3, canonical.depthCm),
+      height: Math.max(3, canonical.heightCm),
+      fragile: canonical.fragile,
+      stackable: canonical.stackable,
+      maxStack: canonical.stackable ? (catalogue?.maxStack ?? 3) : 1,
+      weight: canonical.weightClass,
+      standsUpright: catalogue?.standsUpright ?? false,
+      frequentlyUsed: catalogue?.frequentlyUsed ?? false,
+      popular: false,
+    };
+    return { item, quantity: canonical.quantity };
+  });
 }
 
 

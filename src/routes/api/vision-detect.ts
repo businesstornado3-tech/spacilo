@@ -215,6 +215,7 @@ const SPACE_SYSTEM = [
 
 const CATEGORIES = ["boxes", "furniture", "appliances", "electronics", "leisure", "seasonal"];
 const WEIGHTS = ["light", "medium", "heavy"];
+const MOUNTINGS = ["floor", "wall_mounted", "tabletop", "stackable_unit"];
 
 function num(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;

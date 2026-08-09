@@ -11,6 +11,14 @@ import type {
   CoverageReport,
   PlacementManifest,
 } from "@/lib/spaceplanner/photo/manifest";
+import {
+  EMPTY_TIMINGS,
+  budgetReport,
+  formatMs,
+  type BudgetVerdict,
+  type PipelineTimings,
+} from "@/lib/spaceplanner/photo/timings";
+
 
 type StageState = "waiting" | "working" | "passed" | "failed";
 
@@ -21,6 +29,33 @@ function StageIcon({ state }: { state: StageState }) {
   return <Circle className="size-4 text-muted-foreground" aria-hidden="true" />;
 }
 
+/** One measured stage. Unmeasured stages read "—", never "0s". */
+function TimingRow({
+  label,
+  ms,
+  verdict,
+}: {
+  label: string;
+  ms: number | null;
+  verdict?: BudgetVerdict;
+}) {
+  return (
+    <span className="flex items-center justify-between gap-2">
+      <span>{label}</span>
+      <span className="font-medium text-foreground">
+        {formatMs(ms)}
+        {verdict && verdict.state !== "unknown" ? (
+          <span className={verdict.state === "over" ? "ml-1 text-warning" : "ml-1 text-success"}>
+            {verdict.state === "over" ? `over by ${formatMs(verdict.overBy)}` : "within target"}
+          </span>
+        ) : null}
+      </span>
+    </span>
+  );
+}
+
+
+
 export function SpacePlannerDiagnostics({
   photoCount,
   detectedCount,
@@ -30,6 +65,7 @@ export function SpacePlannerDiagnostics({
   visualStatus,
   coverage,
   render,
+  timings = EMPTY_TIMINGS,
 }: {
   photoCount: number;
   detectedCount: number;
@@ -40,7 +76,11 @@ export function SpacePlannerDiagnostics({
   coverage: CoverageReport | null;
   /** Which service produced the image, for support and provider verification. */
   render?: RenderDiagnostics | null;
+  /** Phase 6U — measured stage timings and their budget verdicts. */
+  timings?: PipelineTimings;
 }) {
+  const budgets = budgetReport(timings);
+
   const renderWorking = isVisualisationWorking(visualStatus);
   const renderFailed =
     visualStatus === "failed" || visualStatus === "unfaithful" || visualStatus === "unverified";
@@ -91,6 +131,38 @@ export function SpacePlannerDiagnostics({
         <div><dt>Verification time</dt><dd className="font-medium text-foreground">{render?.verifyMs ? `${(render.verifyMs / 1000).toFixed(1)}s` : "—"}</dd></div>
         <div><dt>Total visualisation time</dt><dd className="font-medium text-foreground">{render?.totalMs ? `${(render.totalMs / 1000).toFixed(1)}s` : "—"}</dd></div>
         <div><dt>Diagnostic ID</dt><dd className="font-medium text-foreground">{render?.diagnosticId ?? "—"}</dd></div>
+        <div className="sm:col-span-2 border-t border-border pt-3">
+          <dt className="type-label text-foreground">Measured performance</dt>
+          <dd className="mt-2 grid gap-1 sm:grid-cols-2">
+            <TimingRow label="Detection" ms={timings.detectionMs} />
+            <TimingRow label="Classification" ms={timings.classificationMs} />
+            <TimingRow label="Inventory ready" ms={timings.inventoryReadyMs} verdict={budgets.belongings} />
+            <TimingRow label="Space analysis" ms={timings.spaceAnalysisMs} verdict={budgets.space} />
+            <TimingRow label="Deterministic plan" ms={timings.planMs} />
+            <TimingRow label="Manifest validation" ms={timings.manifestValidationMs} />
+            <TimingRow label="Time to arrangement" ms={timings.timeToArrangementMs} verdict={budgets.plan} />
+            <TimingRow label="Render" ms={timings.renderMs} />
+            <TimingRow label="Verification" ms={timings.verifyMs} />
+            <TimingRow label="Total" ms={timings.totalMs} />
+          </dd>
+        </div>
+        <div>
+          <dt>Budget verdict</dt>
+          <dd className="font-medium text-foreground">
+            {budgets.belongings.state === "unknown" &&
+            budgets.space.state === "unknown" &&
+            budgets.plan.state === "unknown"
+              ? "not measured yet"
+              : budgets.allWithinBudget
+                ? "within_budget"
+                : "over_budget"}
+          </dd>
+        </div>
+        <div>
+          <dt>Slowest stage</dt>
+          <dd className="font-medium text-foreground">{budgets.bottleneck ?? "—"}</dd>
+        </div>
+
         <div><dt>Image state</dt><dd className="font-medium text-foreground">{visualStatus}</dd></div>
         <div><dt>Verification</dt><dd className="font-medium text-foreground">{verified.replace("_", " ")}</dd></div>
         <div><dt>Inventory reference</dt><dd className="break-all font-mono text-foreground">{render?.inventoryHash ?? "—"}</dd></div>

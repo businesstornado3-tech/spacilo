@@ -91,3 +91,78 @@ export function formatMs(ms: number | null | undefined): string {
   if (ms < 1000) return `${Math.round(ms)}ms`;
   return `${(ms / 1000).toFixed(1)}s`;
 }
+
+/* --------------------------------------------------------- Phase 6U */
+
+/** Merges measured stages onto a timing record without inventing values. */
+export function mergeTimings(
+  base: PipelineTimings,
+  patch: Partial<PipelineTimings>,
+): PipelineTimings {
+  const next: PipelineTimings = { ...base };
+  for (const [key, value] of Object.entries(patch) as [keyof PipelineTimings, number | null | undefined][]) {
+    if (value === undefined) continue;
+    next[key] = value === null ? null : Math.max(0, Math.round(value));
+  }
+  return next;
+}
+
+/** Runs a synchronous stage and reports how long it really took. */
+export function measure<T>(work: () => T): { value: T; ms: number } {
+  const startedAt = Date.now();
+  const value = work();
+  return { value, ms: Date.now() - startedAt };
+}
+
+/** Runs an asynchronous stage and reports how long it really took. */
+export async function measureAsync<T>(work: () => Promise<T>): Promise<{ value: T; ms: number }> {
+  const startedAt = Date.now();
+  const value = await work();
+  return { value, ms: Date.now() - startedAt };
+}
+
+export interface BudgetReport {
+  /** "Analyse my belongings" → a usable inventory. */
+  belongings: BudgetVerdict;
+  /** "Analyse this space" → a validated room model. */
+  space: BudgetVerdict;
+  /** Deterministic planning + manifest validation. */
+  plan: BudgetVerdict;
+  /** The slowest measured stage overall, or null when nothing was measured. */
+  bottleneck: string | null;
+  /** True only when every MEASURED target came in under its budget. */
+  allWithinBudget: boolean;
+}
+
+/**
+ * Turns measured timings into explicit budget verdicts. A stage that was never
+ * measured is "unknown" and never counted as a pass — a target is only claimed
+ * to be met when a real measurement says so.
+ */
+export function budgetReport(timings: PipelineTimings): BudgetReport {
+  const belongings = budgetVerdict(timings.inventoryReadyMs, BELONGINGS_ANALYSIS_BUDGET_MS);
+  const space = budgetVerdict(timings.spaceAnalysisMs, SPACE_ANALYSIS_BUDGET_MS);
+  const planTotal =
+    timings.planMs === null && timings.manifestValidationMs === null
+      ? null
+      : (timings.planMs ?? 0) + (timings.manifestValidationMs ?? 0);
+  const plan = budgetVerdict(planTotal, DETERMINISTIC_PLAN_BUDGET_MS);
+  const verdicts = [belongings, space, plan];
+  return {
+    belongings,
+    space,
+    plan,
+    bottleneck: bottleneckOf({
+      detection: timings.detectionMs,
+      classification: timings.classificationMs,
+      "space analysis": timings.spaceAnalysisMs,
+      planning: timings.planMs,
+      "manifest validation": timings.manifestValidationMs,
+      render: timings.renderMs,
+      verification: timings.verifyMs,
+    }),
+    allWithinBudget:
+      verdicts.some((verdict) => verdict.state !== "unknown") &&
+      verdicts.every((verdict) => verdict.state !== "over"),
+  };
+}

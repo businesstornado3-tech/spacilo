@@ -31,6 +31,7 @@ import { InventoryLock } from "@/components/spaceplanner/photo/InventoryLock";
 import { SpacePlannerDiagnostics } from "@/components/spaceplanner/photo/SpacePlannerDiagnostics";
 import { PlannerProgress } from "@/components/spaceplanner/photo/PlannerProgress";
 import { ArrangementPlanDiagram } from "@/components/spaceplanner/photo/ArrangementPlanDiagram";
+import { EMPTY_TIMINGS, measure, mergeTimings } from "@/lib/spaceplanner/photo/timings";
 import { buildPhotoPlan, spaceFromScan, type SpaceSource } from "@/lib/spaceplanner/photo";
 import { earningsFromPlan } from "@/lib/spaceplanner/photo/earnings";
 import { usableVolume } from "@/lib/spaceplanner/spaces";

@@ -185,6 +185,7 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
     setStageIndex(0);
     setError(null);
     setElapsedMs(0);
+    setTimings({ detectionMs: null, classificationMs: null, readyMs: null });
 
     const startedAt = Date.now();
     // Gentle drift so the stage list still moves while a call is in flight.
@@ -200,12 +201,18 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
         onStage: (key: string) => setStageIndex(stageIndexFor(stages, key)),
       };
       const provider = await getVisionProvider();
+      // Phase 6U — real, measured stage timings. Detection is the model call;
+      // classification is the canonicalisation that turns the raw reply into
+      // the inventory the UI can use.
+      const detectionAt = Date.now();
       const result =
         mode === "space"
           ? await provider.analyseSpace(photos, spaceType, options)
           : await provider.analyseBelongings(photos, options);
+      const detectionMs = Date.now() - detectionAt;
 
       setStageIndex(stages.length - 1);
+      const classifyAt = Date.now();
       if (mode === "space") {
         setSpaceScan(result as SpaceScanResult);
         setObjects([]);
@@ -214,6 +221,12 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
         setObjects(merged);
         onComplete?.(merged);
       }
+      const classificationMs = Date.now() - classifyAt;
+      setTimings({
+        detectionMs,
+        classificationMs,
+        readyMs: Date.now() - startedAt,
+      });
       setStatus("complete");
     } catch {
       setError("Spacilo AI couldn't finish that scan. Please try again, or add items yourself.");
@@ -223,6 +236,7 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
       setElapsedMs(Date.now() - startedAt);
     }
   }, [photos, stages, mode, spaceType, onComplete, scope, selections]);
+
 
   const summary = React.useMemo(() => summariseDetections(objects), [objects]);
 

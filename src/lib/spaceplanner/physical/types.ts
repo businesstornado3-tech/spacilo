@@ -121,6 +121,13 @@ export interface ArrangementEntry extends Rect {
   supportedBy: string | null;
   /** Items placed as one contiguous cluster share a group. */
   groupId: string;
+  /**
+   * Phase 6R — the deterministic storage zone this footprint belongs to
+   * (luggage, boxes, furniture, soft, fragile, small). Grouping by zone is
+   * what makes a plan read as intentionally organised.
+   */
+  storageZone?: import("./relations").StorageZone;
+
   fragile: boolean;
   weight: WeightClass;
   confidence: number;

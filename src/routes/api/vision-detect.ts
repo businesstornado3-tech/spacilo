@@ -567,11 +567,20 @@ export const Route = createFileRoute("/api/vision-detect")({
             task: "belongings",
             model: MODEL,
             items,
-            observations,
             // Real, measured stage timings so the pipeline can be tuned on
             // evidence rather than on how slow it feels.
-            timings: { detectMs, classifyMs, totalMs: detectMs + classifyMs },
+            timings: {
+              detectMs,
+              mergeMs,
+              // Kept for compatibility: classification now happens inside the
+              // single scan pass, so its separate cost is the refinement only.
+              classifyMs: refineMs,
+              refineMs,
+              totalMs: detectMs + mergeMs + refineMs,
+            },
+            calls: { scan: images.length, refine: refineCalls },
           });
+
         } catch (cause) {
           if (cause instanceof UpstreamError) {
             const status =

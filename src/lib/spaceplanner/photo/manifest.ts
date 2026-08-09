@@ -295,6 +295,29 @@ export function manifestUnitCount(manifest: PlacementManifest): number {
 }
 
 /**
+ * Phase 6T — every "this object rests on that object" relationship the
+ * deterministic plan asserted. The renderer must draw them and render
+ * verification checks for them.
+ */
+export function manifestSupports(manifest: PlacementManifest): ExpectedSupport[] {
+  const labelOf = new Map(manifest.entries.map((entry) => [entry.id, entry.label]));
+  const supports: ExpectedSupport[] = [];
+  for (const entry of manifest.entries) {
+    for (const position of entry.positions) {
+      if (!position.supportSurfaceId) continue;
+      supports.push({
+        itemId: entry.id,
+        itemLabel: entry.label,
+        baseId: position.supportSurfaceId,
+        baseLabel: labelOf.get(position.supportSurfaceId) ?? position.supportSurfaceId,
+      });
+    }
+  }
+  return supports;
+}
+
+
+/**
  * Structured, model-facing manifest text.
  *
  * This is a rendering order, not a suggestion: exact metric coordinates in a

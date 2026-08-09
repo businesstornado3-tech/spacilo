@@ -18,13 +18,8 @@ import { projectPlacements, toPoints, DEFAULT_FLOOR_QUAD, type FloorQuad } from 
 import type { CoverageReport } from "@/lib/spaceplanner/photo/manifest";
 import type { PackResult, StorageSpace } from "@/lib/spaceplanner";
 
-export type ArrangementStatus =
-  | "idle"
-  | "working"
-  | "ready"
-  | "incomplete"
-  | "rejected"
-  | "failed";
+export type ArrangementStatus = VisualisationStatus;
+
 
 export interface PhotoArrangementProps {
   /** The user's own photograph of the space. */

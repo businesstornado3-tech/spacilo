@@ -9,7 +9,7 @@
 import { describe, expect, it } from "vitest";
 import { arrangeItems } from "./arrange";
 import { planningSpaceFrom } from "./space";
-import { classify } from "./classify";
+import { classifyItem } from "./classify";
 import { validateRoomGeometry, longestWallRun } from "../room-geometry";
 import type { PlanningItem } from "./types";
 import type { StorageSpace } from "../types";
@@ -28,17 +28,21 @@ const room: StorageSpace = {
 
 function item(partial: Partial<PlanningItem> & { id: string; label: string }): PlanningItem {
   return {
+    category: "boxes",
     quantity: 1,
     widthCm: 40,
     depthCm: 40,
     heightCm: 40,
     fragile: false,
     stackable: true,
-    maxStack: 3,
+    compressible: false,
+    allowUpright: false,
+    wallMounted: false,
+    components: [],
     weight: "light",
-    standsUpright: false,
-    frequentlyUsed: false,
     confidence: 0.9,
+    dimensionBasis: "estimated",
+    photoIds: [],
     ...partial,
   } as PlanningItem;
 }
@@ -51,9 +55,8 @@ const tv = item({
   heightCm: 70,
   fragile: true,
   stackable: false,
-  maxStack: 1,
   wallMounted: true,
-} as Partial<PlanningItem> & { id: string; label: string });
+});
 
 describe("Phase 6Q — room geometry", () => {
   it("flags a room narrower than any real room as needing confirmation", () => {
@@ -98,7 +101,7 @@ describe("Phase 6Q — room geometry", () => {
 describe("Phase 6Q — wall-mounted items", () => {
   it("hangs a television on a room wall even when the marked storage strip is narrow", () => {
     const space = planningSpaceFrom(room, { usable: { x: 1.1, y: 1.4, w: 1.1, d: 1.4 } });
-    const arrangement = arrangeItems({ space, items: [tv] });
+    const arrangement = arrangeItems([tv], space);
     const placed = arrangement.entries.find((entry) => entry.itemId === "ITEM-tv");
     expect(placed).toBeDefined();
     expect(placed?.mounted).toBe(true);
@@ -109,21 +112,21 @@ describe("Phase 6Q — wall-mounted items", () => {
   it("reports a measured reason when no wall run is long enough", () => {
     const tiny: StorageSpace = { ...room, width: 0.8, depth: 0.8 };
     const space = planningSpaceFrom(tiny);
-    const arrangement = arrangeItems({ space, items: [tv] });
+    const arrangement = arrangeItems([tv], space);
     const unplaced = arrangement.unplaced.find((entry) => entry.itemId === "ITEM-tv");
     expect(unplaced).toBeDefined();
     expect(unplaced?.reason).toMatch(/wall run|Not safely placeable/i);
   });
 
   it("classifies a wall-mounted television away from floor objects", () => {
-    expect(classify(tv)).toBe("WALL_MOUNTED");
+    expect(classifyItem(tv)).toBe("WALL_MOUNTED");
   });
 });
 
 describe("Phase 6Q — deterministic optimisation", () => {
   const inventory: PlanningItem[] = [
-    item({ id: "ITEM-sofa", label: "Sofa", widthCm: 180, depthCm: 85, heightCm: 80, stackable: false, maxStack: 1 }),
-    item({ id: "ITEM-wardrobe", label: "Wardrobe", widthCm: 100, depthCm: 60, heightCm: 190, stackable: false, maxStack: 1 }),
+    item({ id: "ITEM-sofa", label: "Sofa", widthCm: 180, depthCm: 85, heightCm: 80, stackable: false }),
+    item({ id: "ITEM-wardrobe", label: "Wardrobe", widthCm: 100, depthCm: 60, heightCm: 190, stackable: false }),
     item({ id: "ITEM-box", label: "Boxes", widthCm: 45, depthCm: 35, heightCm: 35, quantity: 6 }),
     item({ id: "ITEM-scissors", label: "Scissors", widthCm: 20, depthCm: 8, heightCm: 3 }),
     item({ id: "ITEM-bottle", label: "Bottle", widthCm: 10, depthCm: 10, heightCm: 28 }),
@@ -134,19 +137,19 @@ describe("Phase 6Q — deterministic optimisation", () => {
   const space = planningSpaceFrom(room);
 
   it("is fully deterministic across repeated runs", () => {
-    const a = arrangeItems({ space, items: inventory });
-    const b = arrangeItems({ space, items: inventory });
+    const a = arrangeItems(inventory, space);
+    const b = arrangeItems(inventory, space);
     expect(JSON.stringify(a.entries)).toBe(JSON.stringify(b.entries));
   });
 
   it("produces a physically valid arrangement", () => {
-    const arrangement = arrangeItems({ space, items: inventory });
+    const arrangement = arrangeItems(inventory, space);
     expect(arrangement.valid).toBe(true);
     expect(arrangement.violations).toHaveLength(0);
   });
 
   it("consolidates small items instead of scattering them", () => {
-    const arrangement = arrangeItems({ space, items: inventory });
+    const arrangement = arrangeItems(inventory, space);
     const smalls = arrangement.entries.filter((entry) =>
       ["ITEM-scissors", "ITEM-bottle", "ITEM-lamp"].includes(entry.itemId),
     );
@@ -164,7 +167,7 @@ describe("Phase 6Q — deterministic optimisation", () => {
   });
 
   it("keeps large objects against a wall", () => {
-    const arrangement = arrangeItems({ space, items: inventory });
+    const arrangement = arrangeItems(inventory, space);
     const sofa = arrangement.entries.find((entry) => entry.itemId === "ITEM-sofa");
     expect(sofa).toBeDefined();
     const touchesWall =
@@ -176,7 +179,7 @@ describe("Phase 6Q — deterministic optimisation", () => {
   });
 
   it("never overlaps two placed footprints", () => {
-    const arrangement = arrangeItems({ space, items: inventory });
+    const arrangement = arrangeItems(inventory, space);
     const floor = arrangement.entries.filter((entry) => !entry.mounted && entry.layer === 1);
     for (let i = 0; i < floor.length; i += 1) {
       for (let j = i + 1; j < floor.length; j += 1) {

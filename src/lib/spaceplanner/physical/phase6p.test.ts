@@ -314,7 +314,8 @@ describe("N — item identity survives an inventory edit", () => {
     );
     const dims = (plan: typeof full, id: string) => {
       const entry = plan.entries.find((candidate) => candidate.itemId === id);
-      return entry ? `${entry.w}x${entry.d}` : null;
+      // Identity, not orientation: the same object keeps the same measurements.
+      return entry ? [entry.w, entry.d].sort((a, b) => a - b).join("x") : null;
     };
     expect(dims(without, "ITEM-003")).toBe(dims(full, "ITEM-003"));
     expect(without.entries.every((entry) => entry.itemId !== "ITEM-001")).toBe(true);

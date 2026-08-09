@@ -204,7 +204,10 @@ export function buildPlacementManifest(
       orientation: entry.orientation,
       zone: entry.zone,
       mounted: entry.mounted,
+      supportSurfaceId: entry.supportedBy ?? null,
+      supportType: entry.mounted ? "WALL" : entry.supportedBy ? "TOP_SURFACE" : "FLOOR",
     }));
+
 
     const first = placed[0];
     const state: PlacementState =

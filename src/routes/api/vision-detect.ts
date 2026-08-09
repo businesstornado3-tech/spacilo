@@ -335,6 +335,7 @@ export const Route = createFileRoute("/api/vision-detect")({
           }
 
           /* Stage 1 — per-photograph detection, in parallel. */
+          const detectStartedAt = Date.now();
           const observations = await Promise.all(
             images.map(async (image) => {
               const scope = selected
@@ -365,6 +366,8 @@ export const Route = createFileRoute("/api/vision-detect")({
           );
 
 
+          const detectMs = Date.now() - detectStartedAt;
+
           const totalObservations = observations.reduce(
             (sum, entry) => sum + entry.observations.length,
             0,
@@ -375,10 +378,12 @@ export const Route = createFileRoute("/api/vision-detect")({
               model: MODEL,
               items: [],
               observations,
+              timings: { detectMs, classifyMs: 0, totalMs: detectMs },
             });
           }
 
           /* Stage 2 — classification and cross-photo deduplication. */
+          const classifyStartedAt = Date.now();
           const classified = await chat(
             key,
             [
@@ -400,7 +405,16 @@ export const Route = createFileRoute("/api/vision-detect")({
             classified?.["items"],
             images.map((image) => image.id),
           );
-          return Response.json({ task: "belongings", model: MODEL, items, observations });
+          const classifyMs = Date.now() - classifyStartedAt;
+          return Response.json({
+            task: "belongings",
+            model: MODEL,
+            items,
+            observations,
+            // Real, measured stage timings so the pipeline can be tuned on
+            // evidence rather than on how slow it feels.
+            timings: { detectMs, classifyMs, totalMs: detectMs + classifyMs },
+          });
         } catch (cause) {
           if (cause instanceof UpstreamError) {
             const status =

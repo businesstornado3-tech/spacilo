@@ -197,7 +197,7 @@ const REFINE_SYSTEM = [
   "2. Improve a label only when the photograph clearly supports it. If it does not, keep the generic label and keep confidence below 0.6.",
   "3. Never invent a brand, a model or contents you cannot see.",
   "4. You may correct dimensions, category, weight and mountingType when the photograph supports a better estimate.",
-  'Reply as JSON: {"items":[{"detectionId":"...","label":"...","category":"boxes","quantity":1,"widthCm":0,"depthCm":0,"heightCm":0,"weight":"medium","mountingType":"floor","fragile":false,"stackable":false,"confidence":0.0,"evidence":"..."}]}',
+  'Reply as JSON only, no prose: {"items":[{"detectionId":"","label":"","category":"boxes","quantity":1,"widthCm":0,"depthCm":0,"heightCm":0,"weight":"medium","mountingType":"floor","fragile":false,"stackable":false,"confidence":0.0}]}',
 ].join("\n");
 
 /** Objects at or below this confidence get one targeted second look. */
@@ -438,9 +438,10 @@ export const Route = createFileRoute("/api/vision-detect")({
                 })),
               ],
               SPACE_SYSTEM,
+              SPACE_MODEL,
             );
             if (!result) return Response.json({ error: "unreadable_reply" }, { status: 502 });
-            return Response.json({ task: "space", model: MODEL, space: result });
+            return Response.json({ task: "space", model: SPACE_MODEL, space: result });
           }
 
           /*
@@ -462,7 +463,7 @@ export const Route = createFileRoute("/api/vision-detect")({
                 [
                   {
                     type: "text",
-                    text: `${scope} Report whole objects, not their parts, classify each one, and report nothing you cannot actually see.`,
+                    text: `${scope} Whole objects only. Compact JSON only.`,
                   },
                   { type: "image_url", image_url: { url: image.url } },
                 ],
@@ -484,7 +485,7 @@ export const Route = createFileRoute("/api/vision-detect")({
           if (items.length === 0) {
             return Response.json({
               task: "belongings",
-              model: MODEL,
+              model: SCAN_MODEL,
               items: [],
               timings: { detectMs, mergeMs, classifyMs: 0, refineMs: 0, totalMs: detectMs + mergeMs },
               calls: { scan: images.length, refine: 0 },
@@ -567,7 +568,7 @@ export const Route = createFileRoute("/api/vision-detect")({
 
           return Response.json({
             task: "belongings",
-            model: MODEL,
+            model: SCAN_MODEL,
             items,
             // Real, measured stage timings so the pipeline can be tuned on
             // evidence rather than on how slow it feels.

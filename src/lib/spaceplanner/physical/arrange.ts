@@ -533,9 +533,9 @@ export function compactEntries(
 }
 
 /**
- * Fragile items are accepted onto a larger, non-fragile, floor-standing
+ * Fragile items are lifted onto a larger, non-fragile, floor-standing
  * neighbour so nothing heavy can ever be put on top of them. Nothing is
- * accepted onto a base that cannot physically carry it.
+ * lifted onto a base that cannot physically carry it.
  */
 function protectFragile(entries: ArrangementEntry[], ceiling: number): ArrangementEntry[] {
   const taken = new Set<string>();

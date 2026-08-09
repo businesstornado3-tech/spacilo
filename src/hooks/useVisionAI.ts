@@ -71,6 +71,17 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
   const [scope, setScope] = React.useState<InventoryScope>("whole");
   const [quality, setQuality] = React.useState<Record<string, PhotoQuality>>({});
   const [elapsedMs, setElapsedMs] = React.useState(0);
+  /**
+   * Phase 6U — measured stage timings for this scan. `null` means "not
+   * measured", never zero: an unknown duration is never reported as fast.
+   */
+  const [timings, setTimings] = React.useState<{
+    detectionMs: number | null;
+    classificationMs: number | null;
+    /** Wall clock from pressing analyse to a usable result on screen. */
+    readyMs: number | null;
+  }>({ detectionMs: null, classificationMs: null, readyMs: null });
+
 
   const stages: VisionStage[] = mode === "space" ? SPACE_STAGES : BELONGINGS_STAGES;
 

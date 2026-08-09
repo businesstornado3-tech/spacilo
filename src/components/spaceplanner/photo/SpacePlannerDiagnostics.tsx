@@ -1,6 +1,10 @@
 import { CheckCircle2, Circle, CircleAlert, LoaderCircle } from "lucide-react";
 
-import type { RenderDiagnostics, VisualisationStatus } from "@/hooks/useSpaceVisualisation";
+import {
+  isVisualisationWorking,
+  type RenderDiagnostics,
+  type VisualisationStatus,
+} from "@/hooks/useSpaceVisualisation";
 import { manifestHash, verificationStatusOf } from "@/lib/spaceplanner/photo/diagnostics";
 import type {
   CanonicalInventory,

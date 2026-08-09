@@ -245,7 +245,14 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
       props: { mode: "belongings", scope: stuff.scope, photos: stuff.photos.length },
     });
     const startedAt = Date.now();
-    await stuff.analyse();
+    // Phase 6X — the two analyses are independent. When the user has already
+    // added a space photograph, both run at once instead of one after the
+    // other, so step 4 is reached in the time of the slower one, not the sum.
+    const alsoSpace = space.photos.length > 0 && !space.result;
+    await Promise.all([
+      stuff.analyse(),
+      alsoSpace ? space.analyse().catch(() => undefined) : Promise.resolve(undefined),
+    ]);
     hold();
     track("spaceplanner_items_detected", {
       props: { count: stuff.photos.length, ms: Date.now() - startedAt },

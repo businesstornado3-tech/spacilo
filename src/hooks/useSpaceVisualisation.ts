@@ -199,39 +199,47 @@ export function useSpaceVisualisation(options: {
       const prepareMs = Date.now() - preparedAt;
 
       setStage("rendering");
+      setStatus("rendering");
       const payload = {
         spaceImage: space,
         itemImages: items,
         instruction: buildVisualisationInstruction(result, objects, manifest ?? undefined),
         manifest: renderItems,
         roomFeatures: manifest.roomFeatures,
-        // Diagnostics only. Retries resend the SAME plan — never a new one.
+        supports: manifestSupports(manifest),
+        // Part of the cache key AND of the diagnostics. Retries resend the
+        // SAME plan — never a new one.
         planHash: manifest.planHash,
         inventoryHash: manifest.inventoryId,
       };
 
-
+      const renderedAt = Date.now();
       let response = await render(payload);
       if (run.current !== token) return;
+      const renderWallMs = Date.now() - renderedAt;
 
       // Render verification gate. A render is only accepted when it shows
-      // every confirmed item AND invents nothing. One corrective pass is
-      // attempted with the same manifest — the planner is never asked to
-      // replan — and after that the result is reported honestly.
+      // every confirmed item, invents nothing, and honours every support
+      // relationship the plan asserted. One corrective pass is attempted with
+      // the same manifest — the planner is never asked to replan.
+      const verifiedAt = Date.now();
       for (let pass = 1; pass < MAX_RENDER_ATTEMPTS; pass += 1) {
         setStage("checking");
+        setStatus("verifying");
         const coverageNow = response.coverage;
         // An unverifiable render is not a wrong render: the checker simply
-        // could not answer. It is shown, flagged as unverified.
+        // could not answer. It is not shown either way.
         if (!coverageNow) break;
         // Room-feature drift is deliberately NOT a retry trigger: redrawing
         // the room's own door slightly differently is not a plan failure.
         const missingItems = coverageNow.missing.length > 0;
         const invented = (coverageNow.unexpected?.length ?? 0) > 0;
-        if (!missingItems && !invented) break;
+        const drifted = (coverageNow.supportIssues?.length ?? 0) > 0;
+        if (!missingItems && !invented && !drifted) break;
 
         setAttempt(pass + 1);
         setStage("rendering");
+        setStatus("rendering");
         const retry = await render({
           ...payload,
           nonce: pass,
@@ -239,38 +247,56 @@ export function useSpaceVisualisation(options: {
         });
         if (run.current !== token) return;
         if (!retry.coverage || betterRender(retry.coverage, coverageNow)) response = retry;
-        if (response.coverage?.complete && (response.coverage.unexpected?.length ?? 0) === 0) break;
+        if (
+          response.coverage?.complete &&
+          (response.coverage.unexpected?.length ?? 0) === 0 &&
+          (response.coverage.supportIssues?.length ?? 0) === 0
+        ) {
+          break;
+        }
       }
 
       const finalCoverage = response.coverage;
       setStage("checking");
+      setStatus("verifying");
       setCoverage(finalCoverage);
       setDiagnostics({
         provider: response.provider,
         model: response.model,
         diagnosticId: response.diagnosticId,
         planHash: manifest.planHash,
-        renderMs: response.renderMs,
+        inventoryHash: manifest.inventoryId,
+        renderMs: response.renderMs ?? renderWallMs,
         prepareMs,
+        verifyMs: Date.now() - verifiedAt,
         totalMs: Date.now() - startedAt,
       });
 
-
-
-      // FAIL-CLOSED (Phase 6Q). An image that contains an object the user does
-      // not own — a stray shoe, a packet of wipes — is a false record of their
-      // belongings, so it is never shown, whatever else it got right. The user
-      // is given the measured arrangement plan instead. Retries are capped at
-      // MAX_RENDER_ATTEMPTS so a hallucinating renderer cannot burn credit.
+      // FAIL-CLOSED (Phase 6T). Only a render that was actually checked AND
+      // passed every check is shown. An invented object, a plan contradiction,
+      // a missing item or a checker that could not answer all fall back to the
+      // measured arrangement plan — the image is discarded, not downgraded.
       const inventedFinal = (finalCoverage?.unexpected?.length ?? 0) > 0;
-      if (response.verification === "unfaithful" || inventedFinal) {
+      const driftedFinal = (finalCoverage?.supportIssues?.length ?? 0) > 0;
+      if (response.verification === "unfaithful" || inventedFinal || driftedFinal) {
         setImageUrl(null);
-        setStatus("rejected");
+        setStatus("unfaithful");
+        return;
+      }
+      if (!finalCoverage || response.verification === "unverified") {
+        setImageUrl(null);
+        setStatus("unverified");
+        return;
+      }
+      if (response.verification === "incomplete" || !finalCoverage.complete) {
+        setImageUrl(null);
+        setStatus("incomplete");
         return;
       }
 
       setImageUrl(response.image);
-      setStatus(response.verification === "incomplete" ? "incomplete" : "ready");
+      setStatus("verified");
+
     } catch (cause) {
       if (run.current !== token) return;
       const aborted = cause instanceof DOMException && cause.name === "AbortError";

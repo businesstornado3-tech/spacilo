@@ -441,9 +441,14 @@ export const Route = createFileRoute("/api/vision-detect")({
             return Response.json({ task: "space", model: MODEL, space: result });
           }
 
-          /* Stage 1 — per-photograph detection, in parallel. */
+          /*
+           * Phase 6V — ONE structured pass per photograph, all photographs in
+           * parallel. Detection, identification, class, quantity, dimensions,
+           * mounting and confidence come back together, so the belongings
+           * pipeline is a single round trip rather than two sequential ones.
+           */
           const detectStartedAt = Date.now();
-          const observations = await Promise.all(
+          const perPhoto = await Promise.all(
             images.map(async (image) => {
               const scope = selected
                 ? `The user has marked exactly what they want to store: ${
@@ -455,64 +460,109 @@ export const Route = createFileRoute("/api/vision-detect")({
                 [
                   {
                     type: "text",
-                    text: `${scope} Report whole objects, not their parts, and report nothing you cannot actually see.`,
+                    text: `${scope} Report whole objects, not their parts, classify each one, and report nothing you cannot actually see.`,
                   },
                   { type: "image_url", image_url: { url: image.url } },
                 ],
-                DETECT_SYSTEM,
+                SCAN_SYSTEM,
               );
-              const list = Array.isArray(reply?.["observations"])
-                ? (reply["observations"] as Observation[])
-                : [];
               return {
                 photoId: image.id,
-                ...(image.hint ? { userHint: image.hint } : {}),
-                observations: list.slice(0, 30).filter((entry) => !entry.partOf),
+                items: normaliseItems(reply?.["items"], [image.id]),
               };
             }),
           );
-
-
           const detectMs = Date.now() - detectStartedAt;
 
-          const totalObservations = observations.reduce(
-            (sum, entry) => sum + entry.observations.length,
-            0,
-          );
-          if (totalObservations === 0) {
+          // Deterministic, local cross-photograph merge. No model call.
+          const mergeStartedAt = Date.now();
+          let items = mergeAcrossPhotos(perPhoto.map((entry) => entry.items));
+          const mergeMs = Date.now() - mergeStartedAt;
+
+          if (items.length === 0) {
             return Response.json({
               task: "belongings",
               model: MODEL,
               items: [],
-              observations,
-              timings: { detectMs, classifyMs: 0, totalMs: detectMs },
+              timings: { detectMs, mergeMs, classifyMs: 0, refineMs: 0, totalMs: detectMs + mergeMs },
+              calls: { scan: images.length, refine: 0 },
             });
           }
 
-          /* Stage 2 — classification and cross-photo deduplication. */
-          const classifyStartedAt = Date.now();
-          const classified = await chat(
-            key,
-            [
-              {
-                type: "text",
-                text: `These observations come from ${images.length} photograph(s) of one person's belongings.${
-                  selected
-                    ? " The user marked exactly what they want to store, so every observation is in scope and nothing outside it exists."
-                    : ""
-                } Merge the same physical object across photographs, report primary objects with their components, then classify each distinct item.\n\n${JSON.stringify(
-                  observations,
-                )}`,
-              },
-            ],
-            CLASSIFY_SYSTEM,
-          );
+          /*
+           * Phase 6V — confidence-gated second look. Only objects the first
+           * pass could not identify are re-examined, and only in the
+           * photograph they came from. Confident objects are never
+           * reclassified, which is where the old second pass spent its time.
+           */
+          const refineStartedAt = Date.now();
+          let refineCalls = 0;
+          const uncertainByPhoto = new Map<string, DetectedItemPayload[]>();
+          items
+            .filter((item) => item.confidence < REFINE_BELOW_CONFIDENCE)
+            .forEach((item) => {
+              const photoId = item.photoIds[0];
+              if (!photoId) return;
+              uncertainByPhoto.set(photoId, [...(uncertainByPhoto.get(photoId) ?? []), item]);
+            });
 
-          const items = normaliseItems(
-            classified?.["items"],
-            images.map((image) => image.id),
-          );
-          const classifyMs = Date.now() - classifyStartedAt;
+          if (uncertainByPhoto.size > 0) {
+            const refinements = await Promise.all(
+              [...uncertainByPhoto.entries()].map(async ([photoId, uncertain]) => {
+                const image = images.find((entry) => entry.id === photoId);
+                if (!image) return [];
+                refineCalls += 1;
+                const reply = await chat(
+                  key,
+                  [
+                    {
+                      type: "text",
+                      text: `Re-examine ONLY these objects, by detectionId, in this photograph. Return exactly these objects and no others.\n\n${JSON.stringify(
+                        uncertain.map((item) => ({
+                          detectionId: item.sourceDetectionId,
+                          label: item.label,
+                          widthCm: item.widthCm,
+                          depthCm: item.depthCm,
+                          heightCm: item.heightCm,
+                          confidence: item.confidence,
+                        })),
+                      )}`,
+                    },
+                    { type: "image_url", image_url: { url: image.url } },
+                  ],
+                  REFINE_SYSTEM,
+                ).catch(() => null);
+                return normaliseItems(reply?.["items"], [photoId]);
+              }),
+            );
+
+            // A refinement may only improve an object that already exists. It
+            // can never add one, and it can never remove one.
+            const improved = new Map(
+              refinements.flat().map((item) => [item.sourceDetectionId, item] as const),
+            );
+            items = items.map((item) => {
+              const better = improved.get(item.sourceDetectionId);
+              if (!better || better.confidence <= item.confidence) return item;
+              return {
+                ...item,
+                label: better.label,
+                category: better.category,
+                widthCm: better.widthCm,
+                depthCm: better.depthCm,
+                heightCm: better.heightCm,
+                volumeM3: better.volumeM3,
+                weight: better.weight,
+                fragile: better.fragile,
+                stackable: better.stackable,
+                mountingType: better.mountingType,
+                confidence: better.confidence,
+                evidence: better.evidence || item.evidence,
+              };
+            });
+          }
+          const refineMs = Date.now() - refineStartedAt;
+
           return Response.json({
             task: "belongings",
             model: MODEL,

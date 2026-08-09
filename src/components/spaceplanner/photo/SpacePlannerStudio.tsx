@@ -59,7 +59,22 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   const [selectingStuff, setSelectingStuff] = React.useState<string | null>(null);
   const [selectingSpace, setSelectingSpace] = React.useState<string | null>(null);
 
-  const { anchor, hold } = useStableScroll(step);
+  const { anchor, hold, mark, reveal } = useStableScroll(step);
+  /** The "here's what you just added, here's the next action" block. */
+  const stuffNextRef = React.useRef<HTMLDivElement>(null);
+  const spaceNextRef = React.useRef<HTMLDivElement>(null);
+
+  /**
+   * After photos land: keep the page exactly where it was, then bring the
+   * review + CTA into view. Never the top of the page.
+   */
+  const settleAfterUpload = React.useCallback(
+    (target: React.RefObject<HTMLDivElement | null>) => {
+      hold();
+      window.setTimeout(() => reveal(target.current), 420);
+    },
+    [hold, reveal],
+  );
 
   const manualSource = React.useMemo<SpaceSource | null>(() => {
     const width = Number(manual.width);
@@ -295,10 +310,11 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
               </fieldset>
 
               <ScanUploader
+                onInteract={mark}
                 onFiles={(files) => {
                   track("spaceplanner_image_uploaded", { props: { mode: "belongings" } });
                   stuff.addFiles(files);
-                  hold();
+                  settleAfterUpload(stuffNextRef);
                 }}
                 rejected={stuff.rejected}
                 disabled={!stuff.canAddMore}
@@ -323,30 +339,39 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 />
               ) : null}
 
-              <PhotoGallery
-                photos={stuff.photos}
-                onRemove={stuff.removePhoto}
-                onRotate={stuff.rotatePhoto}
-                onMove={stuff.movePhoto}
-                onReplace={stuff.replacePhoto}
-                {...(stuff.scope === "selected"
-                  ? { onSelectRegion: (id: string) => setSelectingStuff(id) }
-                  : {})}
-                quality={stuff.quality}
-                canAddMore={stuff.canAddMore}
-              />
-              {stuff.photos.length > 0 ? (
-                <Button type="button" size="lg" onClick={() => void analyseStuff()}>
-                  <Sparkles aria-hidden="true" />
-                  {stuff.objects.length > 0 ? "Analyse again" : "Analyse my belongings"}
-                </Button>
-              ) : null}
-              {stuff.objects.length > 0 ? (
-                <Button type="button" variant="secondary" size="lg" onClick={() => setStep("review")}>
-                  See what Spacilo AI found
-                  <ArrowRight aria-hidden="true" />
-                </Button>
-              ) : null}
+              <div ref={stuffNextRef} className="scroll-mt-24 space-y-4">
+                <PhotoGallery
+                  photos={stuff.photos}
+                  onRemove={stuff.removePhoto}
+                  onRotate={stuff.rotatePhoto}
+                  onMove={stuff.movePhoto}
+                  onReplace={stuff.replacePhoto}
+                  {...(stuff.scope === "selected"
+                    ? { onSelectRegion: (id: string) => setSelectingStuff(id) }
+                    : {})}
+                  quality={stuff.quality}
+                  canAddMore={stuff.canAddMore}
+                />
+                {stuff.photos.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" size="lg" onClick={() => void analyseStuff()}>
+                      <Sparkles aria-hidden="true" />
+                      {stuff.objects.length > 0 ? "Analyse again" : "Analyse my belongings"}
+                    </Button>
+                    {stuff.objects.length > 0 ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="lg"
+                        onClick={() => setStep("review")}
+                      >
+                        See what Spacilo AI found
+                        <ArrowRight aria-hidden="true" />
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
             </>
           )}
         </div>
@@ -382,10 +407,11 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
           ) : (
             <>
               <ScanUploader
+                onInteract={mark}
                 onFiles={(files) => {
                   track("spaceplanner_image_uploaded", { props: { mode: "space" } });
                   space.addFiles(files);
-                  hold();
+                  settleAfterUpload(spaceNextRef);
                 }}
                 rejected={space.rejected}
                 disabled={!space.canAddMore}
@@ -413,22 +439,24 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 />
               ) : null}
 
-              <PhotoGallery
-                photos={space.photos}
-                onRemove={space.removePhoto}
-                onRotate={space.rotatePhoto}
-                onMove={space.movePhoto}
-                onReplace={space.replacePhoto}
-                onSelectRegion={(id) => setSelectingSpace(id)}
-                quality={space.quality}
-                canAddMore={space.canAddMore}
-              />
-              {space.photos.length > 0 ? (
-                <Button type="button" size="lg" onClick={() => void analyseSpace()}>
-                  <Camera aria-hidden="true" />
-                  Analyse this space
-                </Button>
-              ) : null}
+              <div ref={spaceNextRef} className="scroll-mt-24 space-y-4">
+                <PhotoGallery
+                  photos={space.photos}
+                  onRemove={space.removePhoto}
+                  onRotate={space.rotatePhoto}
+                  onMove={space.movePhoto}
+                  onReplace={space.replacePhoto}
+                  onSelectRegion={(id) => setSelectingSpace(id)}
+                  quality={space.quality}
+                  canAddMore={space.canAddMore}
+                />
+                {space.photos.length > 0 ? (
+                  <Button type="button" size="lg" onClick={() => void analyseSpace()}>
+                    <Camera aria-hidden="true" />
+                    Analyse this space
+                  </Button>
+                ) : null}
+              </div>
 
               <fieldset className="rounded-2xl border border-border p-4">
                 <legend className="px-1 type-label">Or enter the dimensions (metres)</legend>

@@ -254,6 +254,7 @@ export function candidatesFor(
   space: PlanningSpace,
   blockers: Rect[],
   placed: Placed[],
+  related?: Set<string>,
 ): Candidate[] {
   const usable = space.usable;
   const { xs, ys } = candidateAnchors(usable, blockers, placed);
@@ -295,11 +296,13 @@ export function candidatesFor(
             rotationDeg: option.rotationDeg,
             space,
             placed,
+            ...(related ? { related } : {}),
           }),
         });
       }
     }
   }
+
   return out;
 }
 

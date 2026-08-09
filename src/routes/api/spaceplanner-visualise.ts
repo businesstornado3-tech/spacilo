@@ -19,9 +19,11 @@ import {
   categoriseVerification,
   normaliseLabel,
   type CategorisedVerification,
+  type ExpectedSupport,
   type VerifierReply,
   type WhitelistEntry,
 } from "@/lib/spaceplanner/photo/verification";
+
 
 
 /** Image model used to draw the manifest. Renderer only, never a planner. */

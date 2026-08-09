@@ -188,8 +188,9 @@ export function parsePresentLabels(text: string): string[] | null {
 }
 
 /**
- * Reads the verifier's reply as {present, unexpected, missingFeatures}. Falls
- * back to the older bare-array form so a terse model reply is still usable.
+ * Reads the verifier's reply as {present, unexpected, missingFeatures, objects,
+ * supports}. Falls back to the older bare-array form so a terse model reply is
+ * still usable.
  */
 export function parseCheckReply(text: string): VerifierReply | null {
   const object = text.match(/\{[\s\S]*\}/);
@@ -201,8 +202,18 @@ export function parseCheckReply(text: string): VerifierReply | null {
       const present = strings(parsed["present"]);
       const unexpected = strings(parsed["unexpected"]);
       const missingFeatures = strings(parsed["missingFeatures"]);
-      if (present.length || unexpected.length || missingFeatures.length) {
-        return { present, unexpected, missingFeatures };
+      const objects = strings(parsed["objects"]);
+      const supports = Array.isArray(parsed["supports"])
+        ? (parsed["supports"] as unknown[]).flatMap((entry) => {
+            if (!entry || typeof entry !== "object") return [];
+            const record = entry as Record<string, unknown>;
+            const item = typeof record["item"] === "string" ? record["item"] : "";
+            const restingOn = typeof record["restingOn"] === "string" ? record["restingOn"] : "";
+            return item ? [{ item, restingOn }] : [];
+          })
+        : [];
+      if (present.length || unexpected.length || missingFeatures.length || objects.length) {
+        return { present, unexpected, missingFeatures, objects, supports };
       }
     } catch {
       /* fall through to the array form */
@@ -217,12 +228,18 @@ export type Verdict = "verified" | "incomplete" | "unfaithful" | "unverified";
 /**
  * Turns an observation into a verdict. An absent or unreadable coverage report
  * is "unverified" — never silently promoted to "verified".
+ *
+ * Phase 6T: support drift is a contradiction of the deterministic plan, so a
+ * render that puts a supported object on the floor is unfaithful, exactly like
+ * an invented object. THE PLAN WINS.
  */
 export function verdictFor(coverage: Coverage | null): Verdict {
   if (!coverage) return "unverified";
   if (!coverage.faithful) return "unfaithful";
+  if ((coverage.supportIssues?.length ?? 0) > 0) return "unfaithful";
   return coverage.complete ? "verified" : "incomplete";
 }
+
 
 /**
  * Object-level render verification, through the gateway.

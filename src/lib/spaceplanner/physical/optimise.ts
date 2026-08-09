@@ -131,6 +131,8 @@ export interface CandidateScoreInput {
   rotationDeg: 0 | 90;
   space: PlanningSpace;
   placed: Placed[];
+  /** Ids this item is deterministically related to (TV ↔ TV stand). */
+  related?: Set<string>;
 }
 
 /**
@@ -142,6 +144,8 @@ export function scoreCandidate(input: CandidateScoreInput): number {
   const { rect, cls, item, rotationDeg, space, placed } = input;
   const usable = space.usable;
   const others = placed.map((entry) => entry.entry as Rect);
+  const related = input.related ?? new Set<string>();
+  const zone = storageZoneFor(item);
 
   const walls = wallContact(rect, usable);
   const corner = zoneFor(rect, usable) === "corner" ? 1 : 0;
@@ -149,12 +153,25 @@ export function scoreCandidate(input: CandidateScoreInput): number {
   let neighbour = 0;
   let sameCategory = 0;
   let sameClass = 0;
+  let sameZone = 0;
+  let relatedContact = 0;
+  let relatedProximity = 0;
   for (const other of placed) {
+    const isRelated = related.has(other.item.id);
+    if (isRelated) {
+      // Distance between centres: related objects are pulled together even
+      // when they cannot physically touch.
+      const dx = rect.x + rect.w / 2 - (other.entry.x + other.entry.w / 2);
+      const dy = rect.y + rect.d / 2 - (other.entry.y + other.entry.d / 2);
+      relatedProximity += Math.max(0, 3 - Math.hypot(dx, dy));
+    }
     const touch = contactLength(rect, other.entry);
     if (touch <= 0) continue;
     neighbour += touch;
     if (other.item.category === item.category) sameCategory += touch;
     if (other.cls === cls) sameClass += touch;
+    if (storageZoneFor(other.item) === zone) sameZone += touch;
+    if (isRelated) relatedContact += touch;
   }
 
   const hullBefore = hullArea(others);
@@ -174,6 +191,9 @@ export function scoreCandidate(input: CandidateScoreInput): number {
       neighbour * 11 +
       sameCategory * 4 +
       sameClass * 3 +
+      sameZone * 6 +
+      relatedContact * 16 +
+      relatedProximity * 9 +
       (cls === "SMALL_ITEM" ? neighbour * 6 : 0) -
       growth * 14 -
       gaps * 5 -
@@ -182,6 +202,7 @@ export function scoreCandidate(input: CandidateScoreInput): number {
       (rotationDeg === 90 ? 0.4 : 0),
   );
 }
+
 
 /** Total arrangement objective, used by the improvement pass only. */
 export function arrangementObjective(entries: ArrangementEntry[], space: PlanningSpace): number {

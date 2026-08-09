@@ -143,37 +143,60 @@ class UpstreamError extends Error {
   }
 }
 
-const DETECT_SYSTEM = [
-  "You are a careful visual observer for a storage marketplace.",
-  "You report ONLY what is physically visible in the photograph in front of you.",
+/**
+ * Phase 6V — ONE structured vision pass per photograph.
+ *
+ * Detection and classification used to be two sequential model calls. They now
+ * happen in a single structured reply per photograph, so the belongings
+ * pipeline costs one round trip instead of two. Nothing was relaxed: the same
+ * evidence rules apply, the reply is still schema-validated by
+ * `normaliseItems`, volume is still calculated locally, and cross-photo
+ * merging is now done deterministically in code rather than by a second model
+ * call.
+ */
+const SCAN_SYSTEM = [
+  "You are a careful visual observer and classifier for a UK storage marketplace.",
+  "You report ONLY what is physically visible in the photograph in front of you, and you classify it in the same reply.",
   "Absolute rules:",
   "1. Never invent, assume or add an object that is not visible. An empty or unclear photo returns an empty list.",
-  "2. NAME what you see. If an object is recognisable as an everyday thing, say what it is in plain UK English with its distinguishing features: 'large blue wheeled suitcase', 'black backpack', 'black-framed table', 'large wall-mounted screen', 'cardboard box', 'plastic storage crate'. A shape-and-colour description such as 'small dark tapered object' is a LAST RESORT, used only when the object genuinely cannot be identified — and then say why in the description.",
-  "2b. Do not go the other way either: no brands, no models, no exact identities the image cannot support, and never guess what is inside a closed container.",
-  "3. Count only what you can actually see. If several identical things are visible, say how many and how you counted them. If you cannot count them, say so and give the number you can see.",
-  "4. Report WHOLE objects, not their parts. A cot, a sofa, a wardrobe or a pushchair is ONE object. Its rails, cushions, mattress, drawers, doors, wheels and handles are parts of it — put them in partOf, never in their own entry.",
-  "5. Do not group different objects together either. Two different things are two entries.",
-  "6. If the user has marked a region, only objects inside or overlapping that region count. Anything in the surrounding room is background — do not report it.",
-  "7. Say when something is partly hidden.",
-  "Reply as JSON: {\"observations\":[{\"ref\":\"A\",\"description\":\"...\",\"visibleCount\":1,\"countBasis\":\"...\",\"occluded\":false,\"sizeCue\":\"...\",\"partOf\":\"\",\"confidence\":0.0}]}",
+  "2. NAME what you see, in plain UK English, with its distinguishing feature: 'Large blue wheeled case', 'Black backpack', 'Black-framed table', 'Large wall-mounted screen', 'Cardboard box', 'Plastic storage crate'. Keep the label under about six words.",
+  "2b. No brands, no models, no identities the image cannot support, and never guess what is inside a closed container.",
+  "2c. A shape-and-colour label ('Small dark tapered object') is a LAST RESORT for something you genuinely cannot identify. When you use one, set confidence below 0.6 so a person is asked to confirm it.",
+  "3. Count only what you can actually see. Put the count in quantity and say how you counted it in countBasis.",
+  "4. Report WHOLE objects, not their parts. A cot, a sofa, a wardrobe or a pushchair is ONE object; its rails, cushions, mattress, drawers, doors, wheels and handles go in components, never in their own entry.",
+  "5. Two different things are two entries. Never group different objects together.",
+  "6. If the user has marked a region, only objects inside or overlapping that region count. Everything else is background — ignore it.",
+  "7. Size is an ESTIMATE in centimetres of the WHOLE assembled object, judged from visible references. Be cautious and realistic. Each of widthCm, depthCm and heightCm must be its own positive number — never 0, never omitted, never copied from another dimension to fill a gap.",
+  "8. Do NOT report volume, cubic metres, litres or weight in kilograms. Those are calculated from your dimensions.",
+  "9. category must be one of: boxes, furniture, appliances, electronics, leisure, seasonal.",
+  "10. weight must be one of: light, medium, heavy.",
+  "11. mountingType must be one of: floor, wall_mounted, tabletop, stackable_unit.",
+  "12. confidence is 0-1 and must drop when the object is unclear, partly hidden or unfamiliar. Below 0.6 means 'not identified'.",
+  "13. Give each object its own detectionId, unique within this photograph, describing the thing ('blue-wheeled-case'), never a position index.",
+  'Reply as JSON: {"items":[{"detectionId":"...","label":"...","category":"boxes","quantity":1,"countBasis":"...","widthCm":0,"depthCm":0,"heightCm":0,"weight":"medium","mountingType":"floor","colour":"...","material":"...","fragile":false,"stackable":false,"occluded":false,"confidence":0.0,"evidence":"...","components":["..."]}]}',
 ].join("\n");
 
-const CLASSIFY_SYSTEM = [
-  "You classify already-observed physical objects for a UK storage marketplace.",
-  "You are given raw per-photograph observations. You may not add anything that is not in them.",
+/**
+ * Phase 6V — confidence-gated second look.
+ *
+ * Only genuinely uncertain objects are sent back to the model. High-confidence
+ * objects are never reclassified, which is where most of the old second-pass
+ * latency went. An uncertain object may only become more specific when the
+ * photograph supports it; otherwise it stays generic and stays uncertain.
+ */
+const REFINE_SYSTEM = [
+  "You are re-examining ONLY the objects a first pass could not identify confidently, in the photograph provided.",
   "Absolute rules:",
-  "1. Never introduce an object that no observation mentions. Never drop one either, unless it is the same physical object already listed.",
-  "2. The same physical object seen in more than one photograph is ONE item. Merge it and list every photo id it appeared in. Do not add the counts together when it is clearly the same object.",
-  "3. Report the PRIMARY object, not its components. If observations describe a cot with rails and a mattress, that is one item 'Cot' with components ['rails','mattress'] — never three items. Only list something separately when it can be stored on its own.",
-  "4. Quantity must be justified by the observations. State the basis in countBasis.",
-  "5. Give each item a useful, human-readable UK label naming the object and its distinguishing feature: 'Large blue wheeled case', 'Large grey wheeled case', 'Black backpack', 'Black-framed table', 'Large wall-mounted screen', 'Cardboard box'. Keep it under about six words.",
-  "5b. Only fall back to a shape-and-colour label ('Small dark tapered object') when the observation genuinely could not identify the thing. When you do, set confidence below 0.6 so a person is asked to confirm it. Never invent a brand or an identity the observation does not support.",
-  "6. Size is an ESTIMATE in centimetres of the WHOLE assembled object, from the described size cues. Be cautious and realistic. Every one of widthCm, depthCm and heightCm must be a positive number — never 0, never omitted, never copied from another dimension to fill a gap.",
-  "7. category must be one of: boxes, furniture, appliances, electronics, leisure, seasonal.",
-  "8. weight must be one of: light, medium, heavy.",
-  "9. confidence is 0-1 and must drop when the observation was uncertain or occluded. Below 0.6 means 'not identified'.",
-  "Reply as JSON: {\"items\":[{\"id\":\"ITEM-001\",\"label\":\"...\",\"category\":\"boxes\",\"quantity\":1,\"countBasis\":\"...\",\"widthCm\":0,\"depthCm\":0,\"heightCm\":0,\"weight\":\"medium\",\"fragile\":false,\"stackable\":false,\"confidence\":0.0,\"photoIds\":[\"...\"],\"evidence\":\"...\",\"components\":[\"...\"]}]}",
+  "1. You may not add objects. You may not remove objects. You return exactly the objects you were given, by detectionId.",
+  "2. Improve a label only when the photograph clearly supports it. If it does not, keep the generic label and keep confidence below 0.6.",
+  "3. Never invent a brand, a model or contents you cannot see.",
+  "4. You may correct dimensions, category, weight and mountingType when the photograph supports a better estimate.",
+  'Reply as JSON: {"items":[{"detectionId":"...","label":"...","category":"boxes","quantity":1,"widthCm":0,"depthCm":0,"heightCm":0,"weight":"medium","mountingType":"floor","fragile":false,"stackable":false,"confidence":0.0,"evidence":"..."}]}',
 ].join("\n");
+
+/** Objects at or below this confidence get one targeted second look. */
+export const REFINE_BELOW_CONFIDENCE = 0.6;
+
 
 
 const SPACE_SYSTEM = [

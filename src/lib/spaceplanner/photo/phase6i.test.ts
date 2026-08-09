@@ -151,8 +151,12 @@ describe("Phase 6I — render verification rejects hallucinations", () => {
       present: ["TV"],
       unexpected: ["Lamp"],
       missingFeatures: [],
+      // Phase 6T added the independent object enumeration and support report.
+      objects: [],
+      supports: [],
     });
   });
+
 
   it("still accepts the older bare-array reply", () => {
     expect(parseCheckReply('["TV","Crib"]')).toEqual({ present: ["TV", "Crib"], unexpected: [] });

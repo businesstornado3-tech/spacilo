@@ -75,13 +75,37 @@ export interface DetectedObject {
   sourceDetectionId?: string | null;
 }
 
+/**
+ * Phase 6V — measured cost of one vision call, stage by stage. Every field is
+ * a real measurement; a stage that did not run is simply absent rather than
+ * reported as zero.
+ */
+export interface VisionStageTimings {
+  /** Decoding, downscaling and encoding the photographs (client side). */
+  prepareMs?: number;
+  /** Whole round trip to the analysis endpoint. */
+  requestMs?: number;
+  /** Model time spent scanning the photographs. */
+  detectMs?: number;
+  /** Deterministic cross-photograph merge. No model call. */
+  mergeMs?: number;
+  /** Confidence-gated second look. 0 when nothing needed refining. */
+  refineMs?: number;
+  /** Number of model calls actually made, so parallelism can be verified. */
+  scanCalls?: number;
+  refineCalls?: number;
+}
+
 export interface VisionResult {
   objects: DetectedObject[];
   photoIds: string[];
   provider: string;
   model: string;
   analysedAt: number;
+  /** Real per-stage costs for this analysis. */
+  timings?: VisionStageTimings;
 }
+
 
 export type SpaceSuitability = "excellent" | "good" | "limited";
 

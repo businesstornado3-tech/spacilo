@@ -233,12 +233,128 @@ export interface CategorisedVerification {
    */
   supportIssues: string[];
   /**
+   * Phase 6U — per-label quantity accounting: what the locked inventory allows
+   * against what the render actually shows. Populated only when the verifier
+   * enumerated the objects it could see.
+   */
+  quantities: QuantityCheck[];
+  /**
    * True only when every user belonging is present and nothing was invented.
    * Room-feature drift is reported but never withholds a render — the room
    * still owning its own door is not a reason to distrust the picture.
    */
   verified: boolean;
 }
+
+/** One label's allowed-versus-observed quantity in a rendered image. */
+export interface QuantityCheck {
+  label: string;
+  /** Units of this label the canonical inventory contains. The maximum. */
+  allowed: number;
+  /** Units of this label the verifier says it can see. */
+  observed: number;
+  /** Units beyond the allowance. Anything above zero is an invention. */
+  excess: number;
+}
+
+/**
+ * How many units one free-text description accounts for. "2× cardboard box"
+ * and "two cardboard boxes" are two; "a pair of shoes" is one pair.
+ */
+export function observedCount(text: string): number {
+  const leading = text.trim().match(/^(\d+)\s*[x×]?\s+/i);
+  if (leading) return Math.max(1, Number(leading[1]));
+  const trailing = text.trim().match(/[x×]\s*(\d+)\s*$/i);
+  if (trailing) return Math.max(1, Number(trailing[1]));
+  const words: Record<string, number> = { two: 2, three: 3, four: 4, five: 5, six: 6 };
+  const word = text.trim().toLowerCase().match(/^(two|three|four|five|six)\b/);
+  if (word) return words[word[1]!] ?? 1;
+  return 1;
+}
+
+/**
+ * Phase 6U — deterministic quantity-aware verification.
+ *
+ * The canonical inventory quantity per label is the ALLOWED MAXIMUM. Every
+ * object the verifier enumerated is counted against it. Legitimate duplicates
+ * (two identical boxes the user really owns) pass; a third box, a second
+ * suitcase, or any number of objects matching no whitelist do not.
+ */
+export function quantityCheck(
+  items: readonly WhitelistEntry[],
+  objects: readonly string[],
+  whitelists: {
+    items: readonly WhitelistEntry[];
+    features: readonly WhitelistEntry[];
+    itemAliases?: readonly string[];
+  },
+): { checks: QuantityCheck[]; unexpected: string[] } {
+  const allowed = new Map<string, { label: string; allowed: number }>();
+  for (const entry of items) {
+    const key = normaliseLabel(entry.label);
+    if (!key) continue;
+    const current = allowed.get(key);
+    if (current) current.allowed += 1;
+    else allowed.set(key, { label: entry.label, allowed: 1 });
+  }
+
+  const observed = new Map<string, number>();
+  const invented = new Map<string, { label: string; count: number }>();
+
+  for (const raw of objects) {
+    const text = raw.trim();
+    if (!text) continue;
+    const count = observedCount(text);
+    const category = classifyReported(text, whitelists);
+    if (category === "room_feature") continue;
+    if (category === "unexpected") {
+      const key = normaliseLabel(text) || text.toLowerCase();
+      const current = invented.get(key);
+      if (current) current.count += count;
+      else invented.set(key, { label: text, count });
+      continue;
+    }
+    const key = allowedKeyFor(text, items) ?? normaliseLabel(text);
+    if (!key) continue;
+    observed.set(key, (observed.get(key) ?? 0) + count);
+  }
+
+  const checks: QuantityCheck[] = [];
+  const unexpected: string[] = [];
+
+  for (const [key, info] of allowed) {
+    const seen = observed.get(key) ?? 0;
+    const excess = Math.max(0, seen - info.allowed);
+    checks.push({ label: info.label, allowed: info.allowed, observed: seen, excess });
+    if (excess > 0) unexpected.push(`extra ${info.label} ×${excess}`);
+  }
+
+  for (const entry of invented.values()) {
+    checks.push({ label: entry.label, allowed: 0, observed: entry.count, excess: entry.count });
+    unexpected.push(entry.count > 1 ? `${entry.label} ×${entry.count}` : entry.label);
+  }
+
+  return { checks, unexpected };
+}
+
+/** The allowance key a whitelisted description belongs to, by longest match. */
+function allowedKeyFor(reported: string, items: readonly WhitelistEntry[]): string | null {
+  const ids = new Set([canonicalId(reported), ...idsIn(reported)]);
+  for (const entry of items) {
+    if (ids.has(canonicalId(entry.id))) return normaliseLabel(entry.label);
+  }
+  const text = normaliseLabel(reported);
+  let best: { key: string; length: number } | null = null;
+  for (const entry of items) {
+    const key = normaliseLabel(entry.label);
+    if (!key) continue;
+    const match = key === text || containsLabel(text, key) || containsLabel(key, text);
+    if (!match) continue;
+    if (!best || key.length > best.length) best = { key, length: key.length };
+  }
+  return best ? best.key : null;
+}
+
 
 export interface VerifierReply {
   /** IDs or labels the verifier says it can see. */

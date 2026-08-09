@@ -438,6 +438,12 @@ export interface CoverageReport {
    * Reported for honesty; never a reason to withhold the render.
    */
   featureNotes?: string[];
+  /**
+   * Phase 6T — support relationships the plan asserted that the render failed
+   * to show (a box the plan put on a suitcase, drawn on the floor). Positional
+   * drift: the image is not faithful to the plan, so it is not displayed.
+   */
+  supportIssues?: string[];
   /** Full per-category breakdown from the categorised verifier. */
   categories?: CategorisedVerification;
 }

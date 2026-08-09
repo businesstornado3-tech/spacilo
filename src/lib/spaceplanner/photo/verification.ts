@@ -309,18 +309,18 @@ export function categoriseVerification(input: {
     if (text) featureIssues.push(text);
   }
 
-  // Phase 6T — INDEPENDENT hallucination detection. The verifier is asked to
-  // describe every stored object it can see; each description is classified
-  // here against the two whitelists. Anything matching neither is an invention,
-  // whether or not the model chose to flag it itself. This is what makes a
-  // hallucinated pair of shoes impossible to smuggle through by simply not
-  // being listed as "unexpected".
-  for (const entry of reply.objects ?? []) {
-    const text = entry.trim();
-    if (!text) continue;
-    const category = classifyReported(text, whitelists);
-    if (category === "unexpected") inventedItems.push(text);
-  }
+  // Phase 6T/6U — INDEPENDENT, QUANTITY-AWARE hallucination detection.
+  //
+  // The verifier is asked to describe every stored object it can see. Each
+  // description is classified here against the two whitelists, and — new in
+  // 6U — COUNTED. A matching label is no longer sufficient on its own: the
+  // canonical inventory quantity is the allowed maximum, so a second blue
+  // suitcase the user does not own is an invention even though "suitcase" is
+  // a whitelisted word. Objects matching no whitelist remain inventions at any
+  // quantity, and are reported with the number of occurrences seen.
+  const quantities = quantityCheck(items, reply.objects ?? [], whitelists);
+  for (const issue of quantities.unexpected) inventedItems.push(issue);
+
 
   const itemIds = items.map((entry) => entry.id);
   const featureIds = features.map((entry) => entry.id);

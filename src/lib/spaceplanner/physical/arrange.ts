@@ -392,14 +392,58 @@ function placeStack(
   return null;
 }
 
-const WALL_MOUNT_DEPTH_M = 0.15;
 const WALL_MOUNT_BASE_M = 1;
 
+interface WallRun {
+  id: "back" | "left" | "right";
+  /** Clear length of the run in metres. */
+  length: number;
+  cursor: number;
+  rect: (offset: number, itemW: number, itemD: number) => Rect;
+  zone: PlacementZone;
+}
+
+/** The wall runs the room physically offers, longest first, deterministically. */
+export function wallRunsFor(space: PlanningSpace): WallRun[] {
+  const runs: WallRun[] = [
+    {
+      id: "back",
+      length: space.widthM,
+      cursor: 0,
+      rect: (offset, itemW, itemD) => ({ x: offset, y: 0, w: itemW, d: itemD }),
+      zone: "back-wall",
+    },
+    {
+      id: "left",
+      length: space.depthM,
+      cursor: 0,
+      rect: (offset, itemW, itemD) => ({ x: 0, y: offset, w: itemD, d: itemW }),
+      zone: "left-wall",
+    },
+    {
+      id: "right",
+      length: space.depthM,
+      cursor: 0,
+      rect: (offset, itemW, itemD) => ({
+        x: round2(Math.max(0, space.widthM - itemD)),
+        y: offset,
+        w: itemD,
+        d: itemW,
+      }),
+      zone: "right-wall",
+    },
+  ];
+  return runs.sort((a, b) => b.length - a.length || a.id.localeCompare(b.id));
+}
+
 /**
- * Wall-mounted objects: hung along the rear wall run, left to right, above
- * the floor. They take no floor area, they are never stacked on, and they are
- * never represented as floor-standing. A wall run that has no clear width left
- * reports the object as unplaced rather than laying it on the ground.
+ * Wall-mounted objects: hung on a real wall run of the room, above the floor.
+ *
+ * Phase 6Q — every wall of the room is considered, not only the rear wall of
+ * the storage footprint, because a television hangs on the room's wall and
+ * never consumes storage floor. When no wall run is long enough the object is
+ * reported UNPLACED with the measured geometry that made it impossible; it is
+ * never quietly dropped and never laid on the ground.
  */
 function mountWallItems(
   items: PlanningItem[],
@@ -407,42 +451,58 @@ function mountWallItems(
   ceiling: number,
   startKey: number,
   unplacedUnits: Map<string, number>,
+  reasons?: Map<string, string>,
 ): ArrangementEntry[] {
   if (items.length === 0) return [];
-  const usable = space.usable;
+  const runs = wallRunsFor(space);
   const out: ArrangementEntry[] = [];
-  let cursorX = usable.x;
   let key = startKey;
 
   for (const item of items) {
     for (let unit = 0; unit < item.quantity; unit += 1) {
       const w = round2(Math.round(item.widthCm) / 100);
       const h = round2(Math.round(item.heightCm) / 100);
-      const d = round2(Math.min(WALL_MOUNT_DEPTH_M, Math.round(item.depthCm) / 100));
+      const d = round2(Math.round(item.depthCm) / 100);
       const base = round2(Math.max(0.3, Math.min(WALL_MOUNT_BASE_M, ceiling - h)));
-      const fits =
-        w <= usable.w + 0.001 &&
-        cursorX + w <= usable.x + usable.w + 0.001 &&
-        base + h <= ceiling + 0.001;
-      if (!fits) {
+
+      if (base + h > ceiling + 0.001) {
         unplacedUnits.set(item.id, (unplacedUnits.get(item.id) ?? 0) + 1);
+        reasons?.set(
+          item.id,
+          `Not safely placeable: ${h.toFixed(2)}m tall exceeds the ${ceiling.toFixed(2)}m mounting height available.`,
+        );
         continue;
       }
+
+      const run = runs.find(
+        (candidate) => candidate.cursor + w <= candidate.length + 0.001 && candidate.length >= w,
+      );
+      if (!run) {
+        const widest = Math.max(...runs.map((candidate) => candidate.length - candidate.cursor));
+        unplacedUnits.set(item.id, (unplacedUnits.get(item.id) ?? 0) + 1);
+        reasons?.set(
+          item.id,
+          `Not safely placeable: the widest clear wall run measured is ${Math.max(0, widest).toFixed(2)}m and the object is ${w.toFixed(2)}m wide.`,
+        );
+        continue;
+      }
+
+      const rect = run.rect(round2(run.cursor), w, d);
       out.push({
         key: `mount-${key}-${item.id}`,
         itemId: item.id,
         label: item.label,
         units: 1,
-        x: round2(cursorX),
-        y: round2(usable.y),
-        w,
-        d,
+        x: round2(rect.x),
+        y: round2(rect.y),
+        w: round2(rect.w),
+        d: round2(rect.d),
         heightM: h,
         baseHeightM: base,
         layer: 1,
-        rotationDeg: 0,
+        rotationDeg: run.id === "back" ? 0 : 90,
         orientation: "upright",
-        zone: "back-wall",
+        zone: run.zone,
         supportsItemIds: [],
         supportedBy: "wall",
         groupId: `group-${item.id}`,
@@ -451,7 +511,7 @@ function mountWallItems(
         confidence: item.confidence,
         mounted: true,
       });
-      cursorX = round2(cursorX + w + 0.05);
+      run.cursor = round2(run.cursor + w + 0.05);
       key += 1;
     }
   }

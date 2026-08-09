@@ -1,7 +1,7 @@
 /**
  * Production Vision AI provider.
  *
- * Sends the user's actual photographs to the two-stage detection endpoint and
+ * Sends the user's actual photographs to the detection endpoint and
  * maps the reply onto the shared `DetectedObject` model. Nothing is invented
  * here: this file adds no items, no default inventory and no catalogue
  * substitutions. Each item keeps the identity the detector gave it — the
@@ -18,8 +18,11 @@ import { prepareSelection } from "./crop";
 import {
   detectionCacheKey,
   readDetectionCache,
+  readSpaceCache,
   recordTiming,
+  spaceCacheKey,
   writeDetectionCache,
+  writeSpaceCache,
 } from "./detection-cache";
 import { describeSelection, isFullPhoto, type PhotoSelection } from "./selection";
 import type { AnalyseOptions, VisionProvider } from "./provider";
@@ -30,6 +33,7 @@ import type {
   SpaceSuitability,
   VisionPhoto,
   VisionResult,
+  VisionStageTimings,
 } from "./types";
 
 const DETECT_URL = "/api/vision-detect";
@@ -123,7 +127,7 @@ async function postPhotos(
   task: "belongings" | "space",
   spaceType?: string,
   options?: AnalyseOptions,
-): Promise<Record<string, unknown>> {
+): Promise<{ payload: Record<string, unknown>; prepareMs: number; requestMs: number }> {
   options?.onStage?.("reading");
   const startedPrepare = Date.now();
   const prepared = await Promise.all(
@@ -138,7 +142,8 @@ async function postPhotos(
       };
     }),
   );
-  recordTiming("prepare", Date.now() - startedPrepare);
+  const prepareMs = Date.now() - startedPrepare;
+  recordTiming("prepare", prepareMs);
 
   options?.onStage?.(task === "space" ? "space" : "finding");
   const started = Date.now();
@@ -152,14 +157,39 @@ async function postPhotos(
       ...(spaceType ? { spaceType } : {}),
     }),
   });
-  recordTiming(task, Date.now() - started);
+  const requestMs = Date.now() - started;
+  recordTiming(task, requestMs);
 
   const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
   if (!response.ok || !payload) {
     const reason = typeof payload?.["error"] === "string" ? String(payload["error"]) : "failed";
     throw new VisionUnavailableError(reason);
   }
-  return payload;
+  return { payload, prepareMs, requestMs };
+}
+
+/** Reads the server's measured stage costs without inventing any of them. */
+function stageTimings(
+  payload: Record<string, unknown>,
+  prepareMs: number,
+  requestMs: number,
+): VisionStageTimings {
+  const raw = (payload["timings"] ?? {}) as Record<string, unknown>;
+  const calls = (payload["calls"] ?? {}) as Record<string, unknown>;
+  const num = (value: unknown): number | undefined =>
+    typeof value === "number" && Number.isFinite(value) ? Math.max(0, Math.round(value)) : undefined;
+  const timings: VisionStageTimings = { prepareMs, requestMs };
+  const detectMs = num(raw["detectMs"]);
+  const mergeMs = num(raw["mergeMs"]);
+  const refineMs = num(raw["refineMs"]);
+  const scanCalls = num(calls["scan"]);
+  const refineCalls = num(calls["refine"]);
+  if (detectMs !== undefined) timings.detectMs = detectMs;
+  if (mergeMs !== undefined) timings.mergeMs = mergeMs;
+  if (refineMs !== undefined) timings.refineMs = refineMs;
+  if (scanCalls !== undefined) timings.scanCalls = scanCalls;
+  if (refineCalls !== undefined) timings.refineCalls = refineCalls;
+  return timings;
 }
 
 function suitability(value: unknown): SpaceSuitability {
@@ -197,7 +227,7 @@ function roomFeatures(value: unknown): RoomFeature[] {
 
 export const aiVisionProvider: VisionProvider = {
   id: "spacilo-vision-ai",
-  model: "gateway/two-stage",
+  model: "gateway/single-pass",
 
   async analyseBelongings(
     photos: VisionPhoto[],
@@ -221,10 +251,17 @@ export const aiVisionProvider: VisionProvider = {
         provider: "spacilo-vision-ai",
         model: "cache",
         analysedAt: Date.now(),
+        // A cache hit costs nothing but the lookup itself.
+        timings: { prepareMs: 0, requestMs: 0, detectMs: 0, refineMs: 0, scanCalls: 0, refineCalls: 0 },
       };
     }
 
-    const payload = await postPhotos(photos, "belongings", undefined, options);
+    const { payload, prepareMs, requestMs } = await postPhotos(
+      photos,
+      "belongings",
+      undefined,
+      options,
+    );
     options?.onStage?.("estimating");
     const items = Array.isArray(payload["items"]) ? (payload["items"] as ApiItem[]) : [];
     const objects = items.map(toDetectedObject);
@@ -235,6 +272,7 @@ export const aiVisionProvider: VisionProvider = {
       provider: "spacilo-vision-ai",
       model: typeof payload["model"] === "string" ? String(payload["model"]) : "gateway",
       analysedAt: Date.now(),
+      timings: stageTimings(payload, prepareMs, requestMs),
     };
   },
 
@@ -243,7 +281,24 @@ export const aiVisionProvider: VisionProvider = {
     spaceType?: string,
     options?: AnalyseOptions,
   ): Promise<SpaceScanResult> {
-    const payload = await postPhotos(photos, "space", spaceType, options);
+    // Phase 6V — an unchanged room photograph is never re-analysed.
+    const cacheKey = spaceCacheKey({
+      photos: photos.map((photo) => ({
+        id: photo.id,
+        sizeBytes: photo.sizeBytes,
+        rotation: photo.rotation,
+      })),
+      selections: options?.selections ?? [],
+      mode: options?.mode ?? "whole",
+      ...(spaceType ? { spaceType } : {}),
+    });
+    const cachedSpace = readSpaceCache<SpaceScanResult>(cacheKey);
+    if (cachedSpace) {
+      options?.onStage?.("space");
+      return cachedSpace;
+    }
+
+    const { payload } = await postPhotos(photos, "space", spaceType, options);
     const space = (payload["space"] ?? {}) as Record<string, unknown>;
     const widthM = positive(space["widthM"], 3);
     const depthM = positive(space["depthM"], 3);
@@ -253,7 +308,7 @@ export const aiVisionProvider: VisionProvider = {
     // Never let the room read smaller than the area it is meant to contain.
     const roomWidthM = Math.max(widthM, positive(space["roomWidthM"], widthM));
     const roomDepthM = Math.max(depthM, positive(space["roomDepthM"], depthM));
-    return {
+    const result: SpaceScanResult = {
       widthM,
       depthM,
       roomWidthM,
@@ -273,5 +328,7 @@ export const aiVisionProvider: VisionProvider = {
       provider: "spacilo-vision-ai",
       analysedAt: Date.now(),
     };
+    writeSpaceCache(cacheKey, result);
+    return result;
   },
 };

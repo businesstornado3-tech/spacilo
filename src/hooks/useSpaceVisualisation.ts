@@ -17,7 +17,11 @@ import {
   type VisualisationStage,
 } from "@/lib/spaceplanner/photo/visualise";
 import { prepareImage } from "@/lib/spaceplanner/photo/image-optimise";
-import type { CoverageReport, PlacementManifest } from "@/lib/spaceplanner/photo/manifest";
+import {
+  manifestSupports,
+  type CoverageReport,
+  type PlacementManifest,
+} from "@/lib/spaceplanner/photo/manifest";
 import type { PhotoPlanResult } from "@/lib/spaceplanner/photo";
 import type { DetectedObject, VisionPhoto } from "@/lib/vision/types";
 

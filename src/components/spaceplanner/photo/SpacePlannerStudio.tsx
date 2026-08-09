@@ -161,7 +161,13 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   const timings = React.useMemo(
     () =>
       mergeTimings(EMPTY_TIMINGS, {
-        detectionMs: stuff.timings.detectionMs,
+        photoPrepMs: stuff.serverTimings?.prepareMs ?? null,
+        // The endpoint's own measurement is the truthful one when present.
+        detectionMs: stuff.serverTimings?.detectMs ?? stuff.timings.detectionMs,
+        mergeMs: stuff.serverTimings?.mergeMs ?? null,
+        refineMs: stuff.serverTimings?.refineMs ?? null,
+        scanCalls: stuff.serverTimings?.scanCalls ?? null,
+        refineCalls: stuff.serverTimings?.refineCalls ?? null,
         classificationMs: stuff.timings.classificationMs,
         inventoryReadyMs: stuff.timings.readyMs,
         spaceAnalysisMs: space.timings.readyMs,
@@ -172,7 +178,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
         verifyMs: visual.diagnostics?.verifyMs ?? null,
         totalMs: visual.diagnostics?.totalMs ?? null,
       }),
-    [stuff.timings, space.timings, planRun.ms, manifestRun.ms, timeToArrangementMs, visual.diagnostics],
+    [stuff.timings, stuff.serverTimings, space.timings, planRun.ms, manifestRun.ms, timeToArrangementMs, visual.diagnostics],
   );
 
 

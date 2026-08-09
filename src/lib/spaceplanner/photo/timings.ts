@@ -19,8 +19,17 @@ export const DETERMINISTIC_PLAN_BUDGET_MS = 5000;
  * never rendered as zero — an unknown duration is shown as "—".
  */
 export interface PipelineTimings {
+  /** Phase 6V — decoding, downscaling and encoding photographs, once. */
+  photoPrepMs: number | null;
   /** Vision call that found the objects. */
   detectionMs: number | null;
+  /** Deterministic cross-photograph merge. Never an AI call. */
+  mergeMs: number | null;
+  /** Confidence-gated second look. 0 when nothing needed refining. */
+  refineMs: number | null;
+  /** Model calls made for the belongings scan, so parallelism is visible. */
+  scanCalls: number | null;
+  refineCalls: number | null;
   /** Sizing / canonicalisation of what detection returned. */
   classificationMs: number | null;
   /** Wall clock from pressing analyse to a usable inventory. */
@@ -42,7 +51,12 @@ export interface PipelineTimings {
 }
 
 export const EMPTY_TIMINGS: PipelineTimings = {
+  photoPrepMs: null,
   detectionMs: null,
+  mergeMs: null,
+  refineMs: null,
+  scanCalls: null,
+  refineCalls: null,
   classificationMs: null,
   inventoryReadyMs: null,
   spaceAnalysisMs: null,
@@ -153,7 +167,9 @@ export function budgetReport(timings: PipelineTimings): BudgetReport {
     space,
     plan,
     bottleneck: bottleneckOf({
+      "photo preparation": timings.photoPrepMs,
       detection: timings.detectionMs,
+      refinement: timings.refineMs,
       classification: timings.classificationMs,
       "space analysis": timings.spaceAnalysisMs,
       planning: timings.planMs,

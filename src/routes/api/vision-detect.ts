@@ -46,17 +46,6 @@ interface DetectBody {
   spaceType?: string | null;
 }
 
-interface Observation {
-  ref?: string;
-  description?: string;
-  visibleCount?: number;
-  countBasis?: string;
-  occluded?: boolean;
-  sizeCue?: string;
-  partOf?: string;
-  confidence?: number;
-}
-
 export interface DetectedItemPayload {
   id: string;
   label: string;

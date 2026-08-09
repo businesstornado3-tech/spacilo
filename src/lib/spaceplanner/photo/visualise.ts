@@ -176,9 +176,17 @@ export function manifestPayload(
 /**
  * Deterministic request signature. Same photos, same inventory, same plan →
  * same key, so a repeated request can reuse the previous image.
+ *
+ * Phase 6T — the plan and inventory hashes are part of the key. An image is
+ * only ever reused for the exact plan and exact inventory it was rendered for,
+ * so a re-plan can never be illustrated with a previous run's picture.
  */
 export function visualisationSignature(request: VisualisationRequest): string {
   const parts = [
+    request.planHash ?? "no-plan",
+    request.inventoryHash ?? "no-inventory",
+    (request.manifest ?? []).map((entry) => `${entry.id}x${entry.quantity}`).join(","),
+    (request.supports ?? []).map((support) => `${support.itemId}>${support.baseId}`).join(","),
     request.spaceImage.base64,
     ...request.itemImages.map((image) => image.base64),
     request.instruction,
@@ -187,6 +195,7 @@ export function visualisationSignature(request: VisualisationRequest): string {
   ];
   return `vis_${hashString(parts.join("|")).toString(36)}`;
 }
+
 
 /**
  * Per-session, in-memory only. Never persisted and never shared between

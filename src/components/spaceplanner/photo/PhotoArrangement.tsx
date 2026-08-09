@@ -172,7 +172,7 @@ export function PhotoArrangement({
           </div>
         ) : null}
 
-        {status === "working" ? (
+        {isVisualisationWorking(status) ? (
           <div
             role="status"
             aria-live="polite"

@@ -9,4 +9,6 @@ export * from "./items";
 export * from "./constraints";
 export * from "./score";
 export * from "./quality";
+export * from "./classify";
+export * from "./optimise";
 export * from "./arrange";

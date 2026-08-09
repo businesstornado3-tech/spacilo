@@ -88,62 +88,49 @@ export interface Coverage {
   expected: number;
   present: number;
   missing: string[];
-  /** Objects the verifier saw that are not in the verified inventory. */
+  /**
+   * Objects the verifier saw that are neither a whitelisted belonging nor a
+   * room feature. Only these are hallucinations.
+   */
   unexpected: string[];
+  /**
+   * Fixed room features that drifted — a door redrawn slightly differently, a
+   * radiator partly hidden. Reported, never fatal: the room owning its own
+   * door is not the user owning a belonging they do not have.
+   */
+  featureNotes: string[];
   complete: boolean;
-  /** False when the renderer invented belongings. */
+  /** False only when the renderer invented BELONGINGS. */
   faithful: boolean;
+  /** Full per-category breakdown, for diagnostics and support. */
+  categories: CategorisedVerification;
+}
+
+/** Re-exported for tests and callers that normalise labels themselves. */
+export function normaliseReported(label: string): string {
+  return normaliseLabel(label);
 }
 
 /**
- * Normalises a label the verifier reported so a duplicate of an allowed item
- * ("extra cardboard box", "another suitcase", "2x boxes") is recognised as the
- * allowed item rather than as an invented object. Only genuinely new objects —
- * shoes, plants, shelving — survive this and count as hallucinations.
+ * Builds the coverage report from a verifier reply, using the two explicit
+ * whitelists. This is the single place a report becomes a verdict.
  */
-export function normaliseReported(label: string): string {
-  return label
-    .trim()
-    .toLowerCase()
-    .replace(/^\d+\s*[x×]\s*/, "")
-    .replace(/\b(an?|the|one|two|three|four|five|extra|additional|another|second|third|duplicate|more|further|spare|other)\b/g, " ")
-    .replace(/[^a-z0-9 ]/g, " ")
-    .replace(/\s+/g, " ")
-    // Singular/plural must converge on one stem: "suitcase" and "suitcases"
-    // are the same object, so a duplicate is never read as an invention.
-    .replace(/\b\w+\b/g, (word) => word.replace(/(?:es|s)$/, "").replace(/e$/, ""))
-    .trim();
-}
-
-/** Compares the labels a checker reported against the labels required. */
 export function coverageOf(
-  required: string[],
-  present: string[],
-  unexpected: string[] = [],
-  allowedLabels: string[] = [],
+  items: WhitelistEntry[],
+  features: WhitelistEntry[],
+  reply: VerifierReply,
 ): Coverage {
-  const seen = new Set(present.map((label) => label.trim().toLowerCase()));
-  const missing = required.filter((label) => !seen.has(label.trim().toLowerCase()));
-  const allowed = new Set([
-    ...required.map((label) => label.trim().toLowerCase()),
-    ...required.map((label) => normaliseReported(label)),
-    ...allowedLabels.map((label) => normaliseReported(label)),
-  ]);
-  const invented = unexpected
-    .map((label) => label.trim())
-    .filter(
-      (label) =>
-        label.length > 0 &&
-        !allowed.has(label.toLowerCase()) &&
-        !allowed.has(normaliseReported(label)),
-    );
+  const categories = categoriseVerification({ items, features, reply });
+  const { userInventory, roomFeatures } = categories;
   return {
-    expected: required.length,
-    present: required.length - missing.length,
-    missing,
-    unexpected: invented,
-    complete: missing.length === 0 && required.length > 0,
-    faithful: invented.length === 0,
+    expected: userInventory.expected.length,
+    present: userInventory.found.length,
+    missing: userInventory.missing,
+    unexpected: userInventory.unexpected,
+    featureNotes: roomFeatures.unexpected,
+    complete: userInventory.missing.length === 0 && userInventory.expected.length > 0,
+    faithful: userInventory.unexpected.length === 0,
+    categories,
   };
 }
 
@@ -161,12 +148,10 @@ export function parsePresentLabels(text: string): string[] | null {
 }
 
 /**
- * Reads the verifier's reply as {present, unexpected}. Falls back to the
- * older bare-array form so a terse model reply is still usable.
+ * Reads the verifier's reply as {present, unexpected, missingFeatures}. Falls
+ * back to the older bare-array form so a terse model reply is still usable.
  */
-export function parseCheckReply(
-  text: string,
-): { present: string[]; unexpected: string[] } | null {
+export function parseCheckReply(text: string): VerifierReply | null {
   const object = text.match(/\{[\s\S]*\}/);
   if (object) {
     try {
@@ -175,7 +160,10 @@ export function parseCheckReply(
         Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
       const present = strings(parsed["present"]);
       const unexpected = strings(parsed["unexpected"]);
-      if (present.length || unexpected.length) return { present, unexpected };
+      const missingFeatures = strings(parsed["missingFeatures"]);
+      if (present.length || unexpected.length || missingFeatures.length) {
+        return { present, unexpected, missingFeatures };
+      }
     } catch {
       /* fall through to the array form */
     }
@@ -197,10 +185,12 @@ export function verdictFor(coverage: Coverage | null): Verdict {
 }
 
 /**
- * Object-level render verification, through the gateway. Asks which required units are
- * visible AND which stored objects appear that are NOT on the list — an
- * invented object is a critical failure, not a cosmetic one. Best effort: a
- * verifier that cannot answer returns null rather than a false accusation.
+ * Object-level render verification, through the gateway.
+ *
+ * The verifier is asked for THREE separate lists so the two whitelists never
+ * collide: what it can see, what stored object it saw that is on neither
+ * whitelist, and which room feature drifted. Best effort: a verifier that
+ * cannot answer returns null rather than a false accusation.
  */
 async function checkCoverage(
   key: string,
@@ -224,7 +214,15 @@ async function checkCoverage(
             content: [
               {
                 type: "text",
-                text: `Compare the SOURCE room photograph (first image) with the GENERATED photograph (second image). Required inventory units are: ${required.map((item) => `${item.id}=${item.label}`).join("; ")}. Required fixed room features are: ${roomFeatures.map((feature) => `${feature.id}=${feature.label}`).join("; ") || "all visible source fixtures"}. Reply JSON only as {"present":["ITEM_ID"],"unexpected":["description"]}. Count duplicate units separately. A required unit is present only when clearly visible. Report any generated stored object without a required ID as unexpected. Also report as unexpected any source television, radiator, door, window, fitted shelf, built-in furnishing or electrical fixture that disappeared, moved, changed or became covered.`,
+                text: [
+                  "Compare the SOURCE room photograph (first image) with the GENERATED photograph (second image).",
+                  `USER_INVENTORY_WHITELIST — belongings that must appear, one entry per unit: ${required.map((item) => `${item.id}=${item.label}`).join("; ")}.`,
+                  `ROOM_FEATURE_WHITELIST — parts of the building that must be preserved and are NEVER belongings: ${roomFeatures.map((feature) => `${feature.id}=${feature.label}`).join("; ") || "every fixed fixture visible in the source photograph (doors, doorways, windows, radiators, sockets, fitted units)"}.`,
+                  'Reply JSON only, exactly: {"present":["ITEM-1"],"unexpected":["short description"],"missingFeatures":["FEATURE-1"]}.',
+                  '"present" lists the USER_INVENTORY_WHITELIST ids you can clearly see, counting duplicate units separately.',
+                  '"unexpected" lists ONLY stored objects visible in the generated photograph that are on NEITHER whitelist — for example shoes, bags, chairs, plants, tools, extra boxes. Never put a room feature or a whitelisted item in this list.',
+                  '"missingFeatures" lists ROOM_FEATURE_WHITELIST ids that disappeared, moved, changed or became covered. Room features always go here, never in "unexpected".',
+                ].join(" "),
               },
               { type: "image_url", image_url: { url: sourceImage } },
               { type: "image_url", image_url: { url: image } },
@@ -241,13 +239,9 @@ async function checkCoverage(
     const text = typeof content === "string" ? content : "";
     const reply = parseCheckReply(text);
     if (!reply) return null;
-    return coverageOf(
-      required.map((item) => item.id),
-      reply.present,
-      reply.unexpected,
-      [...required.map((item) => item.label), ...roomFeatures.map((feature) => feature.label)],
-    );
+    return coverageOf(required, roomFeatures, reply);
   } catch {
+
     return null;
   }
 }

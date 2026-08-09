@@ -44,6 +44,7 @@ export function ArrangementPlanDiagram({
       yM: position.yM,
       widthM: position.widthM,
       depthM: position.depthM,
+      mounted: position.mounted,
     })),
   );
 
@@ -95,7 +96,12 @@ export function ArrangementPlanDiagram({
                 width={unit.widthM}
                 height={unit.depthM}
                 rx={0.04}
-                className="fill-signal/35 stroke-signal"
+                className={
+                  unit.mounted
+                    ? "fill-transparent stroke-signal"
+                    : "fill-signal/35 stroke-signal"
+                }
+                strokeDasharray={unit.mounted ? "0.08 0.08" : undefined}
                 strokeWidth={0.03}
               />
               {label?.mode === "marker" ? (

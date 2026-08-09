@@ -27,6 +27,8 @@ export interface PlanUnit {
   yM: number;
   widthM: number;
   depthM: number;
+  /** True when the unit is wall-mounted rather than floor-standing. */
+  mounted?: boolean;
 }
 
 export interface PlanBox {

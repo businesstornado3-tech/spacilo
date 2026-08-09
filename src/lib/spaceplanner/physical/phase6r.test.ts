@@ -88,7 +88,7 @@ describe("Phase 6R — screens versus the furniture that carries them", () => {
 
   it("places the TV stand rather than dropping it", () => {
     const space = planningSpaceFrom(room);
-    const plan = arrangeItems(space, [tvStand, television]);
+    const plan = arrangeItems([tvStand, television], space);
     const labels = plan.entries.map((entry) => entry.itemId);
     expect(labels).toContain("ITEM-tv-stand");
     expect(plan.unplaced.some((entry) => entry.itemId === "ITEM-tv-stand")).toBe(false);
@@ -138,7 +138,7 @@ describe("Phase 6R — deterministic relationships", () => {
     });
 
     const space = planningSpaceFrom(room);
-    const plan = arrangeItems(space, [desk, wardrobe, monitor]);
+    const plan = arrangeItems([desk, wardrobe, monitor], space);
     const deskEntry = plan.entries.find((entry) => entry.itemId === "ITEM-desk");
     const monitorEntry = plan.entries.find((entry) => entry.itemId === "ITEM-monitor");
     expect(deskEntry).toBeTruthy();
@@ -184,7 +184,7 @@ describe("Phase 6R — surfaces and consolidation", () => {
       heightCm: 12,
     });
     const space = planningSpaceFrom(room);
-    const plan = arrangeItems(space, [box, shoebox]);
+    const plan = arrangeItems([box, shoebox], space);
     const stacked = plan.entries.find((entry) => entry.itemId === "ITEM-shoebox");
     expect(stacked).toBeTruthy();
     if (!stacked) return;
@@ -214,9 +214,9 @@ describe("Phase 6R — determinism", () => {
       item({ id: "ITEM-c", label: "Table lamp", widthCm: 20, depthCm: 20, heightCm: 40 }),
     ];
     const space = planningSpaceFrom(room);
-    const first = JSON.stringify(arrangeItems(space, items).entries);
+    const first = JSON.stringify(arrangeItems(items, space).entries);
     for (let run = 0; run < 5; run += 1) {
-      expect(JSON.stringify(arrangeItems(planningSpaceFrom(room), items).entries)).toBe(first);
+      expect(JSON.stringify(arrangeItems(items, planningSpaceFrom(room)).entries)).toBe(first);
     }
   });
 });

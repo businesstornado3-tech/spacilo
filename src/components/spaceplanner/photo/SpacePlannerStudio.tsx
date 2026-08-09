@@ -656,6 +656,8 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
         visualStatus={visual.status}
         coverage={visual.coverage}
         render={visual.diagnostics}
+        timings={timings}
+
       />
     </div>
   );

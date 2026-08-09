@@ -26,6 +26,18 @@ export interface ValidationResult {
   violations: Violation[];
 }
 
+const cm = (metres: number) => Math.round(metres * 100);
+
+/**
+ * Every footprint dimension must be one of the object's canonical dimensions.
+ * The planner may turn an object; it may never shrink one to make it fit.
+ */
+export function matchesCanonicalFootprint(item: PlanningItem, w: number, d: number): boolean {
+  const dims = [item.widthCm, item.depthCm, item.heightCm].map((value) => Math.round(value));
+  const near = (value: number) => dims.some((dim) => Math.abs(dim - value) <= 2);
+  return near(cm(w)) && near(cm(d));
+}
+
 export function validateArrangement(input: ValidationInput): ValidationResult {
   const { space, items, entries } = input;
   const violations: Violation[] = [];
@@ -60,7 +72,63 @@ export function validateArrangement(input: ValidationInput): ValidationResult {
     }
   }
 
+  const itemById = new Map(items.map((item) => [item.id, item]));
+
   for (const entry of entries) {
+    const item = itemById.get(entry.itemId);
+
+    // C0. coordinates must exist and be real numbers.
+    const numbers = [entry.x, entry.y, entry.w, entry.d, entry.heightM, entry.baseHeightM];
+    if (numbers.some((value) => typeof value !== "number" || !Number.isFinite(value))) {
+      violations.push({
+        code: "missing_coordinates",
+        itemId: entry.itemId,
+        message: `${entry.label} has no valid position.`,
+      });
+      continue;
+    }
+    if (entry.w <= 0 || entry.d <= 0 || entry.heightM <= 0) {
+      violations.push({
+        code: "missing_coordinates",
+        itemId: entry.itemId,
+        message: `${entry.label} has a zero or negative dimension.`,
+      });
+    }
+
+    // C1. only physically valid rotations.
+    if (entry.rotationDeg !== 0 && entry.rotationDeg !== 90) {
+      violations.push({
+        code: "invalid_rotation",
+        itemId: entry.itemId,
+        message: `${entry.label} uses a rotation the planner does not support.`,
+      });
+    }
+
+    // C2. dimensions must match the canonical record exactly.
+    if (item && !matchesCanonicalFootprint(item, entry.w, entry.d)) {
+      violations.push({
+        code: "invalid_dimensions",
+        itemId: entry.itemId,
+        message: `${entry.label} was drawn at a size its measurements do not allow.`,
+      });
+    }
+
+    // C3. wall-mounted objects are never floor-standing, and nothing else hangs.
+    if (item?.wallMounted && (!entry.mounted || entry.layer === 0)) {
+      violations.push({
+        code: "invalid_wall_mount",
+        itemId: entry.itemId,
+        message: `${entry.label} is wall-mounted and must not stand on the floor.`,
+      });
+    }
+    if (entry.mounted && (!item?.wallMounted || entry.baseHeightM <= 0)) {
+      violations.push({
+        code: "invalid_wall_mount",
+        itemId: entry.itemId,
+        message: `${entry.label} is shown on a wall but is not a wall-mounted object.`,
+      });
+    }
+
     // C. inside the user-approved usable area.
     if (!contains(space.usable, entry)) {
       violations.push({

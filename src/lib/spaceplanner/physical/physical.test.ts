@@ -173,6 +173,7 @@ describe("physical placement engine", () => {
           fragile: false,
           weight: "medium",
           confidence: 0.5,
+          mounted: false,
         },
       ],
       unplacedUnits: new Map(),

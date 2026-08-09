@@ -38,6 +38,12 @@ export interface PlanningItem {
   compressible: boolean;
   /** True when the item is safely stored stood on its edge. */
   allowUpright: boolean;
+  /**
+   * True when the object belongs on a wall, not on the floor (a television,
+   * a mounted screen, a hanging picture). Wall-mounted objects never consume
+   * floor area and are never planned as floor-standing.
+   */
+  wallMounted: boolean;
   /** Parts of a composite object. Never planned as separate items. */
   components: string[];
   confidence: number;
@@ -118,6 +124,8 @@ export interface ArrangementEntry extends Rect {
   fragile: boolean;
   weight: WeightClass;
   confidence: number;
+  /** True when this footprint hangs on a wall rather than standing on the floor. */
+  mounted: boolean;
 }
 
 export interface UnplacedItem {
@@ -137,7 +145,11 @@ export type ViolationCode =
   | "obstacle_blocked"
   | "exceeds_height"
   | "unsupported_orientation"
-  | "unrealistic_stack";
+  | "unrealistic_stack"
+  | "invalid_rotation"
+  | "invalid_wall_mount"
+  | "invalid_dimensions"
+  | "missing_coordinates";
 
 export interface Violation {
   code: ViolationCode;
@@ -151,6 +163,8 @@ export interface ArrangementScore {
   access: number;
   compactness: number;
   wallUse: number;
+  /** Occupied share of the usable storage volume, 0–100. */
+  volumeUse: number;
   verticalUse: number;
   grouping: number;
   /** 0–100 consolidation objective. Higher means less scatter. */

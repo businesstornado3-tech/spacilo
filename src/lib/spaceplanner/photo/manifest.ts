@@ -97,6 +97,8 @@ export interface ManifestPosition {
   rotationDeg: number;
   orientation: string;
   zone: string;
+  /** True when this unit hangs on a wall rather than standing on the floor. */
+  mounted: boolean;
 }
 
 export interface ManifestEntry {
@@ -190,6 +192,7 @@ export function buildPlacementManifest(
       rotationDeg: entry.rotationDeg,
       orientation: entry.orientation,
       zone: entry.zone,
+      mounted: entry.mounted,
     }));
 
     const first = placed[0];

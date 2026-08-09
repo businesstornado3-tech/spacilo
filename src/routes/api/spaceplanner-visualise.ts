@@ -139,6 +139,7 @@ export function coverageOf(
   features: WhitelistEntry[] | string[],
   reply?: VerifierReply | string[],
   allowedLabels: string[] = [],
+  expectedSupports: readonly ExpectedSupport[] = [],
 ): Coverage {
   // Legacy call shape (required, present, unexpected, allowedLabels) is still
   // supported so existing verification suites keep exercising this logic.
@@ -156,6 +157,7 @@ export function coverageOf(
     reply: verifierReply,
     ...(legacy && allowedLabels.length ? { itemAliases: allowedLabels } : {}),
     ...(!legacy ? { itemAliases: whitelist.map((entry) => entry.label) } : {}),
+    ...(expectedSupports.length ? { expectedSupports } : {}),
   });
   const { userInventory, roomFeatures } = categories;
   return {
@@ -164,11 +166,13 @@ export function coverageOf(
     missing: userInventory.missing,
     unexpected: userInventory.unexpected,
     featureNotes: roomFeatures.unexpected,
+    supportIssues: categories.supportIssues,
     complete: userInventory.missing.length === 0 && userInventory.expected.length > 0,
     faithful: userInventory.unexpected.length === 0,
     categories,
   };
 }
+
 
 /** Reads the checker's JSON reply. Tolerates fenced or noisy output. */
 export function parsePresentLabels(text: string): string[] | null {

@@ -170,11 +170,17 @@ export const STARTER_NAMES = [
 ] as const;
 
 export function formatVolume(m3: number): string {
+  if (!Number.isFinite(m3) || m3 <= 0) return "0m³";
+  // Small objects are real objects: never round a genuine volume down to 0.0.
+  if (m3 < 0.01) return "<0.01m³";
+  if (m3 < 1) return `${m3.toFixed(2)}m³`;
   return `${m3.toFixed(m3 < 10 ? 1 : 0)}m³`;
 }
 
 export function formatWeight(kg: number): string {
-  return kg >= 1000 ? `${(kg / 1000).toFixed(1)}t` : `${kg}kg`;
+  if (!Number.isFinite(kg) || kg <= 0) return "0kg";
+  if (kg < 1) return "<1kg";
+  return kg >= 1000 ? `${(kg / 1000).toFixed(1)}t` : `${Math.round(kg)}kg`;
 }
 
 /** UK short date, e.g. 7 Aug 2026. */

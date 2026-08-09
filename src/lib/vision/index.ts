@@ -5,6 +5,7 @@
  * Space      → Vision AI → Space value → Listing → Bookings
  */
 export * from "./types";
+export * from "./canonical";
 export * from "./taxonomy";
 export * from "./provider";
 export * from "./inventory";

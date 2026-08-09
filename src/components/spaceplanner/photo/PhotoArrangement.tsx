@@ -124,7 +124,8 @@ export function PhotoArrangement({
   onRetry,
   className,
 }: PhotoArrangementProps) {
-  const hasVisual = (status === "ready" || status === "incomplete") && Boolean(arrangedUrl);
+  // Phase 6T — the rendered photograph appears for exactly one state.
+  const hasVisual = showsRenderedImage(status) && Boolean(arrangedUrl);
 
   const [showArranged, setShowArranged] = React.useState(true);
   const [position, setPosition] = React.useState(100);

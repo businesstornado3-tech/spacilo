@@ -90,10 +90,16 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
 
   const planObjects = inventory?.objects ?? [];
 
-  const result = React.useMemo(
-    () => (source && planObjects.length > 0 ? buildPhotoPlan(planObjects, source) : null),
+  // Phase 6U — the deterministic stages are measured where they actually run,
+  // so the reported plan time is the optimiser's real cost, never an estimate.
+  const planRun = React.useMemo(
+    () =>
+      source && planObjects.length > 0
+        ? measure(() => buildPhotoPlan(planObjects, source))
+        : { value: null, ms: null as number | null },
     [source, planObjects],
   );
+  const result = planRun.value;
 
   /** Earning potential follows usable capacity, never the raw room volume. */
   const earnings = React.useMemo(() => {
@@ -107,17 +113,21 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     });
   }, [result]);
 
-  const manifest = React.useMemo(
+  const manifestRun = React.useMemo(
     () =>
       inventory && result
-        ? buildPlacementManifest(
-            inventory,
-            result,
-            (space.spaceScan?.features ?? []).map((feature) => ({ ...feature, verified: true })),
+        ? measure(() =>
+            buildPlacementManifest(
+              inventory,
+              result,
+              (space.spaceScan?.features ?? []).map((feature) => ({ ...feature, verified: true })),
+            ),
           )
-        : null,
+        : { value: null, ms: null as number | null },
     [inventory, result, space.spaceScan],
   );
+  const manifest = manifestRun.value;
+
 
   const spacePhoto = space.photos[0] ?? null;
   const visual = useSpaceVisualisation({

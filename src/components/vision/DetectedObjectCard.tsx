@@ -43,6 +43,7 @@ export function DetectedObjectCard({
 }) {
   const [open, setOpen] = React.useState(false);
   const review = needsReview(object);
+  const tier = confidenceTier(object.confidence);
 
   return (
     <li

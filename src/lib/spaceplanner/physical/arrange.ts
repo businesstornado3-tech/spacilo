@@ -183,7 +183,11 @@ export function arrangeItems(
     })),
   );
 
-  const stacks = stacksFor(items, ceiling).sort(strategy.order);
+  // Wall-mounted objects never compete for floor: they are hung, not packed.
+  const floorItems = items.filter((item) => !item.wallMounted);
+  const mountedItems = items.filter((item) => item.wallMounted);
+
+  const stacks = stacksFor(floorItems, ceiling).sort(strategy.order);
   const entries: ArrangementEntry[] = [];
   const unplacedUnits = new Map<string, number>();
   const placedFloor: Rect[] = [];
@@ -202,35 +206,62 @@ export function arrangeItems(
 
   // Close every gap the row cursor left behind, then lift fragile items clear.
   const compacted = compactEntries(entries, space, blockers);
-  const lifted = protectFragile(compacted, ceiling);
+  const mounted = mountWallItems(mountedItems, space, ceiling, key, unplacedUnits);
+  const lifted = [...protectFragile(compacted, ceiling), ...mounted];
 
-  const unplaced: UnplacedItem[] = [...unplacedUnits.entries()].map(([itemId, units]) => {
-    const item = items.find((candidate) => candidate.id === itemId);
-    return {
-      itemId,
-      label: item?.label ?? itemId,
-      units,
-      reason: "No space remained inside the usable area while keeping the access route clear.",
-    };
-  });
+  // Deterministic repair: an entry that breaks a hard constraint is removed
+  // and reported as unplaced. An invalid placement is never kept, and never
+  // left for the renderer to disguise.
+  let accepted = lifted;
+  let validation = validateArrangement({ space, items, entries: accepted, unplacedUnits });
+  for (let attempt = 0; attempt < 3 && !validation.valid; attempt += 1) {
+    const offending = new Set(
+      validation.violations
+        .filter((violation) => violation.code !== "missing_item" && violation.itemId)
+        .map((violation) => violation.itemId!),
+    );
+    if (offending.size === 0) break;
+    const kept = accepted.filter((entry) => !offending.has(entry.itemId));
+    if (kept.length === accepted.length) break;
+    for (const entry of accepted) {
+      if (offending.has(entry.itemId)) {
+        unplacedUnits.set(entry.itemId, (unplacedUnits.get(entry.itemId) ?? 0) + entry.units);
+      }
+    }
+    accepted = kept.map((entry) => ({
+      ...entry,
+      supportsItemIds: entry.supportsItemIds.filter((id) => !offending.has(id)),
+    }));
+    validation = validateArrangement({ space, items, entries: accepted, unplacedUnits });
+  }
 
-  const { valid, violations } = validateArrangement({
-    space,
-    items,
-    entries: lifted,
-    unplacedUnits,
-  });
+  const unplaced: UnplacedItem[] = [...unplacedUnits.entries()]
+    .filter(([, units]) => units > 0)
+    .map(([itemId, units]) => {
+      const item = items.find((candidate) => candidate.id === itemId);
+      return {
+        itemId,
+        label: item?.label ?? itemId,
+        units,
+        reason: item?.wallMounted
+          ? "No clear wall run remained for a wall-mounted object."
+          : "No space remained inside the usable area while keeping the access route clear.",
+      };
+    });
+
+  const { valid, violations } = validation;
 
   const usableVolumeM3 = usableStorageVolume(space);
+
   const occupiedVolumeM3 = round2(
-    lifted.reduce((sum, entry) => sum + entry.w * entry.d * entry.heightM, 0),
+    accepted.reduce((sum, entry) => sum + entry.w * entry.d * entry.heightM, 0),
   );
   const occupiedFloorM2 = round2(
-    lifted.filter((entry) => entry.layer === 0).reduce((sum, entry) => sum + entry.w * entry.d, 0),
+    accepted.filter((entry) => entry.layer === 0).reduce((sum, entry) => sum + entry.w * entry.d, 0),
   );
-  const placedUnits = lifted.reduce((sum, entry) => sum + entry.units, 0);
+  const placedUnits = accepted.reduce((sum, entry) => sum + entry.units, 0);
   const expectedUnits = items.reduce((sum, item) => sum + item.quantity, 0);
-  const walkwayClear = walkwayIsClear(space, lifted);
+  const walkwayClear = walkwayIsClear(space, accepted);
 
   const excludedFloorM2 = round2(
     space.obstacles.reduce((sum, obstacle) => sum + overlapArea(space.usable, obstacle), 0),
@@ -238,7 +269,7 @@ export function arrangeItems(
 
   const score = scoreArrangement({
     space,
-    entries: lifted,
+    entries: accepted,
     violations,
     placedUnits,
     expectedUnits,
@@ -251,7 +282,7 @@ export function arrangeItems(
 
   return {
     space,
-    entries: lifted,
+    entries: accepted,
     unplaced,
     walkway: walkwayClear ? geometry.walkway : null,
     occupiedFloorM2,
@@ -271,7 +302,7 @@ export function arrangeItems(
     strategy: strategy.id,
     quality: arrangementQuality({
       space,
-      entries: lifted,
+      entries: accepted,
       wallUse: score.wallUse,
       compactness: score.compactness,
       verticalUse: score.verticalUse,
@@ -326,6 +357,7 @@ function placeStack(
         zone: isCorner(band, spot.x, space) ? "corner" : band.zone,
         supportsItemIds: [],
         supportedBy: null,
+        mounted: false,
         groupId: stack.groupId,
         fragile: stack.item.fragile,
         weight: stack.item.weight,
@@ -335,6 +367,73 @@ function placeStack(
   }
 
   return null;
+}
+
+const WALL_MOUNT_DEPTH_M = 0.15;
+const WALL_MOUNT_BASE_M = 1;
+
+/**
+ * Wall-mounted objects: hung along the rear wall run, left to right, above
+ * the floor. They take no floor area, they are never stacked on, and they are
+ * never represented as floor-standing. A wall run that has no clear width left
+ * reports the object as unplaced rather than laying it on the ground.
+ */
+function mountWallItems(
+  items: PlanningItem[],
+  space: PlanningSpace,
+  ceiling: number,
+  startKey: number,
+  unplacedUnits: Map<string, number>,
+): ArrangementEntry[] {
+  if (items.length === 0) return [];
+  const usable = space.usable;
+  const out: ArrangementEntry[] = [];
+  let cursorX = usable.x;
+  let key = startKey;
+
+  for (const item of items) {
+    for (let unit = 0; unit < item.quantity; unit += 1) {
+      const w = round2(Math.round(item.widthCm) / 100);
+      const h = round2(Math.round(item.heightCm) / 100);
+      const d = round2(Math.min(WALL_MOUNT_DEPTH_M, Math.round(item.depthCm) / 100));
+      const base = round2(Math.max(0.3, Math.min(WALL_MOUNT_BASE_M, ceiling - h)));
+      const fits =
+        w <= usable.w + 0.001 &&
+        cursorX + w <= usable.x + usable.w + 0.001 &&
+        base + h <= ceiling + 0.001;
+      if (!fits) {
+        unplacedUnits.set(item.id, (unplacedUnits.get(item.id) ?? 0) + 1);
+        continue;
+      }
+      out.push({
+        key: `mount-${key}-${item.id}`,
+        itemId: item.id,
+        label: item.label,
+        units: 1,
+        x: round2(cursorX),
+        y: round2(usable.y),
+        w,
+        d,
+        heightM: h,
+        baseHeightM: base,
+        layer: 1,
+        rotationDeg: 0,
+        orientation: "upright",
+        zone: "back-wall",
+        supportsItemIds: [],
+        supportedBy: "wall",
+        groupId: `group-${item.id}`,
+        fragile: item.fragile,
+        weight: item.weight,
+        confidence: item.confidence,
+        mounted: true,
+      });
+      cursorX = round2(cursorX + w + 0.05);
+      key += 1;
+    }
+  }
+
+  return out;
 }
 
 function stackedHeight(option: OrientationOption, units: number, unitHeight: number): number {
@@ -434,9 +533,9 @@ export function compactEntries(
 }
 
 /**
- * Fragile items are lifted onto a larger, non-fragile, floor-standing
+ * Fragile items are accepted onto a larger, non-fragile, floor-standing
  * neighbour so nothing heavy can ever be put on top of them. Nothing is
- * lifted onto a base that cannot physically carry it.
+ * accepted onto a base that cannot physically carry it.
  */
 function protectFragile(entries: ArrangementEntry[], ceiling: number): ArrangementEntry[] {
   const taken = new Set<string>();

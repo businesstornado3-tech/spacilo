@@ -248,7 +248,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     // Phase 6X — the two analyses are independent. When the user has already
     // added a space photograph, both run at once instead of one after the
     // other, so step 4 is reached in the time of the slower one, not the sum.
-    const alsoSpace = space.photos.length > 0 && !space.result;
+    const alsoSpace = space.photos.length > 0 && !space.spaceScan;
     await Promise.all([
       stuff.analyse(),
       alsoSpace ? space.analyse().catch(() => undefined) : Promise.resolve(undefined),

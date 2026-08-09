@@ -229,7 +229,8 @@ export function arrangeItems(
   // Close every gap the row cursor left behind, then lift fragile items clear.
   // The search engine has already optimised positions, so it is not re-slid.
   const compacted = strategy.search ? entries : compactEntries(entries, space, blockers);
-  const mounted = mountWallItems(mountedItems, space, ceiling, key, unplacedUnits);
+  const unplacedReasons = new Map<string, string>();
+  const mounted = mountWallItems(mountedItems, space, ceiling, key, unplacedUnits, unplacedReasons);
   const lifted = [...protectFragile(compacted, ceiling), ...mounted];
 
   // Deterministic repair: an entry that breaks a hard constraint is removed
@@ -266,9 +267,11 @@ export function arrangeItems(
         itemId,
         label: item?.label ?? itemId,
         units,
-        reason: item?.wallMounted
-          ? "No clear wall run remained for a wall-mounted object."
-          : "No space remained inside the usable area while keeping the access route clear.",
+        reason:
+          unplacedReasons.get(itemId) ??
+          (item?.wallMounted
+            ? "Not safely placeable: no clear wall run remained for a wall-mounted object."
+            : "No space remained inside the usable area while keeping the access route clear."),
       };
     });
 

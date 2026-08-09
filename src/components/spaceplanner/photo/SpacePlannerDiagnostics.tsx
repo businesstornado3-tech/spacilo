@@ -30,6 +30,7 @@ export function SpacePlannerDiagnostics({
   visualStatus,
   coverage,
   render,
+  timings = EMPTY_TIMINGS,
 }: {
   photoCount: number;
   detectedCount: number;
@@ -40,7 +41,11 @@ export function SpacePlannerDiagnostics({
   coverage: CoverageReport | null;
   /** Which service produced the image, for support and provider verification. */
   render?: RenderDiagnostics | null;
+  /** Phase 6U — measured stage timings and their budget verdicts. */
+  timings?: PipelineTimings;
 }) {
+  const budgets = budgetReport(timings);
+
   const renderWorking = isVisualisationWorking(visualStatus);
   const renderFailed =
     visualStatus === "failed" || visualStatus === "unfaithful" || visualStatus === "unverified";

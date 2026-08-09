@@ -293,11 +293,22 @@ export function PhotoArrangement({
         </div>
       ) : null}
 
+      {hasVisual && coverage?.featureNotes?.length ? (
+        <p className="mt-2 flex items-start gap-2 type-body-xs text-muted-foreground">
+          <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden="true" />
+          <span>
+            Some fixed parts of the room ({coverage.featureNotes.join(", ")}) are drawn less
+            precisely than in your photo. These are features of the space, not your belongings, so
+            the preview and your plan still match your inventory.
+          </span>
+        </p>
+      ) : null}
+
       {status === "rejected" ? (
         <div className="mt-3 rounded-2xl border border-warning-soft bg-warning-soft p-3 text-warning-soft-foreground">
           <p className="flex items-start gap-2 type-body-sm">
             <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            The visual preview showed belongings you don&apos;t own
+            The visual preview showed belongings that are not in your inventory
             {coverage?.unexpected?.length ? ` (${coverage.unexpected.join(", ")})` : ""}, so we
             rejected it rather than show you something inaccurate. Your plan below is unaffected.
           </p>

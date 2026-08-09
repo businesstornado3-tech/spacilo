@@ -13,6 +13,7 @@ import { manifestHash } from "./diagnostics";
 import { objectVolume } from "@/lib/vision/inventory";
 import type { DetectedObject, RoomFeature } from "@/lib/vision/types";
 import type { PhotoPlanResult } from "./plan";
+import { categoriseVerification, type CategorisedVerification } from "./verification";
 
 /** A confirmed, immutable-by-convention inventory. */
 export interface CanonicalInventory {
@@ -368,6 +369,8 @@ export function requiredRenderItems(
     );
 }
 
+export type { CategorisedVerification } from "./verification";
+
 export interface CoverageReport {
   expected: number;
   present: number;
@@ -381,6 +384,13 @@ export interface CoverageReport {
   complete: boolean;
   /** True only when nothing was invented. */
   faithful: boolean;
+  /**
+   * Fixed room features (doors, windows, radiators) the verifier says drifted.
+   * Reported for honesty; never a reason to withhold the render.
+   */
+  featureNotes?: string[];
+  /** Full per-category breakdown from the categorised verifier. */
+  categories?: CategorisedVerification;
 }
 
 export function coverageFrom(
@@ -388,19 +398,21 @@ export function coverageFrom(
   present: string[],
   unexpected: string[] = [],
 ): CoverageReport {
-  const seen = new Set(present.map((label) => label.trim().toLowerCase()));
-  const missing = required.filter((label) => !seen.has(label.trim().toLowerCase()));
-  const allowed = new Set(required.map((label) => label.trim().toLowerCase()));
-  const invented = unexpected
-    .map((label) => label.trim())
-    .filter((label) => label.length > 0 && !allowed.has(label.toLowerCase()));
+  const categories = categoriseVerification({
+    items: required.map((id) => ({ id, label: id })),
+    features: [],
+    reply: { present, unexpected },
+  });
+  const { userInventory, roomFeatures } = categories;
   return {
-    expected: required.length,
-    present: required.length - missing.length,
-    missing,
-    unexpected: invented,
-    complete: missing.length === 0 && required.length > 0,
-    faithful: invented.length === 0,
+    expected: userInventory.expected.length,
+    present: userInventory.found.length,
+    missing: userInventory.missing,
+    unexpected: userInventory.unexpected,
+    featureNotes: roomFeatures.unexpected,
+    complete: userInventory.missing.length === 0 && required.length > 0,
+    faithful: userInventory.unexpected.length === 0,
+    categories,
   };
 }
 

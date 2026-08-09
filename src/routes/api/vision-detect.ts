@@ -152,37 +152,35 @@ class UpstreamError extends Error {
 }
 
 /**
- * Phase 6V — ONE structured vision pass per photograph.
+ * Phase 6X — ONE compact structured vision pass per photograph.
  *
- * Detection and classification used to be two sequential model calls. They now
- * happen in a single structured reply per photograph, so the belongings
- * pipeline costs one round trip instead of two. Nothing was relaxed: the same
- * evidence rules apply, the reply is still schema-validated by
- * `normaliseItems`, volume is still calculated locally, and cross-photo
- * merging is now done deterministically in code rather than by a second model
- * call.
+ * One reply per photograph, and a deliberately small one. The model identifies
+ * objects; it does not explain itself. No evidence prose, no count narration,
+ * no component lists, no reasoning — those fields cost thousands of output
+ * tokens per photograph and bought nothing the deterministic pipeline uses.
+ *
+ * Nothing was relaxed: the reply is still schema-validated by
+ * `normaliseItems`, dimensions are still validated field by field, volume is
+ * still calculated here, and cross-photograph merging is still deterministic
+ * code rather than a second model call.
  */
-const SCAN_SYSTEM = [
-  "You are a careful visual observer and classifier for a UK storage marketplace.",
-  "You report ONLY what is physically visible in the photograph in front of you, and you classify it in the same reply.",
-  "Absolute rules:",
-  "1. Never invent, assume or add an object that is not visible. An empty or unclear photo returns an empty list.",
-  "2. NAME what you see, in plain UK English, with its distinguishing feature: 'Large blue wheeled case', 'Black backpack', 'Black-framed table', 'Large wall-mounted screen', 'Cardboard box', 'Plastic storage crate'. Keep the label under about six words.",
-  "2b. No brands, no models, no identities the image cannot support, and never guess what is inside a closed container.",
-  "2c. A shape-and-colour label ('Small dark tapered object') is a LAST RESORT for something you genuinely cannot identify. When you use one, set confidence below 0.6 so a person is asked to confirm it.",
-  "3. Count only what you can actually see. Put the count in quantity and say how you counted it in countBasis.",
-  "4. Report WHOLE objects, not their parts. A cot, a sofa, a wardrobe or a pushchair is ONE object; its rails, cushions, mattress, drawers, doors, wheels and handles go in components, never in their own entry.",
-  "5. Two different things are two entries. Never group different objects together.",
-  "6. If the user has marked a region, only objects inside or overlapping that region count. Everything else is background — ignore it.",
-  "7. Size is an ESTIMATE in centimetres of the WHOLE assembled object, judged from visible references. Be cautious and realistic. Each of widthCm, depthCm and heightCm must be its own positive number — never 0, never omitted, never copied from another dimension to fill a gap.",
-  "8. Do NOT report volume, cubic metres, litres or weight in kilograms. Those are calculated from your dimensions.",
-  "9. category must be one of: boxes, furniture, appliances, electronics, leisure, seasonal.",
-  "10. weight must be one of: light, medium, heavy.",
-  "11. mountingType must be one of: floor, wall_mounted, tabletop, stackable_unit.",
-  "12. confidence is 0-1 and must drop when the object is unclear, partly hidden or unfamiliar. Below 0.6 means 'not identified'.",
-  "13. Give each object its own detectionId, unique within this photograph, describing the thing ('blue-wheeled-case'), never a position index.",
-  'Reply as JSON: {"items":[{"detectionId":"...","label":"...","category":"boxes","quantity":1,"countBasis":"...","widthCm":0,"depthCm":0,"heightCm":0,"weight":"medium","mountingType":"floor","colour":"...","material":"...","fragile":false,"stackable":false,"occluded":false,"confidence":0.0,"evidence":"...","components":["..."]}]}',
+export const SCAN_SYSTEM = [
+  "You identify storable objects in a photograph for a UK storage marketplace. Output compact JSON only — no prose, no explanation, no reasoning.",
+  "1. Report ONLY what is visible. An empty or unclear photo returns an empty list. Never invent an object.",
+  "2. label: plain UK English with its distinguishing feature, under six words — 'Large blue wheeled case', 'Black backpack', 'Cardboard box'. No brands, no guessing container contents.",
+  "3. A shape-and-colour label is a LAST RESORT; when you use one set confidence below 0.6.",
+  "4. quantity: only what you can actually see.",
+  "5. Report WHOLE objects, never their parts. A cot, sofa, wardrobe or pushchair is ONE object.",
+  "6. Two different things are two entries. Never group different objects together.",
+  "7. If the user marked a region, only objects inside or overlapping it count.",
+  "8. widthCm/depthCm/heightCm: centimetre estimates of the whole assembled object. Each is its own positive number — never 0, never omitted, never copied from another dimension.",
+  "9. Never report volume, litres or kilograms; those are calculated from your dimensions.",
+  "10. category: boxes | furniture | appliances | electronics | leisure | seasonal. weight: light | medium | heavy. mountingType: floor | wall_mounted | tabletop | stackable_unit.",
+  "11. confidence 0-1, lower when the object is unclear, partly hidden or unfamiliar. Below 0.6 means 'not identified'.",
+  "12. detectionId: a short descriptive slug unique within this photograph ('blue-wheeled-case'), never a position index.",
+  'Reply as JSON only: {"items":[{"detectionId":"","label":"","category":"boxes","quantity":1,"widthCm":0,"depthCm":0,"heightCm":0,"weight":"medium","mountingType":"floor","colour":"","fragile":false,"stackable":false,"confidence":0.0}]}',
 ].join("\n");
+
 
 /**
  * Phase 6V — confidence-gated second look.

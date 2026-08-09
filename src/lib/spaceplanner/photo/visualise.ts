@@ -266,11 +266,12 @@ export async function requestVisualisation(
       payload.verification ??
       (!coverage
         ? "unverified"
-        : !coverage.faithful
+        : !coverage.faithful || (coverage.supportIssues?.length ?? 0) > 0
           ? "unfaithful"
           : coverage.complete
             ? "verified"
             : "incomplete"),
+
     diagnosticId: typeof payload.diagnosticId === "string" ? payload.diagnosticId : null,
     provider: typeof payload.provider === "string" ? payload.provider : null,
     model: typeof payload.model === "string" ? payload.model : null,

@@ -344,6 +344,130 @@ function containsLabel(reported: string, allowed: string): boolean {
 
 
 /**
+ * Phase 6AI — generic head nouns and the specific objects they may name.
+ *
+ * "bag" is a legitimate way to describe a backpack; it is NOT a licence for
+ * every bag-like object to satisfy every allowance. A generic description is
+ * only ever resolved when EXACTLY ONE inventory object is compatible with it —
+ * two candidates stay ambiguous and remain fail-closed.
+ */
+const HYPERNYMS: Readonly<Record<string, readonly string[]>> = {
+  bag: ["backpack", "holdall", "duffel", "satchel", "handbag", "rucksack"],
+  case: ["suitcase", "briefcase"],
+  luggage: ["suitcase", "backpack", "holdall"],
+};
+
+const COLOUR_WORDS: ReadonlySet<string> = new Set(
+  [
+    "black", "white", "grey", "gray", "silver", "blue", "navy", "red", "green",
+    "yellow", "orange", "purple", "pink", "brown", "beige", "cream", "tan",
+    "gold", "golden", "bronze", "chrome",
+  ].map((word) => normaliseLabel(word)),
+);
+
+function coloursIn(label: string): string[] {
+  return label.split(" ").filter((word) => COLOUR_WORDS.has(word));
+}
+
+/** Two descriptions of one object may not disagree about its colour. */
+function coloursCompatible(a: string, b: string): boolean {
+  const left = coloursIn(a);
+  const right = coloursIn(b);
+  if (!left.length || !right.length) return true;
+  return left.some((colour) => right.includes(colour));
+}
+
+function stripDescriptors(label: string): string {
+  const words = label.split(" ").filter(Boolean);
+  const core = words.filter((word, index) => !(DESCRIPTOR_WORDS.has(word) && index < words.length - 1));
+  return (core.length ? core : words).join(" ");
+}
+
+function headNoun(label: string): string {
+  const words = label.split(" ").filter(Boolean);
+  return words[words.length - 1] ?? "";
+}
+
+/** Bounded, single-character transcription slack for long head nouns. */
+function nearlySameWord(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (a.length < 6 || b.length < 6) return false;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let edits = 0;
+  let i = 0;
+  let j = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i += 1;
+      j += 1;
+      continue;
+    }
+    edits += 1;
+    if (edits > 1) return false;
+    if (a.length === b.length) {
+      i += 1;
+      j += 1;
+    } else if (a.length > b.length) i += 1;
+    else j += 1;
+  }
+  return edits + (a.length - i) + (b.length - j) <= 1;
+}
+
+/**
+ * Inventory objects a loose description could legitimately be naming, when no
+ * strict label match exists. Returns every compatible allowance — the caller
+ * only ever acts on a UNIQUE result.
+ */
+export function genericCandidates(
+  reported: string,
+  items: readonly WhitelistEntry[],
+): WhitelistEntry[] {
+  const text = normaliseLabel(reported);
+  if (!text) return [];
+  const core = stripDescriptors(text);
+  const head = headNoun(core);
+  if (!head) return [];
+  const family = HYPERNYMS[head] ?? [];
+
+  return items.filter((entry) => {
+    const allowed = normaliseLabel(entry.label);
+    if (!allowed) return false;
+    if (!coloursCompatible(text, allowed)) return false;
+    const allowedCore = stripDescriptors(allowed);
+    const allowedHead = headNoun(allowedCore);
+    // The bare head noun of a compound belonging: "bottle" for "water bottle".
+    if (core === allowedHead || nearlySameWord(core, allowedHead)) return true;
+    if (allowedCore.endsWith(` ${core}`) && core.split(" ").length > 1) return true;
+    // A generic category word naming one specific belonging: "bag" ↔ backpack.
+    if (family.some((word) => nearlySameWord(normaliseLabel(word), allowedHead))) return true;
+    return false;
+  });
+}
+
+/** The one inventory object a loose description unambiguously names, if any. */
+function uniqueGenericMatch(
+  reported: string,
+  items: readonly WhitelistEntry[],
+): WhitelistEntry | null {
+  const candidates = genericCandidates(reported, items);
+  return candidates.length === 1 ? candidates[0]! : null;
+}
+
+/**
+ * Phase 6AI — why one observed description was or was not tied to a belonging.
+ * Purely diagnostic: it explains a verdict, it never changes one.
+ */
+export interface IdentityDecision {
+  observed: string;
+  normalisedObserved: string;
+  matchedId: string | null;
+  matchedLabel: string | null;
+  normalisedInventory: string | null;
+  decision: "matched" | "permitted_unplaced" | "ambiguous" | "unexpected" | "room_feature";
+  reason: string;
+}
+
+/**
  * Phase 6AH — an object the deterministic planner deliberately did NOT place.
  *
  * It is a real belonging of the user's that remains visible in the source

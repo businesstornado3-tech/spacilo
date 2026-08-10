@@ -139,24 +139,37 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     itemPhotos: stuff.photos,
   });
 
-  // Phase 6U — time-to-arrangement is measured from the moment the space scan
-  // starts to the moment a validated manifest exists: the honest answer to
-  // "how long until I can see my plan?".
-  const arrangementStartRef = React.useRef<number | null>(null);
-  const [timeToArrangementMs, setTimeToArrangementMs] = React.useState<number | null>(null);
+  /*
+   * Phase 6Y — the only performance number that describes the user's actual
+   * experience, measured in the browser rather than inferred from server
+   * stages: from the "Analyse my belongings" click to the frame in which the
+   * deterministic arrangement is painted.
+   *
+   * `markArrangement("arrangementPaint")` is fired from a layout effect inside
+   * a rAF, so it records the frame the plan really appeared in, not the moment
+   * a JavaScript object came into existence.
+   */
+  const [perf, setPerf] = React.useState<ArrangementMetrics>(arrangementMetrics());
+  const refreshPerf = React.useCallback(() => setPerf(arrangementMetrics()), []);
+
   React.useEffect(() => {
-    if (space.status === "analysing") {
-      arrangementStartRef.current = Date.now();
-      setTimeToArrangementMs(null);
+    if (stuff.status === "complete" && stuff.objects.length > 0) {
+      markArrangement("inventoryReady");
+      refreshPerf();
     }
-  }, [space.status]);
+  }, [stuff.status, stuff.objects.length, refreshPerf]);
+
   React.useEffect(() => {
-    if (manifest && arrangementStartRef.current !== null) {
-      setTimeToArrangementMs((current) =>
-        current === null ? Date.now() - arrangementStartRef.current! : current,
-      );
+    if (manifest) {
+      markArrangement("planReady");
+      refreshPerf();
     }
-  }, [manifest]);
+  }, [manifest, refreshPerf]);
+
+  const arrangementPainted = React.useCallback(() => {
+    markArrangement("arrangementPaint");
+    refreshPerf();
+  }, [refreshPerf]);
 
   const timings = React.useMemo(
     () =>
@@ -166,20 +179,35 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
         detectionMs: stuff.serverTimings?.detectMs ?? stuff.timings.detectionMs,
         mergeMs: stuff.serverTimings?.mergeMs ?? null,
         refineMs: stuff.serverTimings?.refineMs ?? null,
+        sweepMs: stuff.serverTimings?.sweepMs ?? null,
         scanCalls: stuff.serverTimings?.scanCalls ?? null,
         refineCalls: stuff.serverTimings?.refineCalls ?? null,
+        sweepCalls: stuff.serverTimings?.sweepCalls ?? null,
         classificationMs: stuff.timings.classificationMs,
-        inventoryReadyMs: stuff.timings.readyMs,
+        inventoryReadyMs: perf.inventoryReadyMs ?? stuff.timings.readyMs,
         spaceAnalysisMs: space.timings.readyMs,
         planMs: planRun.ms,
         manifestValidationMs: manifestRun.ms,
-        timeToArrangementMs,
+        planReadyMs: perf.planReadyMs,
+        timeToArrangementMs: perf.timeToArrangementMs,
+        activeTimeToArrangementMs: perf.activeTimeToArrangementMs,
         renderMs: visual.diagnostics?.renderMs ?? null,
         verifyMs: visual.diagnostics?.verifyMs ?? null,
         totalMs: visual.diagnostics?.totalMs ?? null,
       }),
-    [stuff.timings, stuff.serverTimings, space.timings, planRun.ms, manifestRun.ms, timeToArrangementMs, visual.diagnostics],
+    [stuff.timings, stuff.serverTimings, space.timings, planRun.ms, manifestRun.ms, perf, visual.diagnostics],
   );
+
+  /*
+   * Phase 6Y — nothing the photograph showed may quietly vanish. This is the
+   * running proof of that: detected units, confirmed units, and what the
+   * manifest did with them must balance exactly.
+   */
+  const reconciliation = React.useMemo(
+    () => reconcileInventory({ detected: stuff.objects, inventory, manifest }),
+    [stuff.objects, inventory, manifest],
+  );
+
 
 
   /** Ten real pipeline stages, derived from state that genuinely exists. */

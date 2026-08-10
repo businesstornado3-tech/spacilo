@@ -65,8 +65,31 @@ export function showsRenderedImage(status: VisualisationStatus): boolean {
  */
 export const RENDER_TIMEOUT_MS = 95_000;
 
-/** One render plus, at most, one corrective refinement. */
+/**
+ * Phase 6AA — one render, plus at most one corrective redraw, and only when a
+ * redraw is the right answer.
+ */
 export const MAX_RENDER_ATTEMPTS = 2;
+
+/**
+ * A second render is worth its wait only when the fault is "something the plan
+ * asked for is not drawn". Invented objects and refused support relationships
+ * fail closed on the first attempt: the deterministic plan is already visible,
+ * and asking the same model again reliably reproduces the same mistake.
+ *
+ * Room-feature drift is never a retry trigger — redrawing the room's own door
+ * slightly differently is not a plan failure.
+ */
+export function shouldRetryRender(coverage: {
+  missing: string[];
+  unexpected?: string[];
+  supportIssues?: unknown[];
+}): boolean {
+  if ((coverage.unexpected?.length ?? 0) > 0) return false;
+  if ((coverage.supportIssues?.length ?? 0) > 0) return false;
+  return coverage.missing.length > 0;
+}
+
 
 export interface RenderDiagnostics {
   provider: string | null;

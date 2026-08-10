@@ -94,23 +94,40 @@ function detected(id: string, label: string, quantity: number): DetectedObject {
     id,
     label,
     category: "furniture",
-    quantity,
     confidence: 0.9,
-    dimensionsCm: { width: 100, depth: 50, height: 60 },
-    volumeM3: 0.3,
+    width: 100,
+    depth: 50,
+    height: 60,
+    weight: "medium",
+    quantity,
+    fragile: false,
+    stackable: true,
+    catalogueId: null,
     photoIds: ["p1"],
+    source: "ai",
   } as DetectedObject;
 }
 
 function inventoryOf(objects: DetectedObject[]): CanonicalInventory {
+  const units = objects.reduce((sum, object) => sum + object.quantity, 0);
   return {
+    id: "inv-test",
+    signature: "sig-test",
     objects,
-    itemCount: objects.reduce((sum, object) => sum + object.quantity, 0),
+    items: objects.flatMap((object) =>
+      Array.from({ length: object.quantity }, (_unused, index) => ({
+        itemId: `${object.id}-${index + 1}`,
+        sourceObjectId: object.id,
+        label: object.label,
+        category: object.category,
+        dimensions: { widthCm: object.width, depthCm: object.depth, heightCm: object.height },
+        source: "ai" as const,
+      })),
+    ),
+    itemCount: units,
     distinctItems: objects.length,
-    totalVolumeM3: objects.length * 0.3,
-    lockedAt: 0,
-    hash: "test",
-  } as CanonicalInventory;
+    confirmedAt: 0,
+  };
 }
 
 function manifestOf(ids: string[], placedUnits: number, expectedUnits: number): PlacementManifest {

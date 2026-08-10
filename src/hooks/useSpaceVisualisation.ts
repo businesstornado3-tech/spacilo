@@ -221,6 +221,14 @@ export interface UseSpaceVisualisation {
   /** Milliseconds since the current run started, updated about once a second. */
   elapsedMs: number;
   imageUrl: string | null;
+  /**
+   * Phase 6AG — a render that exists but was NOT shown, kept internally so a
+   * timed-out check never destroys work we already paid for. Fail-closed still
+   * governs the screen: `imageUrl` stays null. This is for diagnostics and for
+   * a later verdict, never for silent display.
+   */
+  retainedImageUrl: string | null;
+
   coverage: CoverageReport | null;
   error: string | null;
   /** Named cause when the preview did not finish verified. */

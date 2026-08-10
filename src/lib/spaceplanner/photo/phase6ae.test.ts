@@ -210,8 +210,10 @@ describe("Phase 6AE — waiting is described honestly", () => {
   it("still says the work is happening once it runs long", () => {
     expect(previewProgressMessage(3_000)).toContain("Creating your photographic preview");
     const long = previewProgressMessage(45_000);
-    expect(long).toContain("Still creating");
+    // Phase 6AG — the long-wait copy names the state plainly.
+    expect(long).toContain("Visual preview is still processing");
     // The one thing it must never say while the request is alive.
     expect(long.toLowerCase()).not.toContain("stopped waiting");
   });
+
 });

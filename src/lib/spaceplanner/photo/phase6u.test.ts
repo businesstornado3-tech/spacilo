@@ -109,7 +109,9 @@ describe("Phase 6U — quantity-aware hallucination rejection", () => {
       allowed: 1,
       observed: 2,
       excess: 1,
+      missing: 0,
     });
+
   });
 
   it("does NOT treat a duplicate as valid just because the label matches", () => {

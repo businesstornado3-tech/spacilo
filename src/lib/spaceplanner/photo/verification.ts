@@ -30,7 +30,16 @@ export type ObjectCategory = "user_item" | "room_feature" | "unexpected";
 export interface WhitelistEntry {
   id: string;
   label: string;
+  /**
+   * Phase 6AG — how many units of this object the locked inventory contains.
+   * The verifier contract is OBJECT level: one row, one id, a quantity. It is
+   * never asked to invent per-unit id strings like "ITEM-003_02", which the
+   * compact reply schema ("never repeat a description") made impossible to
+   * satisfy. Absent means one.
+   */
+  quantity?: number;
 }
+
 
 /**
  * Words that describe a state the verifier observed rather than the object
@@ -135,11 +144,26 @@ export function normaliseLabel(label: string): string {
     .trim();
 }
 
-/** Any ID-looking token inside a free-text report. */
+/**
+ * Any ID-looking token inside a free-text report.
+ *
+ * Phase 6AG — a trailing unit suffix ("ITEM-003_02") resolves to its OBJECT
+ * id. The verifier now answers at object level, but a model that still echoes
+ * an older unit string must not silently fail to match.
+ */
 function idsIn(text: string): string[] {
-  const matches = text.toUpperCase().match(/\b(?:ITEMS?|FEATURES?|OBJECTS?)\s*[-_ ]?\s*\d+\b/g);
-  return (matches ?? []).map(canonicalId);
+  const matches = text
+    .toUpperCase()
+    .match(/\b(?:ITEMS?|FEATURES?|OBJECTS?)\s*[-_ ]?\s*\d+(?:\s*[-_]\s*\d+)?\b/g);
+  return (matches ?? []).map((match) => {
+    const trimmed = match.replace(/\s*[-_]\s*\d+\s*$/, (tail, offset: number) =>
+      // Only a SECOND number group is a unit suffix; "ITEM-003" keeps its number.
+      /\d/.test(match.slice(0, offset)) ? "" : tail,
+    );
+    return canonicalId(trimmed);
+  });
 }
+
 
 function looksArchitectural(label: string): boolean {
   const text = ` ${normaliseLabel(label)} `;
@@ -202,10 +226,62 @@ export function classifyReported(
   return "unexpected";
 }
 
+/**
+ * Phase 6AG — words that DESCRIBE an object without changing what it is.
+ *
+ * A colour, a size or a material in front of a noun is the same physical
+ * object seen more precisely: "blue suitcase" IS a suitcase. Any other extra
+ * word makes a different, compound object: a "TV stand" is not a TV, a
+ * "storage box" is not a box, and a "laptop bag" is not any bag. This single
+ * distinction is what keeps the 6AF suitcase fix while restoring the
+ * TV / TV-stand separation it broke.
+ */
+const DESCRIPTOR_WORDS: ReadonlySet<string> = new Set(
+  [
+    // colour
+    "black", "white", "grey", "gray", "silver", "blue", "navy", "red", "green",
+    "yellow", "orange", "purple", "pink", "brown", "beige", "cream", "tan",
+    "gold", "golden", "bronze", "chrome", "dark", "light", "pale", "bright",
+    "clear", "transparent", "patterned", "striped", "plain",
+    // size
+    "small", "medium", "large", "big", "little", "tall", "short", "wide",
+    "narrow", "slim", "compact", "oversized", "tiny", "huge", "mini", "giant",
+    // material and finish
+    "plastic", "metal", "metallic", "wooden", "wood", "cardboard", "fabric",
+    "leather", "canvas", "steel", "aluminium", "aluminum", "glass", "wicker",
+    "rattan", "padded", "soft", "hard", "rigid",
+    // condition and state
+    "old", "new", "used", "worn", "spare", "folded", "stacked", "closed",
+    "open", "empty", "full", "upright", "flat", "upside", "down",
+  ].map((word) => normaliseLabel(word)),
+);
+
+/**
+ * Does `reported` name the same object as `allowed`?
+ *
+ * Whole-word containment, plus the Phase 6AG head-noun rule: the longer label
+ * may only add DESCRIPTOR words, and both labels must end on the same head
+ * noun. "suitcase" ↔ "blue suitcase" passes; "TV" ↮ "TV stand", "bag" ↮
+ * "laptop bag" and "box" ↮ "storage box" do not.
+ */
 function containsLabel(reported: string, allowed: string): boolean {
-  if (!allowed) return false;
-  return ` ${reported} `.includes(` ${allowed} `);
+  if (!allowed || !reported) return false;
+  if (reported === allowed) return true;
+  if (!` ${reported} `.includes(` ${allowed} `)) return false;
+
+  const reportedWords = reported.split(" ").filter(Boolean);
+  const allowedWords = allowed.split(" ").filter(Boolean);
+  // The head noun is the object's identity. A different head noun is a
+  // different object, whatever the shorter label happens to spell.
+  if (reportedWords[reportedWords.length - 1] !== allowedWords[allowedWords.length - 1]) {
+    return false;
+  }
+  // Same head noun, so the allowance sits at the end: everything in front of
+  // it is the expansion, and it must be purely descriptive.
+  const extras = reportedWords.slice(0, reportedWords.length - allowedWords.length);
+  return extras.every((word) => DESCRIPTOR_WORDS.has(word));
 }
+
 
 export interface CategoryReport {
   expected: string[];
@@ -249,11 +325,19 @@ export interface CategorisedVerification {
    */
   quantities: QuantityCheck[];
   /**
-   * True only when every user belonging is present and nothing was invented.
-   * Room-feature drift is reported but never withholds a render — the room
-   * still owning its own door is not a reason to distrust the picture.
+   * Phase 6AG — allowances the render under-filled, e.g. "missing box ×1" when
+   * the inventory holds three and the image shows two. Counted only when the
+   * verifier actually enumerated what it saw.
+   */
+  quantityShortfalls: string[];
+  /**
+   * True only when every user belonging is present at the right quantity and
+   * nothing was invented. Room-feature drift is reported but never withholds a
+   * render — the room still owning its own door is not a reason to distrust
+   * the picture.
    */
   verified: boolean;
+
 }
 
 /** One label's allowed-versus-observed quantity in a rendered image. */
@@ -265,7 +349,14 @@ export interface QuantityCheck {
   observed: number;
   /** Units beyond the allowance. Anything above zero is an invention. */
   excess: number;
+  /**
+   * Phase 6AG — units the allowance expects that the render did not show.
+   * Quantity is reconciled in BOTH directions: three boxes drawn twice is as
+   * much a failure as three boxes drawn four times.
+   */
+  missing: number;
 }
+
 
 /**
  * How many units one free-text description accounts for. "2× cardboard box"
@@ -298,15 +389,19 @@ export function quantityCheck(
     features: readonly WhitelistEntry[];
     itemAliases?: readonly string[];
   },
-): { checks: QuantityCheck[]; unexpected: string[] } {
+): { checks: QuantityCheck[]; unexpected: string[]; shortfalls: string[] } {
   const allowed = new Map<string, { label: string; allowed: number }>();
   for (const entry of items) {
     const key = normaliseLabel(entry.label);
     if (!key) continue;
+    // Phase 6AG — OBJECT level. One whitelist row may stand for several units,
+    // so the allowance is the sum of quantities, not a count of rows.
+    const units = Math.max(1, Math.round(entry.quantity ?? 1));
     const current = allowed.get(key);
-    if (current) current.allowed += 1;
-    else allowed.set(key, { label: entry.label, allowed: 1 });
+    if (current) current.allowed += units;
+    else allowed.set(key, { label: entry.label, allowed: units });
   }
+
 
   const observed = new Map<string, number>();
   const invented = new Map<string, { label: string; count: number }>();
@@ -365,21 +460,34 @@ export function quantityCheck(
 
   const checks: QuantityCheck[] = [];
   const unexpected: string[] = [];
+  const shortfalls: string[] = [];
+  // A verifier that enumerated nothing has told us nothing. Silence is not
+  // evidence of absence, so shortfalls are only counted against a real list.
+  const enumerated = objects.some((entry) => entry.trim().length > 0);
 
   for (const [key, info] of allowed) {
     const seen = observed.get(key) ?? 0;
     const excess = Math.max(0, seen - info.allowed);
-    checks.push({ label: info.label, allowed: info.allowed, observed: seen, excess });
+    const missing = enumerated ? Math.max(0, info.allowed - seen) : 0;
+    checks.push({ label: info.label, allowed: info.allowed, observed: seen, excess, missing });
     if (excess > 0) unexpected.push(`extra ${info.label} ×${excess}`);
+    if (missing > 0) shortfalls.push(`missing ${info.label} ×${missing}`);
   }
 
   for (const entry of invented.values()) {
-    checks.push({ label: entry.label, allowed: 0, observed: entry.count, excess: entry.count });
+    checks.push({
+      label: entry.label,
+      allowed: 0,
+      observed: entry.count,
+      excess: entry.count,
+      missing: 0,
+    });
     unexpected.push(entry.count > 1 ? `${entry.label} ×${entry.count}` : entry.label);
   }
 
-  return { checks, unexpected };
+  return { checks, unexpected, shortfalls };
 }
+
 
 /**
  * Every allowance key a whitelisted description could legitimately be,
@@ -516,11 +624,14 @@ export function categoriseVerification(input: {
     roomFeatures,
     supportIssues,
     quantities: quantities.checks,
+    quantityShortfalls: quantities.shortfalls,
     verified:
       userInventory.missing.length === 0 &&
       userInventory.unexpected.length === 0 &&
+      quantities.shortfalls.length === 0 &&
       supportIssues.length === 0,
   };
+
 
 }
 

@@ -106,17 +106,19 @@ export function formatElapsed(ms: number): string {
 }
 
 /**
- * Phase 6AE — what the user is told while the preview is being made.
+ * Phase 6AG — what the user is told while the preview is being made.
  *
- * Past the UX threshold the presentation changes but the meaning does not: the
- * work is still running, so the copy says so. "We stopped waiting" is never
- * shown while a request is in flight.
+ * The 20-second mark is a PRESENTATION threshold only: it has nothing to do
+ * with the network deadlines, which are far longer. Past it the plan is
+ * already usable, and the copy says plainly that the picture is still being
+ * worked on. "We stopped waiting" is never shown while a request is in flight.
  */
 export function previewProgressMessage(elapsedMs: number): string {
   return elapsedMs >= 20_000
-    ? "Still creating your photographic preview — this is taking a little longer than usual."
+    ? "Visual preview is still processing — your arrangement plan is ready below."
     : "Creating your photographic preview…";
 }
+
 
 /** Plain-language reason, by failure category. */
 function failureMessage(code?: string | null): string {

@@ -49,8 +49,19 @@ const MAX_PROMPT_CHARS = 24_000;
  * bounded on its own, and a slow CHECK can only cost the verdict, never the
  * render.
  */
-const RENDER_DEADLINE_MS = 35_000;
-const VERIFY_DEADLINE_MS = 10_000;
+/**
+ * Phase 6AG — the deadlines are now set from MEASURED latency, not from hope.
+ *
+ * Live evidence: successful renders at 23–29s against a 35s ceiling, and
+ * checks that reached exactly 10,000ms — the abort firing, not the model
+ * answering — against a documented 6–22s check distribution. Both ceilings sat
+ * inside the real distribution, so good renders were being thrown away by the
+ * clock. 50s and 25s put the ceiling ABOVE the observed work, which is the
+ * only place a deadline belongs.
+ */
+const RENDER_DEADLINE_MS = 50_000;
+const VERIFY_DEADLINE_MS = 25_000;
+
 
 /** Aborts a stage without taking the whole request down with it. */
 function deadline(ms: number): AbortSignal | undefined {
@@ -204,7 +215,13 @@ export function coverageOf(
     unexpected: userInventory.unexpected,
     featureNotes: roomFeatures.unexpected,
     supportIssues: categories.supportIssues,
-    complete: userInventory.missing.length === 0 && userInventory.expected.length > 0,
+    // Phase 6AG — quantity is reconciled at OBJECT level: three boxes drawn
+    // twice is incomplete, exactly like a box that is absent altogether.
+    complete:
+      userInventory.missing.length === 0 &&
+      categories.quantityShortfalls.length === 0 &&
+      userInventory.expected.length > 0,
+
     faithful: userInventory.unexpected.length === 0,
     categories,
   };
@@ -290,7 +307,7 @@ async function checkCoverage(
   key: string,
   sourceImage: string,
   image: string,
-  required: { id: string; label: string }[],
+  required: { id: string; label: string; quantity?: number }[],
   roomFeatures: { id: string; label: string }[],
   signal?: AbortSignal,
   expectedSupports: readonly ExpectedSupport[] = [],
@@ -311,7 +328,13 @@ async function checkCoverage(
                 type: "text",
                 text: [
                   "Compare the SOURCE room photograph (first image) with the GENERATED photograph (second image).",
-                  `USER_INVENTORY_WHITELIST — belongings that must appear, one entry per unit: ${required.map((item) => `${item.id}=${item.label}`).join("; ")}.`,
+                  // Phase 6AG — OBJECT level with a quantity. The verifier is
+                  // no longer asked to echo per-unit id strings it cannot
+                  // produce under a "never repeat a description" schema.
+                  `USER_INVENTORY_WHITELIST — belongings that must appear, one row per object with the number of units required: ${required
+                    .map((item) => `${item.id}=${item.label} ×${Math.max(1, Math.round(item.quantity ?? 1))}`)
+                    .join("; ")}.`,
+
                   `ROOM_FEATURE_WHITELIST — parts of the building that must be preserved and are NEVER belongings: ${roomFeatures.map((feature) => `${feature.id}=${feature.label}`).join("; ") || "every fixed fixture visible in the source photograph (doors, doorways, windows, radiators, sockets, fitted units)"}.`,
                   expectedSupports.length
                     ? `EXPECTED_SUPPORTS — the plan places these objects ON TOP OF another object, never on the floor: ${expectedSupports
@@ -322,9 +345,10 @@ async function checkCoverage(
                   // retained; only the prose is gone. Verbose verifier replies
                   // cost 1,157–4,829 output tokens and up to 22 seconds.
                   'Reply with JSON only. No prose, no explanation, no markdown. Schema exactly: {"objects":["2x cardboard box"],"present":["ITEM-1"],"unexpected":["shoes"],"missingFeatures":["FEATURE-1"],"supports":[{"item":"tv","restingOn":"tv stand"}]}.',
-                  'Every string must be at most 4 words. Never repeat a description. Omit reasoning entirely.',
-                  '"objects": every portable/stored object visible, listed independently of the whitelists and BEFORE consulting them. Include small objects (shoes, bottles, toys, bags, cushions). Quantity-accurate: one entry per unit, or prefix the count ("2x cardboard box").',
-                  '"present": USER_INVENTORY_WHITELIST ids clearly visible, duplicate units counted separately.',
+                  'Every string must be at most 4 words. Omit reasoning entirely. Do not repeat an identical description: give the number instead, as a count prefix ("3x cardboard box").',
+                  '"objects": every portable/stored object visible, listed independently of the whitelists and BEFORE consulting them. Include small objects (shoes, bottles, toys, bags, cushions). Quantity-accurate: prefix the count when you see more than one ("2x cardboard box").',
+                  '"present": each USER_INVENTORY_WHITELIST id clearly visible, listed ONCE. Quantity belongs in "objects", not here.',
+
                   '"unexpected": ONLY stored objects on NEITHER whitelist. Never a room feature, never a whitelisted item.',
                   '"missingFeatures": ROOM_FEATURE_WHITELIST ids that disappeared, moved, changed or became covered.',
                   '"supports": for each EXPECTED_SUPPORTS entry, what it actually stands on. Use "floor" when on the ground.',
@@ -464,7 +488,7 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         // projection. Every distinct object is represented before any quantity
         // is expanded, so a twelve-box entry can never crowd a TV stand out of
         // the list the way the old flat `.slice(0, 20)` did.
-        const required = projectionUnits({
+        const projection = {
           objects: manifest.flatMap((entry, index) => {
             const label = typeof entry?.label === "string" ? entry.label.trim() : "";
             if (!label) return [];
@@ -485,10 +509,23 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
             ];
           }),
           excluded: [],
-        });
+        };
+        const required = projectionUnits(projection);
+        /**
+         * Phase 6AG — the VERIFICATION whitelist is object level: one row per
+         * physical object, carrying its quantity. The renderer still receives
+         * the 6AE per-unit list, so required objects keep their protection;
+         * only the verifier stops being asked for unit id strings.
+         */
+        const verifyObjects = projection.objects.map((object) => ({
+          id: object.id,
+          label: object.label,
+          quantity: object.quantity,
+        }));
         if (required.length === 0) {
           return Response.json({ error: "verified_manifest_required" }, { status: 400 });
         }
+
         const roomFeatures = (body.roomFeatures ?? []).flatMap((feature, index) => {
           const label = typeof feature?.label === "string" ? feature.label.trim() : "";
           if (!label) return [];
@@ -556,7 +593,7 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
             (cause.name === "TimeoutError" || cause.name === "AbortError");
           const renderMs = Date.now() - startedRender;
           console.error(
-            `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} stage=render outcome=${timedOut ? "deadline" : "unreachable"} renderMs=${renderMs}`,
+            `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} stage=render RENDER=${timedOut ? "TIMEOUT" : "UNREACHABLE"} renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=NOT_RUN PREVIEW=NOT_VERIFIED PLAN=READY`,
           );
           return Response.json(
             {
@@ -565,9 +602,17 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
               model,
               diagnosticId,
               renderMs,
+              renderDeadlineMs: RENDER_DEADLINE_MS,
+              verifyDeadlineMs: VERIFY_DEADLINE_MS,
+              renderTimedOut: timedOut,
+              verifyTimedOut: false,
+              renderRequestsSpent: 1,
+              verificationVerdict: "unverified",
+              failureReason: timedOut ? "render_timeout" : "upstream_unreachable",
             },
             { status: timedOut ? 504 : 502 },
           );
+
         }
 
         if (!upstream.ok) {
@@ -610,7 +655,7 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           key,
           space,
           image,
-          required,
+          verifyObjects,
           roomFeatures,
           deadline(VERIFY_DEADLINE_MS),
           supports,
@@ -621,9 +666,19 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         // render is presentable; the server reports honestly what it observed
         // and distinguishes "could not verify" from "verified as wrong".
         const verification = verdictFor(coverage);
+        // Phase 6AG — a render that succeeded and a check that ran out of time
+        // is NOT "the preview timed out". Each stage is reported separately so
+        // the log and the diagnostics panel can never conflate the two.
+        const failureReason = verifyTimedOut
+          ? "verification_timeout"
+          : coverage === null
+            ? "verification_unavailable"
+            : verification === "verified"
+              ? null
+              : verification;
 
         console.log(
-          `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} units=${required.length} verification=${verification} present=${coverage?.present ?? "?"}/${required.length} unexpected=${coverage?.unexpected.length ?? 0} renderMs=${renderMs} verifyMs=${verifyMs} verifyTimedOut=${verifyTimedOut}`,
+          `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} objects=${verifyObjects.length} units=${required.length} RENDER=SUCCESS renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=${verifyTimedOut ? "TIMEOUT" : verification.toUpperCase()} verifyMs=${verifyMs}/${VERIFY_DEADLINE_MS} PREVIEW=${verification === "verified" ? "VERIFIED" : "NOT_VERIFIED"} PLAN=READY present=${coverage?.present ?? "?"}/${verifyObjects.length} unexpected=${coverage?.unexpected.length ?? 0} failureReason=${failureReason ?? "-"}`,
         );
 
         return Response.json({
@@ -638,9 +693,16 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           inventoryHash: body.inventoryHash ?? null,
           renderMs,
           verifyMs,
+          renderDeadlineMs: RENDER_DEADLINE_MS,
+          verifyDeadlineMs: VERIFY_DEADLINE_MS,
+          renderTimedOut: false,
           verifyTimedOut,
+          renderRequestsSpent: 1,
+          verificationVerdict: verification,
+          failureReason,
           serverTotalMs: Date.now() - startedRender,
         });
+
       },
     },
   },

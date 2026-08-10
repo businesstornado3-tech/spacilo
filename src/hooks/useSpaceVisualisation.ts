@@ -131,25 +131,26 @@ export function isRetryableFailure(code: string | null): boolean {
 }
 
 /**
- * Hard ceiling on ONE render request. Live evidence puts a successful render
- * at 21–38s and its check at 6–22s, so 45s is generous for a good attempt and
- * decisive about a bad one. Phase 6AB: two 95-second attempts used to produce
- * a 90–120 second dead wait for an OPTIONAL preview while the deterministic
- * arrangement had been on screen the whole time. Never again.
+ * Hard ceiling on ONE render request, in the BACKGROUND. This is the network's
+ * budget, never the user's — the deterministic plan is on screen throughout.
  *
- * Phase 6AD: this is now a BACKGROUND ceiling, not the user's wait. The server
- * bounds render (35s) and check (10s) separately, so the client ceiling sits
- * just above their sum — a good render is never thrown away because the check
- * was slow.
+ * Phase 6AG: the server bounds render (50s) and check (25s) separately and
+ * runs them in sequence, so the parent request must clear 75s or it would
+ * guillotine exactly the slow-but-successful runs the new deadlines exist to
+ * rescue. 85s leaves headroom for the upload and the response, and nothing
+ * more: a request that has not answered by then is genuinely lost.
  */
-export const RENDER_TIMEOUT_MS = 55_000;
+export const RENDER_TIMEOUT_MS = 85_000;
 
 /**
  * The user's budget, which is a different thing from the network's. After this
  * the spinner stops and the measured plan is presented as the result. Anything
- * still in flight becomes a quiet upgrade rather than a wait.
+ * still in flight becomes a quiet upgrade rather than a wait, and the elapsed
+ * clock keeps counting REAL work — we never say we stopped while the gateway
+ * is still going.
  */
 export const PREVIEW_UX_DEADLINE_MS = 20_000;
+
 
 /**
  * Phase 6AA — one render, plus at most one corrective redraw, and only when a
@@ -195,6 +196,18 @@ export interface RenderDiagnostics {
   serverTotalMs?: number | null;
   /** True when the CHECK ran out of time — the render itself succeeded. */
   verifyTimedOut?: boolean;
+  /** True when the RENDER ran out of time — there is no image at all. */
+  renderTimedOut?: boolean;
+  /** Phase 6AG — the ceilings each stage was measured against. */
+  renderDeadlineMs?: number | null;
+  verifyDeadlineMs?: number | null;
+  /** True when an image was received and kept, even if it is not displayed. */
+  imageRetained?: boolean;
+  /** The verdict exactly as the server reported it. */
+  verificationVerdict?: string | null;
+  /** Named server-side cause when the run did not finish verified. */
+  failureReason?: string | null;
+
   /** True when the user's 20s budget expired before the verdict arrived. */
   uxDeadlineExceeded?: boolean;
   /** How many render requests this run actually spent. */
@@ -220,6 +233,14 @@ export interface UseSpaceVisualisation {
   /** Milliseconds since the current run started, updated about once a second. */
   elapsedMs: number;
   imageUrl: string | null;
+  /**
+   * Phase 6AG — a render that exists but was NOT shown, kept internally so a
+   * timed-out check never destroys work we already paid for. Fail-closed still
+   * governs the screen: `imageUrl` stays null. This is for diagnostics and for
+   * a later verdict, never for silent display.
+   */
+  retainedImageUrl: string | null;
+
   coverage: CoverageReport | null;
   error: string | null;
   /** Named cause when the preview did not finish verified. */
@@ -304,6 +325,13 @@ export function useSpaceVisualisation(options: {
   const [status, setStatus] = React.useState<VisualisationStatus>("idle");
   const [stage, setStage] = React.useState<VisualisationStage>("rendering");
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
+  /**
+   * Phase 6AG — the last render we actually received, kept even when the
+   * verdict withholds it. A verification timeout must never destroy a
+   * successful, already-paid-for image.
+   */
+  const [retainedImageUrl, setRetainedImageUrl] = React.useState<string | null>(null);
+
   const [coverage, setCoverage] = React.useState<CoverageReport | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [abortReason, setAbortReason] = React.useState<PreviewAbortReason | null>(null);
@@ -373,6 +401,8 @@ export function useSpaceVisualisation(options: {
     setError(null);
     setAbortReason(null);
     setImageUrl(null);
+    setRetainedImageUrl(null);
+
     setCoverage(null);
     setDiagnostics(null);
     setInFlight(true);
@@ -517,6 +547,8 @@ export function useSpaceVisualisation(options: {
       setStage("checking");
       if (!uxDeadlineExceeded) setStatus("verifying");
       setCoverage(finalCoverage);
+      // Phase 6AG — the render exists; keep it whatever the verdict says.
+      setRetainedImageUrl(response.image);
       setDiagnostics({
         provider: response.provider,
         model: response.model,
@@ -528,7 +560,13 @@ export function useSpaceVisualisation(options: {
         verifyMs: response.verifyMs ?? Date.now() - verifiedAt,
         totalMs: Date.now() - startedAt,
         serverTotalMs: response.serverTotalMs ?? null,
+        renderDeadlineMs: response.renderDeadlineMs ?? null,
+        verifyDeadlineMs: response.verifyDeadlineMs ?? null,
+        renderTimedOut: response.renderTimedOut === true,
         verifyTimedOut: response.verifyTimedOut === true,
+        imageRetained: true,
+        verificationVerdict: response.verification,
+        failureReason: response.failureReason ?? null,
         uxDeadlineExceeded,
         renderRequests,
         requiredObjectCount: manifest.entries.length,
@@ -539,9 +577,9 @@ export function useSpaceVisualisation(options: {
       });
 
       // FAIL-CLOSED (Phase 6T). Only a render that was actually checked AND
-      // passed every check is shown. An invented object, a plan contradiction,
-      // a missing item or a checker that could not answer all fall back to the
-      // measured arrangement plan — the image is discarded, not downgraded.
+      // passed every check is SHOWN. Phase 6AG keeps the bytes internally, so
+      // "not displayed" no longer means "thrown away" — but the screen still
+      // falls back to the measured arrangement plan.
       const inventedFinal = (finalCoverage?.unexpected?.length ?? 0) > 0;
       const driftedFinal = (finalCoverage?.supportIssues?.length ?? 0) > 0;
       if (response.verification === "unfaithful" || inventedFinal || driftedFinal) {
@@ -560,6 +598,7 @@ export function useSpaceVisualisation(options: {
         setStatus("incomplete");
         return;
       }
+
 
       // A verified render is shown even if it arrived after the user's budget:
       // late is a bonus, and the plan was never hidden waiting for it.
@@ -618,6 +657,8 @@ export function useSpaceVisualisation(options: {
     stopClock();
     setStatus("idle");
     setImageUrl(null);
+    setRetainedImageUrl(null);
+
     setCoverage(null);
     setDiagnostics(null);
 
@@ -639,6 +680,8 @@ export function useSpaceVisualisation(options: {
     attempt,
     elapsedMs,
     imageUrl,
+    retainedImageUrl,
+
     coverage,
     error,
     abortReason,

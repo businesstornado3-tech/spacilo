@@ -94,11 +94,21 @@ export interface VisualisationResponse {
   renderMs: number | null;
   /** Milliseconds the server spent checking the render. */
   verifyMs?: number | null;
+  /** Phase 6AG — the ceilings the two stages were actually measured against. */
+  renderDeadlineMs?: number | null;
+  verifyDeadlineMs?: number | null;
+  /** True when the RENDER ran out of time — no image exists. */
+  renderTimedOut?: boolean;
   /** True when the CHECK ran out of time — the render itself was fine. */
   verifyTimedOut?: boolean;
+  /** Render requests the server actually spent on this call. */
+  renderRequestsSpent?: number | null;
+  /** Named cause when the run did not finish verified. */
+  failureReason?: string | null;
   /** Render + verification as measured on the server. */
   serverTotalMs?: number | null;
 }
+
 
 
 
@@ -304,8 +314,14 @@ export async function requestVisualisation(
           model?: unknown;
           renderMs?: unknown;
           verifyMs?: unknown;
+          renderDeadlineMs?: unknown;
+          verifyDeadlineMs?: unknown;
+          renderTimedOut?: unknown;
           verifyTimedOut?: unknown;
+          renderRequestsSpent?: unknown;
+          failureReason?: unknown;
           serverTotalMs?: unknown;
+
         }
       | null;
 
@@ -337,9 +353,18 @@ export async function requestVisualisation(
       model: typeof payload.model === "string" ? payload.model : null,
       renderMs: typeof payload.renderMs === "number" ? payload.renderMs : null,
       verifyMs: typeof payload.verifyMs === "number" ? payload.verifyMs : null,
+      renderDeadlineMs:
+        typeof payload.renderDeadlineMs === "number" ? payload.renderDeadlineMs : null,
+      verifyDeadlineMs:
+        typeof payload.verifyDeadlineMs === "number" ? payload.verifyDeadlineMs : null,
+      renderTimedOut: payload.renderTimedOut === true,
       verifyTimedOut: payload.verifyTimedOut === true,
+      renderRequestsSpent:
+        typeof payload.renderRequestsSpent === "number" ? payload.renderRequestsSpent : null,
+      failureReason: typeof payload.failureReason === "string" ? payload.failureReason : null,
       serverTotalMs: typeof payload.serverTotalMs === "number" ? payload.serverTotalMs : null,
     };
+
 
     sessionCache.set(signature, result);
     return result;

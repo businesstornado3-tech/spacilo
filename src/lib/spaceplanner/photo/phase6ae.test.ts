@@ -54,7 +54,7 @@ function entry(overrides: Partial<Entry> & { id: string; label: string }): Entry
         orientation: "upright",
         zone: "wall",
         supportSurfaceId: null,
-        supportType: "floor",
+        supportType: "FLOOR",
       },
     ],
   } as unknown as Entry;
@@ -88,7 +88,7 @@ function tvOnStandManifest(): PlacementManifest {
         ...stand.positions[0]!,
         baseHeightM: 0.45,
         supportSurfaceId: "obj_stand",
-        supportType: "surface",
+        supportType: "TOP_SURFACE",
       },
     ],
   });
@@ -187,12 +187,12 @@ describe("Phase 6AE — quantity never starves a distinct object", () => {
 describe("Phase 6AE — a corrective pass is told what actually broke", () => {
   it("explains that a missing structural base carries other objects", () => {
     const focus = retryFocusFor(buildRenderProjection(tvOnStandManifest()), ["TV stand"]);
-    expect(focus[0]).toContain("beneath the objects resting on it");
+    expect(focus[0]).toContain("drawn standing on top of it");
   });
 
   it("names the base an object should be resting on", () => {
     const focus = retryFocusFor(buildRenderProjection(tvOnStandManifest()), ["television"]);
-    expect(focus[0]).toContain("resting on top of the TV stand");
+    expect(focus[0]).toContain("drawn standing on the TV stand");
   });
 
   it("asks for nothing when nothing is missing", () => {

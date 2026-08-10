@@ -936,6 +936,7 @@ export function categoriseVerification(input: {
       matchedId: decision === "matched" && matched ? matched.id : null,
       matchedLabel: decision === "matched" && matched ? matched.label : null,
       normalisedInventory: matched ? normaliseLabel(matched.label) : null,
+      decision,
       reason:
         decision === "room_feature"
           ? "architectural or whitelisted room feature"

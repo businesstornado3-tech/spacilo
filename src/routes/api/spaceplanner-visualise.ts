@@ -460,14 +460,32 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           .filter((url): url is string => Boolean(url));
 
         const manifest = body.manifest ?? [];
-        const required = manifest
-          .flatMap((entry, index) => {
+        // Phase 6AE — the verification whitelist is expanded from the PER-OBJECT
+        // projection. Every distinct object is represented before any quantity
+        // is expanded, so a twelve-box entry can never crowd a TV stand out of
+        // the list the way the old flat `.slice(0, 20)` did.
+        const required = projectionUnits({
+          objects: manifest.flatMap((entry, index) => {
             const label = typeof entry?.label === "string" ? entry.label.trim() : "";
             if (!label) return [];
-            const id = typeof entry?.id === "string" && entry.id.trim() ? entry.id.trim() : `ITEM-${index + 1}`;
-            return [{ id, label }];
-          })
-          .slice(0, 20);
+            return [
+              {
+                id: entry.id?.trim() || `ITEM-${index + 1}`,
+                label,
+                quantity: typeof entry.quantity === "number" && entry.quantity > 0 ? entry.quantity : 1,
+                widthCm: entry.widthCm ?? 0,
+                depthCm: entry.depthCm ?? 0,
+                heightCm: entry.heightCm ?? 0,
+                placement: entry.placement ?? "",
+                supportBaseId: entry.supportBaseId ?? null,
+                supportBaseLabel: entry.supportBaseLabel ?? null,
+                structural: entry.structural === true,
+                required: true as const,
+              },
+            ];
+          }),
+          excluded: [],
+        });
         if (required.length === 0) {
           return Response.json({ error: "verified_manifest_required" }, { status: 400 });
         }

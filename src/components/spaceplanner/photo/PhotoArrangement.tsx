@@ -38,7 +38,7 @@ export interface PhotoArrangementProps {
   /** The AI-edited photograph, when one has genuinely been produced. */
   arrangedUrl?: string | null;
   status?: ArrangementStatus;
-  statusLabel?: string;
+  statusLabel?: string | undefined;
   /** How many required items the generated image was shown to contain. */
   coverage?: CoverageReport | null;
   /** Why the render failed, so the message says what actually happened. */

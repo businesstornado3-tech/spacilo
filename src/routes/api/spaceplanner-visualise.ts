@@ -593,7 +593,7 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
             (cause.name === "TimeoutError" || cause.name === "AbortError");
           const renderMs = Date.now() - startedRender;
           console.error(
-            `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} stage=render outcome=${timedOut ? "deadline" : "unreachable"} renderMs=${renderMs}`,
+            `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} stage=render RENDER=${timedOut ? "TIMEOUT" : "UNREACHABLE"} renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=NOT_RUN PREVIEW=NOT_VERIFIED PLAN=READY`,
           );
           return Response.json(
             {
@@ -602,9 +602,17 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
               model,
               diagnosticId,
               renderMs,
+              renderDeadlineMs: RENDER_DEADLINE_MS,
+              verifyDeadlineMs: VERIFY_DEADLINE_MS,
+              renderTimedOut: timedOut,
+              verifyTimedOut: false,
+              renderRequestsSpent: 1,
+              verificationVerdict: "unverified",
+              failureReason: timedOut ? "render_timeout" : "upstream_unreachable",
             },
             { status: timedOut ? 504 : 502 },
           );
+
         }
 
         if (!upstream.ok) {

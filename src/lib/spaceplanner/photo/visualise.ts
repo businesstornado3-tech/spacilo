@@ -14,6 +14,11 @@ import {
   type CoverageReport,
   type PlacementManifest,
 } from "./manifest";
+import {
+  buildRenderProjection,
+  type RenderExclusion,
+  type RenderObject,
+} from "./render-projection";
 import { hashString } from "@/lib/vision/hash";
 import type { DetectedObject } from "@/lib/vision/types";
 
@@ -48,7 +53,19 @@ export interface VisualisationRequest {
   itemImages: VisualisationImage[];
   instruction: string;
   /** Structured manifest the image must satisfy. */
-  manifest?: { id: string; label: string; quantity: number }[];
+  /** Structured render projection the image must satisfy, one row per object. */
+  manifest?: readonly {
+    id: string;
+    label: string;
+    quantity: number;
+    widthCm?: number;
+    depthCm?: number;
+    heightCm?: number;
+    placement?: string;
+    supportBaseId?: string | null;
+    supportBaseLabel?: string | null;
+    structural?: boolean;
+  }[];
   roomFeatures?: readonly { id: string; label: string; kind: string; position: string }[];
   /** Support relationships the plan asserted; rendered and then verified. */
   supports?: readonly { itemId: string; itemLabel: string; baseId: string; baseLabel: string }[];

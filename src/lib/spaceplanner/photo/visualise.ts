@@ -75,6 +75,12 @@ export interface VisualisationResponse {
   provider: string | null;
   model: string | null;
   renderMs: number | null;
+  /** Milliseconds the server spent checking the render. */
+  verifyMs?: number | null;
+  /** True when the CHECK ran out of time — the render itself was fine. */
+  verifyTimedOut?: boolean;
+  /** Render + verification as measured on the server. */
+  serverTotalMs?: number | null;
 }
 
 

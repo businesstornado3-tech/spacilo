@@ -15,3 +15,4 @@ export * from "./selection";
 export * from "./crop";
 export * from "./detection-cache";
 export * from "./photo-quality";
+export type { MergeReport, MergeDecision } from "./merge";

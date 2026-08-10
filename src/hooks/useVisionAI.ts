@@ -15,13 +15,14 @@ import {
   getVisionProvider,
   isAcceptedImage,
   manualObject,
-  mergeDetections,
+  mergeDetectionsWithReport,
   mergeObjects,
   removeObject,
   splitObject,
   stageIndexFor,
   summariseDetections,
   updateObject,
+  type MergeReport,
   fullSelection,
   measurePhoto,
   type PhotoQuality,
@@ -87,6 +88,9 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
    * measured by the client and the endpoint. Null until a scan has run.
    */
   const [serverTimings, setServerTimings] = React.useState<VisionStageTimings | null>(null);
+  // Phase 6AB — raw detections vs unique physical objects, so a duplicated
+  // TV across two photographs is visible rather than mysterious.
+  const [mergeReport, setMergeReport] = React.useState<MergeReport | null>(null);
 
 
   const stages: VisionStage[] = mode === "space" ? SPACE_STAGES : BELONGINGS_STAGES;
@@ -236,7 +240,8 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
         setObjects([]);
       } else {
         const belongings = result as { objects: DetectedObject[]; timings?: VisionStageTimings };
-        const merged = mergeDetections(belongings.objects);
+        const { objects: merged, report } = mergeDetectionsWithReport(belongings.objects);
+        setMergeReport(report);
         // Show the inventory the moment it exists; nothing below this line
         // blocks it appearing.
         setObjects(merged);
@@ -290,6 +295,7 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
     elapsedMs,
     timings,
     serverTimings,
+    mergeReport,
 
     rotatePhoto,
     movePhoto,

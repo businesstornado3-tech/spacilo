@@ -281,14 +281,16 @@ async function checkCoverage(
                         .map((support) => `${support.itemLabel} on ${support.baseLabel}`)
                         .join("; ")}.`
                     : "",
-                  'Reply JSON only, exactly: {"objects":["short description of every stored object you can see"],"present":["ITEM-1"],"unexpected":["short description"],"missingFeatures":["FEATURE-1"],"supports":[{"item":"short description","restingOn":"floor or the object it stands on"}]}.',
-                  '"objects" is an INDEPENDENT list: describe every portable/stored object in the generated photograph before you look at any whitelist. Do not omit small objects such as shoes, bottles, toys, bags or cushions.',
-                  '"objects" MUST BE QUANTITY-ACCURATE: list each physical unit separately, or prefix the count ("2x cardboard box"). Two identical suitcases are two entries, never one.',
-
-                  '"present" lists the USER_INVENTORY_WHITELIST ids you can clearly see, counting duplicate units separately.',
-                  '"unexpected" lists ONLY stored objects visible in the generated photograph that are on NEITHER whitelist — for example shoes, bags, chairs, plants, tools, extra boxes. Never put a room feature or a whitelisted item in this list.',
-                  '"missingFeatures" lists ROOM_FEATURE_WHITELIST ids that disappeared, moved, changed or became covered. Room features always go here, never in "unexpected".',
-                  '"supports" reports, for each EXPECTED_SUPPORTS entry, what that object is actually standing on in the generated photograph. Answer "floor" when it stands on the ground.',
+                  // Phase 6AB — STRICT COMPACT JSON. Every semantic check is
+                  // retained; only the prose is gone. Verbose verifier replies
+                  // cost 1,157–4,829 output tokens and up to 22 seconds.
+                  'Reply with JSON only. No prose, no explanation, no markdown. Schema exactly: {"objects":["2x cardboard box"],"present":["ITEM-1"],"unexpected":["shoes"],"missingFeatures":["FEATURE-1"],"supports":[{"item":"tv","restingOn":"tv stand"}]}.',
+                  'Every string must be at most 4 words. Never repeat a description. Omit reasoning entirely.',
+                  '"objects": every portable/stored object visible, listed independently of the whitelists and BEFORE consulting them. Include small objects (shoes, bottles, toys, bags, cushions). Quantity-accurate: one entry per unit, or prefix the count ("2x cardboard box").',
+                  '"present": USER_INVENTORY_WHITELIST ids clearly visible, duplicate units counted separately.',
+                  '"unexpected": ONLY stored objects on NEITHER whitelist. Never a room feature, never a whitelisted item.',
+                  '"missingFeatures": ROOM_FEATURE_WHITELIST ids that disappeared, moved, changed or became covered.',
+                  '"supports": for each EXPECTED_SUPPORTS entry, what it actually stands on. Use "floor" when on the ground.',
                 ]
                   .filter(Boolean)
                   .join(" "),
@@ -344,12 +346,12 @@ export function buildRenderPrompt(options: {
     .join("\n");
 
   return [
-    "You are a photo-realistic RENDERER, not a planner. A deterministic physical planning engine has already decided the entire arrangement. Your only job is to draw it.",
+    "You are a photo-realistic RENDERER, not a planner. THE MANIFEST IS AUTHORITATIVE: the arrangement below is final, draw it exactly and change nothing.",
     "Edit the FIRST image, which is a real photograph of a room or storage space. Keep it as the foundation: identical walls, floor, ceiling, doorway, windows, fixed furniture, camera position, perspective, lighting and colour. Do not redesign or regenerate the room.",
     hasItemPhotos
       ? "The remaining images are photographs of the user's real belongings. Render those exact objects, matching their appearance, materials and colours."
       : "Render the described belongings into the photographed space.",
-    instruction.slice(0, 6000),
+    instruction.slice(0, 3000),
     whitelist
       ? `ALLOWED OBJECTS — exhaustive per-unit whitelist. Render every ID exactly once:\n${whitelist}`
       : "",
@@ -366,7 +368,6 @@ export function buildRenderPrompt(options: {
           .map((support) => `${support.itemLabel} rests on top of ${support.baseLabel}`)
           .join("; ")}. Draw each one in contact with its base, with a contact shadow.`
       : "",
-    "THE MANIFEST IS AUTHORITATIVE. Do not move, rotate, resize, duplicate, remove or reinterpret any object because another position would look better. A position you disagree with is still the position you must draw.",
 
     required.length
       ? `The finished photograph must contain exactly ${required.length} stored units from the list — no extra objects of any kind.`

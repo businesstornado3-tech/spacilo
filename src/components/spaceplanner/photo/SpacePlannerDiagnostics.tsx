@@ -19,6 +19,7 @@ import {
   type PipelineTimings,
 } from "@/lib/spaceplanner/photo/timings";
 import type { ReconciliationReport } from "@/lib/spaceplanner/photo/reconcile";
+import type { MergeReport } from "@/lib/vision/merge";
 
 
 type StageState = "waiting" | "working" | "passed" | "failed";
@@ -68,6 +69,7 @@ export function SpacePlannerDiagnostics({
   render,
   timings = EMPTY_TIMINGS,
   reconciliation = null,
+  merge = null,
 }: {
   photoCount: number;
   detectedCount: number;
@@ -82,6 +84,8 @@ export function SpacePlannerDiagnostics({
   timings?: PipelineTimings;
   /** Phase 6Y — proof that nothing detected was silently dropped. */
   reconciliation?: ReconciliationReport | null;
+  /** Phase 6AB — raw detections vs unique physical objects across photos. */
+  merge?: MergeReport | null;
 }) {
   const budgets = budgetReport(timings);
 
@@ -204,6 +208,58 @@ export function SpacePlannerDiagnostics({
                     : ""}
                 </span>
               </span>
+            </dd>
+          </div>
+        ) : null}
+
+        {merge ? (
+          <div className="sm:col-span-2 border-t border-border pt-3">
+            <dt className="type-label text-foreground">Multi-photo identity</dt>
+            <dd className="mt-1 grid gap-1 sm:grid-cols-2 text-muted-foreground">
+              <span className="flex justify-between gap-2">
+                <span>Raw detections</span>
+                <span className="font-medium text-foreground">{merge.rawDetectionCount}</span>
+              </span>
+              <span className="flex justify-between gap-2">
+                <span>Unique physical objects</span>
+                <span className="font-medium text-foreground">{merge.uniquePhysicalObjectCount}</span>
+              </span>
+              <span className="flex justify-between gap-2">
+                <span>Views merged</span>
+                <span className="font-medium text-foreground">{merge.mergedViewCount}</span>
+              </span>
+              <span className="flex justify-between gap-2">
+                <span>Photos</span>
+                <span className="font-medium text-foreground">{merge.photoCount}</span>
+              </span>
+              {Object.entries(merge.objectsPerPhoto).map(([photoId, count], index) => (
+                <span key={photoId} className="flex justify-between gap-2">
+                  <span>Photo {index + 1} raw detections</span>
+                  <span className="font-medium text-foreground">{count}</span>
+                </span>
+              ))}
+              {merge.decisions.length > 0 ? (
+                <span className="sm:col-span-2 block">
+                  {merge.decisions.slice(0, 8).map((decision, index) => (
+                    <span key={`${decision.identityGroupId}-${index}`} className="block">
+                      {decision.kind === "merged" ? "Merged" : "Retained separately"}:{" "}
+                      {decision.labels.join(" + ")} — {decision.reason}
+                    </span>
+                  ))}
+                </span>
+              ) : null}
+            </dd>
+          </div>
+        ) : null}
+
+        {budgets.arrangement.state === "over" ? (
+          <div className="sm:col-span-2 rounded-md border border-warning/40 bg-warning/10 p-2 text-warning">
+            <dt className="type-label">Click → arrangement: OVER BUDGET</dt>
+            <dd>
+              {formatMs(budgets.arrangement.actualMs)} against a{" "}
+              {formatMs(budgets.arrangement.budgetMs)} target — over by{" "}
+              {formatMs(budgets.arrangement.overBy)}. Slowest stage:{" "}
+              {budgets.bottleneck ?? "unknown"}.
             </dd>
           </div>
         ) : null}

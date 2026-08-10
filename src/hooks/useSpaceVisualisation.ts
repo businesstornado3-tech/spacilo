@@ -59,11 +59,13 @@ export function showsRenderedImage(status: VisualisationStatus): boolean {
 }
 
 /**
- * Hard ceiling on one render request. A visual preview that has not arrived
- * within this window is abandoned rather than left spinning: the numeric
- * result is already on screen and must never be held hostage to the image.
+ * Hard ceiling on ONE render request. Live evidence puts a successful render
+ * at 21–38s and its check at 6–22s, so 45s is generous for a good attempt and
+ * decisive about a bad one. Phase 6AB: two 95-second attempts used to produce
+ * a 90–120 second dead wait for an OPTIONAL preview while the deterministic
+ * arrangement had been on screen the whole time. Never again.
  */
-export const RENDER_TIMEOUT_MS = 95_000;
+export const RENDER_TIMEOUT_MS = 45_000;
 
 /**
  * Phase 6AA — one render, plus at most one corrective redraw, and only when a
@@ -133,6 +135,52 @@ function betterRender(next: CoverageReport, current: CoverageReport): boolean {
   const currentInvented = current.unexpected?.length ?? 0;
   if (nextInvented !== currentInvented) return nextInvented < currentInvented;
   return next.present >= current.present;
+}
+
+/**
+ * Phase 6AB — one reference photograph per physical object, not every
+ * photograph that happens to contain it.
+ *
+ * Detection still uses every photo. The RENDERER only needs to see each
+ * object once: sending the same suitcase three times inflates the payload,
+ * slows the render and tempts the model into drawing three suitcases.
+ * Deterministic greedy set cover — photographs are chosen for how many
+ * not-yet-covered objects they contribute, ties broken by upload order.
+ */
+export function representativeItemPhotos(
+  photos: VisionPhoto[],
+  objects: DetectedObject[],
+  max: number,
+): VisionPhoto[] {
+  if (photos.length <= 1 || objects.length === 0) return photos.slice(0, max);
+  const covered = new Set<string>();
+  const remaining = [...photos];
+  const chosen: VisionPhoto[] = [];
+
+  while (chosen.length < max && remaining.length > 0) {
+    let bestIndex = 0;
+    let bestGain = -1;
+    remaining.forEach((photo, index) => {
+      const gain = objects.filter(
+        (object) =>
+          object.photoIds.includes(photo.id) &&
+          !covered.has(object.identityGroupId ?? object.id),
+      ).length;
+      if (gain > bestGain) {
+        bestGain = gain;
+        bestIndex = index;
+      }
+    });
+    if (bestGain <= 0) break;
+    const [photo] = remaining.splice(bestIndex, 1);
+    if (!photo) break;
+    for (const object of objects) {
+      if (object.photoIds.includes(photo.id)) covered.add(object.identityGroupId ?? object.id);
+    }
+    chosen.push(photo);
+  }
+
+  return chosen.length > 0 ? chosen : photos.slice(0, max);
 }
 
 export function useSpaceVisualisation(options: {
@@ -220,7 +268,9 @@ export function useSpaceVisualisation(options: {
       const preparedAt = Date.now();
       const [space, ...items] = await Promise.all([
         prepareImageOnce(spacePhoto.url),
-        ...itemPhotos.slice(0, 3).map((photo) => prepareImageOnce(photo.url)),
+        ...representativeItemPhotos(itemPhotos, objects, 3).map((photo) =>
+          prepareImageOnce(photo.url),
+        ),
       ]);
       if (run.current !== token || !space) return;
       const prepareMs = Date.now() - preparedAt;

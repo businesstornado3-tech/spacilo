@@ -23,6 +23,10 @@ import {
   type VerifierReply,
   type WhitelistEntry,
 } from "@/lib/spaceplanner/photo/verification";
+import {
+  projectionUnits,
+  requiredObjectsBlock,
+} from "@/lib/spaceplanner/photo/render-projection";
 
 
 

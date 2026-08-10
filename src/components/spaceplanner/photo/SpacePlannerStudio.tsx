@@ -181,9 +181,13 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   React.useEffect(() => {
     if (manifest) {
       markArrangement("planReady");
+      // Phase 6AA — the manifest is the thing that gets drawn, so the moment
+      // it validates is its own measured stage, separate from the paint.
+      markArrangement("manifestValidated");
       refreshPerf();
     }
   }, [manifest, refreshPerf]);
+
 
   const arrangementPainted = React.useCallback(() => {
     markArrangement("arrangementPaint");

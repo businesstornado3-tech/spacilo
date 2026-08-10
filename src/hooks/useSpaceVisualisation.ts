@@ -389,6 +389,9 @@ export function useSpaceVisualisation(options: {
       }
     };
 
+    /** The exact input this run is spending a render on, for failure memory. */
+    let signatureForRun: string | null = null;
+
     try {
       // Prepare every photograph at once rather than one after another.
       const preparedAt = Date.now();

@@ -583,9 +583,12 @@ function matchId(
     if (ids.has(canonicalId(entry.id))) return canonicalId(entry.id);
   }
   const label = normaliseLabel(reported);
-  const matches = whitelist.filter(
-    (entry) => normaliseLabel(entry.label) === label || containsLabel(label, normaliseLabel(entry.label)),
-  );
+  const matches = whitelist.filter((entry) => {
+    const allowed = normaliseLabel(entry.label);
+    // Both directions: "black television" names the television, and a bare
+    // "suitcase" names one of the user's coloured suitcases.
+    return allowed === label || containsLabel(label, allowed) || containsLabel(allowed, label);
+  });
   const unclaimed = matches.find((entry) => !claimed.has(canonicalId(entry.id)));
   const chosen = unclaimed ?? matches[0];
   return chosen ? canonicalId(chosen.id) : null;

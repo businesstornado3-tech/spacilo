@@ -197,7 +197,13 @@ export function resolveIdentity(a: DetectedObject, b: DetectedObject): IdentityV
   const identityA = identityOf(a.label);
   const identityB = identityOf(b.label);
   if (!identityA || !identityB) return { same: false, reason: "no comparable label" };
-  if (identityA !== identityB) return { same: false, reason: "different object type" };
+  // Phase 6AC — an exact identity match is the strong case; a shared head noun
+  // with compatible qualifiers ("water bottle" / "bottle") is the case that
+  // used to leak a duplicate object into every two-angle upload.
+  const sameHeadNoun = identityA !== identityB && headNounsAgree(a.label, b.label);
+  if (identityA !== identityB && !sameHeadNoun) {
+    return { same: false, reason: "different object type" };
+  }
 
   const left = groupsOf(a.label);
   const right = groupsOf(b.label);

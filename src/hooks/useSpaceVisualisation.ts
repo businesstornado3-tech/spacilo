@@ -185,6 +185,16 @@ export interface RenderDiagnostics {
   verifyMs?: number | null;
   /** Wall-clock time from pressing generate to a decided verdict. */
   totalMs?: number | null;
+  /** Render + check as measured on the server, excluding the network. */
+  serverTotalMs?: number | null;
+  /** True when the CHECK ran out of time — the render itself succeeded. */
+  verifyTimedOut?: boolean;
+  /** True when the user's 20s budget expired before the verdict arrived. */
+  uxDeadlineExceeded?: boolean;
+  /** How many render requests this run actually spent. */
+  renderRequests?: number;
+  /** Why the preview stopped, when it did not finish verified. */
+  abortReason?: PreviewAbortReason | null;
 }
 
 export interface UseSpaceVisualisation {
@@ -198,9 +208,11 @@ export interface UseSpaceVisualisation {
   imageUrl: string | null;
   coverage: CoverageReport | null;
   error: string | null;
+  /** Named cause when the preview did not finish verified. */
+  abortReason: PreviewAbortReason | null;
   /** Which service actually rendered, for support and verification. */
   diagnostics: RenderDiagnostics | null;
-  generate: () => Promise<void>;
+  generate: (options?: { force?: boolean }) => Promise<void>;
   reset: () => void;
 }
 

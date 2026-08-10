@@ -7,6 +7,7 @@ import {
 } from "@/hooks/useSpaceVisualisation";
 import { exclusionReasonLabel } from "@/lib/spaceplanner/photo/render-projection";
 import { manifestHash, verificationStatusOf } from "@/lib/spaceplanner/photo/diagnostics";
+import { partialArrangementCounters } from "@/lib/spaceplanner/photo/manifest";
 import type {
   CanonicalInventory,
   CoverageReport,
@@ -130,7 +131,14 @@ export function SpacePlannerDiagnostics({
       <dl className="mt-4 grid gap-2 border-t border-border pt-4 type-body-xs text-muted-foreground sm:grid-cols-2">
         <div><dt>Verified inventory units</dt><dd className="font-medium text-foreground">{inventory?.itemCount ?? 0}</dd></div>
         <div><dt>Manifest units</dt><dd className="font-medium text-foreground">{manifest?.expectedUnits ?? 0}</dd></div>
-        <div><dt>Units placed</dt><dd className="font-medium text-foreground">{manifest?.placedUnits ?? 0}</dd></div>
+        <div><dt>Units placed</dt><dd className="font-medium text-foreground">{counters?.placedUnits ?? 0}</dd></div>
+        {/* Phase 6AJ — a partial arrangement is a valid outcome, so the split
+            between placed, honestly unplaced and required-in-render units is
+            stated outright rather than inferred from a failure message. */}
+        <div><dt>Units not placed</dt><dd className="font-medium text-foreground">{counters?.unplacedUnits ?? 0}</dd></div>
+        <div><dt>Required render units</dt><dd className="font-medium text-foreground">{counters?.requiredRenderUnits ?? 0}</dd></div>
+        <div><dt>Unexpected objects</dt><dd className="font-medium text-foreground">{coverage ? coverage.unexpected.length : "—"}</dd></div>
+        <div><dt>Arrangement coverage</dt><dd className="font-medium text-foreground">{counters ? (counters.nothingPlaced ? "nothing placeable" : counters.partial ? "partial — best effort" : "complete") : "—"}</dd></div>
         <div><dt>Fixed room features</dt><dd className="font-medium text-foreground">{manifest?.roomFeatures.length ?? 0}</dd></div>
         <div><dt>Packing strategy</dt><dd className="font-medium text-foreground">{manifest?.strategy ?? "—"}</dd></div>
         <div><dt>Arrangement score</dt><dd className="font-medium text-foreground">{manifest ? `${manifest.qualityScore}/100` : "—"}</dd></div>

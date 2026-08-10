@@ -657,6 +657,8 @@ export function useSpaceVisualisation(options: {
     stopClock();
     setStatus("idle");
     setImageUrl(null);
+    setRetainedImageUrl(null);
+
     setCoverage(null);
     setDiagnostics(null);
 

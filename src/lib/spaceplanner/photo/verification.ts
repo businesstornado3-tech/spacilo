@@ -624,11 +624,14 @@ export function categoriseVerification(input: {
     roomFeatures,
     supportIssues,
     quantities: quantities.checks,
+    quantityShortfalls: quantities.shortfalls,
     verified:
       userInventory.missing.length === 0 &&
       userInventory.unexpected.length === 0 &&
+      quantities.shortfalls.length === 0 &&
       supportIssues.length === 0,
   };
+
 
 }
 

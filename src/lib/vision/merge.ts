@@ -283,3 +283,21 @@ export function mergeAcrossPhotos(objects: DetectedObject[]): {
     },
   };
 }
+
+/**
+ * Label-only identity test, for callers that hold a raw detector payload
+ * rather than a `DetectedObject` (the server-side cross-photo pass). Same
+ * rules: same noun, no contradicting descriptor group.
+ */
+export function labelsDescribeSameObject(a: string, b: string): boolean {
+  const identityA = identityOf(a);
+  const identityB = identityOf(b);
+  if (!identityA || !identityB || identityA !== identityB) return false;
+  const left = groupsOf(a);
+  const right = groupsOf(b);
+  return (
+    !contradicts(left.colour, right.colour) &&
+    !contradicts(left.material, right.material) &&
+    !contradicts(left.size, right.size)
+  );
+}

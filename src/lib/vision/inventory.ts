@@ -7,7 +7,7 @@
 import { DENSITY_KG_PER_M3 } from "@/lib/spaceplanner/library";
 import type { ItemCategory } from "@/lib/spaceplanner/types";
 import { classVolume } from "./taxonomy";
-import { mergeAcrossPhotos } from "./merge";
+import { mergeAcrossPhotos, type MergeReport } from "./merge";
 import { needsReview, type DetectedObject } from "./types";
 
 export function objectVolume(object: DetectedObject): number {
@@ -27,7 +27,22 @@ export function objectWeightKg(object: DetectedObject): number {
  * different objects that happen to share a noun never do.
  */
 export function mergeDetections(objects: DetectedObject[]): DetectedObject[] {
-  return mergeAcrossPhotos(objects).objects.sort((a, b) => b.confidence - a.confidence);
+  return mergeDetectionsWithReport(objects).objects;
+}
+
+/**
+ * Phase 6AB — the same merge, with the identity-resolution report attached so
+ * diagnostics can show raw detections vs unique physical objects.
+ */
+export function mergeDetectionsWithReport(objects: DetectedObject[]): {
+  objects: DetectedObject[];
+  report: MergeReport;
+} {
+  const merged = mergeAcrossPhotos(objects);
+  return {
+    objects: [...merged.objects].sort((a, b) => b.confidence - a.confidence),
+    report: merged.report,
+  };
 }
 
 

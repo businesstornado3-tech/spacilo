@@ -23,6 +23,7 @@
  */
 
 import { createFileRoute } from "@tanstack/react-router";
+import { labelsDescribeSameObject } from "@/lib/vision/merge";
 
 import { assessCompleteness } from "@/lib/vision/completeness";
 
@@ -384,12 +385,18 @@ export function mergeAcrossPhotos(groups: DetectedItemPayload[][]): DetectedItem
       ratio(a.heightCm, b.heightCm) < 1.6
     );
   };
+  // Phase 6AB — "black TV" and "TV" are the same television. Identity is the
+  // noun; only a CONTRADICTING colour, material or size word keeps two
+  // detections apart. Word-for-word label equality missed the common case and
+  // produced two TVs from two photographs of one.
+  const sameThing = (a: DetectedItemPayload, b: DetectedItemPayload) =>
+    labelsDescribeSameObject(a.label, b.label) || stem(a.label) === stem(b.label);
 
   groups.forEach((group) => {
     group.forEach((item) => {
       const existing = out.find(
         (candidate) =>
-          stem(candidate.label) === stem(item.label) &&
+          sameThing(candidate, item) &&
           candidate.category === item.category &&
           comparable(candidate, item),
       );

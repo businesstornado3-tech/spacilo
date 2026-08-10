@@ -18,6 +18,15 @@ import { classifyItem, classPlacementOrder, type PhysicalClass } from "./classif
 import { orientationsFor, stacksFor, type OrientationOption, type StackCandidate } from "./items";
 import { canSupport, prefersSurface, relationMap, storageZoneFor } from "./relations";
 import { contains, intersects, rectArea } from "./space";
+import {
+  FLOOR_OCCUPATION_PENALTY,
+  packOnSurface,
+  scoreSurfaceCandidate,
+  smallFloorFootprint,
+  usableSurfaceRect,
+  type SurfaceCandidate,
+} from "./surfaces";
+
 import type {
   ArrangementEntry,
   PlacementZone,

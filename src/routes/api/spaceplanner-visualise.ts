@@ -36,6 +36,27 @@ const MAX_ITEM_PHOTOS = 3;
 /** The model accepts long prompts; this keeps the manifest whole but bounded. */
 const MAX_PROMPT_CHARS = 24_000;
 
+/**
+ * Phase 6AD — render and verification get SEPARATE deadlines.
+ *
+ * They used to share one client-side ceiling. A perfectly good 30s render
+ * followed by a 16s check blew a 45s budget, and the client threw away an
+ * image the gateway had already been paid to produce. Each stage is now
+ * bounded on its own, and a slow CHECK can only cost the verdict, never the
+ * render.
+ */
+const RENDER_DEADLINE_MS = 35_000;
+const VERIFY_DEADLINE_MS = 10_000;
+
+/** Aborts a stage without taking the whole request down with it. */
+function deadline(ms: number): AbortSignal | undefined {
+  try {
+    return AbortSignal.timeout(ms);
+  } catch {
+    return undefined;
+  }
+}
+
 function imageModel(): string {
   return process.env["SPACEPLANNER_IMAGE_MODEL"]?.trim() || DEFAULT_IMAGE_MODEL;
 }

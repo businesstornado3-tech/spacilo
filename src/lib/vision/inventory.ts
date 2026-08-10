@@ -18,31 +18,17 @@ export function objectWeightKg(object: DetectedObject): number {
 }
 
 /**
- * Merges detections proposed from different photos. The same thing seen from
- * the front and the side is one thing, not two: matching label and dimensions
- * collapse into a single object that keeps the highest confidence and the
- * largest observed quantity, and remembers every photo it came from.
+ * Merges detections proposed from different photos.
+ *
+ * Phase 6AA: the merge is the deterministic UNION of every view (see
+ * `./merge`). Two photographs of the same belongings increase recall; a
+ * genuine duplicate view of one physical object collapses; two visually
+ * different objects that happen to share a noun never do.
  */
 export function mergeDetections(objects: DetectedObject[]): DetectedObject[] {
-  const merged = new Map<string, DetectedObject>();
-
-  for (const object of objects) {
-    const key = `${object.label.toLowerCase()}|${object.width}x${object.depth}x${object.height}`;
-    const existing = merged.get(key);
-    if (!existing) {
-      merged.set(key, { ...object, photoIds: [...object.photoIds] });
-      continue;
-    }
-    merged.set(key, {
-      ...existing,
-      confidence: Math.max(existing.confidence, object.confidence),
-      quantity: Math.max(existing.quantity, object.quantity),
-      photoIds: Array.from(new Set([...existing.photoIds, ...object.photoIds])),
-    });
-  }
-
-  return [...merged.values()].sort((a, b) => b.confidence - a.confidence);
+  return mergeAcrossPhotos(objects).objects.sort((a, b) => b.confidence - a.confidence);
 }
+
 
 export interface DetectedInventorySummary {
   objectCount: number;

@@ -437,7 +437,10 @@ export function categoriseVerification(input: {
   for (const entry of reply.present) {
     const category = classifyReported(entry, whitelists);
     if (category === "user_item") {
-      const id = matchId(entry, items);
+      // Phase 6AF — two "suitcase" sightings must satisfy two suitcases, not
+      // the same one twice. An already-claimed id is skipped when another
+      // equally compatible one is still unaccounted for.
+      const id = matchId(entry, items, presentItemIds);
       if (id) presentItemIds.add(id);
     } else if (category === "room_feature") {
       const id = matchId(entry, features);

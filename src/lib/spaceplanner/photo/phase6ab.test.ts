@@ -122,24 +122,24 @@ describe("Phase 6AB — multi-photo identity resolution", () => {
 
   it("merges the same grey suitcase photographed twice", () => {
     const merged = mergeDetections([
-      detected({ id: "a", label: "grey suitcase", category: "luggage", width: 45, depth: 25, height: 65, photoIds: ["photo-1"] }),
-      detected({ id: "b", label: "grey suitcase", category: "luggage", width: 48, depth: 28, height: 62, photoIds: ["photo-2"] }),
+      detected({ id: "a", label: "grey suitcase", category: "leisure", width: 45, depth: 25, height: 65, photoIds: ["photo-1"] }),
+      detected({ id: "b", label: "grey suitcase", category: "leisure", width: 48, depth: 28, height: 62, photoIds: ["photo-2"] }),
     ]);
     expect(merged).toHaveLength(1);
   });
 
   it("keeps a grey suitcase and a blue suitcase apart", () => {
     const merged = mergeDetections([
-      detected({ id: "a", label: "grey suitcase", category: "luggage", photoIds: ["photo-1"] }),
-      detected({ id: "b", label: "blue suitcase", category: "luggage", photoIds: ["photo-2"] }),
+      detected({ id: "a", label: "grey suitcase", category: "leisure", photoIds: ["photo-1"] }),
+      detected({ id: "b", label: "blue suitcase", category: "leisure", photoIds: ["photo-2"] }),
     ]);
     expect(merged).toHaveLength(2);
   });
 
   it("keeps a small and a large blue suitcase apart on dimensions", () => {
     const verdict = resolveIdentity(
-      detected({ id: "a", label: "blue suitcase", category: "luggage", width: 35, depth: 20, height: 50, photoIds: ["photo-1"] }),
-      detected({ id: "b", label: "blue suitcase", category: "luggage", width: 55, depth: 35, height: 80, photoIds: ["photo-2"] }),
+      detected({ id: "a", label: "blue suitcase", category: "leisure", width: 35, depth: 20, height: 50, photoIds: ["photo-1"] }),
+      detected({ id: "b", label: "blue suitcase", category: "leisure", width: 55, depth: 35, height: 80, photoIds: ["photo-2"] }),
     );
     expect(verdict.same).toBe(false);
     expect(verdict.reason).toBe("different dimensions");
@@ -147,8 +147,8 @@ describe("Phase 6AB — multi-photo identity resolution", () => {
 
   it("merges the same laptop bag photographed twice, unlabelled colour on one side", () => {
     const merged = mergeDetections([
-      detected({ id: "a", label: "black laptop bag", category: "bags", width: 40, depth: 12, height: 30, photoIds: ["photo-1"] }),
-      detected({ id: "b", label: "laptop bag", category: "bags", width: 42, depth: 14, height: 31, photoIds: ["photo-2"] }),
+      detected({ id: "a", label: "black laptop bag", category: "leisure", width: 40, depth: 12, height: 30, photoIds: ["photo-1"] }),
+      detected({ id: "b", label: "laptop bag", category: "leisure", width: 42, depth: 14, height: 31, photoIds: ["photo-2"] }),
     ]);
     expect(merged).toHaveLength(1);
     expect(merged[0]!.photoIds).toEqual(["photo-1", "photo-2"]);
@@ -156,8 +156,8 @@ describe("Phase 6AB — multi-photo identity resolution", () => {
 
   it("keeps different bags with different dimensions separate", () => {
     const merged = mergeDetections([
-      detected({ id: "a", label: "holdall", category: "bags", width: 60, depth: 30, height: 35, photoIds: ["photo-1"] }),
-      detected({ id: "b", label: "holdall", category: "bags", width: 25, depth: 15, height: 18, photoIds: ["photo-2"] }),
+      detected({ id: "a", label: "holdall", category: "leisure", width: 60, depth: 30, height: 35, photoIds: ["photo-1"] }),
+      detected({ id: "b", label: "holdall", category: "leisure", width: 25, depth: 15, height: 18, photoIds: ["photo-2"] }),
     ]);
     expect(merged).toHaveLength(2);
   });
@@ -166,8 +166,8 @@ describe("Phase 6AB — multi-photo identity resolution", () => {
     const { report } = mergeDetectionsWithReport([
       tv("a", "photo-1"),
       tv("b", "photo-2"),
-      detected({ id: "c", label: "grey suitcase", category: "luggage", photoIds: ["photo-1"] }),
-      detected({ id: "d", label: "grey suitcase", category: "luggage", photoIds: ["photo-2"] }),
+      detected({ id: "c", label: "grey suitcase", category: "leisure", photoIds: ["photo-1"] }),
+      detected({ id: "d", label: "grey suitcase", category: "leisure", photoIds: ["photo-2"] }),
     ]);
     expect(report.rawDetectionCount).toBe(4);
     expect(report.uniquePhysicalObjectCount).toBe(2);
@@ -178,8 +178,8 @@ describe("Phase 6AB — multi-photo identity resolution", () => {
   it("never deletes a legitimate object during identity resolution", () => {
     const objects = [
       tv("a", "photo-1"),
-      detected({ id: "b", label: "grey suitcase", category: "luggage", photoIds: ["photo-1"] }),
-      detected({ id: "c", label: "blue suitcase", category: "luggage", photoIds: ["photo-1"] }),
+      detected({ id: "b", label: "grey suitcase", category: "leisure", photoIds: ["photo-1"] }),
+      detected({ id: "c", label: "blue suitcase", category: "leisure", photoIds: ["photo-1"] }),
       detected({ id: "d", label: "water bottle", width: 8, depth: 8, height: 25, photoIds: ["photo-1"] }),
     ];
     expect(mergeDetections(objects)).toHaveLength(4);
@@ -189,8 +189,8 @@ describe("Phase 6AB — multi-photo identity resolution", () => {
     const { report } = mergeDetectionsWithReport([
       tv("a", "photo-1"),
       tv("b", "photo-2"),
-      detected({ id: "c", label: "grey suitcase", category: "luggage", width: 35, depth: 20, height: 50, photoIds: ["photo-1"] }),
-      detected({ id: "d", label: "grey suitcase", category: "luggage", width: 60, depth: 40, height: 85, photoIds: ["photo-2"] }),
+      detected({ id: "c", label: "grey suitcase", category: "leisure", width: 35, depth: 20, height: 50, photoIds: ["photo-1"] }),
+      detected({ id: "d", label: "grey suitcase", category: "leisure", width: 60, depth: 40, height: 85, photoIds: ["photo-2"] }),
     ]);
     expect(report.decisions.some((entry) => entry.kind === "merged")).toBe(true);
     expect(report.decisions.some((entry) => entry.kind === "retained" && entry.reason === "different dimensions")).toBe(true);
@@ -224,7 +224,7 @@ describe("Phase 6AB — representative render references", () => {
   it("sends both photos when each contributes a different object", () => {
     const objects = [
       tv("a", "photo-1"),
-      detected({ id: "b", label: "grey suitcase", category: "luggage", photoIds: ["photo-2"] }),
+      detected({ id: "b", label: "grey suitcase", category: "leisure", photoIds: ["photo-2"] }),
     ];
     const chosen = representativeItemPhotos([photo("photo-1"), photo("photo-2")], objects, 3);
     expect(chosen).toHaveLength(2);

@@ -215,21 +215,32 @@ function stageTimings(
 ): VisionStageTimings {
   const raw = (payload["timings"] ?? {}) as Record<string, unknown>;
   const calls = (payload["calls"] ?? {}) as Record<string, unknown>;
+  const completeness = (payload["completeness"] ?? {}) as Record<string, unknown>;
   const num = (value: unknown): number | undefined =>
     typeof value === "number" && Number.isFinite(value) ? Math.max(0, Math.round(value)) : undefined;
   const timings: VisionStageTimings = { prepareMs, requestMs };
   const detectMs = num(raw["detectMs"]);
   const mergeMs = num(raw["mergeMs"]);
   const refineMs = num(raw["refineMs"]);
+  const sweepMs = num(raw["sweepMs"]);
   const scanCalls = num(calls["scan"]);
   const refineCalls = num(calls["refine"]);
+  const sweepCalls = num(calls["sweep"]);
   if (detectMs !== undefined) timings.detectMs = detectMs;
   if (mergeMs !== undefined) timings.mergeMs = mergeMs;
   if (refineMs !== undefined) timings.refineMs = refineMs;
+  if (sweepMs !== undefined) timings.sweepMs = sweepMs;
   if (scanCalls !== undefined) timings.scanCalls = scanCalls;
   if (refineCalls !== undefined) timings.refineCalls = refineCalls;
+  if (sweepCalls !== undefined) timings.sweepCalls = sweepCalls;
+  if (Array.isArray(completeness["reasons"])) {
+    timings.completenessReasons = (completeness["reasons"] as unknown[]).filter(
+      (entry): entry is string => typeof entry === "string",
+    );
+  }
   return timings;
 }
+
 
 function suitability(value: unknown): SpaceSuitability {
   return value === "excellent" || value === "limited" ? value : "good";

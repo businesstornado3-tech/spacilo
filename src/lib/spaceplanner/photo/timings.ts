@@ -13,6 +13,13 @@ export const BELONGINGS_ANALYSIS_BUDGET_MS = 5000;
 export const SPACE_ANALYSIS_BUDGET_MS = 5000;
 /** From a usable room model to a validated deterministic PlacementManifest. */
 export const DETERMINISTIC_PLAN_BUDGET_MS = 5000;
+/**
+ * Phase 6Y — the headline target: from the "Analyse my belongings" click to
+ * the deterministic arrangement being painted, excluding time spent waiting
+ * for the user to review or photograph.
+ */
+export const ARRANGEMENT_VISIBLE_BUDGET_MS = 5000;
+
 
 /**
  * Every stage the pipeline measures. `null` means "not measured yet" and is
@@ -159,6 +166,11 @@ export interface BudgetReport {
   space: BudgetVerdict;
   /** Deterministic planning + manifest validation. */
   plan: BudgetVerdict;
+  /**
+   * Phase 6Y — the headline acceptance criterion: Analyse click → the
+   * deterministic arrangement painted, with user-input time excluded.
+   */
+  arrangement: BudgetVerdict;
   /** The slowest measured stage overall, or null when nothing was measured. */
   bottleneck: string | null;
   /** True only when every MEASURED target came in under its budget. */
@@ -178,14 +190,20 @@ export function budgetReport(timings: PipelineTimings): BudgetReport {
       ? null
       : (timings.planMs ?? 0) + (timings.manifestValidationMs ?? 0);
   const plan = budgetVerdict(planTotal, DETERMINISTIC_PLAN_BUDGET_MS);
-  const verdicts = [belongings, space, plan];
+  const arrangement = budgetVerdict(
+    timings.activeTimeToArrangementMs,
+    ARRANGEMENT_VISIBLE_BUDGET_MS,
+  );
+  const verdicts = [belongings, space, plan, arrangement];
   return {
     belongings,
     space,
     plan,
+    arrangement,
     bottleneck: bottleneckOf({
       "photo preparation": timings.photoPrepMs,
       detection: timings.detectionMs,
+      "completeness sweep": timings.sweepMs,
       refinement: timings.refineMs,
       classification: timings.classificationMs,
       "space analysis": timings.spaceAnalysisMs,
@@ -198,4 +216,5 @@ export function budgetReport(timings: PipelineTimings): BudgetReport {
       verdicts.some((verdict) => verdict.state !== "unknown") &&
       verdicts.every((verdict) => verdict.state !== "over"),
   };
+
 }

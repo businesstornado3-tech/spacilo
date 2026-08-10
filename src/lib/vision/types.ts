@@ -73,6 +73,12 @@ export interface DetectedObject {
   selectionId?: string;
   /** The detector's own identity for this object. Never index-derived. */
   sourceDetectionId?: string | null;
+  /**
+   * Phase 6AB — the physical object this detection belongs to. Several
+   * detections across several photographs share one identity group when they
+   * are views of the same thing; quantity still counts physical units.
+   */
+  identityGroupId?: string;
 }
 
 /**

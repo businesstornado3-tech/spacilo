@@ -42,6 +42,7 @@ import {
   type ArrangementMetrics,
 } from "@/lib/spaceplanner/photo/arrangement-perf";
 import { reconcileInventory } from "@/lib/spaceplanner/photo/reconcile";
+import { ArrangementPaintProbe } from "./ArrangementPaintProbe";
 
 import { buildPhotoPlan, spaceFromScan, type SpaceSource } from "@/lib/spaceplanner/photo";
 import { earningsFromPlan } from "@/lib/spaceplanner/photo/earnings";
@@ -661,6 +662,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                           : "The photographic preview didn't come out accurately this time, so we're showing the plan itself — the same positions the planner decided, drawn to scale."}
                     </p>
                     <ArrangementPlanDiagram manifest={manifest} className="mt-3" />
+                    <ArrangementPaintProbe onPainted={arrangementPainted} />
                     {isVisualisationWorking(visual.status) ? null : (
                       <Button
                         type="button"
@@ -686,6 +688,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                       preview renders.
                     </p>
                     <ArrangementPlanDiagram manifest={manifest} className="mt-3" />
+                    <ArrangementPaintProbe onPainted={arrangementPainted} />
                   </details>
                 )
               ) : null}

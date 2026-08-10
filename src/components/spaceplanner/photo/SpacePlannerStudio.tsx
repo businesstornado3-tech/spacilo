@@ -32,6 +32,17 @@ import { SpacePlannerDiagnostics } from "@/components/spaceplanner/photo/SpacePl
 import { PlannerProgress } from "@/components/spaceplanner/photo/PlannerProgress";
 import { ArrangementPlanDiagram } from "@/components/spaceplanner/photo/ArrangementPlanDiagram";
 import { EMPTY_TIMINGS, measure, mergeTimings } from "@/lib/spaceplanner/photo/timings";
+import {
+  arrangementMetrics,
+  beginUserWait,
+  endUserWait,
+  markArrangement,
+  resetArrangementRun,
+  startArrangementRun,
+  type ArrangementMetrics,
+} from "@/lib/spaceplanner/photo/arrangement-perf";
+import { reconcileInventory } from "@/lib/spaceplanner/photo/reconcile";
+
 import { buildPhotoPlan, spaceFromScan, type SpaceSource } from "@/lib/spaceplanner/photo";
 import { earningsFromPlan } from "@/lib/spaceplanner/photo/earnings";
 import { usableVolume } from "@/lib/spaceplanner/spaces";

@@ -314,8 +314,14 @@ export async function requestVisualisation(
           model?: unknown;
           renderMs?: unknown;
           verifyMs?: unknown;
+          renderDeadlineMs?: unknown;
+          verifyDeadlineMs?: unknown;
+          renderTimedOut?: unknown;
           verifyTimedOut?: unknown;
+          renderRequestsSpent?: unknown;
+          failureReason?: unknown;
           serverTotalMs?: unknown;
+
         }
       | null;
 

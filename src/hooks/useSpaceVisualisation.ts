@@ -401,6 +401,8 @@ export function useSpaceVisualisation(options: {
     setError(null);
     setAbortReason(null);
     setImageUrl(null);
+    setRetainedImageUrl(null);
+
     setCoverage(null);
     setDiagnostics(null);
     setInFlight(true);

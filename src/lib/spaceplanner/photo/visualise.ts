@@ -172,8 +172,25 @@ function describeSpot(x: number, y: number, result: PhotoPlanResult): string {
 }
 
 
-/** Manifest → the compact list the endpoint validates against. */
-export function manifestPayload(
+/**
+ * Manifest → the render projection the endpoint validates against.
+ *
+ * Phase 6AE: PER OBJECT, not per unit. The old per-unit expansion let a single
+ * high-quantity item consume the endpoint's whitelist budget and silently push
+ * later objects — a TV stand among them — off the end. Quantity now travels as
+ * a number, and the endpoint expands it itself.
+ */
+export function manifestPayload(manifest: PlacementManifest): RenderObject[] {
+  return buildRenderProjection(manifest).objects;
+}
+
+/** Objects the manifest contains that the render deliberately leaves out. */
+export function manifestRenderExclusions(manifest: PlacementManifest): RenderExclusion[] {
+  return buildRenderProjection(manifest).excluded;
+}
+
+/** Retained for verification suites that still assert the per-unit contract. */
+export function manifestUnitPayload(
   manifest: PlacementManifest,
 ): { id: string; label: string; quantity: number }[] {
   return requiredRenderItems(manifest);

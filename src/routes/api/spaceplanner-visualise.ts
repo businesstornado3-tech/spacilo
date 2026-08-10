@@ -215,7 +215,13 @@ export function coverageOf(
     unexpected: userInventory.unexpected,
     featureNotes: roomFeatures.unexpected,
     supportIssues: categories.supportIssues,
-    complete: userInventory.missing.length === 0 && userInventory.expected.length > 0,
+    // Phase 6AG — quantity is reconciled at OBJECT level: three boxes drawn
+    // twice is incomplete, exactly like a box that is absent altogether.
+    complete:
+      userInventory.missing.length === 0 &&
+      categories.quantityShortfalls.length === 0 &&
+      userInventory.expected.length > 0,
+
     faithful: userInventory.unexpected.length === 0,
     categories,
   };

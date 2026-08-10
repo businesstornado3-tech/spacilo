@@ -378,6 +378,10 @@ export function useSpaceVisualisation(options: {
     } catch (cause) {
       if (run.current !== token) return;
       const aborted = cause instanceof DOMException && cause.name === "AbortError";
+      // Phase 6AC — a preview that timed out or failed must leave nothing
+      // behind. The deterministic SVG plan stays on screen; no stale or
+      // unverified image is ever allowed to survive a failed run.
+      setImageUrl(null);
       setError(aborted ? "timed_out" : cause instanceof Error ? cause.message : "unknown");
       setStatus("failed");
     } finally {

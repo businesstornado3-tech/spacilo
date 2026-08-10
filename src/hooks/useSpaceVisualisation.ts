@@ -234,12 +234,13 @@ export function useSpaceVisualisation(options: {
         // An unverifiable render is not a wrong render: the checker simply
         // could not answer. It is not shown either way.
         if (!coverageNow) break;
-        // Room-feature drift is deliberately NOT a retry trigger: redrawing
-        // the room's own door slightly differently is not a plan failure.
+        // Phase 6AA — a second render is spent ONLY on the one fault a redraw
+        // can actually fix. An invented object or a support the model refused
+        // to draw fails closed immediately: the plan is already on screen and
+        // is worth more than another render's wait and cost.
+        if (!shouldRetryRender(coverageNow)) break;
         const missingItems = coverageNow.missing.length > 0;
-        const invented = (coverageNow.unexpected?.length ?? 0) > 0;
-        const drifted = (coverageNow.supportIssues?.length ?? 0) > 0;
-        if (!missingItems && !invented && !drifted) break;
+
 
         setAttempt(pass + 1);
         setStage("rendering");

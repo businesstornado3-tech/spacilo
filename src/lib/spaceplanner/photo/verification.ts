@@ -188,6 +188,16 @@ export function classifyReported(
     return "room_feature";
   }
 
+  // Phase 6AF — and the other direction. A verifier that says "suitcase" about
+  // a "blue suitcase" is describing the user's own belonging, not inventing
+  // one. Whole-word containment keeps "toolbox" from matching "box".
+  if (whitelists.items.some((entry) => containsLabel(normaliseLabel(entry.label), label))) {
+    return "user_item";
+  }
+  if (whitelists.features.some((entry) => containsLabel(normaliseLabel(entry.label), label))) {
+    return "room_feature";
+  }
+
   if (looksArchitectural(raw)) return "room_feature";
   return "unexpected";
 }
@@ -301,6 +311,19 @@ export function quantityCheck(
   const observed = new Map<string, number>();
   const invented = new Map<string, { label: string; count: number }>();
 
+  /**
+   * Phase 6AF — a generic description is not a duplicate.
+   *
+   * The live failure: an inventory of "blue suitcase" and "red suitcase"
+   * against a verifier that simply said "suitcase" twice. Longest-match
+   * assignment poured both into the same allowance, invented an excess, and
+   * the render was rejected as unfaithful while the other suitcase was
+   * simultaneously reported missing. Ambiguous descriptions are therefore
+   * assigned to an allowance that still has room BEFORE any excess is
+   * declared — capacity first, blame last.
+   */
+  const ambiguous: { text: string; count: number; candidates: string[] }[] = [];
+
   for (const raw of objects) {
     const text = raw.trim();
     if (!text) continue;
@@ -314,9 +337,30 @@ export function quantityCheck(
       else invented.set(key, { label: text, count });
       continue;
     }
-    const key = allowedKeyFor(text, items) ?? normaliseLabel(text);
-    if (!key) continue;
-    observed.set(key, (observed.get(key) ?? 0) + count);
+    const candidates = candidateKeysFor(text, items);
+    if (candidates.length === 1) {
+      observed.set(candidates[0]!, (observed.get(candidates[0]!) ?? 0) + count);
+      continue;
+    }
+    if (candidates.length === 0) {
+      const key = normaliseLabel(text);
+      if (key) observed.set(key, (observed.get(key) ?? 0) + count);
+      continue;
+    }
+    ambiguous.push({ text, count, candidates });
+  }
+
+  // Ambiguous units, one at a time, into whichever compatible allowance still
+  // has capacity. Only a unit that fits nowhere counts against the longest
+  // matching allowance, where it becomes a genuine excess.
+  for (const entry of ambiguous) {
+    for (let unit = 0; unit < entry.count; unit += 1) {
+      const withRoom = entry.candidates.find(
+        (key) => (observed.get(key) ?? 0) < (allowed.get(key)?.allowed ?? 0),
+      );
+      const key = withRoom ?? entry.candidates[0]!;
+      observed.set(key, (observed.get(key) ?? 0) + 1);
+    }
   }
 
   const checks: QuantityCheck[] = [];
@@ -337,22 +381,28 @@ export function quantityCheck(
   return { checks, unexpected };
 }
 
-/** The allowance key a whitelisted description belongs to, by longest match. */
-function allowedKeyFor(reported: string, items: readonly WhitelistEntry[]): string | null {
+/**
+ * Every allowance key a whitelisted description could legitimately be,
+ * longest (most specific) first. An explicit ID match is unambiguous and
+ * returns exactly one key; a plain label match may return several, which is
+ * precisely the ambiguity the caller resolves by remaining capacity.
+ */
+function candidateKeysFor(reported: string, items: readonly WhitelistEntry[]): string[] {
   const ids = new Set([canonicalId(reported), ...idsIn(reported)]);
   for (const entry of items) {
-    if (ids.has(canonicalId(entry.id))) return normaliseLabel(entry.label);
+    if (ids.has(canonicalId(entry.id))) {
+      const key = normaliseLabel(entry.label);
+      if (key) return [key];
+    }
   }
   const text = normaliseLabel(reported);
-  let best: { key: string; length: number } | null = null;
+  const keys = new Set<string>();
   for (const entry of items) {
     const key = normaliseLabel(entry.label);
     if (!key) continue;
-    const match = key === text || containsLabel(text, key) || containsLabel(key, text);
-    if (!match) continue;
-    if (!best || key.length > best.length) best = { key, length: key.length };
+    if (key === text || containsLabel(text, key) || containsLabel(key, text)) keys.add(key);
   }
-  return best ? best.key : null;
+  return [...keys].sort((a, b) => b.length - a.length);
 }
 
 
@@ -397,7 +447,10 @@ export function categoriseVerification(input: {
   for (const entry of reply.present) {
     const category = classifyReported(entry, whitelists);
     if (category === "user_item") {
-      const id = matchId(entry, items);
+      // Phase 6AF — two "suitcase" sightings must satisfy two suitcases, not
+      // the same one twice. An already-claimed id is skipped when another
+      // equally compatible one is still unaccounted for.
+      const id = matchId(entry, items, presentItemIds);
       if (id) presentItemIds.add(id);
     } else if (category === "room_feature") {
       const id = matchId(entry, features);
@@ -520,16 +573,25 @@ export function supportDrift(
 }
 
 
-function matchId(reported: string, whitelist: readonly WhitelistEntry[]): string | null {
+function matchId(
+  reported: string,
+  whitelist: readonly WhitelistEntry[],
+  claimed: ReadonlySet<string> = new Set(),
+): string | null {
   const ids = new Set([canonicalId(reported), ...idsIn(reported)]);
   for (const entry of whitelist) {
     if (ids.has(canonicalId(entry.id))) return canonicalId(entry.id);
   }
   const label = normaliseLabel(reported);
-  const byLabel = whitelist.find(
-    (entry) => normaliseLabel(entry.label) === label || containsLabel(label, normaliseLabel(entry.label)),
-  );
-  return byLabel ? canonicalId(byLabel.id) : null;
+  const matches = whitelist.filter((entry) => {
+    const allowed = normaliseLabel(entry.label);
+    // Both directions: "black television" names the television, and a bare
+    // "suitcase" names one of the user's coloured suitcases.
+    return allowed === label || containsLabel(label, allowed) || containsLabel(allowed, label);
+  });
+  const unclaimed = matches.find((entry) => !claimed.has(canonicalId(entry.id)));
+  const chosen = unclaimed ?? matches[0];
+  return chosen ? canonicalId(chosen.id) : null;
 }
 
 function dedupe(values: string[]): string[] {

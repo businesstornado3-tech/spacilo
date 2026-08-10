@@ -678,6 +678,20 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                           ? "These are the positions the planner decided, drawn to scale."
                           : "The photographic preview didn't come out accurately this time, so we're showing the plan itself — the same positions the planner decided, drawn to scale."}
                     </p>
+                    {/* Phase 6AA — two independent states, stated plainly, so
+                        the plan is never mistaken for something still loading. */}
+                    <ul className="mt-2 grid gap-1 type-body-xs text-muted-foreground">
+                      <li>Arrangement plan: ready</li>
+                      <li>
+                        Photorealistic preview:{" "}
+                        {isVisualisationWorking(visual.status)
+                          ? "still rendering — optional"
+                          : visual.status === "idle"
+                            ? "not requested — optional"
+                            : "not available this time — optional"}
+                      </li>
+                    </ul>
+
                     <ArrangementPlanDiagram manifest={manifest} className="mt-3" />
                     <ArrangementPaintProbe onPainted={arrangementPainted} />
                     {isVisualisationWorking(visual.status) ? null : (

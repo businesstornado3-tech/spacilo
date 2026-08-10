@@ -422,6 +422,7 @@ export function useSpaceVisualisation(options: {
       // Same photos, same plan, same failure — do not buy the same answer
       // twice. An explicit retry clears the memory and is allowed through.
       const signature = visualisationSignature(payload);
+      signatureForRun = signature;
       if (force) spent.current.delete(signature);
       const remembered = spent.current.get(signature);
       if (remembered && !cachedVisualisation(signature)) {

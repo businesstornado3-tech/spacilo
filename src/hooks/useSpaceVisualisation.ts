@@ -470,6 +470,8 @@ export function useSpaceVisualisation(options: {
       // relationship the plan asserted. One corrective pass is attempted with
       // the same manifest — the planner is never asked to replan.
       const verifiedAt = Date.now();
+      // What a corrective pass was asked to fix, kept for diagnostics.
+      let retryFocus: string[] = [];
       for (let pass = 1; pass < MAX_RENDER_ATTEMPTS; pass += 1) {
         setStage("checking");
         if (!uxDeadlineExceeded) setStatus("verifying");
@@ -487,6 +489,7 @@ export function useSpaceVisualisation(options: {
         // looking at any more.
         if (uxDeadlineExceeded) break;
         const missingItems = coverageNow.missing.length > 0;
+        retryFocus = missingItems ? retryFocusFor(projection, coverageNow.missing) : [];
 
 
         setAttempt(pass + 1);

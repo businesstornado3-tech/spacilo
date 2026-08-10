@@ -5,6 +5,7 @@ import {
   type RenderDiagnostics,
   type VisualisationStatus,
 } from "@/hooks/useSpaceVisualisation";
+import { exclusionReasonLabel } from "@/lib/spaceplanner/photo/render-projection";
 import { manifestHash, verificationStatusOf } from "@/lib/spaceplanner/photo/diagnostics";
 import type {
   CanonicalInventory,

@@ -173,11 +173,13 @@ describe("visualisation instruction", () => {
   it("sends the manifest payload the endpoint validates against", () => {
     const inventory = lockInventory([crib, suitcases]);
     const plan = buildPhotoPlan(inventory.objects, source)!;
+    // Phase 6AE — the payload is PER OBJECT with its real quantity, not one
+    // row per unit. That is what stops a high-quantity item from crowding a
+    // distinct object out of the renderer's required list.
     const payload = manifestPayload(buildPlacementManifest(inventory, plan));
-    expect(payload).toEqual([
-      { id: "obj-crib_01", label: "Bedside crib", quantity: 1 },
-      { id: "obj-case_01", label: "Large suitcase", quantity: 1 },
-      { id: "obj-case_02", label: "Large suitcase", quantity: 1 },
+    expect(payload.map(({ id, label, quantity }) => ({ id, label, quantity }))).toEqual([
+      { id: "obj-crib", label: "Bedside crib", quantity: 1 },
+      { id: "obj-case", label: "Large suitcase", quantity: 2 },
     ]);
   });
 });

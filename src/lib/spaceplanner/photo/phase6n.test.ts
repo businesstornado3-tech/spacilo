@@ -67,12 +67,12 @@ describe("provider rollback", () => {
 
 
 describe("zero invention", () => {
-  it("gives the model an exhaustive per-unit whitelist", () => {
+  it("gives the model an exhaustive per-object required list", () => {
     const text = prompt();
     expect(text).toContain("u_01 = 1 × Television");
     expect(text).toContain("u_02 = 2 × Suitcase");
     expect(text).toContain("u_03 = 3 × Cardboard box");
-    expect(text).toContain("exhaustive per-unit whitelist");
+    expect(text).toContain("REQUIRED_OBJECTS");
   });
 
   it("forbids substitution and invention explicitly", () => {

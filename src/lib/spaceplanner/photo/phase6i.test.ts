@@ -100,7 +100,12 @@ describe("Phase 6I — inventory is the source of truth", () => {
     for (const label of labels) {
       expect(inventoryObjects.some((entry) => entry.label === label)).toBe(true);
     }
-    expect(manifestPayload(manifest).length).toBe(manifestUnitCount(manifest));
+    // Phase 6AE — one payload row per distinct object; the units live in the
+    // quantity field, so the two counts agree once quantity is summed.
+    const payload = manifestPayload(manifest);
+    expect(payload.reduce((total, object) => total + object.quantity, 0)).toBe(
+      manifestUnitCount(manifest),
+    );
   });
 
   it("freezes a stable identity for every physical unit", () => {

@@ -307,7 +307,7 @@ async function checkCoverage(
   key: string,
   sourceImage: string,
   image: string,
-  required: { id: string; label: string }[],
+  required: { id: string; label: string; quantity?: number }[],
   roomFeatures: { id: string; label: string }[],
   signal?: AbortSignal,
   expectedSupports: readonly ExpectedSupport[] = [],

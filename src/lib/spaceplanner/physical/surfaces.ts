@@ -259,11 +259,18 @@ export function smallFloorFootprint(
 
 /** Highest point reached by any placed object, in metres. */
 export function tallestStack(
-  entries: { heightM: number; baseHeightM: number }[],
+  entries: { heightM?: number; baseHeightM?: number }[],
 ): number {
   return round2(
-    entries.reduce((max, entry) => Math.max(max, entry.baseHeightM + entry.heightM), 0),
+    entries.reduce((max, entry) => Math.max(max, topOf(entry)), 0),
   );
+}
+
+/** Height reached by an entry. Entries without a stated height sit on nothing. */
+function topOf(entry: { heightM?: number; baseHeightM?: number }): number {
+  const height = Number.isFinite(entry.heightM) ? (entry.heightM as number) : 0;
+  const base = Number.isFinite(entry.baseHeightM) ? (entry.baseHeightM as number) : 0;
+  return base + height;
 }
 
 /**
@@ -271,11 +278,11 @@ export function tallestStack(
  * then rising, so "stack it higher" can never win purely on floor area.
  */
 export function stackHeightPenalty(
-  entries: { heightM: number; baseHeightM: number }[],
+  entries: { heightM?: number; baseHeightM?: number }[],
 ): number {
   let penalty = 0;
   for (const entry of entries) {
-    const top = entry.baseHeightM + entry.heightM;
+    const top = topOf(entry);
     if (top <= COMFORTABLE_STACK_M) continue;
     penalty += (top - COMFORTABLE_STACK_M) * 10 + (top > MAX_STACK_M ? 25 : 0);
   }

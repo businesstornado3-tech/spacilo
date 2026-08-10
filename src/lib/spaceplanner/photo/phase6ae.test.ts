@@ -58,7 +58,10 @@ function entry(overrides: Partial<Entry> & { id: string; label: string }): Entry
       },
     ],
   } as unknown as Entry;
-  return { ...base, ...overrides } as Entry;
+  const merged = { ...base, ...overrides } as Entry;
+  const placedUnits =
+    overrides.placedUnits ?? (merged.state === "cannot be safely placed" ? 0 : merged.quantity);
+  return { ...merged, placedUnits, unplacedUnits: merged.quantity - placedUnits } as Entry;
 }
 
 function manifestOf(entries: Entry[]): PlacementManifest {

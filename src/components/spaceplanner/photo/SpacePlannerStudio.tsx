@@ -53,6 +53,8 @@ import { usableVolume } from "@/lib/spaceplanner/spaces";
 import {
   buildPlacementManifest,
   lockInventory,
+  partialArrangementCounters,
+  unplacedAllowances,
   type CanonicalInventory,
 } from "@/lib/spaceplanner/photo/manifest";
 import { generaliseUncertain } from "@/lib/spaceplanner/photo/uncertain";
@@ -639,7 +641,10 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 elapsedMs={visual.elapsedMs}
                 planReady={Boolean(manifest)}
               />
-              <SpacePlannerResult result={result} unplaced={manifest?.unplaced ?? []}>
+              <SpacePlannerResult
+                result={result}
+                unplaced={manifest ? unplacedAllowances(manifest) : []}
+              >
 
                 {spacePhoto ? (
                   <PhotoArrangement

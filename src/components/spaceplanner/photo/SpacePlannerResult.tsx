@@ -32,20 +32,24 @@ export function SpacePlannerResult({
 }: {
   result: PhotoPlanResult;
   /**
-   * Phase 6AH — belongings the planner could not accommodate. The plan itself
-   * still succeeded; these are listed plainly with the reason.
+   * Phase 6AH/6AJ — belongings the planner could not accommodate. Everything
+   * else was still arranged: a partial arrangement is a successful plan, not a
+   * failure, so these are listed plainly with the deterministic reason.
    */
-  unplaced?: readonly { label: string; reason: string }[];
+  unplaced?: readonly { label: string; reason: string; quantity?: number }[];
   /** The visual arrangement — the user's photo, or another renderer. */
   children?: React.ReactNode;
   className?: string;
   heading?: string;
 }) {
+  const partial = unplaced.length > 0;
   return (
     <section className={cn("rounded-2xl border border-border bg-card p-4 sm:p-5", className)}>
       <header>
         <p className="type-overline text-muted-foreground">{heading}</p>
-        <h3 className="mt-1 type-h3">Analysis complete</h3>
+        <h3 className="mt-1 type-h3">
+          {partial ? "Arrangement ready — some items could not be placed" : "Arrangement ready"}
+        </h3>
         <p className="mt-1 type-body-sm text-muted-foreground">
           Items detected: {result.itemCount} · Estimated volume:{" "}
           {result.plan.metrics.itemVolume.toFixed(1)}m³
@@ -70,7 +74,7 @@ export function SpacePlannerResult({
         {result.requirementHighM3.toFixed(1)}m³.
       </p>
 
-      {unplaced.length > 0 ? (
+      {partial ? (
         <div className="mt-4 rounded-xl border border-border bg-surface p-3">
           <p className="type-overline text-muted-foreground">Not placed</p>
           <ul className="mt-1.5 space-y-1.5">
@@ -78,16 +82,19 @@ export function SpacePlannerResult({
               <li key={`${entry.label}-${entry.reason}`} className="flex gap-2 type-body-sm">
                 <CircleDashed className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                 <span>
+                  {entry.quantity && entry.quantity > 1 ? `${entry.quantity} × ` : ""}
                   {entry.label} — {entry.reason}
                 </span>
               </li>
             ))}
           </ul>
           <p className="mt-2 type-body-xs text-muted-foreground">
-            Your arrangement plan is ready; these items could not be accommodated in this space.
+            Everything else was arranged. These items could not be accommodated safely in this
+            space — a larger space, or a second visit, would be the safer plan.
           </p>
         </div>
       ) : null}
+
 
       {children ? <div className="mt-4">{children}</div> : null}
 

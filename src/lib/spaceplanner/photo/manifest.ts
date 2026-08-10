@@ -129,6 +129,15 @@ export interface ManifestEntry {
   placement: string;
   orientation: string;
   state: PlacementState;
+  /**
+   * Phase 6AJ — units the deterministic engine actually placed. This, not
+   * `quantity`, is what the renderer must draw: a partly-placed object is a
+   * SUCCESSFUL partial plan, and requiring the unplaced remainder in the
+   * picture would reject an otherwise correct render.
+   */
+  placedUnits: number;
+  /** Units of this object the plan could not safely fit. Informational. */
+  unplacedUnits: number;
   /** The exact positions the physical engine allocated. Authoritative. */
   positions: ManifestPosition[];
 }
@@ -224,10 +233,17 @@ export function buildPlacementManifest(
           ? "intentionally stacked"
           : "placed";
 
+    const placedUnits = Math.min(
+      object.quantity,
+      positions.reduce((sum, position) => sum + position.units, 0),
+    );
+
     return {
       id: object.id,
       label: object.label,
       quantity: object.quantity,
+      placedUnits,
+      unplacedUnits: Math.max(0, object.quantity - placedUnits),
       widthCm: Math.round(object.width),
       depthCm: Math.round(object.depth),
       heightCm: Math.round(object.height),
@@ -296,7 +312,39 @@ export function manifestGroups(manifest: PlacementManifest): { zone: string; lab
 export function manifestUnitCount(manifest: PlacementManifest): number {
   return manifest.entries
     .filter((entry) => entry.state !== "cannot be safely placed")
-    .reduce((sum, entry) => sum + entry.quantity, 0);
+    .reduce((sum, entry) => sum + Math.max(0, entry.placedUnits), 0);
+}
+
+/**
+ * Phase 6AJ — the counters that make a partial arrangement legible at a glance:
+ * how much of the inventory was placed, how much was honestly left out, and
+ * how many units the photograph is therefore required to contain.
+ */
+export interface PartialArrangementCounters {
+  inventoryUnits: number;
+  placedUnits: number;
+  unplacedUnits: number;
+  requiredRenderUnits: number;
+  /** Something placed AND something not. A valid outcome, never a failure. */
+  partial: boolean;
+  /** Nothing could be placed: no photographic preview applies. */
+  nothingPlaced: boolean;
+}
+
+export function partialArrangementCounters(
+  manifest: PlacementManifest,
+): PartialArrangementCounters {
+  const inventoryUnits = manifest.entries.reduce((sum, entry) => sum + entry.quantity, 0);
+  const placedUnits = manifest.entries.reduce((sum, entry) => sum + entry.placedUnits, 0);
+  const unplacedUnits = Math.max(0, inventoryUnits - placedUnits);
+  return {
+    inventoryUnits,
+    placedUnits,
+    unplacedUnits,
+    requiredRenderUnits: manifestUnitCount(manifest),
+    partial: placedUnits > 0 && unplacedUnits > 0,
+    nothingPlaced: placedUnits === 0,
+  };
 }
 
 /**
@@ -364,7 +412,7 @@ export function formatManifestForModel(manifest: PlacementManifest): string {
       const lines = [
         `ITEM ${index + 1}:`,
         `Name: ${entry.label}`,
-        `Quantity: ${entry.quantity}`,
+        `Quantity to draw: ${entry.placedUnits}${entry.unplacedUnits > 0 ? ` (of ${entry.quantity} owned; ${entry.unplacedUnits} did not fit and must NOT be drawn)` : ""}`,
         `Approx dimensions: ${entry.widthCm} × ${entry.depthCm} × ${entry.heightCm} cm`,
         `Placement: ${entry.placement}`,
         `Orientation: ${entry.orientation}`,
@@ -423,11 +471,11 @@ export function unplacedAllowances(
 ): { id: string; label: string; quantity: number; reason: string }[] {
   const reasons = new Map(manifest.unplaced.map((entry) => [entry.label, entry.reason]));
   return manifest.entries
-    .filter((entry) => entry.state === "cannot be safely placed")
+    .filter((entry) => entry.unplacedUnits > 0)
     .map((entry) => ({
       id: entry.id,
       label: entry.label,
-      quantity: entry.quantity,
+      quantity: entry.unplacedUnits,
       reason: reasons.get(entry.label) ?? "not_placeable",
     }));
 }
@@ -439,7 +487,7 @@ export function requiredRenderItems(
   return manifest.entries
     .filter((entry) => entry.state !== "cannot be safely placed")
     .flatMap((entry) =>
-      Array.from({ length: entry.quantity }, (_, index) => ({
+      Array.from({ length: Math.max(0, entry.placedUnits) }, (_, index) => ({
         id: `${entry.id}_${String(index + 1).padStart(2, "0")}`,
         label: entry.label,
         quantity: 1 as const,

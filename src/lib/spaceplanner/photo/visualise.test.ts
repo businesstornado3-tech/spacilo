@@ -112,7 +112,7 @@ describe("placement manifest", () => {
   it("formats a structured manifest, not a loose summary", () => {
     const text = formatManifestForModel(manifest);
     expect(text).toContain("ITEM 1:");
-    expect(text).toContain("Quantity: 1");
+    expect(text).toContain("Quantity to draw: 1");
     expect(text).toContain("Placement:");
     expect(text).toContain("Orientation:");
   });

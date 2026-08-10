@@ -101,7 +101,11 @@ export function buildRenderProjection(
       excluded.push({ id: entry.id, label: entry.label, reason: "no_label" });
       continue;
     }
-    if (entry.state === "cannot be safely placed") {
+    // Phase 6AJ — the renderer is asked for PLACED units only. An object the
+    // plan could not fit, in whole or in part, is honestly reported as
+    // unplaced; it is never a required object in the photograph.
+    const placedUnits = Math.max(0, Math.round(entry.placedUnits));
+    if (entry.state === "cannot be safely placed" || placedUnits === 0) {
       excluded.push({ id: entry.id, label, reason: "not_placeable" });
       continue;
     }
@@ -109,7 +113,7 @@ export function buildRenderProjection(
     candidates.push({
       id: entry.id,
       label,
-      quantity: Math.max(1, Math.round(entry.quantity)),
+      quantity: placedUnits,
       widthCm: entry.widthCm,
       depthCm: entry.depthCm,
       heightCm: entry.heightCm,

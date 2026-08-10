@@ -173,15 +173,29 @@ export function requiredObjectsBlock(projection: RenderProjection): string {
   ].join("\n");
 }
 
-/** One unit-level whitelist row per physical unit, derived from the projection. */export function projectionUnits(
+/**
+ * One unit-level whitelist row per physical unit, derived from the projection.
+ *
+ * Quantity is expanded BREADTH-FIRST: every distinct object gets its first unit
+ * before any object gets its second. That ordering is the whole point — under
+ * a unit cap, twelve cardboard boxes can no longer crowd a TV stand off the
+ * end of the list the way the old depth-first expansion did.
+ */
+export function projectionUnits(
   projection: RenderProjection,
   maxUnits = 40,
 ): { id: string; label: string }[] {
   const units: { id: string; label: string }[] = [];
-  for (const object of projection.objects) {
-    for (let index = 0; index < object.quantity; index += 1) {
-      if (units.length >= maxUnits) return units;
-      units.push({ id: `${object.id}_${String(index + 1).padStart(2, "0")}`, label: object.label });
+  const remaining = projection.objects.map((object) => ({ object, drawn: 0 }));
+  while (units.length < maxUnits && remaining.some((entry) => entry.drawn < entry.object.quantity)) {
+    for (const entry of remaining) {
+      if (entry.drawn >= entry.object.quantity) continue;
+      if (units.length >= maxUnits) break;
+      entry.drawn += 1;
+      units.push({
+        id: `${entry.object.id}_${String(entry.drawn).padStart(2, "0")}`,
+        label: entry.object.label,
+      });
     }
   }
   return units;

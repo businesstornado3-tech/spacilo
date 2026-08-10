@@ -341,7 +341,14 @@ export interface QuantityCheck {
   observed: number;
   /** Units beyond the allowance. Anything above zero is an invention. */
   excess: number;
+  /**
+   * Phase 6AG — units the allowance expects that the render did not show.
+   * Quantity is reconciled in BOTH directions: three boxes drawn twice is as
+   * much a failure as three boxes drawn four times.
+   */
+  missing: number;
 }
+
 
 /**
  * How many units one free-text description accounts for. "2× cardboard box"

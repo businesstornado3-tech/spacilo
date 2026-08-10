@@ -496,7 +496,7 @@ export function useSpaceVisualisation(options: {
           ...payload,
           nonce: pass,
           ...(missingItems
-            ? { emphasise: retryFocusFor(projection, coverageNow.missing) }
+            ? { emphasise: retryFocus }
             : {}),
         });
         if (run.current !== token) return;
@@ -531,6 +531,7 @@ export function useSpaceVisualisation(options: {
         requiredObjectCount: manifest.entries.length,
         projectedObjectCount: projection.objects.length,
         excludedObjects: projection.excluded,
+        retryFocus,
         abortReason: null,
       });
 
@@ -587,6 +588,7 @@ export function useSpaceVisualisation(options: {
         requiredObjectCount: manifest.entries.length,
         projectedObjectCount: projection.objects.length,
         excludedObjects: projection.excluded,
+        retryFocus,
         abortReason: reason,
       }));
       // Phase 6AD — NO BLIND RETRY. A timeout, a busy gateway or an

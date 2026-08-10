@@ -152,33 +152,65 @@ class UpstreamError extends Error {
 }
 
 /**
- * Phase 6X — ONE compact structured vision pass per photograph.
+ * Phase 6Y — ONE compact structured pass per photograph, EXHAUSTIVELY.
  *
- * One reply per photograph, and a deliberately small one. The model identifies
- * objects; it does not explain itself. No evidence prose, no count narration,
- * no component lists, no reasoning — those fields cost thousands of output
- * tokens per photograph and bought nothing the deterministic pipeline uses.
+ * Phase 6X shrank this prompt to make it fast, and in live use the model
+ * started answering a different question: instead of "what is in this
+ * photograph?" it began answering "what is worth mentioning?". It returned the
+ * television but not the stand, one suitcase but not the one next to it, and
+ * skipped most small objects entirely.
  *
- * Nothing was relaxed: the reply is still schema-validated by
- * `normaliseItems`, dimensions are still validated field by field, volume is
- * still calculated here, and cross-photograph merging is still deterministic
- * code rather than a second model call.
+ * The schema stays compact — that is where the speed came from, and none of it
+ * is given back. What changes is the instruction: enumerate the photograph
+ * systematically and completely, and never decide on the user's behalf that
+ * one of their possessions is too small or too awkward to be worth listing.
+ *
+ * STAGE 1 (here) is visual enumeration only. STAGE 2 — categories, weights,
+ * dimensions validation, volume, identity and merging — is deterministic code
+ * in `normaliseItems` and `mergeAcrossPhotos`. The model is never asked to
+ * reason, narrate evidence or justify a count.
  */
 export const SCAN_SYSTEM = [
-  "You identify storable objects in a photograph for a UK storage marketplace. Output compact JSON only — no prose, no explanation, no reasoning.",
-  "1. Report ONLY what is visible. An empty or unclear photo returns an empty list. Never invent an object.",
-  "2. label: plain UK English with its distinguishing feature, under six words — 'Large blue wheeled case', 'Black backpack', 'Cardboard box'. No brands, no guessing container contents.",
-  "3. A shape-and-colour label is a LAST RESORT; when you use one set confidence below 0.6.",
+  "You enumerate physical objects in a photograph for a UK storage marketplace. Output compact JSON only — no prose, no explanation, no reasoning.",
+  "YOUR TASK IS EXHAUSTIVE ENUMERATION. Work across the photograph systematically — left to right, front to back, floor to ceiling — and list EVERY distinct physical object you can see.",
+  "This includes: furniture, televisions and their stands, suitcases, bags, holdalls, boxes, crates, appliances, electronics, toys, bottles, tools, clothing and fabric, sports and garden equipment, and small loose objects.",
+  "It also includes: partially hidden objects, objects at the very edge of the frame, objects overlapping another object, and objects resting on top of another object.",
+  "You must NEVER omit an object because it looks small, ordinary, cheap, unclear or 'not worth listing'. Completeness matters more than tidiness. Two similar objects side by side are TWO entries, not one.",
+  "If you are unsure what something is, still return it — give it a plain shape-and-colour label and a low confidence. Returning it uncertainly is correct; leaving it out is not.",
+  "1. Report ONLY what is visible. An empty photo returns an empty list. Never invent an object that is not there.",
+  "2. label: plain UK English with its distinguishing feature, under six words — 'Large blue wheeled case', 'Black TV stand', 'Cardboard box'. No brands, no guessing container contents.",
+  "3. A shape-and-colour label is fine for an unclear object; when you use one, set confidence below 0.6.",
   "4. quantity: only what you can actually see.",
-  "5. Report WHOLE objects, never their parts. A cot, sofa, wardrobe or pushchair is ONE object.",
-  "6. Two different things are two entries. Never group different objects together.",
+  "5. Report WHOLE objects, never their parts. A cot, sofa, wardrobe or pushchair is ONE object. But a television and the stand it sits on are TWO objects.",
+  "6. Two different things are two entries. Never group different objects together, and never summarise several objects as 'various items'.",
   "7. If the user marked a region, only objects inside or overlapping it count.",
   "8. widthCm/depthCm/heightCm: centimetre estimates of the whole assembled object. Each is its own positive number — never 0, never omitted, never copied from another dimension.",
   "9. Never report volume, litres or kilograms; those are calculated from your dimensions.",
   "10. category: boxes | furniture | appliances | electronics | leisure | seasonal. weight: light | medium | heavy. mountingType: floor | wall_mounted | tabletop | stackable_unit.",
-  "11. confidence 0-1, lower when the object is unclear, partly hidden or unfamiliar. Below 0.6 means 'not identified'.",
+  "11. confidence 0-1, lower when the object is unclear, partly hidden or unfamiliar. A low confidence is a description, never a reason to omit.",
   "12. detectionId: a short descriptive slug unique within this photograph ('blue-wheeled-case'), never a position index.",
   'Reply as JSON only: {"items":[{"detectionId":"","label":"","category":"boxes","quantity":1,"widthCm":0,"depthCm":0,"heightCm":0,"weight":"medium","mountingType":"floor","colour":"","fragile":false,"stackable":false,"confidence":0.0}]}',
+].join("\n");
+
+
+/**
+ * Phase 6Y — the completeness sweep.
+ *
+ * Runs only when `assessCompleteness` says the first pass looks thin, and only
+ * on the photographs that looked thin. It is strictly ADDITIVE: it is shown
+ * what was already found and asked for what was missed. It cannot rename,
+ * re-rank or remove anything — those paths do not exist for its reply.
+ */
+const SWEEP_SYSTEM = [
+  "A first pass over this photograph returned the objects listed below, and it appears to have MISSED things.",
+  "Your only job is to list the ADDITIONAL distinct physical objects visible in the photograph that are NOT already in that list.",
+  "Search the parts of the photograph that are easy to skip: the floor, corners, the edges of the frame, behind and beneath larger objects, the tops of surfaces, and anything small or partly hidden.",
+  "Absolute rules:",
+  "1. Never repeat an object that is already listed. Never rename or re-describe one.",
+  "2. Never invent an object. If there is genuinely nothing more to see, return an empty list.",
+  "3. Small, ordinary or unclear objects DO count. Give an unclear object a plain shape-and-colour label and confidence below 0.6.",
+  "4. Same field rules as the first pass: whole objects only, own positive centimetre estimates for each dimension, no volumes, no brands.",
+  'Reply as JSON only, no prose: {"items":[{"detectionId":"","label":"","category":"boxes","quantity":1,"widthCm":0,"depthCm":0,"heightCm":0,"weight":"medium","mountingType":"floor","fragile":false,"stackable":false,"confidence":0.0}]}',
 ].join("\n");
 
 
@@ -187,21 +219,27 @@ export const SCAN_SYSTEM = [
  *
  * Only genuinely uncertain objects are sent back to the model. High-confidence
  * objects are never reclassified, which is where most of the old second-pass
- * latency went. An uncertain object may only become more specific when the
- * photograph supports it; otherwise it stays generic and stays uncertain.
+ * latency went.
+ *
+ * Phase 6Y constrains it further: refinement may improve a label, a dimension
+ * or a confidence, and nothing else. It cannot delete a legitimate object
+ * merely because that object is small or difficult — an item that stays
+ * uncertain stays in the inventory, described generically.
  */
 const REFINE_SYSTEM = [
   "You are re-examining ONLY the objects a first pass could not identify confidently, in the photograph provided.",
   "Absolute rules:",
   "1. You may not add objects. You may not remove objects. You return exactly the objects you were given, by detectionId.",
   "2. Improve a label only when the photograph clearly supports it. If it does not, keep the generic label and keep confidence below 0.6.",
-  "3. Never invent a brand, a model or contents you cannot see.",
-  "4. You may correct dimensions, category, weight and mountingType when the photograph supports a better estimate.",
+  "3. An object you still cannot identify is still a real object. Never answer with fewer objects than you were given.",
+  "4. Never invent a brand, a model or contents you cannot see.",
+  "5. You may correct dimensions, category, weight and mountingType when the photograph supports a better estimate.",
   'Reply as JSON only, no prose: {"items":[{"detectionId":"","label":"","category":"boxes","quantity":1,"widthCm":0,"depthCm":0,"heightCm":0,"weight":"medium","mountingType":"floor","fragile":false,"stackable":false,"confidence":0.0}]}',
 ].join("\n");
 
 /** Objects at or below this confidence get one targeted second look. */
 export const REFINE_BELOW_CONFIDENCE = 0.6;
+
 
 
 

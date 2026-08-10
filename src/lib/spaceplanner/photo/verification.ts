@@ -452,21 +452,34 @@ export function quantityCheck(
 
   const checks: QuantityCheck[] = [];
   const unexpected: string[] = [];
+  const shortfalls: string[] = [];
+  // A verifier that enumerated nothing has told us nothing. Silence is not
+  // evidence of absence, so shortfalls are only counted against a real list.
+  const enumerated = objects.some((entry) => entry.trim().length > 0);
 
   for (const [key, info] of allowed) {
     const seen = observed.get(key) ?? 0;
     const excess = Math.max(0, seen - info.allowed);
-    checks.push({ label: info.label, allowed: info.allowed, observed: seen, excess });
+    const missing = enumerated ? Math.max(0, info.allowed - seen) : 0;
+    checks.push({ label: info.label, allowed: info.allowed, observed: seen, excess, missing });
     if (excess > 0) unexpected.push(`extra ${info.label} ×${excess}`);
+    if (missing > 0) shortfalls.push(`missing ${info.label} ×${missing}`);
   }
 
   for (const entry of invented.values()) {
-    checks.push({ label: entry.label, allowed: 0, observed: entry.count, excess: entry.count });
+    checks.push({
+      label: entry.label,
+      allowed: 0,
+      observed: entry.count,
+      excess: entry.count,
+      missing: 0,
+    });
     unexpected.push(entry.count > 1 ? `${entry.label} ×${entry.count}` : entry.label);
   }
 
-  return { checks, unexpected };
+  return { checks, unexpected, shortfalls };
 }
+
 
 /**
  * Every allowance key a whitelisted description could legitimately be,

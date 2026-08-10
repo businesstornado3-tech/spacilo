@@ -188,6 +188,16 @@ export function classifyReported(
     return "room_feature";
   }
 
+  // Phase 6AF — and the other direction. A verifier that says "suitcase" about
+  // a "blue suitcase" is describing the user's own belonging, not inventing
+  // one. Whole-word containment keeps "toolbox" from matching "box".
+  if (whitelists.items.some((entry) => containsLabel(normaliseLabel(entry.label), label))) {
+    return "user_item";
+  }
+  if (whitelists.features.some((entry) => containsLabel(normaliseLabel(entry.label), label))) {
+    return "room_feature";
+  }
+
   if (looksArchitectural(raw)) return "room_feature";
   return "unexpected";
 }

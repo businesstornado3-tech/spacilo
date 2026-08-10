@@ -46,9 +46,15 @@ export type VisualisationStatus =
   | "incomplete"
   /** The render arrived but could not be checked. Never displayed. */
   | "unverified"
+  /**
+   * Phase 6AD — the preview outstayed its UX budget. We stop making the user
+   * wait and the measured plan stands on its own. The request may still be in
+   * flight in the background; if it lands verified, the preview appears.
+   */
+  | "unavailable"
   | "failed";
 
-/** True while the pipeline is still doing work. */
+/** True while the pipeline is still doing work the USER is waiting on. */
 export function isVisualisationWorking(status: VisualisationStatus): boolean {
   return status === "preparing" || status === "rendering" || status === "verifying";
 }
@@ -59,13 +65,73 @@ export function showsRenderedImage(status: VisualisationStatus): boolean {
 }
 
 /**
+ * Phase 6AD — WHY a preview stopped. Live failures were all reported as
+ * "timed_out", which hid the fact that the render had usually succeeded and
+ * the CHECK, or our own shared ceiling, was what ran out. Each cause is now
+ * named so the log line and the diagnostics panel say what actually happened.
+ */
+export type PreviewAbortReason =
+  | "user_cancelled"
+  | "ux_deadline"
+  | "client_timeout"
+  | "server_render_timeout"
+  | "server_verify_timeout"
+  | "gateway_busy"
+  | "gateway_unreachable"
+  | "no_image"
+  | "unknown";
+
+/** Maps a failure code to the reason a person would recognise. */
+export function abortReasonFor(code: string | null): PreviewAbortReason {
+  switch (code) {
+    case "timed_out":
+      return "client_timeout";
+    case "render_timeout":
+      return "server_render_timeout";
+    case "upstream_429":
+    case "upstream_402":
+      return "gateway_busy";
+    case "not_configured":
+    case "upstream_unreachable":
+      return "gateway_unreachable";
+    case "no_image_returned":
+    case "bad_upstream_payload":
+      return "no_image";
+    default:
+      return code ? "unknown" : "unknown";
+  }
+}
+
+/**
+ * A retry only ever buys something when the FAULT IS IN THE PICTURE. A
+ * timeout, a busy gateway or an unreachable service will not answer differently
+ * because we asked twice — it will just spend another render's worth of time
+ * and credits while the deterministic plan is already on screen.
+ */
+export function isRetryableFailure(code: string | null): boolean {
+  return false && Boolean(code);
+}
+
+/**
  * Hard ceiling on ONE render request. Live evidence puts a successful render
  * at 21–38s and its check at 6–22s, so 45s is generous for a good attempt and
  * decisive about a bad one. Phase 6AB: two 95-second attempts used to produce
  * a 90–120 second dead wait for an OPTIONAL preview while the deterministic
  * arrangement had been on screen the whole time. Never again.
+ *
+ * Phase 6AD: this is now a BACKGROUND ceiling, not the user's wait. The server
+ * bounds render (35s) and check (10s) separately, so the client ceiling sits
+ * just above their sum — a good render is never thrown away because the check
+ * was slow.
  */
-export const RENDER_TIMEOUT_MS = 45_000;
+export const RENDER_TIMEOUT_MS = 55_000;
+
+/**
+ * The user's budget, which is a different thing from the network's. After this
+ * the spinner stops and the measured plan is presented as the result. Anything
+ * still in flight becomes a quiet upgrade rather than a wait.
+ */
+export const PREVIEW_UX_DEADLINE_MS = 20_000;
 
 /**
  * Phase 6AA — one render, plus at most one corrective redraw, and only when a

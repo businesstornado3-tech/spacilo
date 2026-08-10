@@ -552,22 +552,8 @@ export function useSpaceVisualisation(options: {
       // Phase 6AD — NO BLIND RETRY. A timeout, a busy gateway or an
       // unreachable service is remembered against this exact input so the
       // same wait is never bought twice without the user asking for it.
-      if (!isRetryableFailure(code)) {
-        try {
-          spent.current.set(
-            visualisationSignature({
-              spaceImage: (await prepareImageOnce(spacePhoto.url))!,
-              itemImages: [],
-              instruction: buildVisualisationInstruction(result, objects, manifest),
-              manifest: renderItems,
-              planHash: manifest.planHash,
-              inventoryHash: manifest.inventoryId,
-            }),
-            reason,
-          );
-        } catch {
-          /* remembering a failure must never cause one */
-        }
+      if (signatureForRun && !isRetryableFailure(code)) {
+        spent.current.set(signatureForRun, reason);
       }
       setStatus(uxDeadlineExceeded ? "unavailable" : "failed");
     } finally {

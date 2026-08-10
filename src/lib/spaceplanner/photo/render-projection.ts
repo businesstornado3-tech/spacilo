@@ -173,8 +173,7 @@ export function requiredObjectsBlock(projection: RenderProjection): string {
   ].join("\n");
 }
 
-/** One unit-level whitelist row per physical unit, derived from the projection. */
-export function projectionUnits(
+/** One unit-level whitelist row per physical unit, derived from the projection. */export function projectionUnits(
   projection: RenderProjection,
   maxUnits = 40,
 ): { id: string; label: string }[] {
@@ -211,59 +210,3 @@ export function retryFocusFor(
   });
 }
 
-/**
- * The per-UNIT verification whitelist, expanded from the per-object projection.
- *
- * Quantity is expanded LAST and breadth-first: every distinct object gets its
- * first unit before any object gets its second. That ordering is the whole
- * point — under the endpoint's unit cap, twelve boxes can no longer crowd a TV
- * stand out of the list the way the old flat expansion did.
- */
-export function projectionUnits(
-  projection: RenderProjection,
-  maxUnits = 40,
-): { id: string; label: string }[] {
-  const units: { id: string; label: string }[] = [];
-  const remaining = projection.objects.map((object) => ({ object, left: object.quantity }));
-  while (units.length < maxUnits && remaining.some((entry) => entry.left > 0)) {
-    for (const entry of remaining) {
-      if (entry.left <= 0) continue;
-      if (units.length >= maxUnits) break;
-      units.push({ id: entry.object.id, label: entry.object.label });
-      entry.left -= 1;
-    }
-  }
-  return units;
-}
-
-/**
- * What a corrective second attempt must fix.
- *
- * A structural base that went missing is named first and explicitly, because
- * whatever stood on it is wrong too — telling the renderer only "the TV is
- * missing" would leave it floating again.
- */
-export function retryFocusFor(
-  projection: RenderProjection,
-  missingLabels: readonly string[],
-): string[] {
-  const missing = new Set(missingLabels.map((label) => label.trim().toLowerCase()).filter(Boolean));
-  if (missing.size === 0) return [];
-  const focus: string[] = [];
-  for (const object of projection.objects) {
-    if (!missing.has(object.label.toLowerCase())) continue;
-    focus.push(
-      object.structural
-        ? `the ${object.label}, which must be drawn beneath the objects resting on it`
-        : object.supportBaseLabel
-          ? `the ${object.label}, resting on top of the ${object.supportBaseLabel}`
-          : `the ${object.label}`,
-    );
-  }
-  // Anything the manifest did not name is still reported verbatim.
-  for (const label of missingLabels) {
-    const known = projection.objects.some((object) => object.label.toLowerCase() === label.trim().toLowerCase());
-    if (!known && label.trim()) focus.push(label.trim());
-  }
-  return focus;
-}

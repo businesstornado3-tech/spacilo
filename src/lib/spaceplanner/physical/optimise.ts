@@ -257,7 +257,19 @@ export function arrangementObjective(entries: ArrangementEntry[], space: Plannin
       wallContact(entry, space.usable) <= 0 &&
       !floor.some((other) => other.key !== entry.key && contactLength(entry, other) > 0),
   ).length;
-  return round2((used / hull) * 100 + contact * 8 + walls * 4 - isolated * 30 - hull * 3);
+  // Phase 6Z — floor occupied by objects small enough to have gone on a
+  // surface is wasted floor, and is penalised hard enough to change the
+  // arrangement the optimiser settles on rather than merely nudge it.
+  const smallOnFloor = smallFloorFootprint(entries, SMALL_ITEM_FOOTPRINT_M2);
+  return round2(
+    (used / hull) * 100 +
+      contact * 8 +
+      walls * 4 -
+      isolated * 30 -
+      hull * 3 -
+      smallOnFloor * FLOOR_OCCUPATION_PENALTY,
+  );
+
 }
 
 interface Candidate {

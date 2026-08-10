@@ -7,6 +7,7 @@
 import { DENSITY_KG_PER_M3 } from "@/lib/spaceplanner/library";
 import type { ItemCategory } from "@/lib/spaceplanner/types";
 import { classVolume } from "./taxonomy";
+import { mergeAcrossPhotos } from "./merge";
 import { needsReview, type DetectedObject } from "./types";
 
 export function objectVolume(object: DetectedObject): number {

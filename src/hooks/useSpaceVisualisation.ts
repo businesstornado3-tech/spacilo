@@ -18,6 +18,11 @@ import {
   VISUALISATION_STAGES,
   type VisualisationStage,
 } from "@/lib/spaceplanner/photo/visualise";
+import {
+  buildRenderProjection,
+  retryFocusFor,
+  type RenderExclusion,
+} from "@/lib/spaceplanner/photo/render-projection";
 import { prepareImageOnce } from "@/lib/spaceplanner/photo/image-optimise";
 import {
   manifestSupports,
@@ -197,6 +202,14 @@ export interface RenderDiagnostics {
   renderRequests?: number;
   /** Why the preview stopped, when it did not finish verified. */
   abortReason?: PreviewAbortReason | null;
+  /** Phase 6AE — distinct objects the manifest required the image to contain. */
+  requiredObjectCount?: number;
+  /** Distinct objects actually sent to the renderer. */
+  projectedObjectCount?: number;
+  /** Every object left out of the render, with its named reason. Never silent. */
+  excludedObjects?: RenderExclusion[];
+  /** What a corrective second attempt was asked to fix. */
+  retryFocus?: string[];
 }
 
 export interface UseSpaceVisualisation {
@@ -212,6 +225,12 @@ export interface UseSpaceVisualisation {
   error: string | null;
   /** Named cause when the preview did not finish verified. */
   abortReason: PreviewAbortReason | null;
+  /**
+   * Phase 6AE — true while a render request is GENUINELY in flight, whatever
+   * the UX budget says. The elapsed timer and the wording both key off this, so
+   * the UI can never claim we stopped while the gateway is still working.
+   */
+  inFlight: boolean;
   /** Which service actually rendered, for support and verification. */
   diagnostics: RenderDiagnostics | null;
   generate: (options?: { force?: boolean }) => Promise<void>;
@@ -292,6 +311,7 @@ export function useSpaceVisualisation(options: {
   const [attempt, setAttempt] = React.useState(0);
   const [elapsedMs, setElapsedMs] = React.useState(0);
   const [diagnostics, setDiagnostics] = React.useState<RenderDiagnostics | null>(null);
+  const [inFlight, setInFlight] = React.useState(false);
 
   const run = React.useRef(0);
   const abort = React.useRef<AbortController | null>(null);
@@ -330,7 +350,15 @@ export function useSpaceVisualisation(options: {
       setStatus("failed");
       return;
     }
-    const renderItems = manifestPayload(manifest);
+    const projection = buildRenderProjection(manifest);
+    const renderItems = projection.objects;
+    // Part B — an object may only leave the manifest for a named reason, and
+    // that reason is recorded before a single credit is spent.
+    for (const exclusion of projection.excluded) {
+      console.warn(
+        `[spaceplanner] OBJECT EXCLUDED FROM PHOTO RENDER id=${exclusion.id} label=${exclusion.label} reason=${exclusion.reason}`,
+      );
+    }
     // Items the planner could not fit are legitimately absent from the render
     // list; only an empty list means there is nothing to draw.
     if (renderItems.length === 0) {
@@ -348,6 +376,7 @@ export function useSpaceVisualisation(options: {
     setImageUrl(null);
     setCoverage(null);
     setDiagnostics(null);
+    setInFlight(true);
 
     setAttempt(1);
 
@@ -467,7 +496,9 @@ export function useSpaceVisualisation(options: {
         const retry = await render({
           ...payload,
           nonce: pass,
-          ...(missingItems ? { emphasise: coverageNow.missing } : {}),
+          ...(missingItems
+            ? { emphasise: retryFocusFor(projection, coverageNow.missing) }
+            : {}),
         });
         if (run.current !== token) return;
         if (!retry.coverage || betterRender(retry.coverage, coverageNow)) response = retry;
@@ -498,6 +529,9 @@ export function useSpaceVisualisation(options: {
         verifyTimedOut: response.verifyTimedOut === true,
         uxDeadlineExceeded,
         renderRequests,
+        requiredObjectCount: manifest.entries.length,
+        projectedObjectCount: projection.objects.length,
+        excludedObjects: projection.excluded,
         abortReason: null,
       });
 
@@ -551,6 +585,9 @@ export function useSpaceVisualisation(options: {
         totalMs: Date.now() - startedAt,
         uxDeadlineExceeded,
         renderRequests,
+        requiredObjectCount: manifest.entries.length,
+        projectedObjectCount: projection.objects.length,
+        excludedObjects: projection.excluded,
         abortReason: reason,
       }));
       // Phase 6AD — NO BLIND RETRY. A timeout, a busy gateway or an
@@ -561,7 +598,10 @@ export function useSpaceVisualisation(options: {
       }
       setStatus(uxDeadlineExceeded ? "unavailable" : "failed");
     } finally {
-      if (run.current === token) stopClock();
+      if (run.current === token) {
+        setInFlight(false);
+        stopClock();
+      }
     }
   },
     [result, objects, manifest, spacePhoto, itemPhotos, stopClock],
@@ -581,6 +621,7 @@ export function useSpaceVisualisation(options: {
     setAbortReason(null);
     setAttempt(0);
     setElapsedMs(0);
+    setInFlight(false);
   }, [stopClock]);
 
   const stageLabel =
@@ -597,6 +638,7 @@ export function useSpaceVisualisation(options: {
     coverage,
     error,
     abortReason,
+    inFlight,
     diagnostics,
 
     generate,

@@ -533,6 +533,8 @@ export function useSpaceVisualisation(options: {
       setStage("checking");
       if (!uxDeadlineExceeded) setStatus("verifying");
       setCoverage(finalCoverage);
+      // Phase 6AG — the render exists; keep it whatever the verdict says.
+      setRetainedImageUrl(response.image);
       setDiagnostics({
         provider: response.provider,
         model: response.model,
@@ -544,7 +546,13 @@ export function useSpaceVisualisation(options: {
         verifyMs: response.verifyMs ?? Date.now() - verifiedAt,
         totalMs: Date.now() - startedAt,
         serverTotalMs: response.serverTotalMs ?? null,
+        renderDeadlineMs: response.renderDeadlineMs ?? null,
+        verifyDeadlineMs: response.verifyDeadlineMs ?? null,
+        renderTimedOut: response.renderTimedOut === true,
         verifyTimedOut: response.verifyTimedOut === true,
+        imageRetained: true,
+        verificationVerdict: response.verification,
+        failureReason: response.failureReason ?? null,
         uxDeadlineExceeded,
         renderRequests,
         requiredObjectCount: manifest.entries.length,
@@ -555,9 +563,9 @@ export function useSpaceVisualisation(options: {
       });
 
       // FAIL-CLOSED (Phase 6T). Only a render that was actually checked AND
-      // passed every check is shown. An invented object, a plan contradiction,
-      // a missing item or a checker that could not answer all fall back to the
-      // measured arrangement plan — the image is discarded, not downgraded.
+      // passed every check is SHOWN. Phase 6AG keeps the bytes internally, so
+      // "not displayed" no longer means "thrown away" — but the screen still
+      // falls back to the measured arrangement plan.
       const inventedFinal = (finalCoverage?.unexpected?.length ?? 0) > 0;
       const driftedFinal = (finalCoverage?.supportIssues?.length ?? 0) > 0;
       if (response.verification === "unfaithful" || inventedFinal || driftedFinal) {
@@ -576,6 +584,7 @@ export function useSpaceVisualisation(options: {
         setStatus("incomplete");
         return;
       }
+
 
       // A verified render is shown even if it arrived after the user's budget:
       // late is a bonus, and the plan was never hidden waiting for it.

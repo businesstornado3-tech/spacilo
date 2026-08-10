@@ -313,6 +313,13 @@ export function useSpaceVisualisation(options: {
   const [status, setStatus] = React.useState<VisualisationStatus>("idle");
   const [stage, setStage] = React.useState<VisualisationStage>("rendering");
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
+  /**
+   * Phase 6AG — the last render we actually received, kept even when the
+   * verdict withholds it. A verification timeout must never destroy a
+   * successful, already-paid-for image.
+   */
+  const [retainedImageUrl, setRetainedImageUrl] = React.useState<string | null>(null);
+
   const [coverage, setCoverage] = React.useState<CoverageReport | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [abortReason, setAbortReason] = React.useState<PreviewAbortReason | null>(null);

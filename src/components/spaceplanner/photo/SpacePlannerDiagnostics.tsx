@@ -98,6 +98,7 @@ export function SpacePlannerDiagnostics({
     visualStatus === "unverified" ||
     visualStatus === "unavailable";
   const verified = verificationStatusOf(coverage);
+  const counters = manifest ? partialArrangementCounters(manifest) : null;
   const stages: { label: string; state: StageState }[] = [
     { label: "Photos", state: photoCount > 0 ? "passed" : "waiting" },
     { label: "Detection", state: detectedCount > 0 ? "passed" : photoCount > 0 ? "working" : "waiting" },

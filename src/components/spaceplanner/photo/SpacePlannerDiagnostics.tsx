@@ -18,6 +18,7 @@ import {
   type BudgetVerdict,
   type PipelineTimings,
 } from "@/lib/spaceplanner/photo/timings";
+import type { ReconciliationReport } from "@/lib/spaceplanner/photo/reconcile";
 
 
 type StageState = "waiting" | "working" | "passed" | "failed";
@@ -66,6 +67,7 @@ export function SpacePlannerDiagnostics({
   coverage,
   render,
   timings = EMPTY_TIMINGS,
+  reconciliation = null,
 }: {
   photoCount: number;
   detectedCount: number;
@@ -78,6 +80,8 @@ export function SpacePlannerDiagnostics({
   render?: RenderDiagnostics | null;
   /** Phase 6U — measured stage timings and their budget verdicts. */
   timings?: PipelineTimings;
+  /** Phase 6Y — proof that nothing detected was silently dropped. */
+  reconciliation?: ReconciliationReport | null;
 }) {
   const budgets = budgetReport(timings);
 
@@ -167,9 +171,6 @@ export function SpacePlannerDiagnostics({
         {reconciliation ? (
           <div className="sm:col-span-2 border-t border-border pt-3">
             <dt className="type-label text-foreground">Inventory accounting</dt>
-            <dd className="mt-2 grid gap-1 sm:grid-cols-2">
-              <TimingRow label="" ms={null} />
-            </dd>
             <dd className="mt-1 grid gap-1 sm:grid-cols-2 text-muted-foreground">
               <span className="flex justify-between gap-2">
                 <span>Detected units</span>

@@ -25,6 +25,7 @@ import type { DetectedObject } from "@/lib/vision/types";
 import type { VisionPhoto } from "@/lib/vision/types";
 import {
   MAX_RENDER_ATTEMPTS,
+  PREVIEW_UX_DEADLINE_MS,
   RENDER_TIMEOUT_MS,
   representativeItemPhotos,
   shouldRetryRender,

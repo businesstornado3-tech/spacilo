@@ -381,15 +381,19 @@ export function quantityCheck(
     features: readonly WhitelistEntry[];
     itemAliases?: readonly string[];
   },
-): { checks: QuantityCheck[]; unexpected: string[] } {
+): { checks: QuantityCheck[]; unexpected: string[]; shortfalls: string[] } {
   const allowed = new Map<string, { label: string; allowed: number }>();
   for (const entry of items) {
     const key = normaliseLabel(entry.label);
     if (!key) continue;
+    // Phase 6AG — OBJECT level. One whitelist row may stand for several units,
+    // so the allowance is the sum of quantities, not a count of rows.
+    const units = Math.max(1, Math.round(entry.quantity ?? 1));
     const current = allowed.get(key);
-    if (current) current.allowed += 1;
-    else allowed.set(key, { label: entry.label, allowed: 1 });
+    if (current) current.allowed += units;
+    else allowed.set(key, { label: entry.label, allowed: units });
   }
+
 
   const observed = new Map<string, number>();
   const invented = new Map<string, { label: string; count: number }>();

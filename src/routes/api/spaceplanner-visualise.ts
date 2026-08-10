@@ -20,6 +20,7 @@ import {
   normaliseLabel,
   type CategorisedVerification,
   type ExpectedSupport,
+  type UnplacedAllowance,
   type VerifierReply,
   type WhitelistEntry,
 } from "@/lib/spaceplanner/photo/verification";
@@ -110,6 +111,13 @@ interface VisualiseBody {
   /** Carried through for diagnostics only. Never used to re-plan. */
   planHash?: string;
   inventoryHash?: string;
+  /**
+   * Phase 6AH — belongings the deterministic planner intentionally did NOT
+   * place. They remain visible in the source photograph, so the render may
+   * still show them; they are permitted up to this quantity and can never
+   * satisfy a required placed object.
+   */
+  unplaced?: { id?: string; label?: string; quantity?: number; reason?: string }[];
   /** Varies the retry request without changing the plan. */
   nonce?: number;
 }
@@ -188,6 +196,7 @@ export function coverageOf(
   reply?: VerifierReply | string[],
   allowedLabels: string[] = [],
   expectedSupports: readonly ExpectedSupport[] = [],
+  unplaced: readonly UnplacedAllowance[] = [],
 ): Coverage {
   // Legacy call shape (required, present, unexpected, allowedLabels) is still
   // supported so existing verification suites keep exercising this logic.
@@ -206,6 +215,7 @@ export function coverageOf(
     ...(legacy && allowedLabels.length ? { itemAliases: allowedLabels } : {}),
     ...(!legacy ? { itemAliases: whitelist.map((entry) => entry.label) } : {}),
     ...(expectedSupports.length ? { expectedSupports } : {}),
+    ...(unplaced.length ? { unplaced } : {}),
   });
   const { userInventory, roomFeatures } = categories;
   return {
@@ -311,6 +321,7 @@ async function checkCoverage(
   roomFeatures: { id: string; label: string }[],
   signal?: AbortSignal,
   expectedSupports: readonly ExpectedSupport[] = [],
+  unplaced: readonly UnplacedAllowance[] = [],
 ): Promise<Coverage | null> {
   if (required.length === 0) return null;
   try {
@@ -336,6 +347,11 @@ async function checkCoverage(
                     .join("; ")}.`,
 
                   `ROOM_FEATURE_WHITELIST — parts of the building that must be preserved and are NEVER belongings: ${roomFeatures.map((feature) => `${feature.id}=${feature.label}`).join("; ") || "every fixed fixture visible in the source photograph (doors, doorways, windows, radiators, sockets, fitted units)"}.`,
+                  unplaced.length
+                    ? `UNPLACED_ITEMS — belongings the planner did not place; they may still be visible in the source photograph. They are neither required nor unexpected: ${unplaced
+                        .map((entry) => `${entry.label} ×${Math.max(1, Math.round(entry.quantity ?? 1))}`)
+                        .join("; ")}.`
+                    : "",
                   expectedSupports.length
                     ? `EXPECTED_SUPPORTS — the plan places these objects ON TOP OF another object, never on the floor: ${expectedSupports
                         .map((support) => `${support.itemLabel} on ${support.baseLabel}`)
@@ -371,7 +387,7 @@ async function checkCoverage(
     const text = typeof content === "string" ? content : "";
     const reply = parseCheckReply(text);
     if (!reply) return null;
-    return coverageOf(required, roomFeatures, reply, [], expectedSupports);
+    return coverageOf(required, roomFeatures, reply, [], expectedSupports, unplaced);
 
   } catch {
 
@@ -517,6 +533,25 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
          * the 6AE per-unit list, so required objects keep their protection;
          * only the verifier stops being asked for unit id strings.
          */
+        // Phase 6AH — structured, capacity-limited allowances. Only objects
+        // named here may appear without being called an invention.
+        const unplacedAllowances: UnplacedAllowance[] = (Array.isArray(body.unplaced) ? body.unplaced : [])
+          .flatMap((entry) => {
+            const label = typeof entry?.label === "string" ? entry.label.trim() : "";
+            if (!label) return [];
+            return [
+              {
+                id: typeof entry.id === "string" && entry.id.trim() ? entry.id.trim() : label,
+                label,
+                quantity:
+                  typeof entry.quantity === "number" && entry.quantity > 0
+                    ? Math.round(entry.quantity)
+                    : 1,
+                ...(typeof entry.reason === "string" ? { reason: entry.reason } : {}),
+              },
+            ];
+          });
+
         const verifyObjects = projection.objects.map((object) => ({
           id: object.id,
           label: object.label,
@@ -659,6 +694,7 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           roomFeatures,
           deadline(VERIFY_DEADLINE_MS),
           supports,
+          unplacedAllowances,
         );
         const verifyMs = Date.now() - startedCheck;
         const verifyTimedOut = coverage === null && verifyMs >= VERIFY_DEADLINE_MS - 250;

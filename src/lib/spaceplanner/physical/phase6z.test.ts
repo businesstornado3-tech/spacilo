@@ -172,7 +172,7 @@ const toy = item({
   weight: "light",
 });
 
-const space = planningSpaceFrom(room, []);
+const space = planningSpaceFrom(room);
 
 function entryFor(entries: ReturnType<typeof arrangeItems>["entries"], id: string) {
   return entries.find((entry) => entry.itemId === id) ?? null;
@@ -282,11 +282,7 @@ describe("Phase 6Z — nothing is ever stood on luggage or soft goods", () => {
 /* ------------------------------------------- arrangement behaviour */
 
 describe("Phase 6Z — small objects leave the floor when a surface exists", () => {
-  const withStand = arrangeItems({
-    items: [tvStand, greySuitcase, bottle, scissors, toy],
-    space,
-    room,
-  });
+  const withStand = arrangeItems([tvStand, greySuitcase, bottle, scissors, toy], space);
 
   it("places every small object on the stand rather than the floor", () => {
     for (const small of [bottle, scissors, toy]) {
@@ -322,11 +318,7 @@ describe("Phase 6Z — small objects leave the floor when a surface exists", () 
   });
 
   it("falls back to the floor only when no safe surface exists", () => {
-    const noSurface = arrangeItems({
-      items: [greySuitcase, backpack, bottle, scissors],
-      space,
-      room,
-    });
+    const noSurface = arrangeItems([greySuitcase, backpack, bottle, scissors], space);
     const onFloor = [bottle, scissors]
       .map((small) => entryFor(noSurface.entries, small.id))
       .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
@@ -338,11 +330,7 @@ describe("Phase 6Z — small objects leave the floor when a surface exists", () 
   });
 
   it("produces identical coordinates for identical input", () => {
-    const again = arrangeItems({
-      items: [tvStand, greySuitcase, bottle, scissors, toy],
-      space,
-      room,
-    });
+    const again = arrangeItems([tvStand, greySuitcase, bottle, scissors, toy], space);
     expect(again.entries).toEqual(withStand.entries);
   });
 

@@ -515,6 +515,62 @@ export const Route = createFileRoute("/api/vision-detect")({
           );
           const detectMs = Date.now() - detectStartedAt;
 
+          /*
+           * Phase 6Y — completeness sweep.
+           *
+           * A fast scan that came back thin is not a fast scan, it is a wrong
+           * one. Each photograph is judged deterministically; only the ones
+           * that look under-enumerated get ONE extra compact call, and that
+           * call may only ADD objects it can see. Photographs that already
+           * look complete cost nothing extra, so the common case keeps every
+           * bit of the Phase 6X speed-up.
+           */
+          const sweepStartedAt = Date.now();
+          let sweepCalls = 0;
+          const completeness = perPhoto.map((entry) => ({
+            photoId: entry.photoId,
+            verdict: assessCompleteness({
+              items: entry.items,
+              photoCount: 1,
+              mode: selected ? "selected" : "whole",
+            }),
+          }));
+          const thin = completeness.filter((entry) => entry.verdict.incomplete);
+
+          if (thin.length > 0) {
+            const swept = await Promise.all(
+              thin.map(async ({ photoId }) => {
+                const image = images.find((entry) => entry.id === photoId);
+                const group = perPhoto.find((entry) => entry.photoId === photoId);
+                if (!image || !group) return { photoId, items: [] as DetectedItemPayload[] };
+                sweepCalls += 1;
+                const reply = await chat(
+                  key,
+                  [
+                    {
+                      type: "text",
+                      text: `Already found in this photograph:\n${
+                        group.items.map((item) => `- ${item.label}`).join("\n") || "- (nothing)"
+                      }\n\nList only the ADDITIONAL distinct objects visible that are not in that list.`,
+                    },
+                    { type: "image_url", image_url: { url: image.url } },
+                  ],
+                  SWEEP_SYSTEM,
+                ).catch(() => null);
+                return { photoId, items: normaliseItems(reply?.["items"], [photoId]) };
+              }),
+            );
+
+            // Additive only. A sweep result that duplicates something already
+            // found is discarded by the same deterministic merge that handles
+            // the same object appearing in two photographs.
+            swept.forEach(({ photoId, items: extra }) => {
+              const group = perPhoto.find((entry) => entry.photoId === photoId);
+              if (group) group.items = mergeAcrossPhotos([group.items, extra]);
+            });
+          }
+          const sweepMs = Date.now() - sweepStartedAt;
+
           // Deterministic, local cross-photograph merge. No model call.
           const mergeStartedAt = Date.now();
           let items = mergeAcrossPhotos(perPhoto.map((entry) => entry.items));
@@ -525,10 +581,19 @@ export const Route = createFileRoute("/api/vision-detect")({
               task: "belongings",
               model: SCAN_MODEL,
               items: [],
-              timings: { detectMs, mergeMs, classifyMs: 0, refineMs: 0, totalMs: detectMs + mergeMs },
-              calls: { scan: images.length, refine: 0 },
+              timings: {
+                detectMs,
+                sweepMs,
+                mergeMs,
+                classifyMs: 0,
+                refineMs: 0,
+                totalMs: detectMs + sweepMs + mergeMs,
+              },
+              calls: { scan: images.length, sweep: sweepCalls, refine: 0 },
+              completeness: { swept: sweepCalls, reasons: thin.flatMap((e) => e.verdict.reasons) },
             });
           }
+
 
           /*
            * Phase 6V — confidence-gated second look. Only objects the first

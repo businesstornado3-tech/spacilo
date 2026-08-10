@@ -487,12 +487,13 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         ];
 
         const startedRender = Date.now();
+        const renderSignal = deadline(RENDER_DEADLINE_MS);
         let upstream: Response;
         try {
           upstream = await fetch(`${GATEWAY}/images/generations`, {
             method: "POST",
             headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-            ...(deadline(RENDER_DEADLINE_MS) ? { signal: deadline(RENDER_DEADLINE_MS)! } : {}),
+            ...(renderSignal ? { signal: renderSignal } : {}),
             body: JSON.stringify({
               model,
               messages: [{ role: "user", content }],

@@ -284,6 +284,8 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
       props: { mode: "belongings", scope: stuff.scope, photos: stuff.photos.length },
     });
     const startedAt = Date.now();
+    // Phase 6Y — the click that the headline metric is measured from.
+    startArrangementRun();
     // Phase 6X — the two analyses are independent. When the user has already
     // added a space photograph, both run at once instead of one after the
     // other, so step 4 is reached in the time of the slower one, not the sum.
@@ -298,23 +300,33 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     });
     setInventory(null);
     setStep("review");
+    // From here the product is waiting on the user, not the other way round.
+    beginUserWait();
+    refreshPerf();
   };
 
   const confirmInventory = () => {
+    endUserWait();
     const locked = lockInventory(generaliseUncertain(stuff.objects));
     setInventory(locked);
     track("spaceplanner_items_detected", {
       props: { count: locked.distinctItems, units: locked.itemCount, confirmed: 1 },
     });
     setStep("space");
+    // Unless the space was already analysed alongside the belongings, the next
+    // thing that has to happen is the user adding a photograph.
+    if (!space.spaceScan) beginUserWait();
+    refreshPerf();
   };
 
   const analyseSpace = async () => {
+    endUserWait();
     track("spaceplanner_analysis_started", { props: { mode: "space" } });
     await space.analyse();
     hold();
     track("spaceplanner_space_detected", { props: { photos: space.photos.length } });
     setStep("result");
+    refreshPerf();
   };
 
   const restart = () => {
@@ -323,8 +335,11 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     setInventory(null);
     setManual({ width: "", depth: "", height: "" });
     clearVisualisationCache();
+    resetArrangementRun();
+    setPerf(arrangementMetrics());
     setStep("stuff");
   };
+
 
   const stuffPhotoBeingSelected = stuff.photos.find((photo) => photo.id === selectingStuff) ?? null;
   const spacePhotoBeingSelected = space.photos.find((photo) => photo.id === selectingSpace) ?? null;

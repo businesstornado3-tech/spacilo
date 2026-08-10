@@ -13,6 +13,13 @@ export const BELONGINGS_ANALYSIS_BUDGET_MS = 5000;
 export const SPACE_ANALYSIS_BUDGET_MS = 5000;
 /** From a usable room model to a validated deterministic PlacementManifest. */
 export const DETERMINISTIC_PLAN_BUDGET_MS = 5000;
+/**
+ * Phase 6Y — the headline target: from the "Analyse my belongings" click to
+ * the deterministic arrangement being painted, excluding time spent waiting
+ * for the user to review or photograph.
+ */
+export const ARRANGEMENT_VISIBLE_BUDGET_MS = 5000;
+
 
 /**
  * Every stage the pipeline measures. `null` means "not measured yet" and is
@@ -27,9 +34,12 @@ export interface PipelineTimings {
   mergeMs: number | null;
   /** Confidence-gated second look. 0 when nothing needed refining. */
   refineMs: number | null;
+  /** Phase 6Y — completeness sweep. 0 when the first pass looked complete. */
+  sweepMs: number | null;
   /** Model calls made for the belongings scan, so parallelism is visible. */
   scanCalls: number | null;
   refineCalls: number | null;
+  sweepCalls: number | null;
   /** Sizing / canonicalisation of what detection returned. */
   classificationMs: number | null;
   /** Wall clock from pressing analyse to a usable inventory. */
@@ -40,8 +50,16 @@ export interface PipelineTimings {
   planMs: number | null;
   /** Hard-constraint validation of the produced manifest. */
   manifestValidationMs: number | null;
-  /** Wall clock from pressing analyse-space to a usable arrangement plan. */
+  /**
+   * Phase 6Y — measured in the BROWSER, from the Analyse click to the frame
+   * in which the deterministic arrangement was painted. Wall clock, so it
+   * includes any time the user spent reviewing or photographing.
+   */
   timeToArrangementMs: number | null;
+  /** The same journey with user-input windows subtracted. The 5s target. */
+  activeTimeToArrangementMs: number | null;
+  /** Analyse click → a validated deterministic plan existed. */
+  planReadyMs: number | null;
   /** Image model call. */
   renderMs: number | null;
   /** Render verification call. */
@@ -50,23 +68,29 @@ export interface PipelineTimings {
   totalMs: number | null;
 }
 
+
 export const EMPTY_TIMINGS: PipelineTimings = {
   photoPrepMs: null,
   detectionMs: null,
   mergeMs: null,
   refineMs: null,
+  sweepMs: null,
   scanCalls: null,
   refineCalls: null,
+  sweepCalls: null,
   classificationMs: null,
   inventoryReadyMs: null,
   spaceAnalysisMs: null,
   planMs: null,
   manifestValidationMs: null,
   timeToArrangementMs: null,
+  activeTimeToArrangementMs: null,
+  planReadyMs: null,
   renderMs: null,
   verifyMs: null,
   totalMs: null,
 };
+
 
 export type BudgetState = "unknown" | "within" | "over";
 
@@ -142,6 +166,11 @@ export interface BudgetReport {
   space: BudgetVerdict;
   /** Deterministic planning + manifest validation. */
   plan: BudgetVerdict;
+  /**
+   * Phase 6Y — the headline acceptance criterion: Analyse click → the
+   * deterministic arrangement painted, with user-input time excluded.
+   */
+  arrangement: BudgetVerdict;
   /** The slowest measured stage overall, or null when nothing was measured. */
   bottleneck: string | null;
   /** True only when every MEASURED target came in under its budget. */
@@ -161,14 +190,20 @@ export function budgetReport(timings: PipelineTimings): BudgetReport {
       ? null
       : (timings.planMs ?? 0) + (timings.manifestValidationMs ?? 0);
   const plan = budgetVerdict(planTotal, DETERMINISTIC_PLAN_BUDGET_MS);
-  const verdicts = [belongings, space, plan];
+  const arrangement = budgetVerdict(
+    timings.activeTimeToArrangementMs,
+    ARRANGEMENT_VISIBLE_BUDGET_MS,
+  );
+  const verdicts = [belongings, space, plan, arrangement];
   return {
     belongings,
     space,
     plan,
+    arrangement,
     bottleneck: bottleneckOf({
       "photo preparation": timings.photoPrepMs,
       detection: timings.detectionMs,
+      "completeness sweep": timings.sweepMs,
       refinement: timings.refineMs,
       classification: timings.classificationMs,
       "space analysis": timings.spaceAnalysisMs,
@@ -181,4 +216,5 @@ export function budgetReport(timings: PipelineTimings): BudgetReport {
       verdicts.some((verdict) => verdict.state !== "unknown") &&
       verdicts.every((verdict) => verdict.state !== "over"),
   };
+
 }

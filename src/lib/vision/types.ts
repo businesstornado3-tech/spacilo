@@ -91,10 +91,20 @@ export interface VisionStageTimings {
   mergeMs?: number;
   /** Confidence-gated second look. 0 when nothing needed refining. */
   refineMs?: number;
+  /** Phase 6Y — completeness sweep. 0 when the first pass looked complete. */
+  sweepMs?: number;
   /** Number of model calls actually made, so parallelism can be verified. */
   scanCalls?: number;
   refineCalls?: number;
+  /** Extra enumeration calls made because a photograph looked under-scanned. */
+  sweepCalls?: number;
+  /** Why a sweep was triggered, in plain words. */
+  completenessReasons?: string[];
+  /** True when this result came from the content-addressed cache. */
+  cacheHit?: boolean;
+
 }
+
 
 export interface VisionResult {
   objects: DetectedObject[];

@@ -18,6 +18,7 @@ import {
   type BudgetVerdict,
   type PipelineTimings,
 } from "@/lib/spaceplanner/photo/timings";
+import type { ReconciliationReport } from "@/lib/spaceplanner/photo/reconcile";
 
 
 type StageState = "waiting" | "working" | "passed" | "failed";
@@ -66,6 +67,7 @@ export function SpacePlannerDiagnostics({
   coverage,
   render,
   timings = EMPTY_TIMINGS,
+  reconciliation = null,
 }: {
   photoCount: number;
   detectedCount: number;
@@ -78,6 +80,8 @@ export function SpacePlannerDiagnostics({
   render?: RenderDiagnostics | null;
   /** Phase 6U — measured stage timings and their budget verdicts. */
   timings?: PipelineTimings;
+  /** Phase 6Y — proof that nothing detected was silently dropped. */
+  reconciliation?: ReconciliationReport | null;
 }) {
   const budgets = budgetReport(timings);
 
@@ -138,12 +142,19 @@ export function SpacePlannerDiagnostics({
             <TimingRow label="Detection" ms={timings.detectionMs} />
             <TimingRow label="Cross-photo merge" ms={timings.mergeMs} />
             <TimingRow label="Refinement" ms={timings.refineMs} />
+            <TimingRow label="Completeness sweep" ms={timings.sweepMs} />
             <TimingRow label="Classification" ms={timings.classificationMs} />
             <TimingRow label="Inventory ready" ms={timings.inventoryReadyMs} verdict={budgets.belongings} />
             <TimingRow label="Space analysis" ms={timings.spaceAnalysisMs} verdict={budgets.space} />
             <TimingRow label="Deterministic plan" ms={timings.planMs} />
             <TimingRow label="Manifest validation" ms={timings.manifestValidationMs} />
-            <TimingRow label="Time to arrangement" ms={timings.timeToArrangementMs} verdict={budgets.plan} />
+            <TimingRow label="Plan ready" ms={timings.planReadyMs} verdict={budgets.plan} />
+            <TimingRow label="Click → arrangement (wall clock)" ms={timings.timeToArrangementMs} />
+            <TimingRow
+              label="Click → arrangement (excluding user input)"
+              ms={timings.activeTimeToArrangementMs}
+              verdict={budgets.arrangement}
+            />
             <TimingRow label="Render" ms={timings.renderMs} />
             <TimingRow label="Verification" ms={timings.verifyMs} />
             <TimingRow label="Total" ms={timings.totalMs} />
@@ -152,11 +163,50 @@ export function SpacePlannerDiagnostics({
               <dd className="font-medium text-foreground">
                 {timings.scanCalls === null
                   ? "—"
-                  : `${timings.scanCalls} scan${timings.scanCalls === 1 ? "" : "s"}, ${timings.refineCalls ?? 0} refine`}
+                  : `${timings.scanCalls} scan${timings.scanCalls === 1 ? "" : "s"}, ${timings.sweepCalls ?? 0} sweep, ${timings.refineCalls ?? 0} refine`}
               </dd>
             </div>
           </dd>
         </div>
+        {reconciliation ? (
+          <div className="sm:col-span-2 border-t border-border pt-3">
+            <dt className="type-label text-foreground">Inventory accounting</dt>
+            <dd className="mt-1 grid gap-1 sm:grid-cols-2 text-muted-foreground">
+              <span className="flex justify-between gap-2">
+                <span>Detected units</span>
+                <span className="font-medium text-foreground">{reconciliation.detectedCount}</span>
+              </span>
+              <span className="flex justify-between gap-2">
+                <span>Confirmed units</span>
+                <span className="font-medium text-foreground">{reconciliation.classifiedCount}</span>
+              </span>
+              <span className="flex justify-between gap-2">
+                <span>Placed</span>
+                <span className="font-medium text-foreground">{reconciliation.manifestPlacedCount}</span>
+              </span>
+              <span className="flex justify-between gap-2">
+                <span>Explicitly unplaced</span>
+                <span className="font-medium text-foreground">{reconciliation.manifestUnplacedCount}</span>
+              </span>
+              <span className="flex justify-between gap-2 sm:col-span-2">
+                <span>Silently dropped</span>
+                <span
+                  className={
+                    reconciliation.droppedCount > 0
+                      ? "font-medium text-destructive"
+                      : "font-medium text-success"
+                  }
+                >
+                  {reconciliation.droppedCount}
+                  {reconciliation.droppedLabels.length > 0
+                    ? ` (${reconciliation.droppedLabels.join(", ")})`
+                    : ""}
+                </span>
+              </span>
+            </dd>
+          </div>
+        ) : null}
+
         <div>
           <dt>Budget verdict</dt>
           <dd className="font-medium text-foreground">

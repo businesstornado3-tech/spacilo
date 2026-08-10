@@ -648,6 +648,8 @@ export function useSpaceVisualisation(options: {
     attempt,
     elapsedMs,
     imageUrl,
+    retainedImageUrl,
+
     coverage,
     error,
     abortReason,

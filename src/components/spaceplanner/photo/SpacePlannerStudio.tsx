@@ -172,6 +172,13 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   }, [stuff.status, stuff.objects.length, refreshPerf]);
 
   React.useEffect(() => {
+    if (space.spaceScan) {
+      markArrangement("spaceReady");
+      refreshPerf();
+    }
+  }, [space.spaceScan, refreshPerf]);
+
+  React.useEffect(() => {
     if (manifest) {
       markArrangement("planReady");
       refreshPerf();
@@ -203,6 +210,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
         planReadyMs: perf.planReadyMs,
         timeToArrangementMs: perf.timeToArrangementMs,
         activeTimeToArrangementMs: perf.activeTimeToArrangementMs,
+        arrangementPaintMs: perf.arrangementPaintMs,
         renderMs: visual.diagnostics?.renderMs ?? null,
         verifyMs: visual.diagnostics?.verifyMs ?? null,
         totalMs: visual.diagnostics?.totalMs ?? null,

@@ -149,6 +149,7 @@ export function SpacePlannerDiagnostics({
             <TimingRow label="Deterministic plan" ms={timings.planMs} />
             <TimingRow label="Manifest validation" ms={timings.manifestValidationMs} />
             <TimingRow label="Plan ready" ms={timings.planReadyMs} verdict={budgets.plan} />
+            <TimingRow label="Plan → arrangement painted" ms={timings.arrangementPaintMs} />
             <TimingRow label="Click → arrangement (wall clock)" ms={timings.timeToArrangementMs} />
             <TimingRow
               label="Click → arrangement (excluding user input)"

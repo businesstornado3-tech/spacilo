@@ -345,9 +345,10 @@ async function checkCoverage(
                   // retained; only the prose is gone. Verbose verifier replies
                   // cost 1,157–4,829 output tokens and up to 22 seconds.
                   'Reply with JSON only. No prose, no explanation, no markdown. Schema exactly: {"objects":["2x cardboard box"],"present":["ITEM-1"],"unexpected":["shoes"],"missingFeatures":["FEATURE-1"],"supports":[{"item":"tv","restingOn":"tv stand"}]}.',
-                  'Every string must be at most 4 words. Never repeat a description. Omit reasoning entirely.',
-                  '"objects": every portable/stored object visible, listed independently of the whitelists and BEFORE consulting them. Include small objects (shoes, bottles, toys, bags, cushions). Quantity-accurate: one entry per unit, or prefix the count ("2x cardboard box").',
-                  '"present": USER_INVENTORY_WHITELIST ids clearly visible, duplicate units counted separately.',
+                  'Every string must be at most 4 words. Omit reasoning entirely. Do not repeat an identical description: give the number instead, as a count prefix ("3x cardboard box").',
+                  '"objects": every portable/stored object visible, listed independently of the whitelists and BEFORE consulting them. Include small objects (shoes, bottles, toys, bags, cushions). Quantity-accurate: prefix the count when you see more than one ("2x cardboard box").',
+                  '"present": each USER_INVENTORY_WHITELIST id clearly visible, listed ONCE. Quantity belongs in "objects", not here.',
+
                   '"unexpected": ONLY stored objects on NEITHER whitelist. Never a room feature, never a whitelisted item.',
                   '"missingFeatures": ROOM_FEATURE_WHITELIST ids that disappeared, moved, changed or became covered.',
                   '"supports": for each EXPECTED_SUPPORTS entry, what it actually stands on. Use "floor" when on the ground.',

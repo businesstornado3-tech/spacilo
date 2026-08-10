@@ -164,10 +164,18 @@ export function isRenderableSupport(baseLabel: string): boolean {
  * Items that should be lifted off the floor whenever a surface exists: small
  * objects, and anything light enough that a floor footprint of its own is
  * simply wasted area.
+ *
+ * Phase 6AA — the floor is the LAST resort, not the default. Anything that is
+ * not heavy, keeps a modest footprint and is short enough to sit on a table or
+ * a stand without looking absurd is surface-seeking. Whether a surface can
+ * actually take it is still decided by `canSupport`, so widening this only
+ * ever gives the packer more chances to use vertical space.
  */
 export function prefersSurface(item: PlanningItem): boolean {
   const cls = classifyItem(item);
   if (cls === "SMALL_ITEM") return true;
   const footprintM2 = (item.widthCm * item.depthCm) / 10_000;
-  return item.weight === "light" && footprintM2 <= 0.25;
+  if (item.weight === "light" && footprintM2 <= 0.25) return true;
+  return item.weight !== "heavy" && footprintM2 <= 0.35 && item.heightCm <= 70;
 }
+

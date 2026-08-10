@@ -578,10 +578,122 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
     }
   }
 
-
+  // Phase 6AA — the floor is the last resort.
+  //
+  // Anything still standing on its own patch of floor that a surface could
+  // safely carry is lifted now, after every base has settled. This is what
+  // turns "there was a free table in the corner" into vertical storage instead
+  // of a critique.
+  liftFloorItemsOntoSurfaces(placed, surfaceOccupancy, relations, ceiling);
 
   return placed.map((entry) => entry.entry);
 }
+
+/**
+ * Moves qualifying floor objects onto real surfaces in place. Only objects
+ * that carry nothing themselves are moved, so nothing is ever left hovering,
+ * and `canSupport` still decides what is physically allowed.
+ */
+export function liftFloorItemsOntoSurfaces(
+  placed: Placed[],
+  surfaceOccupancy: Map<string, Rect[]>,
+  relations: Map<string, Set<string>>,
+  ceiling: number,
+): number {
+  let lifted = 0;
+
+  const liftable = placed
+    .filter(
+      (candidate) =>
+        candidate.entry.layer === 0 &&
+        !candidate.entry.mounted &&
+        candidate.entry.supportedBy === null &&
+        candidate.entry.supportsItemIds.length === 0 &&
+        prefersSurface(candidate.item),
+    )
+    // Largest first: the awkward objects get the pick of the surfaces.
+    .sort((a, b) => b.entry.w * b.entry.d - a.entry.w * a.entry.d || a.entry.key.localeCompare(b.entry.key));
+
+  for (const subject of liftable) {
+    const relatedIds = relations.get(subject.item.id);
+    let best: { base: Placed; candidate: SurfaceCandidate } | null = null;
+
+    const bases = placed
+      .filter(
+        (candidate) =>
+          candidate.entry.layer === 0 &&
+          !candidate.entry.mounted &&
+          candidate.entry.key !== subject.entry.key,
+      )
+      .filter((candidate) =>
+        canSupport(
+          {
+            item: candidate.item,
+            w: candidate.entry.w,
+            d: candidate.entry.d,
+            topHeightM: candidate.entry.heightM,
+          },
+          {
+            item: subject.item,
+            w: subject.entry.w,
+            d: subject.entry.d,
+            heightM: subject.entry.heightM,
+          },
+          ceiling,
+        ),
+      )
+      .sort((a, b) => a.entry.key.localeCompare(b.entry.key));
+
+    for (const candidate of bases) {
+      const surface = usableSurfaceRect(candidate.entry);
+      const occupied = surfaceOccupancy.get(candidate.entry.key) ?? [];
+      const fit = packOnSurface(surface, occupied, subject.entry.w, subject.entry.d);
+      if (!fit) continue;
+      const scored: SurfaceCandidate = {
+        baseKey: candidate.entry.key,
+        baseItemId: candidate.entry.itemId,
+        fit,
+        score: scoreSurfaceCandidate({
+          baseItem: candidate.item,
+          baseTopHeightM: candidate.entry.heightM,
+          fit,
+          related: relatedIds?.has(candidate.item.id) ?? false,
+        }),
+      };
+      if (
+        !best ||
+        scored.score > best.candidate.score + 0.0001 ||
+        (Math.abs(scored.score - best.candidate.score) <= 0.0001 &&
+          scored.baseKey.localeCompare(best.candidate.baseKey) < 0)
+      ) {
+        best = { base: candidate, candidate: scored };
+      }
+    }
+
+    if (!best) continue;
+
+    const { base, candidate } = best;
+    const occupied = surfaceOccupancy.get(base.entry.key) ?? [];
+    occupied.push(candidate.fit.rect);
+    surfaceOccupancy.set(base.entry.key, occupied);
+    base.entry.supportsItemIds.push(subject.item.id);
+
+    subject.entry.x = candidate.fit.rect.x;
+    subject.entry.y = candidate.fit.rect.y;
+    subject.entry.w = candidate.fit.rect.w;
+    subject.entry.d = candidate.fit.rect.d;
+    subject.entry.rotationDeg = candidate.fit.rotationDeg;
+    subject.entry.baseHeightM = base.entry.heightM;
+    subject.entry.layer = base.entry.layer + 1;
+    subject.entry.zone = base.entry.zone;
+    subject.entry.supportedBy = base.entry.itemId;
+    subject.entry.groupId = `group-on-${base.entry.itemId}`;
+    lifted += 1;
+  }
+
+  return lifted;
+}
+
 
 
 /**

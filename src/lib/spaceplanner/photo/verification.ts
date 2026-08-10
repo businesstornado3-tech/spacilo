@@ -165,6 +165,11 @@ function stemWord(word: string): string {
   return word.replace(/(?:es|s)$/, "").replace(/e$/, "");
 }
 
+/** The synonym map keyed by the stemmed token the normaliser actually sees. */
+const STEMMED_WORD_SYNONYMS: Readonly<Record<string, string>> = Object.fromEntries(
+  Object.entries(WORD_SYNONYMS).map(([from, to]) => [stemWord(from), stemWord(to)]),
+);
+
 /** Text form used to compare labels. Plural, article and spelling insensitive. */
 export function normaliseLabel(label: string): string {
   let text = label
@@ -192,7 +197,7 @@ export function normaliseLabel(label: string): string {
     .split(" ")
     .filter(Boolean)
     .map((word) => {
-      const canonical = WORD_SYNONYMS[word];
+      const canonical = STEMMED_WORD_SYNONYMS[word];
       return canonical ? stemWord(canonical) : word;
     })
     .join(" ");

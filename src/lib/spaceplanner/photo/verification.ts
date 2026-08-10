@@ -563,16 +563,22 @@ export function supportDrift(
 }
 
 
-function matchId(reported: string, whitelist: readonly WhitelistEntry[]): string | null {
+function matchId(
+  reported: string,
+  whitelist: readonly WhitelistEntry[],
+  claimed: ReadonlySet<string> = new Set(),
+): string | null {
   const ids = new Set([canonicalId(reported), ...idsIn(reported)]);
   for (const entry of whitelist) {
     if (ids.has(canonicalId(entry.id))) return canonicalId(entry.id);
   }
   const label = normaliseLabel(reported);
-  const byLabel = whitelist.find(
+  const matches = whitelist.filter(
     (entry) => normaliseLabel(entry.label) === label || containsLabel(label, normaliseLabel(entry.label)),
   );
-  return byLabel ? canonicalId(byLabel.id) : null;
+  const unclaimed = matches.find((entry) => !claimed.has(canonicalId(entry.id)));
+  const chosen = unclaimed ?? matches[0];
+  return chosen ? canonicalId(chosen.id) : null;
 }
 
 function dedupe(values: string[]): string[] {

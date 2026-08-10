@@ -377,7 +377,8 @@ export function mergeAcrossPhotos(objects: DetectedObject[]): {
 export function labelsDescribeSameObject(a: string, b: string): boolean {
   const identityA = identityOf(a);
   const identityB = identityOf(b);
-  if (!identityA || !identityB || identityA !== identityB) return false;
+  if (!identityA || !identityB) return false;
+  if (identityA !== identityB && !headNounsAgree(a, b)) return false;
   const left = groupsOf(a);
   const right = groupsOf(b);
   return (

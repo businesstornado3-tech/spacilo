@@ -71,6 +71,42 @@ export function identityOf(label: string): string {
     .trim();
 }
 
+/**
+ * Phase 6AC — the HEAD NOUN of a label.
+ *
+ * Detectors name the same physical thing at different levels of detail from
+ * one angle to the next: "water bottle" in the first photograph, "bottle" in
+ * the second. English puts the noun that says WHAT SOMETHING IS at the end of
+ * the phrase, so the head noun is the last identity word, and everything
+ * before it is a qualifier.
+ */
+export function headNounOf(label: string): string {
+  const words = identityOf(label).split(" ").filter(Boolean);
+  return words.length === 0 ? "" : words[words.length - 1]!;
+}
+
+/** The identity words in front of the head noun ("water" in "water bottle"). */
+export function qualifiersOf(label: string): string[] {
+  const words = identityOf(label).split(" ").filter(Boolean);
+  return words.slice(0, -1);
+}
+
+/**
+ * True when two labels name the same KIND of object at different levels of
+ * detail. "water bottle" and "bottle" qualify; "water bottle" and "milk
+ * bottle" do not, because both sides named a qualifier and the qualifiers
+ * disagree — that is positive evidence of two different things.
+ */
+export function headNounsAgree(a: string, b: string): boolean {
+  const headA = headNounOf(a);
+  const headB = headNounOf(b);
+  if (!headA || headA !== headB) return false;
+  const left = qualifiersOf(a);
+  const right = qualifiersOf(b);
+  if (left.length === 0 || right.length === 0) return true;
+  return left.some((word) => right.includes(word));
+}
+
 /** Everyday synonyms collapsed to one canonical noun. */
 const SYNONYMS: Record<string, string> = {
   tv: "television",

@@ -100,6 +100,9 @@ export interface VisionStageTimings {
   sweepCalls?: number;
   /** Why a sweep was triggered, in plain words. */
   completenessReasons?: string[];
+  /** True when this result came from the content-addressed cache. */
+  cacheHit?: boolean;
+
 }
 
 

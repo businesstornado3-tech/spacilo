@@ -296,9 +296,22 @@ export const aiVisionProvider: VisionProvider = {
         model: "cache",
         analysedAt: Date.now(),
         // A cache hit costs nothing but the lookup itself.
-        timings: { prepareMs: 0, requestMs: 0, detectMs: 0, refineMs: 0, scanCalls: 0, refineCalls: 0 },
+        // A cache hit costs nothing but the lookup itself, and — the point of
+        // the whole content fingerprint — makes ZERO model calls.
+        timings: {
+          prepareMs: 0,
+          requestMs: 0,
+          detectMs: 0,
+          refineMs: 0,
+          sweepMs: 0,
+          scanCalls: 0,
+          refineCalls: 0,
+          sweepCalls: 0,
+          cacheHit: true,
+        },
       };
     }
+
 
     const { payload, requestMs } = await postPrepared(prepared, "belongings", undefined, options);
     options?.onStage?.("estimating");

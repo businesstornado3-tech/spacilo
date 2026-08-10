@@ -226,10 +226,62 @@ export function classifyReported(
   return "unexpected";
 }
 
+/**
+ * Phase 6AG — words that DESCRIBE an object without changing what it is.
+ *
+ * A colour, a size or a material in front of a noun is the same physical
+ * object seen more precisely: "blue suitcase" IS a suitcase. Any other extra
+ * word makes a different, compound object: a "TV stand" is not a TV, a
+ * "storage box" is not a box, and a "laptop bag" is not any bag. This single
+ * distinction is what keeps the 6AF suitcase fix while restoring the
+ * TV / TV-stand separation it broke.
+ */
+const DESCRIPTOR_WORDS: ReadonlySet<string> = new Set(
+  [
+    // colour
+    "black", "white", "grey", "gray", "silver", "blue", "navy", "red", "green",
+    "yellow", "orange", "purple", "pink", "brown", "beige", "cream", "tan",
+    "gold", "golden", "bronze", "chrome", "dark", "light", "pale", "bright",
+    "clear", "transparent", "patterned", "striped", "plain",
+    // size
+    "small", "medium", "large", "big", "little", "tall", "short", "wide",
+    "narrow", "slim", "compact", "oversized", "tiny", "huge", "mini", "giant",
+    // material and finish
+    "plastic", "metal", "metallic", "wooden", "wood", "cardboard", "fabric",
+    "leather", "canvas", "steel", "aluminium", "aluminum", "glass", "wicker",
+    "rattan", "padded", "soft", "hard", "rigid",
+    // condition and state
+    "old", "new", "used", "worn", "spare", "folded", "stacked", "closed",
+    "open", "empty", "full", "upright", "flat", "upside", "down",
+  ].map((word) => normaliseLabel(word)),
+);
+
+/**
+ * Does `reported` name the same object as `allowed`?
+ *
+ * Whole-word containment, plus the Phase 6AG head-noun rule: the longer label
+ * may only add DESCRIPTOR words, and both labels must end on the same head
+ * noun. "suitcase" ↔ "blue suitcase" passes; "TV" ↮ "TV stand", "bag" ↮
+ * "laptop bag" and "box" ↮ "storage box" do not.
+ */
 function containsLabel(reported: string, allowed: string): boolean {
-  if (!allowed) return false;
-  return ` ${reported} `.includes(` ${allowed} `);
+  if (!allowed || !reported) return false;
+  if (reported === allowed) return true;
+  if (!` ${reported} `.includes(` ${allowed} `)) return false;
+
+  const reportedWords = reported.split(" ").filter(Boolean);
+  const allowedWords = allowed.split(" ").filter(Boolean);
+  // The head noun is the object's identity. A different head noun is a
+  // different object, whatever the shorter label happens to spell.
+  if (reportedWords[reportedWords.length - 1] !== allowedWords[allowedWords.length - 1]) {
+    return false;
+  }
+  // Same head noun, so the allowance sits at the end: everything in front of
+  // it is the expansion, and it must be purely descriptive.
+  const extras = reportedWords.slice(0, reportedWords.length - allowedWords.length);
+  return extras.every((word) => DESCRIPTOR_WORDS.has(word));
 }
+
 
 export interface CategoryReport {
   expected: string[];

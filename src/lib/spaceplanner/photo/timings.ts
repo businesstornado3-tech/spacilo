@@ -27,9 +27,12 @@ export interface PipelineTimings {
   mergeMs: number | null;
   /** Confidence-gated second look. 0 when nothing needed refining. */
   refineMs: number | null;
+  /** Phase 6Y — completeness sweep. 0 when the first pass looked complete. */
+  sweepMs: number | null;
   /** Model calls made for the belongings scan, so parallelism is visible. */
   scanCalls: number | null;
   refineCalls: number | null;
+  sweepCalls: number | null;
   /** Sizing / canonicalisation of what detection returned. */
   classificationMs: number | null;
   /** Wall clock from pressing analyse to a usable inventory. */
@@ -40,8 +43,16 @@ export interface PipelineTimings {
   planMs: number | null;
   /** Hard-constraint validation of the produced manifest. */
   manifestValidationMs: number | null;
-  /** Wall clock from pressing analyse-space to a usable arrangement plan. */
+  /**
+   * Phase 6Y — measured in the BROWSER, from the Analyse click to the frame
+   * in which the deterministic arrangement was painted. Wall clock, so it
+   * includes any time the user spent reviewing or photographing.
+   */
   timeToArrangementMs: number | null;
+  /** The same journey with user-input windows subtracted. The 5s target. */
+  activeTimeToArrangementMs: number | null;
+  /** Analyse click → a validated deterministic plan existed. */
+  planReadyMs: number | null;
   /** Image model call. */
   renderMs: number | null;
   /** Render verification call. */
@@ -49,6 +60,7 @@ export interface PipelineTimings {
   /** Whole visualisation, including photo preparation. */
   totalMs: number | null;
 }
+
 
 export const EMPTY_TIMINGS: PipelineTimings = {
   photoPrepMs: null,

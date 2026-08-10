@@ -67,18 +67,23 @@ export const EMPTY_TIMINGS: PipelineTimings = {
   detectionMs: null,
   mergeMs: null,
   refineMs: null,
+  sweepMs: null,
   scanCalls: null,
   refineCalls: null,
+  sweepCalls: null,
   classificationMs: null,
   inventoryReadyMs: null,
   spaceAnalysisMs: null,
   planMs: null,
   manifestValidationMs: null,
   timeToArrangementMs: null,
+  activeTimeToArrangementMs: null,
+  planReadyMs: null,
   renderMs: null,
   verifyMs: null,
   totalMs: null,
 };
+
 
 export type BudgetState = "unknown" | "within" | "over";
 

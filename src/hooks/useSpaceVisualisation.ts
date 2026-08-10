@@ -286,6 +286,7 @@ export function useSpaceVisualisation(options: {
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
   const [coverage, setCoverage] = React.useState<CoverageReport | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [abortReason, setAbortReason] = React.useState<PreviewAbortReason | null>(null);
   const [attempt, setAttempt] = React.useState(0);
   const [elapsedMs, setElapsedMs] = React.useState(0);
   const [diagnostics, setDiagnostics] = React.useState<RenderDiagnostics | null>(null);
@@ -293,22 +294,37 @@ export function useSpaceVisualisation(options: {
   const run = React.useRef(0);
   const abort = React.useRef<AbortController | null>(null);
   const timer = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  const uxTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  /**
+   * Signatures whose preview already failed for a reason a second attempt
+   * cannot change. An identical automatic run is answered from memory instead
+   * of spending another render; only an explicit "try again" clears one.
+   */
+  const spent = React.useRef(new Map<string, PreviewAbortReason>());
 
   const stopClock = React.useCallback(() => {
     if (timer.current) {
       clearInterval(timer.current);
       timer.current = null;
     }
+    if (uxTimer.current) {
+      clearTimeout(uxTimer.current);
+      uxTimer.current = null;
+    }
   }, []);
 
   React.useEffect(() => () => {
     if (timer.current) clearInterval(timer.current);
+    if (uxTimer.current) clearTimeout(uxTimer.current);
     abort.current?.abort();
   }, []);
 
-  const generate = React.useCallback(async () => {
+  const generate = React.useCallback(
+    async (callOptions?: { force?: boolean }) => {
+    const force = callOptions?.force === true;
     if (!result || !spacePhoto || !manifest) {
       setError("verified_manifest_required");
+      setAbortReason("unknown");
       setStatus("failed");
       return;
     }
@@ -317,6 +333,7 @@ export function useSpaceVisualisation(options: {
     // list; only an empty list means there is nothing to draw.
     if (renderItems.length === 0) {
       setError("inventory_not_fully_placeable");
+      setAbortReason("unknown");
       setStatus("failed");
       return;
     }
@@ -325,6 +342,7 @@ export function useSpaceVisualisation(options: {
     setStatus("preparing");
     setStage("planning");
     setError(null);
+    setAbortReason(null);
     setImageUrl(null);
     setCoverage(null);
     setDiagnostics(null);
@@ -341,11 +359,27 @@ export function useSpaceVisualisation(options: {
       setElapsedMs(Date.now() - startedAt);
     }, 1000);
 
+    /**
+     * Phase 6AD — the USER's deadline, not the network's. When it expires the
+     * spinner stops and the measured plan is the answer. Anything still in
+     * flight keeps going quietly and can only ever upgrade the screen.
+     */
+    let uxDeadlineExceeded = false;
+    uxTimer.current = setTimeout(() => {
+      if (run.current !== token) return;
+      uxDeadlineExceeded = true;
+      setStatus((current) => (isVisualisationWorking(current) ? "unavailable" : current));
+      setAbortReason((current) => current ?? "ux_deadline");
+    }, PREVIEW_UX_DEADLINE_MS);
+
+    let renderRequests = 0;
+
     /** One render request, abandoned rather than left hanging. */
     const render = async (body: Parameters<typeof requestVisualisation>[0]) => {
       const controller = new AbortController();
       abort.current = controller;
       const guard = setTimeout(() => controller.abort(), RENDER_TIMEOUT_MS);
+      renderRequests += 1;
       try {
         return await requestVisualisation(body, fetch, { signal: controller.signal });
       } finally {
@@ -380,6 +414,18 @@ export function useSpaceVisualisation(options: {
         inventoryHash: manifest.inventoryId,
       };
 
+      // Same photos, same plan, same failure — do not buy the same answer
+      // twice. An explicit retry clears the memory and is allowed through.
+      const signature = visualisationSignature(payload);
+      if (force) spent.current.delete(signature);
+      const remembered = spent.current.get(signature);
+      if (remembered && !cachedVisualisation(signature)) {
+        stopClock();
+        setAbortReason(remembered);
+        setStatus("unavailable");
+        return;
+      }
+
       const renderedAt = Date.now();
       let response = await render(payload);
       if (run.current !== token) return;
@@ -392,7 +438,7 @@ export function useSpaceVisualisation(options: {
       const verifiedAt = Date.now();
       for (let pass = 1; pass < MAX_RENDER_ATTEMPTS; pass += 1) {
         setStage("checking");
-        setStatus("verifying");
+        if (!uxDeadlineExceeded) setStatus("verifying");
         const coverageNow = response.coverage;
         // An unverifiable render is not a wrong render: the checker simply
         // could not answer. It is not shown either way.
@@ -402,6 +448,10 @@ export function useSpaceVisualisation(options: {
         // to draw fails closed immediately: the plan is already on screen and
         // is worth more than another render's wait and cost.
         if (!shouldRetryRender(coverageNow)) break;
+        // Phase 6AD — and never once the user has stopped waiting. A second
+        // render past the budget costs credits to improve a screen nobody is
+        // looking at any more.
+        if (uxDeadlineExceeded) break;
         const missingItems = coverageNow.missing.length > 0;
 
 
@@ -426,7 +476,7 @@ export function useSpaceVisualisation(options: {
 
       const finalCoverage = response.coverage;
       setStage("checking");
-      setStatus("verifying");
+      if (!uxDeadlineExceeded) setStatus("verifying");
       setCoverage(finalCoverage);
       setDiagnostics({
         provider: response.provider,
@@ -436,8 +486,13 @@ export function useSpaceVisualisation(options: {
         inventoryHash: manifest.inventoryId,
         renderMs: response.renderMs ?? renderWallMs,
         prepareMs,
-        verifyMs: Date.now() - verifiedAt,
+        verifyMs: response.verifyMs ?? Date.now() - verifiedAt,
         totalMs: Date.now() - startedAt,
+        serverTotalMs: response.serverTotalMs ?? null,
+        verifyTimedOut: response.verifyTimedOut === true,
+        uxDeadlineExceeded,
+        renderRequests,
+        abortReason: null,
       });
 
       // FAIL-CLOSED (Phase 6T). Only a render that was actually checked AND
@@ -453,6 +508,7 @@ export function useSpaceVisualisation(options: {
       }
       if (!finalCoverage || response.verification === "unverified") {
         setImageUrl(null);
+        if (response.verifyTimedOut) setAbortReason("server_verify_timeout");
         setStatus("unverified");
         return;
       }
@@ -462,22 +518,62 @@ export function useSpaceVisualisation(options: {
         return;
       }
 
+      // A verified render is shown even if it arrived after the user's budget:
+      // late is a bonus, and the plan was never hidden waiting for it.
       setImageUrl(response.image);
       setStatus("verified");
+      setAbortReason(null);
 
     } catch (cause) {
       if (run.current !== token) return;
       const aborted = cause instanceof DOMException && cause.name === "AbortError";
+      const code = aborted ? "timed_out" : cause instanceof Error ? cause.message : "unknown";
+      const reason = abortReasonFor(code);
       // Phase 6AC — a preview that timed out or failed must leave nothing
       // behind. The deterministic SVG plan stays on screen; no stale or
       // unverified image is ever allowed to survive a failed run.
       setImageUrl(null);
-      setError(aborted ? "timed_out" : cause instanceof Error ? cause.message : "unknown");
-      setStatus("failed");
+      setError(code);
+      setAbortReason(reason);
+      setDiagnostics((current) => ({
+        provider: current?.provider ?? null,
+        model: current?.model ?? null,
+        diagnosticId: current?.diagnosticId ?? null,
+        planHash: manifest.planHash,
+        inventoryHash: manifest.inventoryId,
+        renderMs: current?.renderMs ?? null,
+        totalMs: Date.now() - startedAt,
+        uxDeadlineExceeded,
+        renderRequests,
+        abortReason: reason,
+      }));
+      // Phase 6AD — NO BLIND RETRY. A timeout, a busy gateway or an
+      // unreachable service is remembered against this exact input so the
+      // same wait is never bought twice without the user asking for it.
+      if (!isRetryableFailure(code)) {
+        try {
+          spent.current.set(
+            visualisationSignature({
+              spaceImage: (await prepareImageOnce(spacePhoto.url))!,
+              itemImages: [],
+              instruction: buildVisualisationInstruction(result, objects, manifest),
+              manifest: renderItems,
+              planHash: manifest.planHash,
+              inventoryHash: manifest.inventoryId,
+            }),
+            reason,
+          );
+        } catch {
+          /* remembering a failure must never cause one */
+        }
+      }
+      setStatus(uxDeadlineExceeded ? "unavailable" : "failed");
     } finally {
       if (run.current === token) stopClock();
     }
-  }, [result, objects, manifest, spacePhoto, itemPhotos, stopClock]);
+  },
+    [result, objects, manifest, spacePhoto, itemPhotos, stopClock],
+  );
 
 
   const reset = React.useCallback(() => {
@@ -490,6 +586,7 @@ export function useSpaceVisualisation(options: {
     setDiagnostics(null);
 
     setError(null);
+    setAbortReason(null);
     setAttempt(0);
     setElapsedMs(0);
   }, [stopClock]);
@@ -507,6 +604,7 @@ export function useSpaceVisualisation(options: {
     imageUrl,
     coverage,
     error,
+    abortReason,
     diagnostics,
 
     generate,

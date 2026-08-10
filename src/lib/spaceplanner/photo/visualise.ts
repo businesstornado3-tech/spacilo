@@ -353,9 +353,18 @@ export async function requestVisualisation(
       model: typeof payload.model === "string" ? payload.model : null,
       renderMs: typeof payload.renderMs === "number" ? payload.renderMs : null,
       verifyMs: typeof payload.verifyMs === "number" ? payload.verifyMs : null,
+      renderDeadlineMs:
+        typeof payload.renderDeadlineMs === "number" ? payload.renderDeadlineMs : null,
+      verifyDeadlineMs:
+        typeof payload.verifyDeadlineMs === "number" ? payload.verifyDeadlineMs : null,
+      renderTimedOut: payload.renderTimedOut === true,
       verifyTimedOut: payload.verifyTimedOut === true,
+      renderRequestsSpent:
+        typeof payload.renderRequestsSpent === "number" ? payload.renderRequestsSpent : null,
+      failureReason: typeof payload.failureReason === "string" ? payload.failureReason : null,
       serverTotalMs: typeof payload.serverTotalMs === "number" ? payload.serverTotalMs : null,
     };
+
 
     sessionCache.set(signature, result);
     return result;

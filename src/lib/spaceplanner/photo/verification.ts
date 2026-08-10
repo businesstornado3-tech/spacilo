@@ -144,11 +144,26 @@ export function normaliseLabel(label: string): string {
     .trim();
 }
 
-/** Any ID-looking token inside a free-text report. */
+/**
+ * Any ID-looking token inside a free-text report.
+ *
+ * Phase 6AG — a trailing unit suffix ("ITEM-003_02") resolves to its OBJECT
+ * id. The verifier now answers at object level, but a model that still echoes
+ * an older unit string must not silently fail to match.
+ */
 function idsIn(text: string): string[] {
-  const matches = text.toUpperCase().match(/\b(?:ITEMS?|FEATURES?|OBJECTS?)\s*[-_ ]?\s*\d+\b/g);
-  return (matches ?? []).map(canonicalId);
+  const matches = text
+    .toUpperCase()
+    .match(/\b(?:ITEMS?|FEATURES?|OBJECTS?)\s*[-_ ]?\s*\d+(?:\s*[-_]\s*\d+)?\b/g);
+  return (matches ?? []).map((match) => {
+    const trimmed = match.replace(/\s*[-_]\s*\d+\s*$/, (tail, offset: number) =>
+      // Only a SECOND number group is a unit suffix; "ITEM-003" keeps its number.
+      /\d/.test(match.slice(0, offset)) ? "" : tail,
+    );
+    return canonicalId(trimmed);
+  });
 }
+
 
 function looksArchitectural(label: string): boolean {
   const text = ` ${normaliseLabel(label)} `;

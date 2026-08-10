@@ -14,7 +14,13 @@
  * The same manifest and the same room geometry always produce the same
  * coordinates.
  */
-import { classifyItem, classPlacementOrder, type PhysicalClass } from "./classify";
+import {
+  classifyItem,
+  classPlacementOrder,
+  SMALL_ITEM_FOOTPRINT_M2,
+  type PhysicalClass,
+} from "./classify";
+
 import { orientationsFor, stacksFor, type OrientationOption, type StackCandidate } from "./items";
 import { canSupport, prefersSurface, relationMap, storageZoneFor } from "./relations";
 import { contains, intersects, rectArea } from "./space";

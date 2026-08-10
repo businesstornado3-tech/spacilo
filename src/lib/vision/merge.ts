@@ -35,8 +35,13 @@ const COLOUR =
 const MATERIAL = /\b(wooden|wood|metal|steel|plastic|cardboard|fabric|leather|glass|canvas)\b/g;
 const SIZE = /\b(large|small|medium|big|tall|short|mini|compact|oversized)\b/g;
 
-/** Everything that is noise for identity purposes. */
-const NOISE = /\b(a|an|the|of|with|and|approx|approximately|about|item|object)\b/g;
+/**
+ * Everything that is noise for identity purposes — articles, filler and the
+ * styling words detectors sprinkle on the same object ("flat screen TV",
+ * "smart television").
+ */
+const NOISE =
+  /\b(a|an|the|of|with|and|approx|approximately|about|item|object|flat|flatscreen|flat-screen|smart|led|lcd|plasma|modern|old|new|standard|typical|generic)\b/g;
 
 export function normaliseLabel(label: string): string {
   return label

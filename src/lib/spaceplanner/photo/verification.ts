@@ -282,6 +282,12 @@ export function classifyReported(
     return "room_feature";
   }
 
+  // Phase 6AI — a loose but unambiguous description of a belonging the user
+  // really owns ("black bag", "bagpack" for their black backpack). Only ever
+  // when exactly one inventory object is compatible; two candidates stay
+  // unexpected, so the render fails closed rather than guessing.
+  if (uniqueGenericMatch(raw, whitelists.items)) return "user_item";
+
   if (looksArchitectural(raw)) return "room_feature";
   return "unexpected";
 }
@@ -762,6 +768,15 @@ function candidateKeysFor(reported: string, items: readonly WhitelistEntry[]): s
     if (!key) continue;
     if (key === text || containsLabel(text, key) || containsLabel(key, text)) keys.add(key);
   }
+  if (!keys.size) {
+    // Phase 6AI — no literal match, so fall back to the unique compatible
+    // belonging, if there is exactly one. Ambiguity yields no key at all.
+    const generic = uniqueGenericMatch(reported, items);
+    if (generic) {
+      const key = normaliseLabel(generic.label);
+      if (key) keys.add(key);
+    }
+  }
   return [...keys].sort((a, b) => b.length - a.length);
 }
 
@@ -961,6 +976,10 @@ function matchId(
     // "suitcase" names one of the user's coloured suitcases.
     return allowed === label || containsLabel(label, allowed) || containsLabel(allowed, label);
   });
+  if (!matches.length) {
+    const generic = uniqueGenericMatch(reported, whitelist);
+    if (generic) matches.push(generic);
+  }
   const unclaimed = matches.find((entry) => !claimed.has(canonicalId(entry.id)));
   const chosen = unclaimed ?? matches[0];
   return chosen ? canonicalId(chosen.id) : null;

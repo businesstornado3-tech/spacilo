@@ -313,10 +313,15 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     track("spaceplanner_items_detected", {
       props: { count: locked.distinctItems, units: locked.itemCount, confirmed: 1 },
     });
-    setStep("space");
-    // Unless the space was already analysed alongside the belongings, the next
-    // thing that has to happen is the user adding a photograph.
-    if (!space.spaceScan) beginUserWait();
+    // When the space was already analysed alongside the belongings there is
+    // nothing left to ask for — go straight to the arrangement rather than
+    // making the user press a second button for work already done.
+    if (space.spaceScan) {
+      setStep("result");
+    } else {
+      setStep("space");
+      beginUserWait();
+    }
     refreshPerf();
   };
 

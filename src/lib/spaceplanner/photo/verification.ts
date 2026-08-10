@@ -283,6 +283,58 @@ function containsLabel(reported: string, allowed: string): boolean {
 }
 
 
+/**
+ * Phase 6AH — an object the deterministic planner deliberately did NOT place.
+ *
+ * It is a real belonging of the user's that remains visible in the source
+ * photograph, so the renderer may reproduce it. It is permitted, capped at the
+ * quantity the planner left unplaced, and it can never satisfy a required
+ * placed allowance.
+ */
+export interface UnplacedAllowance {
+  id: string;
+  label: string;
+  quantity: number;
+  reason?: string;
+}
+
+/** Capacity-limited claim book for intentionally unplaced belongings. */
+export function unplacedLedger(unplaced: readonly UnplacedAllowance[] = []) {
+  const remaining = unplaced
+    .map((entry) => ({
+      label: normaliseLabel(entry.label),
+      original: entry.label,
+      left: Math.max(0, Math.round(entry.quantity ?? 1)),
+    }))
+    .filter((entry) => entry.label && entry.left > 0);
+  const claimed: string[] = [];
+  return {
+    /** Consumes up to `count` units of this description. Returns units left over. */
+    claim(text: string, count = 1): number {
+      let outstanding = Math.max(1, count);
+      const label = normaliseLabel(text);
+      if (!label) return outstanding;
+      for (const entry of remaining) {
+        if (outstanding <= 0) break;
+        if (entry.left <= 0) continue;
+        const same =
+          entry.label === label ||
+          containsLabel(label, entry.label) ||
+          containsLabel(entry.label, label);
+        if (!same) continue;
+        const take = Math.min(entry.left, outstanding);
+        entry.left -= take;
+        outstanding -= take;
+        for (let i = 0; i < take; i += 1) claimed.push(entry.original);
+      }
+      return outstanding;
+    },
+    get permitted(): string[] {
+      return [...claimed];
+    },
+  };
+}
+
 export interface CategoryReport {
   expected: string[];
   found: string[];
@@ -330,6 +382,11 @@ export interface CategorisedVerification {
    * verifier actually enumerated what it saw.
    */
   quantityShortfalls: string[];
+  /**
+   * Phase 6AH — belongings the planner intentionally left unplaced that the
+   * render still shows. Permitted, never counted as placed, never fatal.
+   */
+  permittedUnplaced: string[];
   /**
    * True only when every user belonging is present at the right quantity and
    * nothing was invented. Room-feature drift is reported but never withholds a
@@ -389,7 +446,8 @@ export function quantityCheck(
     features: readonly WhitelistEntry[];
     itemAliases?: readonly string[];
   },
-): { checks: QuantityCheck[]; unexpected: string[]; shortfalls: string[] } {
+  unplaced: readonly UnplacedAllowance[] = [],
+): { checks: QuantityCheck[]; unexpected: string[]; shortfalls: string[]; permitted: string[] } {
   const allowed = new Map<string, { label: string; allowed: number }>();
   for (const entry of items) {
     const key = normaliseLabel(entry.label);
@@ -474,6 +532,16 @@ export function quantityCheck(
     if (missing > 0) shortfalls.push(`missing ${info.label} ×${missing}`);
   }
 
+  // Phase 6AH — before anything is called an invention, the intentionally
+  // unplaced belongings get their capped allowance. Excess beyond that
+  // allowance stays an invention, so phantom-object protection is unchanged.
+  const ledger = unplacedLedger(unplaced);
+  for (const [key, entry] of [...invented.entries()]) {
+    const left = ledger.claim(entry.label, entry.count);
+    if (left <= 0) invented.delete(key);
+    else entry.count = left;
+  }
+
   for (const entry of invented.values()) {
     checks.push({
       label: entry.label,
@@ -485,7 +553,7 @@ export function quantityCheck(
     unexpected.push(entry.count > 1 ? `${entry.label} ×${entry.count}` : entry.label);
   }
 
-  return { checks, unexpected, shortfalls };
+  return { checks, unexpected, shortfalls, permitted: ledger.permitted };
 }
 
 
@@ -543,6 +611,8 @@ export function categoriseVerification(input: {
   itemAliases?: readonly string[];
   /** Support relationships the deterministic plan asserted. */
   expectedSupports?: readonly ExpectedSupport[];
+  /** Belongings the deterministic planner intentionally did not place. */
+  unplaced?: readonly UnplacedAllowance[];
 }): CategorisedVerification {
 
   const { items, features, reply } = input;
@@ -570,13 +640,19 @@ export function categoriseVerification(input: {
 
   const inventedItems: string[] = [];
   const featureIssues: string[] = [];
+  // One ledger per reported list: the two lists describe the SAME image, so a
+  // sighting in each must not consume the allowance twice.
+  const strayLedger = unplacedLedger(input.unplaced ?? []);
 
   for (const entry of [...reply.unexpected, ...strayFromPresent]) {
     const text = entry.trim();
     if (!text) continue;
     const category = classifyReported(text, whitelists);
     if (category === "room_feature") featureIssues.push(text);
-    else if (category === "unexpected") inventedItems.push(text);
+    else if (category === "unexpected") {
+      // Phase 6AH — a known belonging the planner left unplaced is permitted.
+      if (strayLedger.claim(text, observedCount(text)) > 0) inventedItems.push(text);
+    }
     // A whitelisted user item reported as "unexpected" is a duplicate-count
     // artefact of the checker, not an invention: the ID is already required.
   }
@@ -595,7 +671,7 @@ export function categoriseVerification(input: {
   // suitcase the user does not own is an invention even though "suitcase" is
   // a whitelisted word. Objects matching no whitelist remain inventions at any
   // quantity, and are reported with the number of occurrences seen.
-  const quantities = quantityCheck(items, reply.objects ?? [], whitelists);
+  const quantities = quantityCheck(items, reply.objects ?? [], whitelists, input.unplaced ?? []);
   for (const issue of quantities.unexpected) inventedItems.push(issue);
 
 
@@ -625,6 +701,7 @@ export function categoriseVerification(input: {
     supportIssues,
     quantities: quantities.checks,
     quantityShortfalls: quantities.shortfalls,
+    permittedUnplaced: dedupe([...strayLedger.permitted, ...quantities.permitted]),
     verified:
       userInventory.missing.length === 0 &&
       userInventory.unexpected.length === 0 &&

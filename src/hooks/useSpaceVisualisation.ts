@@ -109,7 +109,19 @@ export function abortReasonFor(code: string | null): PreviewAbortReason {
  * and credits while the deterministic plan is already on screen.
  */
 export function isRetryableFailure(code: string | null): boolean {
-  return false && Boolean(code);
+  const neverRetry: ReadonlySet<string> = new Set([
+    "timed_out",
+    "render_timeout",
+    "upstream_429",
+    "upstream_402",
+    "upstream_unreachable",
+    "not_configured",
+    "no_image_returned",
+    "bad_upstream_payload",
+    "verified_manifest_required",
+    "inventory_not_fully_placeable",
+  ]);
+  return code !== null && !neverRetry.has(code);
 }
 
 /**

@@ -127,9 +127,52 @@ function canonicalId(value: string): string {
     .replace(/^OBJECTS/, "OBJECT");
 }
 
-/** Text form used to compare labels. Plural and article insensitive. */
+/**
+ * Phase 6AI — bounded, deterministic spelling and synonym normalisation.
+ *
+ * The live failure: the verifier wrote "Black bagpack" for the user's own
+ * black backpack, and the matcher — which only ever compared literal text —
+ * called it an invention. These maps are a CLOSED list of known equivalences
+ * and transcription slips. Nothing outside them is normalised, so unrelated
+ * objects can never collapse into one another.
+ */
+const PHRASE_SYNONYMS: ReadonlyArray<[string, string]> = [
+  ["back pack", "backpack"],
+  ["bag pack", "backpack"],
+  ["suit case", "suitcase"],
+  ["lap top", "laptop"],
+  ["flat screen television", "television"],
+  ["flatscreen television", "television"],
+  ["television set", "television"],
+  ["luggage case", "suitcase"],
+  ["laptop case", "laptop bag"],
+  ["water bottle", "water bottle"],
+];
+
+const WORD_SYNONYMS: Readonly<Record<string, string>> = {
+  tv: "television",
+  telly: "television",
+  televison: "television",
+  bagpack: "backpack",
+  backpak: "backpack",
+  bakpack: "backpack",
+  rucksack: "backpack",
+  knapsack: "backpack",
+  luggage: "suitcase",
+};
+
+function stemWord(word: string): string {
+  return word.replace(/(?:es|s)$/, "").replace(/e$/, "");
+}
+
+/** The synonym map keyed by the stemmed token the normaliser actually sees. */
+const STEMMED_WORD_SYNONYMS: Readonly<Record<string, string>> = Object.fromEntries(
+  Object.entries(WORD_SYNONYMS).map(([from, to]) => [stemWord(from), stemWord(to)]),
+);
+
+/** Text form used to compare labels. Plural, article and spelling insensitive. */
 export function normaliseLabel(label: string): string {
-  return label
+  let text = label
     .trim()
     .toLowerCase()
     .replace(STATE_WORDS, " ")
@@ -140,9 +183,26 @@ export function normaliseLabel(label: string): string {
     )
     .replace(/[^a-z0-9 ]/g, " ")
     .replace(/\s+/g, " ")
-    .replace(/\b\w+\b/g, (word) => word.replace(/(?:es|s)$/, "").replace(/e$/, ""))
+    .replace(/\b\w+\b/g, stemWord)
     .trim();
+
+  for (const [from, to] of PHRASE_SYNONYMS) {
+    const source = from.split(" ").map(stemWord).join(" ");
+    const target = to.split(" ").map(stemWord).join(" ");
+    if (source === target) continue;
+    text = ` ${text} `.split(` ${source} `).join(` ${target} `).trim();
+  }
+
+  return text
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => {
+      const canonical = STEMMED_WORD_SYNONYMS[word];
+      return canonical ? stemWord(canonical) : word;
+    })
+    .join(" ");
 }
+
 
 /**
  * Any ID-looking token inside a free-text report.
@@ -222,6 +282,12 @@ export function classifyReported(
     return "room_feature";
   }
 
+  // Phase 6AI — a loose but unambiguous description of a belonging the user
+  // really owns ("black bag", "bagpack" for their black backpack). Only ever
+  // when exactly one inventory object is compatible; two candidates stay
+  // unexpected, so the render fails closed rather than guessing.
+  if (uniqueGenericMatch(raw, whitelists.items)) return "user_item";
+
   if (looksArchitectural(raw)) return "room_feature";
   return "unexpected";
 }
@@ -282,6 +348,130 @@ function containsLabel(reported: string, allowed: string): boolean {
   return extras.every((word) => DESCRIPTOR_WORDS.has(word));
 }
 
+
+/**
+ * Phase 6AI — generic head nouns and the specific objects they may name.
+ *
+ * "bag" is a legitimate way to describe a backpack; it is NOT a licence for
+ * every bag-like object to satisfy every allowance. A generic description is
+ * only ever resolved when EXACTLY ONE inventory object is compatible with it —
+ * two candidates stay ambiguous and remain fail-closed.
+ */
+const HYPERNYMS: Readonly<Record<string, readonly string[]>> = {
+  bag: ["backpack", "holdall", "duffel", "satchel", "handbag", "rucksack"],
+  case: ["suitcase", "briefcase"],
+  luggage: ["suitcase", "backpack", "holdall"],
+};
+
+const COLOUR_WORDS: ReadonlySet<string> = new Set(
+  [
+    "black", "white", "grey", "gray", "silver", "blue", "navy", "red", "green",
+    "yellow", "orange", "purple", "pink", "brown", "beige", "cream", "tan",
+    "gold", "golden", "bronze", "chrome",
+  ].map((word) => normaliseLabel(word)),
+);
+
+function coloursIn(label: string): string[] {
+  return label.split(" ").filter((word) => COLOUR_WORDS.has(word));
+}
+
+/** Two descriptions of one object may not disagree about its colour. */
+function coloursCompatible(a: string, b: string): boolean {
+  const left = coloursIn(a);
+  const right = coloursIn(b);
+  if (!left.length || !right.length) return true;
+  return left.some((colour) => right.includes(colour));
+}
+
+function stripDescriptors(label: string): string {
+  const words = label.split(" ").filter(Boolean);
+  const core = words.filter((word, index) => !(DESCRIPTOR_WORDS.has(word) && index < words.length - 1));
+  return (core.length ? core : words).join(" ");
+}
+
+function headNoun(label: string): string {
+  const words = label.split(" ").filter(Boolean);
+  return words[words.length - 1] ?? "";
+}
+
+/** Bounded, single-character transcription slack for long head nouns. */
+function nearlySameWord(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (a.length < 6 || b.length < 6) return false;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let edits = 0;
+  let i = 0;
+  let j = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i += 1;
+      j += 1;
+      continue;
+    }
+    edits += 1;
+    if (edits > 1) return false;
+    if (a.length === b.length) {
+      i += 1;
+      j += 1;
+    } else if (a.length > b.length) i += 1;
+    else j += 1;
+  }
+  return edits + (a.length - i) + (b.length - j) <= 1;
+}
+
+/**
+ * Inventory objects a loose description could legitimately be naming, when no
+ * strict label match exists. Returns every compatible allowance — the caller
+ * only ever acts on a UNIQUE result.
+ */
+export function genericCandidates(
+  reported: string,
+  items: readonly WhitelistEntry[],
+): WhitelistEntry[] {
+  const text = normaliseLabel(reported);
+  if (!text) return [];
+  const core = stripDescriptors(text);
+  const head = headNoun(core);
+  if (!head) return [];
+  const family = HYPERNYMS[head] ?? [];
+
+  return items.filter((entry) => {
+    const allowed = normaliseLabel(entry.label);
+    if (!allowed) return false;
+    if (!coloursCompatible(text, allowed)) return false;
+    const allowedCore = stripDescriptors(allowed);
+    const allowedHead = headNoun(allowedCore);
+    // The bare head noun of a compound belonging: "bottle" for "water bottle".
+    if (core === allowedHead || nearlySameWord(core, allowedHead)) return true;
+    if (allowedCore.endsWith(` ${core}`) && core.split(" ").length > 1) return true;
+    // A generic category word naming one specific belonging: "bag" ↔ backpack.
+    if (family.some((word) => nearlySameWord(normaliseLabel(word), allowedHead))) return true;
+    return false;
+  });
+}
+
+/** The one inventory object a loose description unambiguously names, if any. */
+function uniqueGenericMatch(
+  reported: string,
+  items: readonly WhitelistEntry[],
+): WhitelistEntry | null {
+  const candidates = genericCandidates(reported, items);
+  return candidates.length === 1 ? candidates[0]! : null;
+}
+
+/**
+ * Phase 6AI — why one observed description was or was not tied to a belonging.
+ * Purely diagnostic: it explains a verdict, it never changes one.
+ */
+export interface IdentityDecision {
+  observed: string;
+  normalisedObserved: string;
+  matchedId: string | null;
+  matchedLabel: string | null;
+  normalisedInventory: string | null;
+  decision: "matched" | "permitted_unplaced" | "ambiguous" | "unexpected" | "room_feature";
+  reason: string;
+}
 
 /**
  * Phase 6AH — an object the deterministic planner deliberately did NOT place.
@@ -387,6 +577,11 @@ export interface CategorisedVerification {
    * render still shows. Permitted, never counted as placed, never fatal.
    */
   permittedUnplaced: string[];
+  /**
+   * Phase 6AI — one line per observed description explaining how it was tied
+   * to the inventory (or why it was not). Diagnostic only.
+   */
+  identityDecisions: IdentityDecision[];
   /**
    * True only when every user belonging is present at the right quantity and
    * nothing was invented. Room-feature drift is reported but never withholds a
@@ -578,6 +773,15 @@ function candidateKeysFor(reported: string, items: readonly WhitelistEntry[]): s
     if (!key) continue;
     if (key === text || containsLabel(text, key) || containsLabel(key, text)) keys.add(key);
   }
+  if (!keys.size) {
+    // Phase 6AI — no literal match, so fall back to the unique compatible
+    // belonging, if there is exactly one. Ambiguity yields no key at all.
+    const generic = uniqueGenericMatch(reported, items);
+    if (generic) {
+      const key = normaliseLabel(generic.label);
+      if (key) keys.add(key);
+    }
+  }
   return [...keys].sort((a, b) => b.length - a.length);
 }
 
@@ -695,6 +899,59 @@ export function categoriseVerification(input: {
 
   const supportIssues = supportDrift(input.expectedSupports ?? [], reply.supports ?? []);
 
+  // Phase 6AI — explain every identity decision so a future false rejection
+  // can be read rather than guessed at.
+  const permittedText = new Set(
+    [...strayLedger.permitted, ...quantities.permitted].map((value) => normaliseLabel(value)),
+  );
+  const identityDecisions: IdentityDecision[] = [];
+  for (const observation of [...(reply.objects ?? []), ...reply.unexpected, ...strayFromPresent]) {
+    const text = observation.trim();
+    if (!text) continue;
+    const normalisedObserved = normaliseLabel(text);
+    const category = classifyReported(text, whitelists);
+    const literal = items.find((entry) => {
+      const allowed = normaliseLabel(entry.label);
+      return (
+        allowed === normalisedObserved ||
+        containsLabel(normalisedObserved, allowed) ||
+        containsLabel(allowed, normalisedObserved)
+      );
+    });
+    const loose = genericCandidates(text, items);
+    const matched = literal ?? (loose.length === 1 ? loose[0]! : null);
+    const decision: IdentityDecision["decision"] =
+      category === "room_feature"
+        ? "room_feature"
+        : category === "user_item"
+          ? "matched"
+          : permittedText.has(normalisedObserved)
+            ? "permitted_unplaced"
+            : loose.length > 1
+              ? "ambiguous"
+              : "unexpected";
+    identityDecisions.push({
+      observed: text,
+      normalisedObserved,
+      matchedId: decision === "matched" && matched ? matched.id : null,
+      matchedLabel: decision === "matched" && matched ? matched.label : null,
+      normalisedInventory: matched ? normaliseLabel(matched.label) : null,
+      decision,
+      reason:
+        decision === "room_feature"
+          ? "architectural or whitelisted room feature"
+          : decision === "matched"
+            ? literal
+              ? "literal or descriptor-compatible label match"
+              : "bounded spelling/synonym normalisation with a unique compatible allowance"
+            : decision === "permitted_unplaced"
+              ? "belonging the planner intentionally left unplaced"
+              : decision === "ambiguous"
+                ? `several inventory objects compatible: ${loose.map((entry) => entry.label).join(", ")}`
+                : "no compatible inventory object",
+    });
+  }
+
   return {
     userInventory,
     roomFeatures,
@@ -702,6 +959,7 @@ export function categoriseVerification(input: {
     quantities: quantities.checks,
     quantityShortfalls: quantities.shortfalls,
     permittedUnplaced: dedupe([...strayLedger.permitted, ...quantities.permitted]),
+    identityDecisions,
     verified:
       userInventory.missing.length === 0 &&
       userInventory.unexpected.length === 0 &&
@@ -777,6 +1035,10 @@ function matchId(
     // "suitcase" names one of the user's coloured suitcases.
     return allowed === label || containsLabel(label, allowed) || containsLabel(allowed, label);
   });
+  if (!matches.length) {
+    const generic = uniqueGenericMatch(reported, whitelist);
+    if (generic) matches.push(generic);
+  }
   const unclaimed = matches.find((entry) => !claimed.has(canonicalId(entry.id)));
   const chosen = unclaimed ?? matches[0];
   return chosen ? canonicalId(chosen.id) : null;

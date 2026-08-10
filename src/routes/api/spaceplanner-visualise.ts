@@ -717,6 +717,18 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} objects=${verifyObjects.length} units=${required.length} RENDER=SUCCESS renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=${verifyTimedOut ? "TIMEOUT" : verification.toUpperCase()} verifyMs=${verifyMs}/${VERIFY_DEADLINE_MS} PREVIEW=${verification === "verified" ? "VERIFIED" : "NOT_VERIFIED"} PLAN=READY present=${coverage?.present ?? "?"}/${verifyObjects.length} unexpected=${coverage?.unexpected.length ?? 0} failureReason=${failureReason ?? "-"}`,
         );
 
+        // Phase 6AI — when the check did not pass, spell out how each observed
+        // description was reconciled against the locked inventory, so a false
+        // "not in your inventory" can be read from the log rather than guessed.
+        if (verification !== "verified") {
+          for (const decision of coverage?.categories?.identityDecisions ?? []) {
+            if (decision.decision === "matched" || decision.decision === "room_feature") continue;
+            console.log(
+              `[spaceplanner-visualise] ${diagnosticId} IDENTITY observed="${decision.observed}" normalised="${decision.normalisedObserved}" matched=${decision.matchedId ?? "-"} inventory="${decision.normalisedInventory ?? "-"}" decision=${decision.decision.toUpperCase()} reason="${decision.reason}"`,
+            );
+          }
+        }
+
         return Response.json({
           image,
           provider: PROVIDER,

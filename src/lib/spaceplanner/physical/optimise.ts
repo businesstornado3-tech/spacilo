@@ -29,6 +29,8 @@ import {
   packOnSurface,
   scoreSurfaceCandidate,
   smallFloorFootprint,
+  stackHeightPenalty,
+  surfaceObstructions,
   usableSurfaceRect,
   type SurfaceCandidate,
 } from "./surfaces";
@@ -267,7 +269,10 @@ export function arrangementObjective(entries: ArrangementEntry[], space: Plannin
       walls * 4 -
       isolated * 30 -
       hull * 3 -
-      smallOnFloor * FLOOR_OCCUPATION_PENALTY,
+      smallOnFloor * FLOOR_OCCUPATION_PENALTY -
+      // Phase 6AC — towers built only to keep the floor clear are penalised,
+      // so "compact" can never win by becoming unstable.
+      stackHeightPenalty(entries),
   );
 
 }
@@ -509,7 +514,15 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
     let best: { base: Placed; candidate: SurfaceCandidate } | null = null;
     for (const candidate of bases) {
       const surface = usableSurfaceRect(candidate.entry);
-      const occupied = surfaceOccupancy.get(candidate.entry.key) ?? [];
+      const occupied = [
+        ...(surfaceOccupancy.get(candidate.entry.key) ?? []),
+        // Phase 6AC — whatever already stands over this surface (the TV on its
+        // own stand, a printer on the desk) is not free area.
+        ...surfaceObstructions(
+          { ...candidate.entry, topHeightM: candidate.entry.heightM },
+          placed.map((entry) => entry.entry),
+        ),
+      ];
       const fit = packOnSurface(surface, occupied, w, d);
       if (!fit) continue;
       const scored: SurfaceCandidate = {
@@ -521,6 +534,7 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
           baseTopHeightM: candidate.entry.heightM,
           fit,
           related: relatedIds?.has(candidate.item.id) ?? false,
+          objectHeightM: heightM,
         }),
       };
       if (
@@ -646,7 +660,15 @@ export function liftFloorItemsOntoSurfaces(
 
     for (const candidate of bases) {
       const surface = usableSurfaceRect(candidate.entry);
-      const occupied = surfaceOccupancy.get(candidate.entry.key) ?? [];
+      const occupied = [
+        ...(surfaceOccupancy.get(candidate.entry.key) ?? []),
+        ...surfaceObstructions(
+          { ...candidate.entry, topHeightM: candidate.entry.heightM },
+          placed
+            .filter((entry) => entry.entry.key !== subject.entry.key)
+            .map((entry) => entry.entry),
+        ),
+      ];
       const fit = packOnSurface(surface, occupied, subject.entry.w, subject.entry.d);
       if (!fit) continue;
       const scored: SurfaceCandidate = {
@@ -658,6 +680,7 @@ export function liftFloorItemsOntoSurfaces(
           baseTopHeightM: candidate.entry.heightM,
           fit,
           related: relatedIds?.has(candidate.item.id) ?? false,
+          objectHeightM: subject.entry.heightM,
         }),
       };
       if (

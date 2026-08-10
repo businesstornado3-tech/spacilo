@@ -639,7 +639,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 elapsedMs={visual.elapsedMs}
                 planReady={Boolean(manifest)}
               />
-              <SpacePlannerResult result={result}>
+              <SpacePlannerResult result={result} unplaced={manifest?.unplaced ?? []}>
 
                 {spacePhoto ? (
                   <PhotoArrangement
@@ -681,7 +681,9 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                         ? "These are the positions the planner decided, drawn to scale. Your photographic preview is still being created."
                         : visual.status === "idle"
                           ? "These are the positions the planner decided, drawn to scale."
-                          : "The photographic preview didn't come out accurately this time, so we're showing the plan itself — the same positions the planner decided, drawn to scale."}
+                          : visual.status === "not_applicable"
+                            ? "None of your items could be safely placed in this space, so there was nothing to photograph. The plan below shows the space and lists what could not be accommodated."
+                            : "The photographic preview didn't come out accurately this time, so we're showing the plan itself — the same positions the planner decided, drawn to scale."}
                     </p>
                     {/* Phase 6AA — two independent states, stated plainly, so
                         the plan is never mistaken for something still loading. */}
@@ -693,7 +695,9 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                           ? "still being created — optional"
                           : visual.status === "idle"
                             ? "not requested — optional"
-                            : "not available this time — optional"}
+                            : visual.status === "not_applicable"
+                              ? "not applicable — nothing to render"
+                              : "not available this time — optional"}
                       </li>
                     </ul>
 

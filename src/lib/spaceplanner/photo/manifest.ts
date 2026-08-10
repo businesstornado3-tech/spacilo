@@ -412,6 +412,26 @@ export function requiredLabels(manifest: PlacementManifest): string[] {
     .map((entry) => entry.label);
 }
 
+/**
+ * Phase 6AH — the belongings the deterministic planner intentionally did NOT
+ * place, as structured allowances for the verifier. They stay in the user's
+ * inventory and remain visible in their photograph; they are simply not part
+ * of the arrangement, so they may never satisfy a required placed object.
+ */
+export function unplacedAllowances(
+  manifest: PlacementManifest,
+): { id: string; label: string; quantity: number; reason: string }[] {
+  const reasons = new Map(manifest.unplaced.map((entry) => [entry.label, entry.reason]));
+  return manifest.entries
+    .filter((entry) => entry.state === "cannot be safely placed")
+    .map((entry) => ({
+      id: entry.id,
+      label: entry.label,
+      quantity: entry.quantity,
+      reason: reasons.get(entry.label) ?? "not_placeable",
+    }));
+}
+
 /** Exact one-entry-per-unit render contract. IDs remain distinct for duplicate labels. */
 export function requiredRenderItems(
   manifest: PlacementManifest,

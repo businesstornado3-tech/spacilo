@@ -8,7 +8,7 @@
  * Percentages are never communicated by colour alone — each figure carries its
  * own label and value in text.
  */
-import { Info } from "lucide-react";
+import { CircleDashed, Info } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { PhotoPlanResult } from "@/lib/spaceplanner/photo";
@@ -27,9 +27,15 @@ export function SpacePlannerResult({
   result,
   children,
   className,
+  unplaced = [],
   heading = "Spacilo AI SpacePlanner™",
 }: {
   result: PhotoPlanResult;
+  /**
+   * Phase 6AH — belongings the planner could not accommodate. The plan itself
+   * still succeeded; these are listed plainly with the reason.
+   */
+  unplaced?: readonly { label: string; reason: string }[];
   /** The visual arrangement — the user's photo, or another renderer. */
   children?: React.ReactNode;
   className?: string;
@@ -63,6 +69,25 @@ export function SpacePlannerResult({
         Estimated storage requirement: approximately {result.requirementLowM3.toFixed(1)}–
         {result.requirementHighM3.toFixed(1)}m³.
       </p>
+
+      {unplaced.length > 0 ? (
+        <div className="mt-4 rounded-xl border border-border bg-surface p-3">
+          <p className="type-overline text-muted-foreground">Not placed</p>
+          <ul className="mt-1.5 space-y-1.5">
+            {unplaced.map((entry) => (
+              <li key={`${entry.label}-${entry.reason}`} className="flex gap-2 type-body-sm">
+                <CircleDashed className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <span>
+                  {entry.label} — {entry.reason}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 type-body-xs text-muted-foreground">
+            Your arrangement plan is ready; these items could not be accommodated in this space.
+          </p>
+        </div>
+      ) : null}
 
       {children ? <div className="mt-4">{children}</div> : null}
 

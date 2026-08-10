@@ -69,6 +69,11 @@ export interface VisualisationRequest {
   roomFeatures?: readonly { id: string; label: string; kind: string; position: string }[];
   /** Support relationships the plan asserted; rendered and then verified. */
   supports?: readonly { itemId: string; itemLabel: string; baseId: string; baseLabel: string }[];
+  /**
+   * Phase 6AH — belongings the planner intentionally left unplaced. Sent so
+   * the verifier can permit them without treating them as inventions.
+   */
+  unplaced?: readonly { id: string; label: string; quantity: number; reason?: string }[];
   /** Items a previous attempt missed; the retry emphasises these. */
   emphasise?: string[];
   /** Distinguishes a corrective re-render from the cached first attempt. */
@@ -237,6 +242,7 @@ export function visualisationSignature(request: VisualisationRequest): string {
     request.inventoryHash ?? "no-inventory",
     (request.manifest ?? []).map((entry) => `${entry.id}x${entry.quantity}`).join(","),
     (request.supports ?? []).map((support) => `${support.itemId}>${support.baseId}`).join(","),
+    (request.unplaced ?? []).map((entry) => `${entry.id}x${entry.quantity}`).join(","),
     request.spaceImage.base64,
     ...request.itemImages.map((image) => image.base64),
     request.instruction,

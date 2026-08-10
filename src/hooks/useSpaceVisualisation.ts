@@ -25,6 +25,7 @@ import {
 import { prepareImageOnce } from "@/lib/spaceplanner/photo/image-optimise";
 import {
   manifestSupports,
+  unplacedAllowances,
   type CoverageReport,
   type PlacementManifest,
 } from "@/lib/spaceplanner/photo/manifest";
@@ -58,6 +59,12 @@ export type VisualisationStatus =
    * flight in the background; if it lands verified, the preview appears.
    */
   | "unavailable"
+  /**
+   * Phase 6AH — there was nothing to photograph: the deterministic planner
+   * placed no items, so no render was requested. A valid planning outcome,
+   * never a failure.
+   */
+  | "not_applicable"
   | "failed";
 
 /** True while the pipeline is still doing work the USER is waiting on. */
@@ -386,12 +393,16 @@ export function useSpaceVisualisation(options: {
         `[spaceplanner] OBJECT EXCLUDED FROM PHOTO RENDER id=${exclusion.id} label=${exclusion.label} reason=${exclusion.reason}`,
       );
     }
-    // Items the planner could not fit are legitimately absent from the render
-    // list; only an empty list means there is nothing to draw.
+    // Phase 6AH — items the planner could not fit are legitimately absent from
+    // the render list. An EMPTY list means there is simply nothing to draw:
+    // the deterministic plan is still valid and still on screen, so no render
+    // is requested and this is never reported as a failure.
     if (renderItems.length === 0) {
-      setError("inventory_not_fully_placeable");
-      setAbortReason("unknown");
-      setStatus("failed");
+      setError(null);
+      setAbortReason(null);
+      setImageUrl(null);
+      setCoverage(null);
+      setStatus("not_applicable");
       return;
     }
     const token = ++run.current;
@@ -471,6 +482,10 @@ export function useSpaceVisualisation(options: {
         manifest: renderItems,
         roomFeatures: manifest.roomFeatures,
         supports: manifestSupports(manifest),
+        // Phase 6AH — belongings the planner left unplaced. They are not
+        // rendered, but they remain in the user's photograph, so the verifier
+        // is told they are permitted rather than invented.
+        unplaced: unplacedAllowances(manifest),
         // Part of the cache key AND of the diagnostics. Retries resend the
         // SAME plan — never a new one.
         planHash: manifest.planHash,

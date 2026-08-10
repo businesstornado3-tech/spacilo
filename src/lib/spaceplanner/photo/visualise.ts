@@ -14,6 +14,11 @@ import {
   type CoverageReport,
   type PlacementManifest,
 } from "./manifest";
+import {
+  buildRenderProjection,
+  type RenderExclusion,
+  type RenderObject,
+} from "./render-projection";
 import { hashString } from "@/lib/vision/hash";
 import type { DetectedObject } from "@/lib/vision/types";
 
@@ -48,7 +53,19 @@ export interface VisualisationRequest {
   itemImages: VisualisationImage[];
   instruction: string;
   /** Structured manifest the image must satisfy. */
-  manifest?: { id: string; label: string; quantity: number }[];
+  /** Structured render projection the image must satisfy, one row per object. */
+  manifest?: readonly {
+    id: string;
+    label: string;
+    quantity: number;
+    widthCm?: number;
+    depthCm?: number;
+    heightCm?: number;
+    placement?: string;
+    supportBaseId?: string | null;
+    supportBaseLabel?: string | null;
+    structural?: boolean;
+  }[];
   roomFeatures?: readonly { id: string; label: string; kind: string; position: string }[];
   /** Support relationships the plan asserted; rendered and then verified. */
   supports?: readonly { itemId: string; itemLabel: string; baseId: string; baseLabel: string }[];
@@ -172,8 +189,25 @@ function describeSpot(x: number, y: number, result: PhotoPlanResult): string {
 }
 
 
-/** Manifest → the compact list the endpoint validates against. */
-export function manifestPayload(
+/**
+ * Manifest → the render projection the endpoint validates against.
+ *
+ * Phase 6AE: PER OBJECT, not per unit. The old per-unit expansion let a single
+ * high-quantity item consume the endpoint's whitelist budget and silently push
+ * later objects — a TV stand among them — off the end. Quantity now travels as
+ * a number, and the endpoint expands it itself.
+ */
+export function manifestPayload(manifest: PlacementManifest): RenderObject[] {
+  return buildRenderProjection(manifest).objects;
+}
+
+/** Objects the manifest contains that the render deliberately leaves out. */
+export function manifestRenderExclusions(manifest: PlacementManifest): RenderExclusion[] {
+  return buildRenderProjection(manifest).excluded;
+}
+
+/** Retained for verification suites that still assert the per-unit contract. */
+export function manifestUnitPayload(
   manifest: PlacementManifest,
 ): { id: string; label: string; quantity: number }[] {
   return requiredRenderItems(manifest);

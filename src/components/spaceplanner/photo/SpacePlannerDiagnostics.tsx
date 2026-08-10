@@ -5,6 +5,7 @@ import {
   type RenderDiagnostics,
   type VisualisationStatus,
 } from "@/hooks/useSpaceVisualisation";
+import { exclusionReasonLabel } from "@/lib/spaceplanner/photo/render-projection";
 import { manifestHash, verificationStatusOf } from "@/lib/spaceplanner/photo/diagnostics";
 import type {
   CanonicalInventory,
@@ -147,6 +148,26 @@ export function SpacePlannerDiagnostics({
         <div><dt>User budget exceeded (20s)</dt><dd className="font-medium text-foreground">{render?.uxDeadlineExceeded ? "yes" : "no"}</dd></div>
         <div><dt>Preview stop reason</dt><dd className="font-medium text-foreground">{render?.abortReason ?? "—"}</dd></div>
         <div><dt>Diagnostic ID</dt><dd className="font-medium text-foreground">{render?.diagnosticId ?? "—"}</dd></div>
+        {/* Phase 6AE — object-level chain: manifest → projection → excluded.
+            A missing object in the preview is now attributable, never silent. */}
+        <div><dt>Objects required by plan</dt><dd className="font-medium text-foreground">{render?.requiredObjectCount ?? "—"}</dd></div>
+        <div><dt>Objects sent to renderer</dt><dd className="font-medium text-foreground">{render?.projectedObjectCount ?? "—"}</dd></div>
+        {render?.excludedObjects?.length ? (
+          <div className="sm:col-span-2">
+            <dt>Objects excluded from render</dt>
+            <dd className="font-medium text-foreground">
+              {render.excludedObjects
+                .map((entry) => `${entry.label} (${exclusionReasonLabel(entry.reason)})`)
+                .join("; ")}
+            </dd>
+          </div>
+        ) : null}
+        {render?.retryFocus?.length ? (
+          <div className="sm:col-span-2">
+            <dt>Second attempt asked to fix</dt>
+            <dd className="font-medium text-foreground">{render.retryFocus.join("; ")}</dd>
+          </div>
+        ) : null}
         <div className="sm:col-span-2 border-t border-border pt-3">
           <dt className="type-label text-foreground">Measured performance</dt>
           <dd className="mt-2 grid gap-1 sm:grid-cols-2">

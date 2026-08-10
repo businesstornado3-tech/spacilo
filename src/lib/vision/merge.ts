@@ -214,7 +214,12 @@ export function resolveIdentity(a: DetectedObject, b: DetectedObject): IdentityV
   if (contradicts(left.size, right.size)) return { same: false, reason: "different stated size" };
   if (!dimensionsAgree(a, b)) return { same: false, reason: "different dimensions" };
 
-  return { same: true, reason: "same object photographed from another angle" };
+  return {
+    same: true,
+    reason: sameHeadNoun
+      ? "same head noun + compatible appearance and dimensions + different photograph"
+      : "same object photographed from another angle",
+  };
 }
 
 /** True when two detections are the same physical object seen twice. */

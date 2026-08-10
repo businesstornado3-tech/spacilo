@@ -488,7 +488,7 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         // projection. Every distinct object is represented before any quantity
         // is expanded, so a twelve-box entry can never crowd a TV stand out of
         // the list the way the old flat `.slice(0, 20)` did.
-        const required = projectionUnits({
+        const projection = {
           objects: manifest.flatMap((entry, index) => {
             const label = typeof entry?.label === "string" ? entry.label.trim() : "";
             if (!label) return [];
@@ -509,10 +509,23 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
             ];
           }),
           excluded: [],
-        });
+        };
+        const required = projectionUnits(projection);
+        /**
+         * Phase 6AG — the VERIFICATION whitelist is object level: one row per
+         * physical object, carrying its quantity. The renderer still receives
+         * the 6AE per-unit list, so required objects keep their protection;
+         * only the verifier stops being asked for unit id strings.
+         */
+        const verifyObjects = projection.objects.map((object) => ({
+          id: object.id,
+          label: object.label,
+          quantity: object.quantity,
+        }));
         if (required.length === 0) {
           return Response.json({ error: "verified_manifest_required" }, { status: 400 });
         }
+
         const roomFeatures = (body.roomFeatures ?? []).flatMap((feature, index) => {
           const label = typeof feature?.label === "string" ? feature.label.trim() : "";
           if (!label) return [];

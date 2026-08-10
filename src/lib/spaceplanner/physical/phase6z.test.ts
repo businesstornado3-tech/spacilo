@@ -368,7 +368,9 @@ describe("Phase 6Z — wasted floor is penalised, not tolerated", () => {
   });
 
   it("materially changes the objective", () => {
-    expect(FLOOR_OCCUPATION_PENALTY).toBeGreaterThanOrEqual(20);
+    // Phase 6AC rebalanced this: still decisive, no longer so large that the
+    // optimiser builds unstable towers just to empty the floor.
+    expect(FLOOR_OCCUPATION_PENALTY).toBeGreaterThanOrEqual(10);
     const base = [
       { key: "a", layer: 0, x: 0, y: 0, w: 1.2, d: 0.45 },
       { key: "b", layer: 0, x: 1.2, y: 0, w: 0.5, d: 0.3 },

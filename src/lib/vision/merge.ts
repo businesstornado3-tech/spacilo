@@ -71,6 +71,42 @@ export function identityOf(label: string): string {
     .trim();
 }
 
+/**
+ * Phase 6AC — the HEAD NOUN of a label.
+ *
+ * Detectors name the same physical thing at different levels of detail from
+ * one angle to the next: "water bottle" in the first photograph, "bottle" in
+ * the second. English puts the noun that says WHAT SOMETHING IS at the end of
+ * the phrase, so the head noun is the last identity word, and everything
+ * before it is a qualifier.
+ */
+export function headNounOf(label: string): string {
+  const words = identityOf(label).split(" ").filter(Boolean);
+  return words.length === 0 ? "" : words[words.length - 1]!;
+}
+
+/** The identity words in front of the head noun ("water" in "water bottle"). */
+export function qualifiersOf(label: string): string[] {
+  const words = identityOf(label).split(" ").filter(Boolean);
+  return words.slice(0, -1);
+}
+
+/**
+ * True when two labels name the same KIND of object at different levels of
+ * detail. "water bottle" and "bottle" qualify; "water bottle" and "milk
+ * bottle" do not, because both sides named a qualifier and the qualifiers
+ * disagree — that is positive evidence of two different things.
+ */
+export function headNounsAgree(a: string, b: string): boolean {
+  const headA = headNounOf(a);
+  const headB = headNounOf(b);
+  if (!headA || headA !== headB) return false;
+  const left = qualifiersOf(a);
+  const right = qualifiersOf(b);
+  if (left.length === 0 || right.length === 0) return true;
+  return left.some((word) => right.includes(word));
+}
+
 /** Everyday synonyms collapsed to one canonical noun. */
 const SYNONYMS: Record<string, string> = {
   tv: "television",
@@ -161,7 +197,13 @@ export function resolveIdentity(a: DetectedObject, b: DetectedObject): IdentityV
   const identityA = identityOf(a.label);
   const identityB = identityOf(b.label);
   if (!identityA || !identityB) return { same: false, reason: "no comparable label" };
-  if (identityA !== identityB) return { same: false, reason: "different object type" };
+  // Phase 6AC — an exact identity match is the strong case; a shared head noun
+  // with compatible qualifiers ("water bottle" / "bottle") is the case that
+  // used to leak a duplicate object into every two-angle upload.
+  const sameHeadNoun = identityA !== identityB && headNounsAgree(a.label, b.label);
+  if (identityA !== identityB && !sameHeadNoun) {
+    return { same: false, reason: "different object type" };
+  }
 
   const left = groupsOf(a.label);
   const right = groupsOf(b.label);
@@ -172,7 +214,12 @@ export function resolveIdentity(a: DetectedObject, b: DetectedObject): IdentityV
   if (contradicts(left.size, right.size)) return { same: false, reason: "different stated size" };
   if (!dimensionsAgree(a, b)) return { same: false, reason: "different dimensions" };
 
-  return { same: true, reason: "same object photographed from another angle" };
+  return {
+    same: true,
+    reason: sameHeadNoun
+      ? "same head noun + compatible appearance and dimensions + different photograph"
+      : "same object photographed from another angle",
+  };
 }
 
 /** True when two detections are the same physical object seen twice. */
@@ -330,7 +377,8 @@ export function mergeAcrossPhotos(objects: DetectedObject[]): {
 export function labelsDescribeSameObject(a: string, b: string): boolean {
   const identityA = identityOf(a);
   const identityB = identityOf(b);
-  if (!identityA || !identityB || identityA !== identityB) return false;
+  if (!identityA || !identityB) return false;
+  if (identityA !== identityB && !headNounsAgree(a, b)) return false;
   const left = groupsOf(a);
   const right = groupsOf(b);
   return (

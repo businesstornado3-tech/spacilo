@@ -948,8 +948,7 @@ export function categoriseVerification(input: {
               : decision === "ambiguous"
                 ? `several inventory objects compatible: ${loose.map((entry) => entry.label).join(", ")}`
                 : "no compatible inventory object",
-      matchedIdPlaceholder: undefined,
-    } as IdentityDecision);
+    });
   }
 
   return {

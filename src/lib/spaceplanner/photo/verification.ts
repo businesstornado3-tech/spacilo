@@ -30,7 +30,16 @@ export type ObjectCategory = "user_item" | "room_feature" | "unexpected";
 export interface WhitelistEntry {
   id: string;
   label: string;
+  /**
+   * Phase 6AG — how many units of this object the locked inventory contains.
+   * The verifier contract is OBJECT level: one row, one id, a quantity. It is
+   * never asked to invent per-unit id strings like "ITEM-003_02", which the
+   * compact reply schema ("never repeat a description") made impossible to
+   * satisfy. Absent means one.
+   */
+  quantity?: number;
 }
+
 
 /**
  * Words that describe a state the verifier observed rather than the object

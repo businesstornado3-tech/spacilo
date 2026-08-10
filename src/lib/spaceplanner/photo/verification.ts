@@ -325,11 +325,19 @@ export interface CategorisedVerification {
    */
   quantities: QuantityCheck[];
   /**
-   * True only when every user belonging is present and nothing was invented.
-   * Room-feature drift is reported but never withholds a render — the room
-   * still owning its own door is not a reason to distrust the picture.
+   * Phase 6AG — allowances the render under-filled, e.g. "missing box ×1" when
+   * the inventory holds three and the image shows two. Counted only when the
+   * verifier actually enumerated what it saw.
+   */
+  quantityShortfalls: string[];
+  /**
+   * True only when every user belonging is present at the right quantity and
+   * nothing was invented. Room-feature drift is reported but never withholds a
+   * render — the room still owning its own door is not a reason to distrust
+   * the picture.
    */
   verified: boolean;
+
 }
 
 /** One label's allowed-versus-observed quantity in a rendered image. */

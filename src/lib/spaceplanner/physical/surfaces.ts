@@ -142,6 +142,61 @@ export interface SurfaceCandidate {
 }
 
 /**
+ * Phase 6AC — what already OCCUPIES the space above a surface.
+ *
+ * A support surface is only free where nothing stands over it. Until this
+ * phase the packer treated the whole top of a TV stand as empty even when the
+ * television itself was standing on it, which produced overlapping objects in
+ * the plan and an unbuildable scene for the renderer.
+ *
+ * The test is purely geometric and therefore generic: any other object whose
+ * plan footprint overlaps the base AND whose top reaches above the base's top
+ * takes that area away from the packer. TV on a stand, printer on a desk,
+ * monitor on a desk, appliance on a counter, box on a shelf — one rule.
+ */
+export interface OccupyingEntry {
+  key: string;
+  x: number;
+  y: number;
+  w: number;
+  d: number;
+  /** Height of the object itself, in metres. */
+  heightM: number;
+  /** Height of the surface it stands on. 0 for floor items. */
+  baseHeightM: number;
+  mounted?: boolean;
+}
+
+export function surfaceObstructions(
+  base: { key: string; x: number; y: number; w: number; d: number; topHeightM: number },
+  entries: OccupyingEntry[],
+): Rect[] {
+  const surface = usableSurfaceRect(base);
+  const out: Rect[] = [];
+  for (const entry of entries) {
+    if (entry.key === base.key) continue;
+    if (entry.mounted) continue;
+    // Anything whose highest point is at or below the surface cannot be in
+    // the way of something standing on it.
+    if (entry.baseHeightM + entry.heightM <= base.topHeightM + EPS) continue;
+    const overlapW = Math.min(entry.x + entry.w, surface.x + surface.w) - Math.max(entry.x, surface.x);
+    const overlapD = Math.min(entry.y + entry.d, surface.y + surface.d) - Math.max(entry.y, surface.y);
+    if (overlapW <= EPS || overlapD <= EPS) continue;
+    out.push({
+      x: round2(Math.max(entry.x, surface.x)),
+      y: round2(Math.max(entry.y, surface.y)),
+      w: round2(overlapW),
+      d: round2(overlapD),
+    });
+  }
+  return out;
+}
+
+/** Above this, a stack stops being storage and starts being a hazard. */
+export const COMFORTABLE_STACK_M = 1.2;
+export const MAX_STACK_M = 1.8;
+
+/**
  * How attractive one elevated placement is, compared with the alternatives.
  * Higher is better. Every term is arithmetic over geometry the planner already
  * knows: no model, no randomness.
@@ -151,8 +206,18 @@ export function scoreSurfaceCandidate(input: {
   baseTopHeightM: number;
   fit: SurfaceFit;
   related: boolean;
+  /** Height of the object being placed, when known. Drives the stack penalty. */
+  objectHeightM?: number;
 }): number {
   const { baseItem, baseTopHeightM, fit, related } = input;
+  const resultingTop = baseTopHeightM + Math.max(0, input.objectHeightM ?? 0);
+  // Phase 6AC — height is not free. A tower built purely to keep the floor
+  // clear is less useful and less stable than the same objects at waist
+  // height, so the penalty grows with how far above comfortable reach the
+  // result ends up, and becomes decisive past the safe limit.
+  const heightPenalty =
+    Math.max(0, resultingTop - COMFORTABLE_STACK_M) * 22 +
+    (resultingTop > MAX_STACK_M ? 60 : 0);
   return round2(
     // Filling a surface is the whole point: reward utilisation heavily.
     fit.utilisation * 40 +
@@ -161,6 +226,7 @@ export function scoreSurfaceCandidate(input: {
       (related ? 25 : 0) +
       (isRenderableSupport(baseItem.label) ? 14 : 0) +
       (baseItem.weight === "heavy" ? 6 : baseItem.weight === "medium" ? 3 : 0) -
+      heightPenalty -
       (fit.rotationDeg === 90 ? 0.5 : 0),
   );
 }
@@ -169,10 +235,15 @@ export function scoreSurfaceCandidate(input: {
  * Phase 6Z, Part I — the floor-occupation penalty.
  *
  * A small object standing on the floor when a safe surface was available is a
- * planning failure, not a stylistic choice. The penalty is deliberately large
- * enough to change which arrangement wins rather than merely nudge it.
+ * planning failure, not a stylistic choice.
+ *
+ * Phase 6AC balances it. At 30 it stopped being a preference and became an
+ * obsession: the optimiser built a 1.55 m box tower on a 0.5 m TV stand while
+ * eight square metres of floor stood empty. The floor is the LAST resort, not
+ * a forbidden surface, so the penalty now nudges hard without overruling
+ * physical sense.
  */
-export const FLOOR_OCCUPATION_PENALTY = 30;
+export const FLOOR_OCCUPATION_PENALTY = 12;
 
 /** Small footprints left on the floor, in m². */
 export function smallFloorFootprint(
@@ -185,3 +256,29 @@ export function smallFloorFootprint(
       .reduce((sum, entry) => sum + entry.w * entry.d, 0),
   );
 }
+
+/** Highest point reached by any placed object, in metres. */
+export function tallestStack(
+  entries: { heightM: number; baseHeightM: number }[],
+): number {
+  return round2(
+    entries.reduce((max, entry) => Math.max(max, entry.baseHeightM + entry.heightM), 0),
+  );
+}
+
+/**
+ * Penalty for towers. Zero while everything stays within comfortable reach,
+ * then rising, so "stack it higher" can never win purely on floor area.
+ */
+export function stackHeightPenalty(
+  entries: { heightM: number; baseHeightM: number }[],
+): number {
+  let penalty = 0;
+  for (const entry of entries) {
+    const top = entry.baseHeightM + entry.heightM;
+    if (top <= COMFORTABLE_STACK_M) continue;
+    penalty += (top - COMFORTABLE_STACK_M) * 10 + (top > MAX_STACK_M ? 25 : 0);
+  }
+  return round2(penalty);
+}
+

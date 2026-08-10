@@ -92,6 +92,8 @@ function failureMessage(code?: string | null): string {
   switch (code) {
     case "timed_out":
       return "The visual preview took longer than expected, so we stopped waiting.";
+    case "render_timeout":
+      return "The image service took too long to draw the preview.";
     case "upstream_429":
       return "The image service is busy right now.";
     case "upstream_402":

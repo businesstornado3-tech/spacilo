@@ -36,6 +36,27 @@ const MAX_ITEM_PHOTOS = 3;
 /** The model accepts long prompts; this keeps the manifest whole but bounded. */
 const MAX_PROMPT_CHARS = 24_000;
 
+/**
+ * Phase 6AD — render and verification get SEPARATE deadlines.
+ *
+ * They used to share one client-side ceiling. A perfectly good 30s render
+ * followed by a 16s check blew a 45s budget, and the client threw away an
+ * image the gateway had already been paid to produce. Each stage is now
+ * bounded on its own, and a slow CHECK can only cost the verdict, never the
+ * render.
+ */
+const RENDER_DEADLINE_MS = 35_000;
+const VERIFY_DEADLINE_MS = 10_000;
+
+/** Aborts a stage without taking the whole request down with it. */
+function deadline(ms: number): AbortSignal | undefined {
+  try {
+    return AbortSignal.timeout(ms);
+  } catch {
+    return undefined;
+  }
+}
+
 function imageModel(): string {
   return process.env["SPACEPLANNER_IMAGE_MODEL"]?.trim() || DEFAULT_IMAGE_MODEL;
 }
@@ -466,11 +487,13 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         ];
 
         const startedRender = Date.now();
+        const renderSignal = deadline(RENDER_DEADLINE_MS);
         let upstream: Response;
         try {
           upstream = await fetch(`${GATEWAY}/images/generations`, {
             method: "POST",
             headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+            ...(renderSignal ? { signal: renderSignal } : {}),
             body: JSON.stringify({
               model,
               messages: [{ role: "user", content }],
@@ -478,11 +501,25 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
               stream: false,
             }),
           });
-        } catch {
-
+        } catch (cause) {
+          // A stage that ran out of time is a DIFFERENT failure from a service
+          // we could not reach, and the UI says so rather than guessing.
+          const timedOut =
+            cause instanceof DOMException &&
+            (cause.name === "TimeoutError" || cause.name === "AbortError");
+          const renderMs = Date.now() - startedRender;
+          console.error(
+            `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} stage=render outcome=${timedOut ? "deadline" : "unreachable"} renderMs=${renderMs}`,
+          );
           return Response.json(
-            { error: "upstream_unreachable", provider: PROVIDER, model, diagnosticId },
-            { status: 502 },
+            {
+              error: timedOut ? "render_timeout" : "upstream_unreachable",
+              provider: PROVIDER,
+              model,
+              diagnosticId,
+              renderMs,
+            },
+            { status: timedOut ? 504 : 502 },
           );
         }
 
@@ -517,6 +554,10 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         }
         const renderMs = Date.now() - startedRender;
 
+        // The check is bounded on its own clock. If it runs out of time the
+        // image still comes back, marked unverified — the client's fail-closed
+        // rule then keeps it hidden. A slow checker costs a verdict, never a
+        // paid-for render.
         const startedCheck = Date.now();
         const coverage = await checkCoverage(
           key,
@@ -524,17 +565,18 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           image,
           required,
           roomFeatures,
-          undefined,
+          deadline(VERIFY_DEADLINE_MS),
           supports,
         );
         const verifyMs = Date.now() - startedCheck;
+        const verifyTimedOut = coverage === null && verifyMs >= VERIFY_DEADLINE_MS - 250;
         // Verification never withholds the image. The client decides whether a
         // render is presentable; the server reports honestly what it observed
         // and distinguishes "could not verify" from "verified as wrong".
         const verification = verdictFor(coverage);
 
         console.log(
-          `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} units=${required.length} verification=${verification} present=${coverage?.present ?? "?"}/${required.length} unexpected=${coverage?.unexpected.length ?? 0} renderMs=${renderMs} verifyMs=${verifyMs}`,
+          `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} units=${required.length} verification=${verification} present=${coverage?.present ?? "?"}/${required.length} unexpected=${coverage?.unexpected.length ?? 0} renderMs=${renderMs} verifyMs=${verifyMs} verifyTimedOut=${verifyTimedOut}`,
         );
 
         return Response.json({
@@ -549,6 +591,8 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           inventoryHash: body.inventoryHash ?? null,
           renderMs,
           verifyMs,
+          verifyTimedOut,
+          serverTotalMs: Date.now() - startedRender,
         });
       },
     },

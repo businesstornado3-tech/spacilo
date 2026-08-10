@@ -25,6 +25,7 @@ import type { DetectedObject } from "@/lib/vision/types";
 import type { VisionPhoto } from "@/lib/vision/types";
 import {
   MAX_RENDER_ATTEMPTS,
+  PREVIEW_UX_DEADLINE_MS,
   RENDER_TIMEOUT_MS,
   representativeItemPhotos,
   shouldRetryRender,
@@ -236,12 +237,19 @@ describe("Phase 6AB — representative render references", () => {
 /* ------------------------------------------------------------------ */
 
 describe("Phase 6AB — bounded optional preview", () => {
-  it("bounds a single render attempt well below a minute", () => {
-    expect(RENDER_TIMEOUT_MS).toBeLessThanOrEqual(45_000);
+  // Phase 6AD moved the bound the USER feels off the network ceiling and onto
+  // its own budget: the network may keep working in the background, but the
+  // spinner stops at PREVIEW_UX_DEADLINE_MS. The original promise — nobody
+  // waits a minute for an optional picture — is asserted against that instead.
+  it("bounds what the user is asked to wait for well below a minute", () => {
+    expect(PREVIEW_UX_DEADLINE_MS).toBeLessThanOrEqual(30_000);
   });
 
   it("cannot produce a 90-second wait across the whole attempt budget", () => {
-    expect(RENDER_TIMEOUT_MS * MAX_RENDER_ATTEMPTS).toBeLessThan(95_000);
+    expect(PREVIEW_UX_DEADLINE_MS * MAX_RENDER_ATTEMPTS).toBeLessThan(95_000);
+    // The background ceiling still outlasts one server render plus its check,
+    // so a good render is never discarded for a slow verifier.
+    expect(RENDER_TIMEOUT_MS).toBeGreaterThan(45_000);
   });
 
   it("only ever displays a verified image", () => {

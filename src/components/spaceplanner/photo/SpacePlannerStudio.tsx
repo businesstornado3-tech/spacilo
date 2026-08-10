@@ -653,7 +653,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
 
                     coverage={visual.coverage}
                     errorCode={visual.error}
-                    onRetry={() => void visual.generate()}
+                    onRetry={() => void visual.generate({ force: true })}
 
                     description={`${result.itemCount} items shown in the space you photographed. Estimated fit ${result.fitPercent}%, with about ${result.spaceRemainingM3.toFixed(1)}m³ estimated to remain.`}
                   />
@@ -688,7 +688,9 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                           ? "still rendering — optional"
                           : visual.status === "idle"
                             ? "not requested — optional"
-                            : "not available this time — optional"}
+                            : visual.status === "unavailable"
+                              ? "still working in the background — optional"
+                              : "not available this time — optional"}
                       </li>
                     </ul>
 
@@ -699,7 +701,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                         type="button"
                         variant="secondary"
                         className="mt-3"
-                        onClick={() => void visual.generate()}
+                        onClick={() => void visual.generate({ force: true })}
                       >
                         <RefreshCw aria-hidden="true" />
                         {visual.status === "idle"

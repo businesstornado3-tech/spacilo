@@ -91,7 +91,10 @@ export function SpacePlannerDiagnostics({
 
   const renderWorking = isVisualisationWorking(visualStatus);
   const renderFailed =
-    visualStatus === "failed" || visualStatus === "unfaithful" || visualStatus === "unverified";
+    visualStatus === "failed" ||
+    visualStatus === "unfaithful" ||
+    visualStatus === "unverified" ||
+    visualStatus === "unavailable";
   const verified = verificationStatusOf(coverage);
   const stages: { label: string; state: StageState }[] = [
     { label: "Photos", state: photoCount > 0 ? "passed" : "waiting" },
@@ -138,6 +141,11 @@ export function SpacePlannerDiagnostics({
         <div><dt>Photo prep time</dt><dd className="font-medium text-foreground">{render?.prepareMs ? `${(render.prepareMs / 1000).toFixed(1)}s` : "—"}</dd></div>
         <div><dt>Verification time</dt><dd className="font-medium text-foreground">{render?.verifyMs ? `${(render.verifyMs / 1000).toFixed(1)}s` : "—"}</dd></div>
         <div><dt>Total visualisation time</dt><dd className="font-medium text-foreground">{render?.totalMs ? `${(render.totalMs / 1000).toFixed(1)}s` : "—"}</dd></div>
+        <div><dt>Server render + check</dt><dd className="font-medium text-foreground">{render?.serverTotalMs ? `${(render.serverTotalMs / 1000).toFixed(1)}s` : "—"}</dd></div>
+        <div><dt>Render requests spent</dt><dd className="font-medium text-foreground">{render?.renderRequests ?? "—"}</dd></div>
+        <div><dt>Check ran out of time</dt><dd className="font-medium text-foreground">{render?.verifyTimedOut ? "yes" : "no"}</dd></div>
+        <div><dt>User budget exceeded (20s)</dt><dd className="font-medium text-foreground">{render?.uxDeadlineExceeded ? "yes" : "no"}</dd></div>
+        <div><dt>Preview stop reason</dt><dd className="font-medium text-foreground">{render?.abortReason ?? "—"}</dd></div>
         <div><dt>Diagnostic ID</dt><dd className="font-medium text-foreground">{render?.diagnosticId ?? "—"}</dd></div>
         <div className="sm:col-span-2 border-t border-border pt-3">
           <dt className="type-label text-foreground">Measured performance</dt>

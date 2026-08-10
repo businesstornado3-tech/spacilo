@@ -85,12 +85,12 @@ function tvOnStandManifest(): PlacementManifest {
     heightCm: 65,
     positions: [
       {
-        ...(stand.positions[0] as object),
+        ...stand.positions[0]!,
         baseHeightM: 0.45,
         supportSurfaceId: "obj_stand",
         supportType: "surface",
       },
-    ] as Entry["positions"],
+    ],
   });
   const boxes = entry({ id: "obj_boxes", label: "cardboard box", quantity: 12 });
   return manifestOf([boxes, tv, stand]);

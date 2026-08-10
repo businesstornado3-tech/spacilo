@@ -131,25 +131,26 @@ export function isRetryableFailure(code: string | null): boolean {
 }
 
 /**
- * Hard ceiling on ONE render request. Live evidence puts a successful render
- * at 21–38s and its check at 6–22s, so 45s is generous for a good attempt and
- * decisive about a bad one. Phase 6AB: two 95-second attempts used to produce
- * a 90–120 second dead wait for an OPTIONAL preview while the deterministic
- * arrangement had been on screen the whole time. Never again.
+ * Hard ceiling on ONE render request, in the BACKGROUND. This is the network's
+ * budget, never the user's — the deterministic plan is on screen throughout.
  *
- * Phase 6AD: this is now a BACKGROUND ceiling, not the user's wait. The server
- * bounds render (35s) and check (10s) separately, so the client ceiling sits
- * just above their sum — a good render is never thrown away because the check
- * was slow.
+ * Phase 6AG: the server bounds render (50s) and check (25s) separately and
+ * runs them in sequence, so the parent request must clear 75s or it would
+ * guillotine exactly the slow-but-successful runs the new deadlines exist to
+ * rescue. 85s leaves headroom for the upload and the response, and nothing
+ * more: a request that has not answered by then is genuinely lost.
  */
-export const RENDER_TIMEOUT_MS = 55_000;
+export const RENDER_TIMEOUT_MS = 85_000;
 
 /**
  * The user's budget, which is a different thing from the network's. After this
  * the spinner stops and the measured plan is presented as the result. Anything
- * still in flight becomes a quiet upgrade rather than a wait.
+ * still in flight becomes a quiet upgrade rather than a wait, and the elapsed
+ * clock keeps counting REAL work — we never say we stopped while the gateway
+ * is still going.
  */
 export const PREVIEW_UX_DEADLINE_MS = 20_000;
+
 
 /**
  * Phase 6AA — one render, plus at most one corrective redraw, and only when a

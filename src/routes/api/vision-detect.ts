@@ -24,6 +24,9 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 
+import { assessCompleteness } from "@/lib/vision/completeness";
+
+
 /**
  * Phase 6X — belongings detection runs on the fast multimodal model.
  *

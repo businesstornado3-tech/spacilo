@@ -25,6 +25,7 @@ export type ArrangementMark =
   | "inventoryReady"
   | "spaceReady"
   | "planReady"
+  | "manifestValidated"
   | "arrangementPaint";
 
 /** The 5-second acceptance target for click → arrangement visible. */
@@ -93,6 +94,8 @@ export interface ArrangementMetrics {
   spaceReadyMs: number | null;
   /** Analyse click → a validated deterministic plan in memory. */
   planReadyMs: number | null;
+  /** Analyse click → the placement manifest validated and ready to draw. */
+  manifestValidatedMs: number | null;
   /**
    * Validated plan → the frame it was actually painted in. Phase 6Z, Part A:
    * the browser paint cost of the arrangement on its own, separated from the
@@ -113,6 +116,7 @@ const EMPTY: ArrangementMetrics = {
   inventoryReadyMs: null,
   spaceReadyMs: null,
   planReadyMs: null,
+  manifestValidatedMs: null,
   arrangementPaintMs: null,
   timeToArrangementMs: null,
   activeTimeToArrangementMs: null,
@@ -141,6 +145,7 @@ export function arrangementMetrics(): ArrangementMetrics {
     inventoryReadyMs: since("inventoryReady"),
     spaceReadyMs: since("spaceReady"),
     planReadyMs,
+    manifestValidatedMs: since("manifestValidated"),
     arrangementPaintMs:
       timeToArrangementMs === null || planReadyMs === null
         ? null

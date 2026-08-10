@@ -209,12 +209,27 @@ export function visualisationSignature(request: VisualisationRequest): string {
  */
 const sessionCache = new Map<string, VisualisationResponse>();
 
+/**
+ * Phase 6AD — identical input must never pay for a second render.
+ *
+ * A request already in flight is JOINED rather than duplicated: React strict
+ * mode, a double click and an effect re-run all resolve from the one call the
+ * gateway is actually billing for.
+ */
+const inFlight = new Map<string, Promise<VisualisationResponse>>();
+
 export function cachedVisualisation(signature: string): VisualisationResponse | undefined {
   return sessionCache.get(signature);
 }
 
+/** True when this exact plan+photos already has a render request running. */
+export function visualisationInFlight(signature: string): boolean {
+  return inFlight.has(signature);
+}
+
 export function clearVisualisationCache(): void {
   sessionCache.clear();
+  inFlight.clear();
 }
 
 export class VisualisationError extends Error {
@@ -233,58 +248,75 @@ export async function requestVisualisation(
   const signature = visualisationSignature(request);
   const cached = sessionCache.get(signature);
   if (cached) return cached;
+  const running = inFlight.get(signature);
+  if (running) return running;
 
-  const response = await fetchImpl("/api/spaceplanner-visualise", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(request),
-    ...(options.signal ? { signal: options.signal } : {}),
-  });
+  const attempt = (async (): Promise<VisualisationResponse> => {
+    const response = await fetchImpl("/api/spaceplanner-visualise", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+      ...(options.signal ? { signal: options.signal } : {}),
+    });
 
+    const payload = (await response.json().catch(() => null)) as
+      | {
+          image?: unknown;
+          error?: unknown;
+          coverage?: CoverageReport;
+          verification?: VerificationVerdict;
+          diagnosticId?: unknown;
+          provider?: unknown;
+          model?: unknown;
+          renderMs?: unknown;
+          verifyMs?: unknown;
+          verifyTimedOut?: unknown;
+          serverTotalMs?: unknown;
+        }
+      | null;
 
-  const payload = (await response.json().catch(() => null)) as
-    | {
-        image?: unknown;
-        error?: unknown;
-        coverage?: CoverageReport;
-        verification?: VerificationVerdict;
-        diagnosticId?: unknown;
-        provider?: unknown;
-        model?: unknown;
-        renderMs?: unknown;
-      }
-    | null;
+    if (!response.ok) {
+      throw new VisualisationError(
+        typeof payload?.error === "string" ? payload.error : `http_${response.status}`,
+      );
+    }
+    if (typeof payload?.image !== "string" || !payload.image) {
+      throw new VisualisationError("no_image_returned");
+    }
 
-  if (!response.ok) {
-    throw new VisualisationError(
-      typeof payload?.error === "string" ? payload.error : `http_${response.status}`,
-    );
+    const coverage = payload.coverage ?? null;
+    const result: VisualisationResponse = {
+      image: payload.image,
+      coverage,
+      verification:
+        payload.verification ??
+        (!coverage
+          ? "unverified"
+          : !coverage.faithful || (coverage.supportIssues?.length ?? 0) > 0
+            ? "unfaithful"
+            : coverage.complete
+              ? "verified"
+              : "incomplete"),
+
+      diagnosticId: typeof payload.diagnosticId === "string" ? payload.diagnosticId : null,
+      provider: typeof payload.provider === "string" ? payload.provider : null,
+      model: typeof payload.model === "string" ? payload.model : null,
+      renderMs: typeof payload.renderMs === "number" ? payload.renderMs : null,
+      verifyMs: typeof payload.verifyMs === "number" ? payload.verifyMs : null,
+      verifyTimedOut: payload.verifyTimedOut === true,
+      serverTotalMs: typeof payload.serverTotalMs === "number" ? payload.serverTotalMs : null,
+    };
+
+    sessionCache.set(signature, result);
+    return result;
+  })();
+
+  inFlight.set(signature, attempt);
+  try {
+    return await attempt;
+  } finally {
+    inFlight.delete(signature);
   }
-  if (typeof payload?.image !== "string" || !payload.image) {
-    throw new VisualisationError("no_image_returned");
-  }
-
-  const coverage = payload.coverage ?? null;
-  const result: VisualisationResponse = {
-    image: payload.image,
-    coverage,
-    verification:
-      payload.verification ??
-      (!coverage
-        ? "unverified"
-        : !coverage.faithful || (coverage.supportIssues?.length ?? 0) > 0
-          ? "unfaithful"
-          : coverage.complete
-            ? "verified"
-            : "incomplete"),
-
-    diagnosticId: typeof payload.diagnosticId === "string" ? payload.diagnosticId : null,
-    provider: typeof payload.provider === "string" ? payload.provider : null,
-    model: typeof payload.model === "string" ? payload.model : null,
-    renderMs: typeof payload.renderMs === "number" ? payload.renderMs : null,
-  };
-
-  sessionCache.set(signature, result);
-  return result;
 }
+
 

@@ -680,15 +680,23 @@ export const Route = createFileRoute("/api/vision-detect")({
             // evidence rather than on how slow it feels.
             timings: {
               detectMs,
+              /** Phase 6Y — completeness sweep. 0 when the scan looked complete. */
+              sweepMs,
               mergeMs,
               // Kept for compatibility: classification now happens inside the
               // single scan pass, so its separate cost is the refinement only.
               classifyMs: refineMs,
               refineMs,
-              totalMs: detectMs + mergeMs + refineMs,
+              totalMs: detectMs + sweepMs + mergeMs + refineMs,
             },
-            calls: { scan: images.length, refine: refineCalls },
+            calls: { scan: images.length, sweep: sweepCalls, refine: refineCalls },
+            // Why an extra call was (or was not) made, in plain words.
+            completeness: {
+              swept: sweepCalls,
+              reasons: completeness.flatMap((entry) => entry.verdict.reasons),
+            },
           });
+
 
         } catch (cause) {
           if (cause instanceof UpstreamError) {

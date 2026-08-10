@@ -196,6 +196,18 @@ export interface RenderDiagnostics {
   serverTotalMs?: number | null;
   /** True when the CHECK ran out of time — the render itself succeeded. */
   verifyTimedOut?: boolean;
+  /** True when the RENDER ran out of time — there is no image at all. */
+  renderTimedOut?: boolean;
+  /** Phase 6AG — the ceilings each stage was measured against. */
+  renderDeadlineMs?: number | null;
+  verifyDeadlineMs?: number | null;
+  /** True when an image was received and kept, even if it is not displayed. */
+  imageRetained?: boolean;
+  /** The verdict exactly as the server reported it. */
+  verificationVerdict?: string | null;
+  /** Named server-side cause when the run did not finish verified. */
+  failureReason?: string | null;
+
   /** True when the user's 20s budget expired before the verdict arrived. */
   uxDeadlineExceeded?: boolean;
   /** How many render requests this run actually spent. */

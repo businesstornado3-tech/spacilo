@@ -11,8 +11,10 @@ import * as React from "react";
 
 import {
   buildVisualisationInstruction,
+  cachedVisualisation,
   manifestPayload,
   requestVisualisation,
+  visualisationSignature,
   VISUALISATION_STAGES,
   type VisualisationStage,
 } from "@/lib/spaceplanner/photo/visualise";

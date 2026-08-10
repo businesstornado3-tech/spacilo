@@ -22,6 +22,7 @@ import {
   stageIndexFor,
   summariseDetections,
   updateObject,
+  type MergeReport,
   fullSelection,
   measurePhoto,
   type PhotoQuality,

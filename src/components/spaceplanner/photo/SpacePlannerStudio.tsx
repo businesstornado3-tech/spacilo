@@ -21,7 +21,10 @@ import { PhotoGallery } from "@/components/vision/PhotoGallery";
 import { PhotoRegionSelector } from "@/components/vision/PhotoRegionSelector";
 import { VisionAnalysis } from "@/components/vision/VisionAnalysis";
 
-import { PhotoArrangement } from "@/components/spaceplanner/photo/PhotoArrangement";
+import {
+  PhotoArrangement,
+  previewProgressMessage,
+} from "@/components/spaceplanner/photo/PhotoArrangement";
 import { SpacePlannerResult } from "@/components/spaceplanner/photo/SpacePlannerResult";
 import { EarningsEstimateCard } from "@/components/spaceplanner/photo/EarningsEstimateCard";
 import { useVisionAI } from "@/hooks/useVisionAI";
@@ -646,10 +649,12 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                     arrangedUrl={visual.imageUrl}
                     status={visual.status}
                     statusLabel={
-                      isVisualisationWorking(visual.status)
-                        ? `${visual.stageLabel}${visual.attempt > 1 ? " (refining)" : ""} · ${Math.round(visual.elapsedMs / 1000)}s`
-                        : visual.stageLabel
+                      visual.inFlight
+                        ? `${previewProgressMessage(visual.elapsedMs)}${visual.attempt > 1 ? " (refining)" : ""}`
+                        : undefined
                     }
+                    elapsedMs={visual.elapsedMs}
+                    previewInFlight={visual.inFlight}
 
                     coverage={visual.coverage}
                     errorCode={visual.error}
@@ -672,8 +677,8 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                   <section className="rounded-2xl border border-border bg-surface p-4">
                     <h4 className="type-h4">Your arrangement plan is ready</h4>
                     <p className="mt-1 type-body-sm text-muted-foreground">
-                      {isVisualisationWorking(visual.status)
-                        ? "These are the positions the planner decided, drawn to scale. The photographic preview is still rendering."
+                      {visual.inFlight
+                        ? "These are the positions the planner decided, drawn to scale. Your photographic preview is still being created."
                         : visual.status === "idle"
                           ? "These are the positions the planner decided, drawn to scale."
                           : "The photographic preview didn't come out accurately this time, so we're showing the plan itself — the same positions the planner decided, drawn to scale."}
@@ -684,19 +689,17 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                       <li>Arrangement plan: ready</li>
                       <li>
                         Photorealistic preview:{" "}
-                        {isVisualisationWorking(visual.status)
-                          ? "still rendering — optional"
+                        {visual.inFlight
+                          ? "still being created — optional"
                           : visual.status === "idle"
                             ? "not requested — optional"
-                            : visual.status === "unavailable"
-                              ? "still working in the background — optional"
-                              : "not available this time — optional"}
+                            : "not available this time — optional"}
                       </li>
                     </ul>
 
                     <ArrangementPlanDiagram manifest={manifest} className="mt-3" />
                     <ArrangementPaintProbe onPainted={arrangementPainted} />
-                    {isVisualisationWorking(visual.status) ? null : (
+                    {visual.inFlight ? null : (
                       <Button
                         type="button"
                         variant="secondary"

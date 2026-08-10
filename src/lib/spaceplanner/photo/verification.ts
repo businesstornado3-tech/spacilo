@@ -578,6 +578,11 @@ export interface CategorisedVerification {
    */
   permittedUnplaced: string[];
   /**
+   * Phase 6AI — one line per observed description explaining how it was tied
+   * to the inventory (or why it was not). Diagnostic only.
+   */
+  identityDecisions: IdentityDecision[];
+  /**
    * True only when every user belonging is present at the right quantity and
    * nothing was invented. Room-feature drift is reported but never withholds a
    * render — the room still owning its own door is not a reason to distrust
@@ -894,6 +899,59 @@ export function categoriseVerification(input: {
 
   const supportIssues = supportDrift(input.expectedSupports ?? [], reply.supports ?? []);
 
+  // Phase 6AI — explain every identity decision so a future false rejection
+  // can be read rather than guessed at.
+  const permittedText = new Set(
+    [...strayLedger.permitted, ...quantities.permitted].map((value) => normaliseLabel(value)),
+  );
+  const identityDecisions: IdentityDecision[] = [];
+  for (const observation of [...(reply.objects ?? []), ...reply.unexpected, ...strayFromPresent]) {
+    const text = observation.trim();
+    if (!text) continue;
+    const normalisedObserved = normaliseLabel(text);
+    const category = classifyReported(text, whitelists);
+    const literal = items.find((entry) => {
+      const allowed = normaliseLabel(entry.label);
+      return (
+        allowed === normalisedObserved ||
+        containsLabel(normalisedObserved, allowed) ||
+        containsLabel(allowed, normalisedObserved)
+      );
+    });
+    const loose = genericCandidates(text, items);
+    const matched = literal ?? (loose.length === 1 ? loose[0]! : null);
+    const decision: IdentityDecision["decision"] =
+      category === "room_feature"
+        ? "room_feature"
+        : category === "user_item"
+          ? "matched"
+          : permittedText.has(normalisedObserved)
+            ? "permitted_unplaced"
+            : loose.length > 1
+              ? "ambiguous"
+              : "unexpected";
+    identityDecisions.push({
+      observed: text,
+      normalisedObserved,
+      matchedId: decision === "matched" && matched ? matched.id : null,
+      matchedLabel: decision === "matched" && matched ? matched.label : null,
+      normalisedInventory: matched ? normaliseLabel(matched.label) : null,
+      reason:
+        decision === "room_feature"
+          ? "architectural or whitelisted room feature"
+          : decision === "matched"
+            ? literal
+              ? "literal or descriptor-compatible label match"
+              : "bounded spelling/synonym normalisation with a unique compatible allowance"
+            : decision === "permitted_unplaced"
+              ? "belonging the planner intentionally left unplaced"
+              : decision === "ambiguous"
+                ? `several inventory objects compatible: ${loose.map((entry) => entry.label).join(", ")}`
+                : "no compatible inventory object",
+      matchedIdPlaceholder: undefined,
+    } as IdentityDecision);
+  }
+
   return {
     userInventory,
     roomFeatures,
@@ -901,6 +959,7 @@ export function categoriseVerification(input: {
     quantities: quantities.checks,
     quantityShortfalls: quantities.shortfalls,
     permittedUnplaced: dedupe([...strayLedger.permitted, ...quantities.permitted]),
+    identityDecisions,
     verified:
       userInventory.missing.length === 0 &&
       userInventory.unexpected.length === 0 &&

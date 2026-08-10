@@ -14,10 +14,25 @@
  * The same manifest and the same room geometry always produce the same
  * coordinates.
  */
-import { classifyItem, classPlacementOrder, type PhysicalClass } from "./classify";
+import {
+  classifyItem,
+  classPlacementOrder,
+  SMALL_ITEM_FOOTPRINT_M2,
+  type PhysicalClass,
+} from "./classify";
+
 import { orientationsFor, stacksFor, type OrientationOption, type StackCandidate } from "./items";
 import { canSupport, prefersSurface, relationMap, storageZoneFor } from "./relations";
 import { contains, intersects, rectArea } from "./space";
+import {
+  FLOOR_OCCUPATION_PENALTY,
+  packOnSurface,
+  scoreSurfaceCandidate,
+  smallFloorFootprint,
+  usableSurfaceRect,
+  type SurfaceCandidate,
+} from "./surfaces";
+
 import type {
   ArrangementEntry,
   PlacementZone,
@@ -242,7 +257,19 @@ export function arrangementObjective(entries: ArrangementEntry[], space: Plannin
       wallContact(entry, space.usable) <= 0 &&
       !floor.some((other) => other.key !== entry.key && contactLength(entry, other) > 0),
   ).length;
-  return round2((used / hull) * 100 + contact * 8 + walls * 4 - isolated * 30 - hull * 3);
+  // Phase 6Z — floor occupied by objects small enough to have gone on a
+  // surface is wasted floor, and is penalised hard enough to change the
+  // arrangement the optimiser settles on rather than merely nudge it.
+  const smallOnFloor = smallFloorFootprint(entries, SMALL_ITEM_FOOTPRINT_M2);
+  return round2(
+    (used / hull) * 100 +
+      contact * 8 +
+      walls * 4 -
+      isolated * 30 -
+      hull * 3 -
+      smallOnFloor * FLOOR_OCCUPATION_PENALTY,
+  );
+
 }
 
 interface Candidate {
@@ -444,8 +471,12 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
   placed.length = 0;
   placed.push(...improved);
 
-  // 3D consolidation: put the small stuff on a surface if one exists.
-  const surfaceUse = new Map<string, number>();
+  // Phase 6Z — 3D consolidation as real 2D surface packing.
+  //
+  // Every safe base is evaluated, every valid position on every base is
+  // generated, each is scored, and the best one wins. Floor is reached only
+  // when no surface in the room can physically and safely take the object.
+  const surfaceOccupancy = new Map<string, Rect[]>();
   for (const stack of surfaceSeeking) {
     const unitHeight = Math.max(0.05, Math.round(stack.item.heightCm) / 100);
     const w = round2(Math.round(stack.item.widthCm) / 100);
@@ -457,9 +488,9 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
         unitHeight,
       ),
     );
+    const relatedIds = relations.get(stack.item.id);
 
-    // Deterministic base choice: lowest usable surface first, then by id.
-    const base = placed
+    const bases = placed
       .filter((candidate) => candidate.entry.layer === 0 && !candidate.entry.mounted)
       .filter((candidate) =>
         canSupport(
@@ -473,20 +504,40 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
           ceiling,
         ),
       )
-      .sort(
-        (a, b) =>
-          a.entry.heightM - b.entry.heightM ||
-          a.entry.itemId.localeCompare(b.entry.itemId) ||
-          a.entry.key.localeCompare(b.entry.key),
-      )
-      .find((candidate) => {
-        const used = surfaceUse.get(candidate.entry.key) ?? 0;
-        return used + w <= candidate.entry.w * 0.9 + EPS && d <= candidate.entry.d * 0.9 + EPS;
-      });
+      .sort((a, b) => a.entry.key.localeCompare(b.entry.key));
 
-    if (base) {
-      const used = surfaceUse.get(base.entry.key) ?? 0;
-      surfaceUse.set(base.entry.key, round2(used + w + 0.02));
+    let best: { base: Placed; candidate: SurfaceCandidate } | null = null;
+    for (const candidate of bases) {
+      const surface = usableSurfaceRect(candidate.entry);
+      const occupied = surfaceOccupancy.get(candidate.entry.key) ?? [];
+      const fit = packOnSurface(surface, occupied, w, d);
+      if (!fit) continue;
+      const scored: SurfaceCandidate = {
+        baseKey: candidate.entry.key,
+        baseItemId: candidate.entry.itemId,
+        fit,
+        score: scoreSurfaceCandidate({
+          baseItem: candidate.item,
+          baseTopHeightM: candidate.entry.heightM,
+          fit,
+          related: relatedIds?.has(candidate.item.id) ?? false,
+        }),
+      };
+      if (
+        !best ||
+        scored.score > best.candidate.score + 0.0001 ||
+        (Math.abs(scored.score - best.candidate.score) <= 0.0001 &&
+          scored.baseKey.localeCompare(best.candidate.baseKey) < 0)
+      ) {
+        best = { base: candidate, candidate: scored };
+      }
+    }
+
+    if (best) {
+      const { base, candidate } = best;
+      const occupied = surfaceOccupancy.get(base.entry.key) ?? [];
+      occupied.push(candidate.fit.rect);
+      surfaceOccupancy.set(base.entry.key, occupied);
       base.entry.supportsItemIds.push(stack.item.id);
       placed.push({
         item: stack.item,
@@ -496,14 +547,14 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
           itemId: stack.item.id,
           label: stack.item.label,
           units: stack.units,
-          x: round2(base.entry.x + used),
-          y: base.entry.y,
-          w,
-          d,
+          x: candidate.fit.rect.x,
+          y: candidate.fit.rect.y,
+          w: candidate.fit.rect.w,
+          d: candidate.fit.rect.d,
           heightM,
           baseHeightM: base.entry.heightM,
           layer: base.entry.layer + 1,
-          rotationDeg: 0,
+          rotationDeg: candidate.fit.rotationDeg,
           orientation: "flat",
           zone: base.entry.zone,
           storageZone: storageZoneFor(stack.item),
@@ -520,12 +571,13 @@ export function searchPlacements(input: SearchInput): ArrangementEntry[] {
       continue;
     }
 
-    // No surface could carry it: fall back to a scored floor position, which
-    // the small-item rule already forces to join the existing block.
+    // No surface in the room could safely carry it: fall back to a scored
+    // floor position, which the small-item rule forces to join the block.
     if (!place(stack)) {
       unplacedUnits.set(stack.item.id, (unplacedUnits.get(stack.item.id) ?? 0) + stack.units);
     }
   }
+
 
 
   return placed.map((entry) => entry.entry);

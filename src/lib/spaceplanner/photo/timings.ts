@@ -58,6 +58,8 @@ export interface PipelineTimings {
   timeToArrangementMs: number | null;
   /** The same journey with user-input windows subtracted. The 5s target. */
   activeTimeToArrangementMs: number | null;
+  /** Validated plan → the frame the arrangement was actually painted in. */
+  arrangementPaintMs: number | null;
   /** Analyse click → a validated deterministic plan existed. */
   planReadyMs: number | null;
   /** Image model call. */
@@ -85,6 +87,7 @@ export const EMPTY_TIMINGS: PipelineTimings = {
   manifestValidationMs: null,
   timeToArrangementMs: null,
   activeTimeToArrangementMs: null,
+  arrangementPaintMs: null,
   planReadyMs: null,
   renderMs: null,
   verifyMs: null,

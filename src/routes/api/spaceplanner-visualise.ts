@@ -346,7 +346,7 @@ export function buildRenderPrompt(options: {
     .join("\n");
 
   return [
-    "You are a photo-realistic RENDERER, not a planner. The arrangement below is final: draw it exactly, change nothing.",
+    "You are a photo-realistic RENDERER, not a planner. THE MANIFEST IS AUTHORITATIVE: the arrangement below is final, draw it exactly and change nothing.",
     "Edit the FIRST image, which is a real photograph of a room or storage space. Keep it as the foundation: identical walls, floor, ceiling, doorway, windows, fixed furniture, camera position, perspective, lighting and colour. Do not redesign or regenerate the room.",
     hasItemPhotos
       ? "The remaining images are photographs of the user's real belongings. Render those exact objects, matching their appearance, materials and colours."

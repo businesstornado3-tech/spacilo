@@ -49,13 +49,46 @@ export function normaliseLabel(label: string): string {
 
 /** The identity of the object with its descriptors stripped out. */
 export function identityOf(label: string): string {
-  return normaliseLabel(label)
+  const stripped = normaliseLabel(label)
     .replace(COLOUR, " ")
     .replace(MATERIAL, " ")
     .replace(SIZE, " ")
     .replace(/\s+/g, " ")
     .trim();
+  // Detectors are inconsistent between everyday synonyms for the same thing;
+  // "TV" and "television" are one object, and identity must not depend on
+  // which word the model happened to choose.
+  return stripped
+    .split(" ")
+    .map((word) => SYNONYMS[word] ?? word)
+    .filter((word, index, words) => word.length > 0 && words.indexOf(word) === index)
+    .join(" ")
+    .trim();
 }
+
+/** Everyday synonyms collapsed to one canonical noun. */
+const SYNONYMS: Record<string, string> = {
+  tv: "television",
+  telly: "television",
+  screen: "television",
+  monitor: "television",
+  couch: "sofa",
+  settee: "sofa",
+  fridge: "refrigerator",
+  bike: "bicycle",
+  cycle: "bicycle",
+  case: "suitcase",
+  luggage: "suitcase",
+  carton: "box",
+  crate: "box",
+  cupboard: "wardrobe",
+  bookshelf: "shelving",
+  bookcase: "shelving",
+  shelf: "shelving",
+  rug: "carpet",
+  pram: "pushchair",
+  stroller: "pushchair",
+};
 
 /** The descriptors themselves, sorted, so comparison is order-independent. */
 export function descriptorsOf(label: string): string[] {

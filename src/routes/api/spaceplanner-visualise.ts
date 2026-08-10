@@ -65,10 +65,22 @@ function verifyModel(): string {
   return process.env["SPACEPLANNER_VERIFY_MODEL"]?.trim() || DEFAULT_VERIFY_MODEL;
 }
 
+/**
+ * Phase 6AE — one row per PHYSICAL OBJECT, carrying everything the renderer
+ * needs and nothing it does not. Quantity is a number, so a high-count item can
+ * no longer crowd other objects out of the whitelist.
+ */
 interface ManifestItem {
   id?: string;
   label?: string;
   quantity?: number;
+  widthCm?: number;
+  depthCm?: number;
+  heightCm?: number;
+  placement?: string;
+  supportBaseId?: string | null;
+  supportBaseLabel?: string | null;
+  structural?: boolean;
 }
 
 interface VisualiseBody {

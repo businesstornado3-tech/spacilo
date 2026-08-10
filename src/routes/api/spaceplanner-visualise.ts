@@ -647,7 +647,7 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           key,
           space,
           image,
-          required,
+          verifyObjects,
           roomFeatures,
           deadline(VERIFY_DEADLINE_MS),
           supports,
@@ -658,9 +658,19 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         // render is presentable; the server reports honestly what it observed
         // and distinguishes "could not verify" from "verified as wrong".
         const verification = verdictFor(coverage);
+        // Phase 6AG — a render that succeeded and a check that ran out of time
+        // is NOT "the preview timed out". Each stage is reported separately so
+        // the log and the diagnostics panel can never conflate the two.
+        const failureReason = verifyTimedOut
+          ? "verification_timeout"
+          : coverage === null
+            ? "verification_unavailable"
+            : verification === "verified"
+              ? null
+              : verification;
 
         console.log(
-          `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} units=${required.length} verification=${verification} present=${coverage?.present ?? "?"}/${required.length} unexpected=${coverage?.unexpected.length ?? 0} renderMs=${renderMs} verifyMs=${verifyMs} verifyTimedOut=${verifyTimedOut}`,
+          `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} objects=${verifyObjects.length} units=${required.length} RENDER=SUCCESS renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=${verifyTimedOut ? "TIMEOUT" : verification.toUpperCase()} verifyMs=${verifyMs}/${VERIFY_DEADLINE_MS} PREVIEW=${verification === "verified" ? "VERIFIED" : "NOT_VERIFIED"} PLAN=READY present=${coverage?.present ?? "?"}/${verifyObjects.length} unexpected=${coverage?.unexpected.length ?? 0} failureReason=${failureReason ?? "-"}`,
         );
 
         return Response.json({
@@ -675,9 +685,16 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           inventoryHash: body.inventoryHash ?? null,
           renderMs,
           verifyMs,
+          renderDeadlineMs: RENDER_DEADLINE_MS,
+          verifyDeadlineMs: VERIFY_DEADLINE_MS,
+          renderTimedOut: false,
           verifyTimedOut,
+          renderRequestsSpent: 1,
+          verificationVerdict: verification,
+          failureReason,
           serverTotalMs: Date.now() - startedRender,
         });
+
       },
     },
   },

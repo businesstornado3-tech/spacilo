@@ -43,6 +43,16 @@ export interface PhotoArrangementProps {
   coverage?: CoverageReport | null;
   /** Why the render failed, so the message says what actually happened. */
   errorCode?: string | null;
+  /**
+   * Phase 6AE — monotonic milliseconds since the preview request began. Shown
+   * as a plain clock so the wait is legible rather than an endless spinner.
+   */
+  elapsedMs?: number;
+  /**
+   * True while the preview request is GENUINELY still running. The UI must
+   * never suggest we stopped while this is true.
+   */
+  previewInFlight?: boolean;
   onRetry?: () => void;
 
   className?: string;
@@ -87,11 +97,32 @@ function Overlay({
   );
 }
 
+/** Monotonic elapsed time as mm:ss. Never estimated, never faked. */
+export function formatElapsed(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+/**
+ * Phase 6AE — what the user is told while the preview is being made.
+ *
+ * Past the UX threshold the presentation changes but the meaning does not: the
+ * work is still running, so the copy says so. "We stopped waiting" is never
+ * shown while a request is in flight.
+ */
+export function previewProgressMessage(elapsedMs: number): string {
+  return elapsedMs >= 20_000
+    ? "Still creating your photographic preview — this is taking a little longer than usual."
+    : "Creating your photographic preview…";
+}
+
 /** Plain-language reason, by failure category. */
 function failureMessage(code?: string | null): string {
   switch (code) {
     case "timed_out":
-      return "The visual preview took longer than expected, so we stopped waiting.";
+      return "The photographic preview didn't finish this time.";
     case "render_timeout":
       return "The image service took too long to draw the preview.";
     case "upstream_429":
@@ -123,9 +154,14 @@ export function PhotoArrangement({
   statusLabel,
   coverage = null,
   errorCode = null,
+  elapsedMs = 0,
+  previewInFlight = false,
   onRetry,
   className,
 }: PhotoArrangementProps) {
+  // The spinner belongs to the request, not to the UX threshold: work that is
+  // still running is still shown as running.
+  const working = isVisualisationWorking(status) || (status === "unavailable" && previewInFlight);
   // Phase 6T — the rendered photograph appears for exactly one state.
   const hasVisual = showsRenderedImage(status) && Boolean(arrangedUrl);
 
@@ -174,7 +210,7 @@ export function PhotoArrangement({
           </div>
         ) : null}
 
-        {isVisualisationWorking(status) ? (
+        {working ? (
           <div
             role="status"
             aria-live="polite"
@@ -182,7 +218,10 @@ export function PhotoArrangement({
           >
             <span className="max-w-[18rem] rounded-2xl bg-card/95 px-4 py-3 type-body-sm">
               <span className="mx-auto mb-2 block size-5 animate-spin rounded-full border-2 border-signal border-t-transparent" />
-              {statusLabel ?? "Creating your SpacePlanner visualisation…"}
+              {statusLabel ?? previewProgressMessage(elapsedMs)}
+              <span className="mt-1 block type-body-xs text-muted-foreground tabular-nums">
+                {formatElapsed(elapsedMs)} elapsed
+              </span>
             </span>
           </div>
         ) : null}
@@ -343,18 +382,41 @@ export function PhotoArrangement({
 
       {status === "unavailable" ? (
         <div className="mt-3 rounded-2xl border border-border bg-surface p-3">
-          <p className="flex items-start gap-2 type-body-sm">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
-            Your optimised arrangement plan below is ready. The photographic preview is optional and
-            was taking longer than we&apos;re willing to make you wait, so we stopped showing a
-            spinner. If it finishes, it will appear here on its own.
-          </p>
-          {onRetry ? (
-            <Button type="button" size="sm" variant="secondary" className="mt-2" onClick={onRetry}>
-              <RefreshCw aria-hidden="true" />
-              Try the preview again
-            </Button>
-          ) : null}
+          {previewInFlight ? (
+            // Part J — still running. Say so, keep the clock, promise nothing.
+            <p className="flex items-start gap-2 type-body-sm" aria-live="polite">
+              <span className="mt-0.5 size-4 shrink-0 animate-spin rounded-full border-2 border-signal border-t-transparent" />
+              <span>
+                {previewProgressMessage(elapsedMs)}{" "}
+                <span className="tabular-nums text-muted-foreground">
+                  {formatElapsed(elapsedMs)}
+                </span>
+                <span className="mt-1 block type-body-xs text-muted-foreground">
+                  Your optimised arrangement plan below is ready to use now — the preview will
+                  appear here the moment it&apos;s finished.
+                </span>
+              </span>
+            </p>
+          ) : (
+            <>
+              <p className="flex items-start gap-2 type-body-sm">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
+                <span>
+                  Photographic preview unavailable
+                  {elapsedMs > 0 ? (
+                    <span className="tabular-nums text-muted-foreground"> · {formatElapsed(elapsedMs)}</span>
+                  ) : null}
+                  . Your optimised arrangement plan is ready below.
+                </span>
+              </p>
+              {onRetry ? (
+                <Button type="button" size="sm" variant="secondary" className="mt-2" onClick={onRetry}>
+                  <RefreshCw aria-hidden="true" />
+                  Try the preview again
+                </Button>
+              ) : null}
+            </>
+          )}
         </div>
       ) : null}
 

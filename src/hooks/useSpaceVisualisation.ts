@@ -12,7 +12,6 @@ import * as React from "react";
 import {
   buildVisualisationInstruction,
   cachedVisualisation,
-  manifestPayload,
   requestVisualisation,
   visualisationSignature,
   VISUALISATION_STAGES,

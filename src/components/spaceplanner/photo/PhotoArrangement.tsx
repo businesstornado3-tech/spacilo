@@ -341,8 +341,26 @@ export function PhotoArrangement({
       ) : null}
 
 
+      {status === "unavailable" ? (
+        <div className="mt-3 rounded-2xl border border-border bg-surface p-3">
+          <p className="flex items-start gap-2 type-body-sm">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
+            Your optimised arrangement plan below is ready. The photographic preview is optional and
+            was taking longer than we&apos;re willing to make you wait, so we stopped showing a
+            spinner. If it finishes, it will appear here on its own.
+          </p>
+          {onRetry ? (
+            <Button type="button" size="sm" variant="secondary" className="mt-2" onClick={onRetry}>
+              <RefreshCw aria-hidden="true" />
+              Try the preview again
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+
       {status === "failed" ? (
         <div className="mt-3 rounded-2xl border border-border bg-surface p-3">
+
 
           <p className="flex items-start gap-2 type-body-sm">
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />

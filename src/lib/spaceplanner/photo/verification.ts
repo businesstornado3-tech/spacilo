@@ -301,6 +301,19 @@ export function quantityCheck(
   const observed = new Map<string, number>();
   const invented = new Map<string, { label: string; count: number }>();
 
+  /**
+   * Phase 6AF — a generic description is not a duplicate.
+   *
+   * The live failure: an inventory of "blue suitcase" and "red suitcase"
+   * against a verifier that simply said "suitcase" twice. Longest-match
+   * assignment poured both into the same allowance, invented an excess, and
+   * the render was rejected as unfaithful while the other suitcase was
+   * simultaneously reported missing. Ambiguous descriptions are therefore
+   * assigned to an allowance that still has room BEFORE any excess is
+   * declared — capacity first, blame last.
+   */
+  const ambiguous: { text: string; count: number; candidates: string[] }[] = [];
+
   for (const raw of objects) {
     const text = raw.trim();
     if (!text) continue;
@@ -314,9 +327,30 @@ export function quantityCheck(
       else invented.set(key, { label: text, count });
       continue;
     }
-    const key = allowedKeyFor(text, items) ?? normaliseLabel(text);
-    if (!key) continue;
-    observed.set(key, (observed.get(key) ?? 0) + count);
+    const candidates = candidateKeysFor(text, items);
+    if (candidates.length === 1) {
+      observed.set(candidates[0]!, (observed.get(candidates[0]!) ?? 0) + count);
+      continue;
+    }
+    if (candidates.length === 0) {
+      const key = normaliseLabel(text);
+      if (key) observed.set(key, (observed.get(key) ?? 0) + count);
+      continue;
+    }
+    ambiguous.push({ text, count, candidates });
+  }
+
+  // Ambiguous units, one at a time, into whichever compatible allowance still
+  // has capacity. Only a unit that fits nowhere counts against the longest
+  // matching allowance, where it becomes a genuine excess.
+  for (const entry of ambiguous) {
+    for (let unit = 0; unit < entry.count; unit += 1) {
+      const withRoom = entry.candidates.find(
+        (key) => (observed.get(key) ?? 0) < (allowed.get(key)?.allowed ?? 0),
+      );
+      const key = withRoom ?? entry.candidates[0]!;
+      observed.set(key, (observed.get(key) ?? 0) + 1);
+    }
   }
 
   const checks: QuantityCheck[] = [];

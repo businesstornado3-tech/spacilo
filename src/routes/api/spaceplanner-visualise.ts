@@ -367,16 +367,31 @@ export function buildRenderPrompt(options: {
   const { instruction, manifest, required, roomFeatures, emphasise, hasItemPhotos } = options;
   const supports = options.supports ?? [];
 
-  const whitelist = manifest
-    .map((entry, index) => {
+  // Phase 6AE — the REQUIRED_OBJECTS block replaces the flat per-unit
+  // whitelist. Structural objects (a stand carrying a television) are marked as
+  // such, so the model cannot treat a support base as scenery it may omit.
+  const requiredObjects = requiredObjectsBlock({
+    objects: manifest.flatMap((entry, index) => {
       const label = typeof entry?.label === "string" ? entry.label.trim() : "";
-      if (!label) return "";
-      const quantity = typeof entry?.quantity === "number" && entry.quantity > 0 ? entry.quantity : 1;
-      const id = typeof entry?.id === "string" && entry.id ? entry.id : `item_${String(index + 1).padStart(2, "0")}`;
-      return `${id} = ${quantity} × ${label}`;
-    })
-    .filter(Boolean)
-    .join("\n");
+      if (!label) return [];
+      return [
+        {
+          id: entry.id?.trim() || `item_${String(index + 1).padStart(2, "0")}`,
+          label,
+          quantity: typeof entry.quantity === "number" && entry.quantity > 0 ? entry.quantity : 1,
+          widthCm: entry.widthCm ?? 0,
+          depthCm: entry.depthCm ?? 0,
+          heightCm: entry.heightCm ?? 0,
+          placement: entry.placement ?? "as positioned in the manifest",
+          supportBaseId: entry.supportBaseId ?? null,
+          supportBaseLabel: entry.supportBaseLabel ?? null,
+          structural: entry.structural === true,
+          required: true as const,
+        },
+      ];
+    }),
+    excluded: [],
+  });
 
   return [
     "You are a photo-realistic RENDERER, not a planner. THE MANIFEST IS AUTHORITATIVE: the arrangement below is final, draw it exactly and change nothing.",
@@ -385,10 +400,8 @@ export function buildRenderPrompt(options: {
       ? "The remaining images are photographs of the user's real belongings. Render those exact objects, matching their appearance, materials and colours."
       : "Render the described belongings into the photographed space.",
     instruction.slice(0, 3000),
-    whitelist
-      ? `ALLOWED OBJECTS — exhaustive per-unit whitelist. Render every ID exactly once:\n${whitelist}`
-      : "",
-    "Do not add, remove, replace, duplicate, merge, substitute or infer any object. Any object not on the whitelist must not appear. No shoes, chairs, tables, extra boxes, extra bags, plants, tools, bicycles, shelving or decorative items.",
+    requiredObjects,
+    "Every REQUIRED_OBJECT must appear in the final image exactly once per allowed quantity. Do not add, remove, replace, duplicate, merge, substitute or infer any object. Any object not listed must not appear. No shoes, chairs, tables, extra boxes, extra bags, plants, tools, bicycles, shelving or decorative items.",
     roomFeatures.length
       ? `FIXED ROOM FEATURES — preserve these exactly where they are in the source photograph and never treat them as inventory: ${roomFeatures.map((feature) => `${feature.id}=${feature.label}`).join("; ")}.`
       : "Preserve every source room feature, especially any television, radiator, door, window, fitted shelf, built-in furnishing and electrical fixture. Never remove, relocate, replace or cover them.",

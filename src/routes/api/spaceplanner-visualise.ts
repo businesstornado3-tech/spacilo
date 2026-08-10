@@ -49,8 +49,19 @@ const MAX_PROMPT_CHARS = 24_000;
  * bounded on its own, and a slow CHECK can only cost the verdict, never the
  * render.
  */
-const RENDER_DEADLINE_MS = 35_000;
-const VERIFY_DEADLINE_MS = 10_000;
+/**
+ * Phase 6AG — the deadlines are now set from MEASURED latency, not from hope.
+ *
+ * Live evidence: successful renders at 23–29s against a 35s ceiling, and
+ * checks that reached exactly 10,000ms — the abort firing, not the model
+ * answering — against a documented 6–22s check distribution. Both ceilings sat
+ * inside the real distribution, so good renders were being thrown away by the
+ * clock. 50s and 25s put the ceiling ABOVE the observed work, which is the
+ * only place a deadline belongs.
+ */
+const RENDER_DEADLINE_MS = 50_000;
+const VERIFY_DEADLINE_MS = 25_000;
+
 
 /** Aborts a stage without taking the whole request down with it. */
 function deadline(ms: number): AbortSignal | undefined {

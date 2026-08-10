@@ -84,12 +84,22 @@ describe("Phase 6AC — stacking is bounded", () => {
   const base: PlanningItem = {
     id: "stand",
     label: "TV stand",
+    category: "furniture",
     quantity: 1,
-    w: 1.2,
-    d: 0.45,
-    h: 0.5,
+    widthCm: 120,
+    depthCm: 45,
+    heightCm: 50,
     weight: "medium",
-  } as PlanningItem;
+    stackable: false,
+    fragile: false,
+    compressible: false,
+    allowUpright: false,
+    wallMounted: false,
+    components: [],
+    confidence: 0.9,
+    dimensionBasis: "estimated",
+    photoIds: ["p1"],
+  };
 
   const fit = { rect: { x: 0, y: 0, w: 0.3, d: 0.3 }, rotationDeg: 0 as const, utilisation: 0.4 };
 

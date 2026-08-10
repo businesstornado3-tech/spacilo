@@ -20,7 +20,12 @@
  * work in a plain test environment.
  */
 
-export type ArrangementMark = "analyseClick" | "inventoryReady" | "planReady" | "arrangementPaint";
+export type ArrangementMark =
+  | "analyseClick"
+  | "inventoryReady"
+  | "spaceReady"
+  | "planReady"
+  | "arrangementPaint";
 
 /** The 5-second acceptance target for click → arrangement visible. */
 export const ARRANGEMENT_TARGET_MS = 5000;
@@ -84,8 +89,16 @@ export function endUserWait(): void {
 export interface ArrangementMetrics {
   /** Analyse click → a usable inventory on screen. */
   inventoryReadyMs: number | null;
+  /** Analyse click → a usable room model. */
+  spaceReadyMs: number | null;
   /** Analyse click → a validated deterministic plan in memory. */
   planReadyMs: number | null;
+  /**
+   * Validated plan → the frame it was actually painted in. Phase 6Z, Part A:
+   * the browser paint cost of the arrangement on its own, separated from the
+   * analysis that preceded it.
+   */
+  arrangementPaintMs: number | null;
   /** Analyse click → the arrangement actually painted. Wall clock. */
   timeToArrangementMs: number | null;
   /** The same, minus time spent waiting for the user. The 5s target. */
@@ -98,7 +111,9 @@ export interface ArrangementMetrics {
 
 const EMPTY: ArrangementMetrics = {
   inventoryReadyMs: null,
+  spaceReadyMs: null,
   planReadyMs: null,
+  arrangementPaintMs: null,
   timeToArrangementMs: null,
   activeTimeToArrangementMs: null,
   userWaitMs: null,
@@ -120,9 +135,16 @@ export function arrangementMetrics(): ArrangementMetrics {
   const activeTimeToArrangementMs =
     timeToArrangementMs === null ? null : Math.max(0, Math.round(timeToArrangementMs - idleSoFar));
 
+  const planReadyMs = since("planReady");
+
   return {
     inventoryReadyMs: since("inventoryReady"),
-    planReadyMs: since("planReady"),
+    spaceReadyMs: since("spaceReady"),
+    planReadyMs,
+    arrangementPaintMs:
+      timeToArrangementMs === null || planReadyMs === null
+        ? null
+        : Math.max(0, timeToArrangementMs - planReadyMs),
     timeToArrangementMs,
     activeTimeToArrangementMs,
     userWaitMs: Math.round(idleSoFar),

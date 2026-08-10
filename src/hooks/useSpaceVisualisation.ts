@@ -591,7 +591,7 @@ export function useSpaceVisualisation(options: {
         requiredObjectCount: manifest.entries.length,
         projectedObjectCount: projection.objects.length,
         excludedObjects: projection.excluded,
-        retryFocus,
+        retryFocus: current?.retryFocus ?? [],
         abortReason: reason,
       }));
       // Phase 6AD — NO BLIND RETRY. A timeout, a busy gateway or an

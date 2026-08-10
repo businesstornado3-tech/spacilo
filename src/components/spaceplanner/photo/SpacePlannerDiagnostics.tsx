@@ -91,7 +91,10 @@ export function SpacePlannerDiagnostics({
 
   const renderWorking = isVisualisationWorking(visualStatus);
   const renderFailed =
-    visualStatus === "failed" || visualStatus === "unfaithful" || visualStatus === "unverified";
+    visualStatus === "failed" ||
+    visualStatus === "unfaithful" ||
+    visualStatus === "unverified" ||
+    visualStatus === "unavailable";
   const verified = verificationStatusOf(coverage);
   const stages: { label: string; state: StageState }[] = [
     { label: "Photos", state: photoCount > 0 ? "passed" : "waiting" },

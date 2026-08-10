@@ -328,7 +328,13 @@ async function checkCoverage(
                 type: "text",
                 text: [
                   "Compare the SOURCE room photograph (first image) with the GENERATED photograph (second image).",
-                  `USER_INVENTORY_WHITELIST — belongings that must appear, one entry per unit: ${required.map((item) => `${item.id}=${item.label}`).join("; ")}.`,
+                  // Phase 6AG — OBJECT level with a quantity. The verifier is
+                  // no longer asked to echo per-unit id strings it cannot
+                  // produce under a "never repeat a description" schema.
+                  `USER_INVENTORY_WHITELIST — belongings that must appear, one row per object with the number of units required: ${required
+                    .map((item) => `${item.id}=${item.label} ×${Math.max(1, Math.round(item.quantity ?? 1))}`)
+                    .join("; ")}.`,
+
                   `ROOM_FEATURE_WHITELIST — parts of the building that must be preserved and are NEVER belongings: ${roomFeatures.map((feature) => `${feature.id}=${feature.label}`).join("; ") || "every fixed fixture visible in the source photograph (doors, doorways, windows, radiators, sockets, fitted units)"}.`,
                   expectedSupports.length
                     ? `EXPECTED_SUPPORTS — the plan places these objects ON TOP OF another object, never on the floor: ${expectedSupports

@@ -127,9 +127,47 @@ function canonicalId(value: string): string {
     .replace(/^OBJECTS/, "OBJECT");
 }
 
-/** Text form used to compare labels. Plural and article insensitive. */
+/**
+ * Phase 6AI — bounded, deterministic spelling and synonym normalisation.
+ *
+ * The live failure: the verifier wrote "Black bagpack" for the user's own
+ * black backpack, and the matcher — which only ever compared literal text —
+ * called it an invention. These maps are a CLOSED list of known equivalences
+ * and transcription slips. Nothing outside them is normalised, so unrelated
+ * objects can never collapse into one another.
+ */
+const PHRASE_SYNONYMS: ReadonlyArray<[string, string]> = [
+  ["back pack", "backpack"],
+  ["bag pack", "backpack"],
+  ["suit case", "suitcase"],
+  ["lap top", "laptop"],
+  ["flat screen television", "television"],
+  ["flatscreen television", "television"],
+  ["television set", "television"],
+  ["luggage case", "suitcase"],
+  ["laptop case", "laptop bag"],
+  ["water bottle", "water bottle"],
+];
+
+const WORD_SYNONYMS: Readonly<Record<string, string>> = {
+  tv: "television",
+  telly: "television",
+  televison: "television",
+  bagpack: "backpack",
+  backpak: "backpack",
+  bakpack: "backpack",
+  rucksack: "backpack",
+  knapsack: "backpack",
+  luggage: "suitcase",
+};
+
+function stemWord(word: string): string {
+  return word.replace(/(?:es|s)$/, "").replace(/e$/, "");
+}
+
+/** Text form used to compare labels. Plural, article and spelling insensitive. */
 export function normaliseLabel(label: string): string {
-  return label
+  let text = label
     .trim()
     .toLowerCase()
     .replace(STATE_WORDS, " ")
@@ -140,9 +178,26 @@ export function normaliseLabel(label: string): string {
     )
     .replace(/[^a-z0-9 ]/g, " ")
     .replace(/\s+/g, " ")
-    .replace(/\b\w+\b/g, (word) => word.replace(/(?:es|s)$/, "").replace(/e$/, ""))
+    .replace(/\b\w+\b/g, stemWord)
     .trim();
+
+  for (const [from, to] of PHRASE_SYNONYMS) {
+    const source = from.split(" ").map(stemWord).join(" ");
+    const target = to.split(" ").map(stemWord).join(" ");
+    if (source === target) continue;
+    text = ` ${text} `.split(` ${source} `).join(` ${target} `).trim();
+  }
+
+  return text
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => {
+      const canonical = WORD_SYNONYMS[word];
+      return canonical ? stemWord(canonical) : word;
+    })
+    .join(" ");
 }
+
 
 /**
  * Any ID-looking token inside a free-text report.

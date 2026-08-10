@@ -139,6 +139,8 @@ function failureMessage(code?: string | null): string {
       return "We couldn't reach the image service.";
     case "inventory_not_fully_placeable":
       return "There were no items the planner could place in this space.";
+    case "nothing_to_render":
+      return "There were no safely placeable items to draw.";
     default:
       return "We couldn't create the visual preview this time.";
   }
@@ -419,6 +421,18 @@ export function PhotoArrangement({
               ) : null}
             </>
           )}
+        </div>
+      ) : null}
+
+      {status === "not_applicable" ? (
+        // Phase 6AH — a valid planning outcome, not a failure: the planner
+        // placed nothing, so there was nothing to photograph.
+        <div className="mt-3 rounded-2xl border border-border bg-surface p-3">
+          <p className="type-body-sm">
+            Photographic preview not applicable — there were no safely placeable items to render.
+            Your arrangement plan below is ready, including the items that could not be
+            accommodated.
+          </p>
         </div>
       ) : null}
 

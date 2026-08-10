@@ -371,22 +371,28 @@ export function quantityCheck(
   return { checks, unexpected };
 }
 
-/** The allowance key a whitelisted description belongs to, by longest match. */
-function allowedKeyFor(reported: string, items: readonly WhitelistEntry[]): string | null {
+/**
+ * Every allowance key a whitelisted description could legitimately be,
+ * longest (most specific) first. An explicit ID match is unambiguous and
+ * returns exactly one key; a plain label match may return several, which is
+ * precisely the ambiguity the caller resolves by remaining capacity.
+ */
+function candidateKeysFor(reported: string, items: readonly WhitelistEntry[]): string[] {
   const ids = new Set([canonicalId(reported), ...idsIn(reported)]);
   for (const entry of items) {
-    if (ids.has(canonicalId(entry.id))) return normaliseLabel(entry.label);
+    if (ids.has(canonicalId(entry.id))) {
+      const key = normaliseLabel(entry.label);
+      if (key) return [key];
+    }
   }
   const text = normaliseLabel(reported);
-  let best: { key: string; length: number } | null = null;
+  const keys = new Set<string>();
   for (const entry of items) {
     const key = normaliseLabel(entry.label);
     if (!key) continue;
-    const match = key === text || containsLabel(text, key) || containsLabel(key, text);
-    if (!match) continue;
-    if (!best || key.length > best.length) best = { key, length: key.length };
+    if (key === text || containsLabel(text, key) || containsLabel(key, text)) keys.add(key);
   }
-  return best ? best.key : null;
+  return [...keys].sort((a, b) => b.length - a.length);
 }
 
 

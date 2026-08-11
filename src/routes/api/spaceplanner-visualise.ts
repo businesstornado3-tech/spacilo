@@ -400,14 +400,19 @@ async function checkCoverage(
                   // Phase 6AB — STRICT COMPACT JSON. Every semantic check is
                   // retained; only the prose is gone. Verbose verifier replies
                   // cost 1,157–4,829 output tokens and up to 22 seconds.
-                  'Reply with JSON only. No prose, no explanation, no markdown. Schema exactly: {"objects":["2x cardboard box"],"present":["ITEM-1"],"unexpected":["shoes"],"missingFeatures":["FEATURE-1"],"supports":[{"item":"tv","restingOn":"tv stand"}]}.',
-                  'Every string must be at most 4 words. Omit reasoning entirely. Do not repeat an identical description: give the number instead, as a count prefix ("3x cardboard box").',
-                  '"objects": every portable/stored object visible, listed independently of the whitelists and BEFORE consulting them. Include small objects (shoes, bottles, toys, bags, cushions). Quantity-accurate: prefix the count when you see more than one ("2x cardboard box").',
-                  '"present": each USER_INVENTORY_WHITELIST id clearly visible, listed ONCE. Quantity belongs in "objects", not here.',
+                  'Reply with JSON only. No prose, no explanation, no markdown. Schema exactly: {"objects":["ITEM-1 | 2x cardboard box"],"present":["ITEM-1"],"unexpected":["UNKNOWN | shoes"],"missingFeatures":["FEATURE-1"],"supports":[{"item":"ITEM-1","restingOn":"ITEM-2"}]}.',
+                  // Phase 6AP — THE IDENTITY CONTRACT. The canonical whitelist
+                  // id is the identity; the wording after the pipe is only
+                  // description, so a different phrasing is never a new object.
+                  'IDENTITY CONTRACT: every entry in "objects" and "unexpected" MUST start with a USER_INVENTORY_WHITELIST id followed by " | " and your own short description, e.g. "ITEM-5 | small bottle". Use the id whenever the object you can see is that whitelisted belonging, even if you would word it differently. Only when you cannot confidently associate the object with any whitelist id, write "UNKNOWN | <description>". Never force an unknown object onto an id, and never invent an id.',
+                  'Each description must be at most 4 words. Omit reasoning entirely. Do not repeat an identical entry: give the number instead, as a count prefix after the id ("ITEM-1 | 3x cardboard box").',
+                  '"objects": every portable/stored object visible, each with its id or UNKNOWN. Include small objects (shoes, bottles, toys, bags, cushions). Quantity-accurate: prefix the count when you see more than one.',
+                  '"present": each USER_INVENTORY_WHITELIST id clearly visible, listed ONCE, id only. Quantity belongs in "objects", not here.',
 
-                  '"unexpected": ONLY stored objects on NEITHER whitelist. Never a room feature, never a whitelisted item.',
+                  '"unexpected": ONLY stored objects on NEITHER whitelist — these carry the "UNKNOWN | " prefix. Never a room feature, never a whitelisted item.',
                   '"missingFeatures": ROOM_FEATURE_WHITELIST ids that disappeared, moved, changed or became covered.',
-                  '"supports": for each EXPECTED_SUPPORTS entry, what it actually stands on. Use "floor" when on the ground.',
+                  '"supports": for each EXPECTED_SUPPORTS entry, what it actually stands on. Use the whitelist id where you can, and "floor" when on the ground.',
+
                 ]
                   .filter(Boolean)
                   .join(" "),

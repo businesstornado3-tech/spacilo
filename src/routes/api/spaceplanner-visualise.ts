@@ -297,7 +297,7 @@ export function parseCheckReply(text: string): VerifierReply | null {
   return present ? { present, unexpected: [] } : null;
 }
 
-export type Verdict = "verified" | "incomplete" | "unfaithful" | "unverified";
+export type Verdict = "verified" | "partial" | "incomplete" | "unfaithful" | "unverified";
 
 /**
  * Turns an observation into a verdict. An absent or unreadable coverage report
@@ -306,13 +306,19 @@ export type Verdict = "verified" | "incomplete" | "unfaithful" | "unverified";
  * Phase 6T: support drift is a contradiction of the deterministic plan, so a
  * render that puts a supported object on the floor is unfaithful, exactly like
  * an invented object. THE PLAN WINS.
+ *
+ * Phase 6AK: a faithful render that simply did not account for every placed
+ * belonging is PARTIAL, not rejected. The picture is real, the objects in it
+ * are the user's own, and the missing lines are reported alongside it.
  */
 export function verdictFor(coverage: Coverage | null): Verdict {
   if (!coverage) return "unverified";
   if (!coverage.faithful) return "unfaithful";
   if ((coverage.supportIssues?.length ?? 0) > 0) return "unfaithful";
-  return coverage.complete ? "verified" : "incomplete";
+  if (coverage.complete) return "verified";
+  return coverage.usable ? "partial" : "incomplete";
 }
+
 
 
 /**

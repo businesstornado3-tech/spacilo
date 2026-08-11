@@ -385,6 +385,11 @@ const HYPERNYMS: Readonly<Record<string, readonly string[]>> = {
   luggage: ["suitcase", "backpack", "holdall"],
 };
 
+/** The same map keyed by the stemmed head noun the normaliser produces. */
+const STEMMED_HYPERNYMS: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
+  Object.entries(HYPERNYMS).map(([key, values]) => [stemWord(key), values]),
+);
+
 const COLOUR_WORDS: ReadonlySet<string> = new Set(
   [
     "black", "white", "grey", "gray", "silver", "blue", "navy", "red", "green",

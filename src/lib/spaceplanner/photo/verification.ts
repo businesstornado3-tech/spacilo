@@ -700,9 +700,18 @@ export interface CategorisedVerification {
   observations: ObjectVerification[];
   /** Objects we could not attribute to one belonging. Reported, never fatal. */
   unconfirmed: string[];
+  /**
+   * Phase 6AM — known belongings drawn on the wrong support. EXCLUDED from the
+   * verified set, never a reason to withhold the whole picture.
+   */
+  supportMismatches: SupportMismatch[];
+  /** Descriptions of the excluded objects, for the user-facing explanation. */
+  excluded: string[];
   confirmedCount: number;
   unconfirmedCount: number;
   forbiddenCount: number;
+  supportMismatchCount: number;
+  excludedCount: number;
 }
 
 

@@ -338,6 +338,16 @@ export function PhotoArrangement({
         </p>
       ) : null}
 
+      {hasVisual && coverage?.excluded?.length ? (
+        <p className="mt-2 type-body-xs text-muted-foreground">
+          Arrangement ready — some items could not be verified.{" "}
+          {coverage.excluded
+            .map((label) => `${label} — excluded because its planned support could not be verified`)
+            .join("; ")}
+          . Everything else in the preview matches your measured plan.
+        </p>
+      ) : null}
+
       {status === "partial" && onRetry ? (
         <div className="mt-3 flex flex-wrap gap-2">
           <Button type="button" size="sm" variant="secondary" onClick={onRetry}>
@@ -378,12 +388,6 @@ export function PhotoArrangement({
               <>
                 We couldn&apos;t check the visual preview against your inventory, so we&apos;re not
                 showing it. Your measured plan below is unaffected.
-              </>
-            ) : coverage?.supportIssues?.length ? (
-              <>
-                The visual preview didn&apos;t follow the plan ({coverage.supportIssues.join(" ")}),
-                so we set it aside rather than show you something inaccurate. Your plan below is
-                unaffected.
               </>
             ) : (
               <>

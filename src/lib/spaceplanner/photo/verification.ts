@@ -1000,6 +1000,10 @@ export function categoriseVerification(input: {
     });
   }
 
+  // Phase 6AK — a MATERIAL violation is an invention, an impossible quantity
+  // or a contradicted support relationship. Nothing else withholds the image.
+  const materialIssues = dedupe([...userInventory.unexpected, ...supportIssues]);
+
   return {
     userInventory,
     roomFeatures,
@@ -1008,12 +1012,15 @@ export function categoriseVerification(input: {
     quantityShortfalls: quantities.shortfalls,
     permittedUnplaced: dedupe([...strayLedger.permitted, ...quantities.permitted]),
     identityDecisions,
+    materialIssues,
+    usable: materialIssues.length === 0,
     verified:
       userInventory.missing.length === 0 &&
       userInventory.unexpected.length === 0 &&
       quantities.shortfalls.length === 0 &&
       supportIssues.length === 0,
   };
+
 
 
 }

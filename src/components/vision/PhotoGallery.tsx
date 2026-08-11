@@ -7,11 +7,13 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
+  Expand,
   Maximize2,
   Plus,
   RotateCw,
   Scissors,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
 
@@ -169,7 +171,6 @@ export function PhotoGallery({
             ref={retakeRef}
             type="file"
             accept="image/*"
-            capture="environment"
             className="sr-only"
             onChange={(event) => {
               const file = event.target.files?.[0];

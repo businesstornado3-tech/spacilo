@@ -85,6 +85,9 @@ export function PhotoGallery({
                 style={{ transform: `rotate(${photo.rotation}deg)` }}
               />
             </div>
+            {selectedPhotoIds?.includes(photo.id) ? (
+              <p className="px-2 pt-2 type-body-xs text-muted-foreground">Area selected</p>
+            ) : null}
             {quality?.[photo.id]?.advice.length ? (
               <p className="flex gap-1.5 px-2 pt-2 type-body-xs text-warning">
                 <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
@@ -114,16 +117,36 @@ export function PhotoGallery({
                     <Scissors className="size-4" aria-hidden="true" />
                   </IconButton>
                 ) : null}
-                {onReplace ? (
+                {onUseWholePhoto ? (
                   <IconButton
-                    label="Retake photo"
-                    onClick={() => {
-                      retakeFor.current = photo.id;
-                      retakeRef.current?.click();
-                    }}
+                    label="Use entire photo"
+                    onClick={() => onUseWholePhoto(photo.id)}
+                    disabled={selectedPhotoIds ? !selectedPhotoIds.includes(photo.id) : false}
                   >
-                    <Camera className="size-4" aria-hidden="true" />
+                    <Expand className="size-4" aria-hidden="true" />
                   </IconButton>
+                ) : null}
+                {onReplace ? (
+                  <>
+                    <IconButton
+                      label="Retake photo"
+                      onClick={() => {
+                        retakeFor.current = photo.id;
+                        retakeRef.current?.click();
+                      }}
+                    >
+                      <Camera className="size-4" aria-hidden="true" />
+                    </IconButton>
+                    <IconButton
+                      label="Replace photo"
+                      onClick={() => {
+                        retakeFor.current = photo.id;
+                        replaceRef.current?.click();
+                      }}
+                    >
+                      <Upload className="size-4" aria-hidden="true" />
+                    </IconButton>
+                  </>
                 ) : null}
                 <IconButton label="Rotate photo" onClick={() => onRotate(photo.id)}>
                   <RotateCw className="size-4" aria-hidden="true" />
@@ -141,19 +164,35 @@ export function PhotoGallery({
       </ul>
 
       {onReplace ? (
-        <input
-          ref={retakeRef}
-          type="file"
-          accept="image/*"
-          className="sr-only"
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            const id = retakeFor.current;
-            if (file && id) onReplace(id, file);
-            retakeFor.current = null;
-            event.target.value = "";
-          }}
-        />
+        <>
+          <input
+            ref={retakeRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              const id = retakeFor.current;
+              if (file && id) onReplace(id, file);
+              retakeFor.current = null;
+              event.target.value = "";
+            }}
+          />
+          <input
+            ref={replaceRef}
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              const id = retakeFor.current;
+              if (file && id) onReplace(id, file);
+              retakeFor.current = null;
+              event.target.value = "";
+            }}
+          />
+        </>
       ) : null}
 
       {zoomed ? (

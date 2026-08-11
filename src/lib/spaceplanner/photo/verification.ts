@@ -496,6 +496,35 @@ export interface IdentityDecision {
 }
 
 /**
+ * Phase 6AL — object-level verification.
+ *
+ * Verification is no longer a single yes/no about the whole image. EVERY
+ * object the verifier reports is sorted into exactly one of three buckets:
+ *
+ *   CONFIRMED   — tied to a locked inventory belonging (placed or permitted
+ *                 unplaced). Evidence the render is the user's own.
+ *   UNCONFIRMED — a real-looking object we could not tie to one specific
+ *                 belonging, usually because several are equally compatible.
+ *                 AMBIGUITY IS NOT HALLUCINATION: it is reported, never fatal.
+ *   FORBIDDEN   — nothing in the inventory can account for it, or it exceeds
+ *                 an allowance. This, and only this, withholds the picture.
+ */
+export type ObjectClassification = "confirmed" | "unconfirmed" | "forbidden";
+
+export interface ObjectVerification {
+  observed: string;
+  classification: ObjectClassification;
+  matchedId: string | null;
+  matchedLabel: string | null;
+  reason: string;
+}
+
+/** True when several inventory belongings are equally compatible with a description. */
+function isAmbiguousDescription(text: string, items: readonly WhitelistEntry[]): boolean {
+  return genericCandidates(text, items).length > 1;
+}
+
+/**
  * Phase 6AH — an object the deterministic planner deliberately did NOT place.
  *
  * It is a real belonging of the user's that remains visible in the source
@@ -690,7 +719,14 @@ export function quantityCheck(
     itemAliases?: readonly string[];
   },
   unplaced: readonly UnplacedAllowance[] = [],
-): { checks: QuantityCheck[]; unexpected: string[]; shortfalls: string[]; permitted: string[] } {
+): {
+  checks: QuantityCheck[];
+  unexpected: string[];
+  shortfalls: string[];
+  permitted: string[];
+  /** Phase 6AL — described objects we could not attribute, and did not blame. */
+  unconfirmed: string[];
+} {
   const allowed = new Map<string, { label: string; allowed: number }>();
   for (const entry of items) {
     const key = normaliseLabel(entry.label);
@@ -706,6 +742,7 @@ export function quantityCheck(
 
   const observed = new Map<string, number>();
   const invented = new Map<string, { label: string; count: number }>();
+  const unconfirmed: string[] = [];
 
   /**
    * Phase 6AF — a generic description is not a duplicate.
@@ -727,6 +764,13 @@ export function quantityCheck(
     const category = classifyReported(text, whitelists);
     if (category === "room_feature") continue;
     if (category === "unexpected") {
+      // Phase 6AL — ambiguity is not hallucination. A description several of
+      // the user's own belongings could equally be is UNCONFIRMED: reported,
+      // never counted against an allowance and never fatal.
+      if (isAmbiguousDescription(text, items)) {
+        unconfirmed.push(text);
+        continue;
+      }
       const key = normaliseLabel(text) || text.toLowerCase();
       const current = invented.get(key);
       if (current) current.count += count;
@@ -796,7 +840,7 @@ export function quantityCheck(
     unexpected.push(entry.count > 1 ? `${entry.label} ×${entry.count}` : entry.label);
   }
 
-  return { checks, unexpected, shortfalls, permitted: ledger.permitted };
+  return { checks, unexpected, shortfalls, permitted: ledger.permitted, unconfirmed };
 }
 
 

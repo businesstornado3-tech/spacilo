@@ -190,6 +190,13 @@ export interface Coverage {
   confirmedCount: number;
   unconfirmedCount: number;
   forbiddenCount: number;
+  /**
+   * Phase 6AM — known belongings excluded from the verified set because their
+   * planned support could not be confirmed. Object-level, never global.
+   */
+  excluded: string[];
+  excludedCount: number;
+  supportMismatchCount: number;
   /** Full per-category breakdown, for diagnostics and support. */
   categories: CategorisedVerification;
 }
@@ -254,6 +261,9 @@ export function coverageOf(
     confirmedCount: categories.confirmedCount,
     unconfirmedCount: categories.unconfirmedCount,
     forbiddenCount: categories.forbiddenCount,
+    excluded: categories.excluded,
+    excludedCount: categories.excludedCount,
+    supportMismatchCount: categories.supportMismatchCount,
     categories,
   };
 
@@ -326,8 +336,10 @@ export type Verdict = "verified" | "partial" | "incomplete" | "unfaithful" | "un
 export function verdictFor(coverage: Coverage | null): Verdict {
   if (!coverage) return "unverified";
   if (!coverage.faithful) return "unfaithful";
-  if ((coverage.supportIssues?.length ?? 0) > 0) return "unfaithful";
-  if (coverage.complete) return "verified";
+  // Phase 6AM: a contradicted support EXCLUDES its own object. It no longer
+  // rejects the picture — the remaining verified objects stay visible.
+  if (coverage.complete && (coverage.supportIssues?.length ?? 0) === 0) return "verified";
+  if ((coverage.supportIssues?.length ?? 0) > 0) return coverage.usable ? "partial" : "incomplete";
   return coverage.usable ? "partial" : "incomplete";
 }
 

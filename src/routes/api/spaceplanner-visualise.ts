@@ -177,9 +177,15 @@ export interface Coverage {
   complete: boolean;
   /** False only when the renderer invented BELONGINGS. */
   faithful: boolean;
+  /**
+   * Phase 6AK — nothing material is wrong with this image, so it may be shown
+   * even if the verifier did not manage to enumerate every placed belonging.
+   */
+  usable: boolean;
   /** Full per-category breakdown, for diagnostics and support. */
   categories: CategorisedVerification;
 }
+
 
 /** Re-exported for tests and callers that normalise labels themselves. */
 export function normaliseReported(label: string): string {

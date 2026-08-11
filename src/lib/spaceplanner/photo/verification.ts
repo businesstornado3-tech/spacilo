@@ -517,7 +517,17 @@ export interface IdentityDecision {
  *   FORBIDDEN   — nothing in the inventory can account for it, or it exceeds
  *                 an allowance. This, and only this, withholds the picture.
  */
-export type ObjectClassification = "confirmed" | "unconfirmed" | "forbidden";
+/**
+ * Phase 6AM — an object-level verdict. `support_mismatch` is new: a KNOWN
+ * belonging drawn on the wrong support is EXCLUDED from the verified set, not
+ * promoted to a whole-image rejection. Only `forbidden` (invented object or
+ * impossible quantity) is a global integrity failure.
+ */
+export type ObjectClassification =
+  | "confirmed"
+  | "unconfirmed"
+  | "support_mismatch"
+  | "forbidden";
 
 export interface ObjectVerification {
   observed: string;
@@ -525,6 +535,15 @@ export interface ObjectVerification {
   matchedId: string | null;
   matchedLabel: string | null;
   reason: string;
+}
+
+/** Phase 6AM — one contradicted support relationship, attributed to its object. */
+export interface SupportMismatch {
+  itemId: string;
+  itemLabel: string;
+  expectedBase: string;
+  observedBase: string;
+  message: string;
 }
 
 /** True when several inventory belongings are equally compatible with a description. */

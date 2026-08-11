@@ -398,19 +398,20 @@ export function PhotoArrangement({
         <div className="mt-3 rounded-2xl border border-warning-soft bg-warning-soft p-3 text-warning-soft-foreground">
           <p className="flex items-start gap-2 type-body-sm">
             <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            {status === "unverified" ? (
+            {status === "unfaithful" && coverage?.unexpected?.length ? (
               <>
-                We couldn&apos;t check the visual preview against your inventory, so we&apos;re not
-                showing it. Your measured plan below is unaffected.
+                The visual preview showed belongings that are not in your inventory
+                {` (${coverage.unexpected.join(", ")})`}, and nothing in it could be confirmed as
+                yours, so we rejected it rather than show you something inaccurate. Your plan below
+                is unaffected.
               </>
             ) : (
               <>
-                The visual preview showed belongings that are not in your inventory
-                {coverage?.unexpected?.length ? ` (${coverage.unexpected.join(", ")})` : ""}, so we
-                rejected it rather than show you something inaccurate. Your plan below is
-                unaffected.
+                Photographic preview unavailable — the planner could not produce a verified visual
+                arrangement for this space. Your measured plan below is unaffected.
               </>
             )}
+
           </p>
           {onRetry ? (
             <Button type="button" size="sm" variant="secondary" className="mt-2" onClick={onRetry}>

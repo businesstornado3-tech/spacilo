@@ -946,6 +946,7 @@ export function categoriseVerification(input: {
 
   const inventedItems: string[] = [];
   const featureIssues: string[] = [];
+  const strayUnconfirmed: string[] = [];
   // One ledger per reported list: the two lists describe the SAME image, so a
   // sighting in each must not consume the allowance twice.
   const strayLedger = unplacedLedger(input.unplaced ?? []);
@@ -956,8 +957,11 @@ export function categoriseVerification(input: {
     const category = classifyReported(text, whitelists);
     if (category === "room_feature") featureIssues.push(text);
     else if (category === "unexpected") {
+      // Phase 6AL — several of the user's belongings could be this. Ambiguous,
+      // therefore UNCONFIRMED, never an invention.
+      if (isAmbiguousDescription(text, items)) strayUnconfirmed.push(text);
       // Phase 6AH — a known belonging the planner left unplaced is permitted.
-      if (strayLedger.claim(text, observedCount(text)) > 0) inventedItems.push(text);
+      else if (strayLedger.claim(text, observedCount(text)) > 0) inventedItems.push(text);
     }
     // A whitelisted user item reported as "unexpected" is a duplicate-count
     // artefact of the checker, not an invention: the ID is already required.

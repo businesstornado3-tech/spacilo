@@ -474,6 +474,32 @@ function stripDescriptors(label: string): string {
   return (core.length ? core : words).join(" ");
 }
 
+/**
+ * Phase 6AP — could the locked inventory legitimately account for a declared
+ * UNKNOWN sighting? A shared content word ("bottle" against "small plastic
+ * bottle with blue cap") means the verifier is hedging about a belonging we
+ * own, so the object is UNCONFIRMED. Nothing in common ("black office chair")
+ * leaves the existing invention protection untouched.
+ */
+const OBSERVATION_STOP_WORDS: ReadonlySet<string> = new Set([
+  "with", "and", "of", "the", "a", "an", "in", "on", "for", "to",
+]);
+
+function unknownIsCompatible(description: string, items: readonly WhitelistEntry[]): boolean {
+  if (genericCandidates(description, items).length > 0) return true;
+  const words = new Set(
+    stripDescriptors(normaliseLabel(description))
+      .split(" ")
+      .filter((word) => word && !OBSERVATION_STOP_WORDS.has(word)),
+  );
+  if (!words.size) return false;
+  return items.some((entry) =>
+    stripDescriptors(normaliseLabel(entry.label))
+      .split(" ")
+      .some((word) => word && !OBSERVATION_STOP_WORDS.has(word) && words.has(word)),
+  );
+}
+
 function headNoun(label: string): string {
   const words = label.split(" ").filter(Boolean);
   return words[words.length - 1] ?? "";
@@ -877,7 +903,7 @@ export function quantityCheck(
       // with a belonging is UNCONFIRMED too, never an invention.
       if (
         isAmbiguousDescription(described, items) ||
-        (parsed.unknown && genericCandidates(described, items).length > 0)
+        (parsed.unknown && unknownIsCompatible(described, items))
       ) {
         unconfirmed.push(described);
         continue;
@@ -1067,7 +1093,7 @@ export function categoriseVerification(input: {
       // belonging is UNCONFIRMED as well.
       if (
         isAmbiguousDescription(described, items) ||
-        (parsed.unknown && genericCandidates(described, items).length > 0)
+        (parsed.unknown && unknownIsCompatible(described, items))
       ) {
         strayUnconfirmed.push(described);
       }
@@ -1158,7 +1184,7 @@ export function categoriseVerification(input: {
           ? "matched"
           : permittedText.has(normalisedObserved)
             ? "permitted_unplaced"
-            : loose.length > 1 || (parsed.unknown && loose.length > 0)
+            : loose.length > 1 || (parsed.unknown && unknownIsCompatible(described, items))
               ? "ambiguous"
               : "unexpected";
     identityDecisions.push({

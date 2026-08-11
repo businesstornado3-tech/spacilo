@@ -228,10 +228,13 @@ export function normaliseLabel(label: string): string {
  * an older unit string must not silently fail to match.
  */
 function idsIn(text: string): string[] {
-  const matches = text
-    .toUpperCase()
-    .match(/\b(?:ITEMS?|FEATURES?|OBJECTS?)\s*[-_ ]?\s*\d+(?:\s*[-_]\s*\d+)?\b/g);
-  return (matches ?? []).map((match) => {
+  const upper = text.toUpperCase();
+  const matches = [
+    ...(upper.match(/\b(?:ITEMS?|FEATURES?|OBJECTS?)\s*[-_ ]?\s*\d+(?:\s*[-_]\s*\d+)?\b/g) ?? []),
+    // Phase 6AP — any canonical id shape the pipeline may mint ("OBJ-005").
+    ...(upper.match(/\b[A-Z]{2,12}[-_]\d+(?:[-_]\d+)?\b/g) ?? []),
+  ];
+  return matches.map((match) => {
     const trimmed = match.replace(/\s*[-_]\s*\d+\s*$/, (tail, offset: number) =>
       // Only a SECOND number group is a unit suffix; "ITEM-003" keeps its number.
       /\d/.test(match.slice(0, offset)) ? "" : tail,
@@ -239,6 +242,52 @@ function idsIn(text: string): string[] {
     return canonicalId(trimmed);
   });
 }
+
+/**
+ * Phase 6AP — THE VERIFIER RESPONSE CONTRACT.
+ *
+ * Every observed object arrives as "<CANONICAL-ID> | free wording" or, when the
+ * model cannot confidently tie it to the locked inventory, "UNKNOWN | wording".
+ * The ID is the identity; the wording is descriptive evidence only. Older,
+ * ID-less replies still parse — the description is then the whole string and
+ * the existing wording heuristics run exactly as before.
+ */
+export function splitObservation(raw: string): {
+  idPart: string | null;
+  unknown: boolean;
+  description: string;
+} {
+  const text = raw.trim();
+  const pipe = text.indexOf("|");
+  if (pipe < 0) return { idPart: null, unknown: /^unknown$/i.test(text), description: text };
+  const head = text.slice(0, pipe).trim();
+  const rest = text.slice(pipe + 1).trim();
+  if (/^unknown$/i.test(head)) return { idPart: null, unknown: true, description: rest || text };
+  return { idPart: head || null, unknown: false, description: rest || head };
+}
+
+/** The observation's wording, with any identity prefix removed. */
+export function observationDescription(raw: string): string {
+  return splitObservation(raw).description;
+}
+
+/** Did the verifier explicitly say it could not tie this object to inventory? */
+export function declaredUnknown(raw: string): boolean {
+  return splitObservation(raw).unknown;
+}
+
+/**
+ * Phase 6AP — ID-FIRST RESOLUTION. A valid canonical inventory id inside an
+ * observation resolves identity outright: no wording heuristic may override it.
+ */
+export function canonicalMatch(
+  reported: string,
+  items: readonly WhitelistEntry[],
+): WhitelistEntry | null {
+  const ids = new Set([canonicalId(reported), ...idsIn(reported)]);
+  return items.find((entry) => ids.has(canonicalId(entry.id))) ?? null;
+}
+
 
 
 function looksArchitectural(label: string): boolean {
@@ -259,10 +308,13 @@ export function classifyReported(
     itemAliases?: readonly string[];
   },
 ): ObjectCategory {
-  const raw = reported.trim();
+  const observation = splitObservation(reported);
+  const raw = observation.description.trim() || reported.trim();
   if (!raw) return "unexpected";
 
-  const ids = new Set([canonicalId(raw), ...idsIn(raw)]);
+  // Phase 6AP — ID FIRST. A canonical id anywhere in the observation settles
+  // identity before any wording is looked at.
+  const ids = new Set([canonicalId(reported.trim()), ...idsIn(reported)]);
   const itemIds = new Set(whitelists.items.map((entry) => canonicalId(entry.id)));
   const featureIds = new Set(whitelists.features.map((entry) => canonicalId(entry.id)));
 
@@ -275,6 +327,12 @@ export function classifyReported(
 
   const label = normaliseLabel(raw);
   if (!label) return "room_feature"; // a bare state word describes nothing new
+
+  // Phase 6AP — the verifier said UNKNOWN with no canonical id. It must not be
+  // promoted into a belonging by wording alone; the caller decides between
+  // UNCONFIRMED and the existing integrity rules.
+  if (observation.unknown) return looksArchitectural(raw) ? "room_feature" : "unexpected";
+
   const aliases = (whitelists.itemAliases ?? []).map(normaliseLabel).filter(Boolean);
   if (aliases.some((alias) => alias === label || containsLabel(label, alias))) return "user_item";
   if (whitelists.items.some((entry) => normaliseLabel(entry.label) === label)) return "user_item";
@@ -414,6 +472,32 @@ function stripDescriptors(label: string): string {
   const words = label.split(" ").filter(Boolean);
   const core = words.filter((word, index) => !(DESCRIPTOR_WORDS.has(word) && index < words.length - 1));
   return (core.length ? core : words).join(" ");
+}
+
+/**
+ * Phase 6AP — could the locked inventory legitimately account for a declared
+ * UNKNOWN sighting? A shared content word ("bottle" against "small plastic
+ * bottle with blue cap") means the verifier is hedging about a belonging we
+ * own, so the object is UNCONFIRMED. Nothing in common ("black office chair")
+ * leaves the existing invention protection untouched.
+ */
+const OBSERVATION_STOP_WORDS: ReadonlySet<string> = new Set([
+  "with", "and", "of", "the", "a", "an", "in", "on", "for", "to",
+]);
+
+function unknownIsCompatible(description: string, items: readonly WhitelistEntry[]): boolean {
+  if (genericCandidates(description, items).length > 0) return true;
+  const words = new Set(
+    stripDescriptors(normaliseLabel(description))
+      .split(" ")
+      .filter((word) => word && !OBSERVATION_STOP_WORDS.has(word)),
+  );
+  if (!words.size) return false;
+  return items.some((entry) =>
+    stripDescriptors(normaliseLabel(entry.label))
+      .split(" ")
+      .some((word) => word && !OBSERVATION_STOP_WORDS.has(word) && words.has(word)),
+  );
 }
 
 function headNoun(label: string): string {
@@ -806,21 +890,28 @@ export function quantityCheck(
   for (const raw of objects) {
     const text = raw.trim();
     if (!text) continue;
-    const count = observedCount(text);
+    const parsed = splitObservation(text);
+    const described = parsed.description || text;
+    const count = observedCount(described);
     const category = classifyReported(text, whitelists);
     if (category === "room_feature") continue;
     if (category === "unexpected") {
       // Phase 6AL — ambiguity is not hallucination. A description several of
       // the user's own belongings could equally be is UNCONFIRMED: reported,
       // never counted against an allowance and never fatal.
-      if (isAmbiguousDescription(text, items)) {
-        unconfirmed.push(text);
+      // Phase 6AP — an explicit "UNKNOWN | …" that is nevertheless compatible
+      // with a belonging is UNCONFIRMED too, never an invention.
+      if (
+        isAmbiguousDescription(described, items) ||
+        (parsed.unknown && unknownIsCompatible(described, items))
+      ) {
+        unconfirmed.push(described);
         continue;
       }
-      const key = normaliseLabel(text) || text.toLowerCase();
+      const key = normaliseLabel(described) || described.toLowerCase();
       const current = invented.get(key);
       if (current) current.count += count;
-      else invented.set(key, { label: text, count });
+      else invented.set(key, { label: described, count });
       continue;
     }
     const candidates = candidateKeysFor(text, items);
@@ -829,11 +920,11 @@ export function quantityCheck(
       continue;
     }
     if (candidates.length === 0) {
-      const key = normaliseLabel(text);
+      const key = normaliseLabel(described);
       if (key) observed.set(key, (observed.get(key) ?? 0) + count);
       continue;
     }
-    ambiguous.push({ text, count, candidates });
+    ambiguous.push({ text: described, count, candidates });
   }
 
   // Ambiguous units, one at a time, into whichever compatible allowance still
@@ -904,7 +995,8 @@ function candidateKeysFor(reported: string, items: readonly WhitelistEntry[]): s
       if (key) return [key];
     }
   }
-  const text = normaliseLabel(reported);
+  const described = observationDescription(reported) || reported;
+  const text = normaliseLabel(described);
   const keys = new Set<string>();
   for (const entry of items) {
     const key = normaliseLabel(entry.label);
@@ -914,7 +1006,7 @@ function candidateKeysFor(reported: string, items: readonly WhitelistEntry[]): s
   if (!keys.size) {
     // Phase 6AI — no literal match, so fall back to the unique compatible
     // belonging, if there is exactly one. Ambiguity yields no key at all.
-    const generic = uniqueGenericMatch(reported, items);
+    const generic = uniqueGenericMatch(described, items);
     if (generic) {
       const key = normaliseLabel(generic.label);
       if (key) keys.add(key);
@@ -990,14 +1082,25 @@ export function categoriseVerification(input: {
   for (const entry of [...reply.unexpected, ...strayFromPresent]) {
     const text = entry.trim();
     if (!text) continue;
+    const parsed = splitObservation(text);
+    const described = parsed.description || text;
     const category = classifyReported(text, whitelists);
-    if (category === "room_feature") featureIssues.push(text);
+    if (category === "room_feature") featureIssues.push(described);
     else if (category === "unexpected") {
       // Phase 6AL — several of the user's belongings could be this. Ambiguous,
       // therefore UNCONFIRMED, never an invention.
-      if (isAmbiguousDescription(text, items)) strayUnconfirmed.push(text);
+      // Phase 6AP — a declared UNKNOWN that is still compatible with a
+      // belonging is UNCONFIRMED as well.
+      if (
+        isAmbiguousDescription(described, items) ||
+        (parsed.unknown && unknownIsCompatible(described, items))
+      ) {
+        strayUnconfirmed.push(described);
+      }
       // Phase 6AH — a known belonging the planner left unplaced is permitted.
-      else if (strayLedger.claim(text, observedCount(text)) > 0) inventedItems.push(text);
+      else if (strayLedger.claim(described, observedCount(described)) > 0) {
+        inventedItems.push(described);
+      }
     }
     // A whitelisted user item reported as "unexpected" is a duplicate-count
     // artefact of the checker, not an invention: the ID is already required.
@@ -1054,37 +1157,46 @@ export function categoriseVerification(input: {
   for (const observation of [...(reply.objects ?? []), ...reply.unexpected, ...strayFromPresent]) {
     const text = observation.trim();
     if (!text) continue;
-    const normalisedObserved = normaliseLabel(text);
+    const parsed = splitObservation(text);
+    const described = parsed.description || text;
+    const normalisedObserved = normaliseLabel(described);
     const category = classifyReported(text, whitelists);
-    const literal = items.find((entry) => {
-      const allowed = normaliseLabel(entry.label);
-      return (
-        allowed === normalisedObserved ||
-        containsLabel(normalisedObserved, allowed) ||
-        containsLabel(allowed, normalisedObserved)
-      );
-    });
-    const loose = genericCandidates(text, items);
+    // Phase 6AP — ID FIRST. A canonical inventory id is authoritative; the
+    // wording heuristics below are only consulted when there is no valid id.
+    const byId = canonicalMatch(text, items);
+    const literal =
+      byId ??
+      items.find((entry) => {
+        const allowed = normaliseLabel(entry.label);
+        return (
+          allowed === normalisedObserved ||
+          containsLabel(normalisedObserved, allowed) ||
+          containsLabel(allowed, normalisedObserved)
+        );
+      });
+    const loose = genericCandidates(described, items);
     const matched = literal ?? (loose.length === 1 ? loose[0]! : null);
-    const decision: IdentityDecision["decision"] =
-      category === "room_feature"
+    const decision: IdentityDecision["decision"] = byId
+      ? "matched"
+      : category === "room_feature"
         ? "room_feature"
         : category === "user_item"
           ? "matched"
           : permittedText.has(normalisedObserved)
             ? "permitted_unplaced"
-            : loose.length > 1
+            : loose.length > 1 || (parsed.unknown && unknownIsCompatible(described, items))
               ? "ambiguous"
               : "unexpected";
     identityDecisions.push({
-      observed: text,
+      observed: described,
       normalisedObserved,
       matchedId: decision === "matched" && matched ? matched.id : null,
       matchedLabel: decision === "matched" && matched ? matched.label : null,
       normalisedInventory: matched ? normaliseLabel(matched.label) : null,
       decision,
-      reason:
-        decision === "room_feature"
+      reason: byId
+        ? "canonical_id_match"
+        : decision === "room_feature"
           ? "architectural or whitelisted room feature"
           : decision === "matched"
             ? literal
@@ -1093,7 +1205,9 @@ export function categoriseVerification(input: {
             : decision === "permitted_unplaced"
               ? "belonging the planner intentionally left unplaced"
               : decision === "ambiguous"
-                ? `several inventory objects compatible: ${loose.map((entry) => entry.label).join(", ")}`
+                ? parsed.unknown
+                  ? "no_canonical_inventory_match"
+                  : `several inventory objects compatible: ${loose.map((entry) => entry.label).join(", ")}`
                 : "no compatible inventory object",
     });
   }
@@ -1317,7 +1431,8 @@ function matchId(
   for (const entry of whitelist) {
     if (ids.has(canonicalId(entry.id))) return canonicalId(entry.id);
   }
-  const label = normaliseLabel(reported);
+  const described = observationDescription(reported) || reported;
+  const label = normaliseLabel(described);
   const matches = whitelist.filter((entry) => {
     const allowed = normaliseLabel(entry.label);
     // Both directions: "black television" names the television, and a bare
@@ -1325,7 +1440,7 @@ function matchId(
     return allowed === label || containsLabel(label, allowed) || containsLabel(allowed, label);
   });
   if (!matches.length) {
-    const generic = uniqueGenericMatch(reported, whitelist);
+    const generic = uniqueGenericMatch(described, whitelist);
     if (generic) matches.push(generic);
   }
   const unclaimed = matches.find((entry) => !claimed.has(canonicalId(entry.id)));

@@ -98,8 +98,10 @@ describe("render verification", () => {
     const coverage = coverageOf(required, required, ["shoes"], inventory.map((e) => e.label));
     expect(coverage.faithful).toBe(false);
     expect(coverage.unexpected).toContain("shoes");
-    expect(verdictFor(coverage)).toBe("unfaithful");
+    // Phase 6AQ — still reported; the confirmed arrangement stays visible.
+    expect(verdictFor(coverage)).toBe("partial");
   });
+
 
   it("accepts shoes when they are a confirmed unit", () => {
     const withShoes = [...required, "u_04"];

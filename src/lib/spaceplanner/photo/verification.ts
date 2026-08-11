@@ -864,21 +864,28 @@ export function quantityCheck(
   for (const raw of objects) {
     const text = raw.trim();
     if (!text) continue;
-    const count = observedCount(text);
+    const parsed = splitObservation(text);
+    const described = parsed.description || text;
+    const count = observedCount(described);
     const category = classifyReported(text, whitelists);
     if (category === "room_feature") continue;
     if (category === "unexpected") {
       // Phase 6AL — ambiguity is not hallucination. A description several of
       // the user's own belongings could equally be is UNCONFIRMED: reported,
       // never counted against an allowance and never fatal.
-      if (isAmbiguousDescription(text, items)) {
-        unconfirmed.push(text);
+      // Phase 6AP — an explicit "UNKNOWN | …" that is nevertheless compatible
+      // with a belonging is UNCONFIRMED too, never an invention.
+      if (
+        isAmbiguousDescription(described, items) ||
+        (parsed.unknown && genericCandidates(described, items).length > 0)
+      ) {
+        unconfirmed.push(described);
         continue;
       }
-      const key = normaliseLabel(text) || text.toLowerCase();
+      const key = normaliseLabel(described) || described.toLowerCase();
       const current = invented.get(key);
       if (current) current.count += count;
-      else invented.set(key, { label: text, count });
+      else invented.set(key, { label: described, count });
       continue;
     }
     const candidates = candidateKeysFor(text, items);
@@ -887,11 +894,11 @@ export function quantityCheck(
       continue;
     }
     if (candidates.length === 0) {
-      const key = normaliseLabel(text);
+      const key = normaliseLabel(described);
       if (key) observed.set(key, (observed.get(key) ?? 0) + count);
       continue;
     }
-    ambiguous.push({ text, count, candidates });
+    ambiguous.push({ text: described, count, candidates });
   }
 
   // Ambiguous units, one at a time, into whichever compatible allowance still

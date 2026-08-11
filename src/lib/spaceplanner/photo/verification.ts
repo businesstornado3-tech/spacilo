@@ -510,10 +510,19 @@ export interface UnplacedAllowance {
   reason?: string;
 }
 
-/** Capacity-limited claim book for intentionally unplaced belongings. */
+/**
+ * Capacity-limited claim book for intentionally unplaced belongings.
+ *
+ * Phase 6AK — matching here is SEMANTIC, exactly like the required-item
+ * matcher. The literal-only version rejected a known unplaced "glass table"
+ * the moment the verifier wrote "glass coffee table", and the user's own
+ * belonging was reported as an invention. Capacity is still strict: each
+ * unplaced unit can be claimed once and no more.
+ */
 export function unplacedLedger(unplaced: readonly UnplacedAllowance[] = []) {
   const remaining = unplaced
     .map((entry) => ({
+      id: entry.id,
       label: normaliseLabel(entry.label),
       original: entry.label,
       left: Math.max(0, Math.round(entry.quantity ?? 1)),
@@ -526,13 +535,17 @@ export function unplacedLedger(unplaced: readonly UnplacedAllowance[] = []) {
       let outstanding = Math.max(1, count);
       const label = normaliseLabel(text);
       if (!label) return outstanding;
+      const ids = new Set([canonicalId(text), ...idsIn(text)]);
       for (const entry of remaining) {
         if (outstanding <= 0) break;
         if (entry.left <= 0) continue;
         const same =
+          ids.has(canonicalId(entry.id)) ||
           entry.label === label ||
           containsLabel(label, entry.label) ||
-          containsLabel(entry.label, label);
+          containsLabel(entry.label, label) ||
+          // Loose but colour-compatible description of this one belonging.
+          genericCandidates(text, [{ id: entry.id, label: entry.original }]).length === 1;
         if (!same) continue;
         const take = Math.min(entry.left, outstanding);
         entry.left -= take;
@@ -541,6 +554,7 @@ export function unplacedLedger(unplaced: readonly UnplacedAllowance[] = []) {
       }
       return outstanding;
     },
+
     get permitted(): string[] {
       return [...claimed];
     },

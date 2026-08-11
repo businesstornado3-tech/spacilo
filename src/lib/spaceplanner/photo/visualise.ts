@@ -355,9 +355,9 @@ export async function requestVisualisation(
         payload.verification ??
         (!coverage
           ? "unverified"
-          : !coverage.faithful || (coverage.supportIssues?.length ?? 0) > 0
+          : !coverage.faithful
             ? "unfaithful"
-            : coverage.complete
+            : coverage.complete && (coverage.supportIssues?.length ?? 0) === 0
               ? "verified"
               : coverage.usable === false
                 ? "incomplete"

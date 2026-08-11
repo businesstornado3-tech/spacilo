@@ -524,6 +524,14 @@ export interface CoverageReport {
   confirmedCount?: number;
   unconfirmedCount?: number;
   forbiddenCount?: number;
+  /**
+   * Phase 6AM — known belongings excluded from the verified set because their
+   * planned support could not be confirmed in the render. Object-level: the
+   * remaining arrangement is still shown.
+   */
+  excluded?: string[];
+  excludedCount?: number;
+  supportMismatchCount?: number;
 
 
 
@@ -567,6 +575,9 @@ export function coverageFrom(
     confirmedCount: categories.confirmedCount,
     unconfirmedCount: categories.unconfirmedCount,
     forbiddenCount: categories.forbiddenCount,
+    excluded: categories.excluded,
+    excludedCount: categories.excludedCount,
+    supportMismatchCount: categories.supportMismatchCount,
     categories,
   };
 }

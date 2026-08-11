@@ -603,9 +603,11 @@ export function useSpaceVisualisation(options: {
       // An invented belonging, an impossible quantity or a contradicted support
       // still withholds the picture. A belonging the checker simply could not
       // account for does not: the image is real and its objects are the user's.
+      // Phase 6AM — support/placement drift is OBJECT-LEVEL exclusion, not a
+      // global rejection: the excluded object is reported and the remaining
+      // photographic arrangement stays on screen.
       const inventedFinal = (finalCoverage?.unexpected?.length ?? 0) > 0;
-      const driftedFinal = (finalCoverage?.supportIssues?.length ?? 0) > 0;
-      if (response.verification === "unfaithful" || inventedFinal || driftedFinal) {
+      if (response.verification === "unfaithful" || inventedFinal) {
         setImageUrl(null);
         setStatus("unfaithful");
         return;

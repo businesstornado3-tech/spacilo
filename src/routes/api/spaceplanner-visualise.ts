@@ -239,8 +239,12 @@ export function coverageOf(
       userInventory.expected.length > 0,
 
     faithful: userInventory.unexpected.length === 0,
+    // Phase 6AK — showable. Only inventions, impossible quantities and
+    // contradicted supports withhold a picture from the user.
+    usable: categories.usable,
     categories,
   };
+
 }
 
 

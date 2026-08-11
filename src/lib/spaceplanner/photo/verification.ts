@@ -665,7 +665,17 @@ export interface CategorisedVerification {
   usable: boolean;
   /** The material violations, if any, that make this render unusable. */
   materialIssues: string[];
-
+  /**
+   * Phase 6AL — one row per object the verifier reported, classified as
+   * CONFIRMED, UNCONFIRMED or FORBIDDEN. This is the object-level record the
+   * display decision is now made from.
+   */
+  observations: ObjectVerification[];
+  /** Objects we could not attribute to one belonging. Reported, never fatal. */
+  unconfirmed: string[];
+  confirmedCount: number;
+  unconfirmedCount: number;
+  forbiddenCount: number;
 }
 
 

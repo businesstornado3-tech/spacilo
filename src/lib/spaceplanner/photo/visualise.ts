@@ -85,7 +85,14 @@ export interface VisualisationRequest {
 
 
 /** How the server's own verification pass judged the returned image. */
-export type VerificationVerdict = "verified" | "incomplete" | "unfaithful" | "unverified";
+export type VerificationVerdict =
+  | "verified"
+  /** Phase 6AK — showable: nothing invented, but not every item accounted for. */
+  | "partial"
+  | "incomplete"
+  | "unfaithful"
+  | "unverified";
+
 
 export interface VisualisationResponse {
   image: string;

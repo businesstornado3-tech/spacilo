@@ -980,7 +980,7 @@ function candidateKeysFor(reported: string, items: readonly WhitelistEntry[]): s
   if (!keys.size) {
     // Phase 6AI — no literal match, so fall back to the unique compatible
     // belonging, if there is exactly one. Ambiguity yields no key at all.
-    const generic = uniqueGenericMatch(reported, items);
+    const generic = uniqueGenericMatch(described, items);
     if (generic) {
       const key = normaliseLabel(generic.label);
       if (key) keys.add(key);

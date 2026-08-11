@@ -7,11 +7,13 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
+  Expand,
   Maximize2,
   Plus,
   RotateCw,
   Scissors,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
 
@@ -27,6 +29,8 @@ export function PhotoGallery({
   onAddMore,
   onReplace,
   onSelectRegion,
+  onUseWholePhoto,
+  selectedPhotoIds,
   quality,
   canAddMore = true,
 }: {
@@ -39,12 +43,17 @@ export function PhotoGallery({
   onReplace?: (id: string, file: File) => void;
   /** Opens the region selector for this photo. */
   onSelectRegion?: (id: string) => void;
+  /** Clears any drawn area so the whole photo is analysed again. */
+  onUseWholePhoto?: (id: string) => void;
+  /** Photos that currently have a drawn area. */
+  selectedPhotoIds?: string[];
   /** Advisory quality findings, keyed by photo id. */
   quality?: Record<string, PhotoQuality>;
   canAddMore?: boolean;
 }) {
   const [zoomed, setZoomed] = React.useState<VisionPhoto | null>(null);
   const retakeRef = React.useRef<HTMLInputElement>(null);
+  const replaceRef = React.useRef<HTMLInputElement>(null);
   const retakeFor = React.useRef<string | null>(null);
 
   if (photos.length === 0) return null;
@@ -78,6 +87,9 @@ export function PhotoGallery({
                 style={{ transform: `rotate(${photo.rotation}deg)` }}
               />
             </div>
+            {selectedPhotoIds?.includes(photo.id) ? (
+              <p className="px-2 pt-2 type-body-xs text-muted-foreground">Area selected</p>
+            ) : null}
             {quality?.[photo.id]?.advice.length ? (
               <p className="flex gap-1.5 px-2 pt-2 type-body-xs text-warning">
                 <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
@@ -107,16 +119,36 @@ export function PhotoGallery({
                     <Scissors className="size-4" aria-hidden="true" />
                   </IconButton>
                 ) : null}
-                {onReplace ? (
+                {onUseWholePhoto ? (
                   <IconButton
-                    label="Retake photo"
-                    onClick={() => {
-                      retakeFor.current = photo.id;
-                      retakeRef.current?.click();
-                    }}
+                    label="Use entire photo"
+                    onClick={() => onUseWholePhoto(photo.id)}
+                    disabled={selectedPhotoIds ? !selectedPhotoIds.includes(photo.id) : false}
                   >
-                    <Camera className="size-4" aria-hidden="true" />
+                    <Expand className="size-4" aria-hidden="true" />
                   </IconButton>
+                ) : null}
+                {onReplace ? (
+                  <>
+                    <IconButton
+                      label="Retake photo"
+                      onClick={() => {
+                        retakeFor.current = photo.id;
+                        retakeRef.current?.click();
+                      }}
+                    >
+                      <Camera className="size-4" aria-hidden="true" />
+                    </IconButton>
+                    <IconButton
+                      label="Replace photo"
+                      onClick={() => {
+                        retakeFor.current = photo.id;
+                        replaceRef.current?.click();
+                      }}
+                    >
+                      <Upload className="size-4" aria-hidden="true" />
+                    </IconButton>
+                  </>
                 ) : null}
                 <IconButton label="Rotate photo" onClick={() => onRotate(photo.id)}>
                   <RotateCw className="size-4" aria-hidden="true" />
@@ -134,19 +166,34 @@ export function PhotoGallery({
       </ul>
 
       {onReplace ? (
-        <input
-          ref={retakeRef}
-          type="file"
-          accept="image/*"
-          className="sr-only"
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            const id = retakeFor.current;
-            if (file && id) onReplace(id, file);
-            retakeFor.current = null;
-            event.target.value = "";
-          }}
-        />
+        <>
+          <input
+            ref={retakeRef}
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              const id = retakeFor.current;
+              if (file && id) onReplace(id, file);
+              retakeFor.current = null;
+              event.target.value = "";
+            }}
+          />
+          <input
+            ref={replaceRef}
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              const id = retakeFor.current;
+              if (file && id) onReplace(id, file);
+              retakeFor.current = null;
+              event.target.value = "";
+            }}
+          />
+        </>
       ) : null}
 
       {zoomed ? (

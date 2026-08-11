@@ -182,6 +182,14 @@ export interface Coverage {
    * even if the verifier did not manage to enumerate every placed belonging.
    */
   usable: boolean;
+  /**
+   * Phase 6AL — objects the verifier described that could not be tied to one
+   * specific belonging. Ambiguity, not hallucination: reported, never fatal.
+   */
+  unconfirmed: string[];
+  confirmedCount: number;
+  unconfirmedCount: number;
+  forbiddenCount: number;
   /** Full per-category breakdown, for diagnostics and support. */
   categories: CategorisedVerification;
 }
@@ -242,6 +250,10 @@ export function coverageOf(
     // Phase 6AK — showable. Only inventions, impossible quantities and
     // contradicted supports withhold a picture from the user.
     usable: categories.usable,
+    unconfirmed: categories.unconfirmed,
+    confirmedCount: categories.confirmedCount,
+    unconfirmedCount: categories.unconfirmedCount,
+    forbiddenCount: categories.forbiddenCount,
     categories,
   };
 
@@ -731,7 +743,7 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
               : verification;
 
         console.log(
-          `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} objects=${verifyObjects.length} units=${required.length} RENDER=SUCCESS renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=${verifyTimedOut ? "TIMEOUT" : verification.toUpperCase()} verifyMs=${verifyMs}/${VERIFY_DEADLINE_MS} PREVIEW=${showable ? (verification === "verified" ? "VERIFIED" : "PARTIAL") : "NOT_VERIFIED"} PLAN=READY present=${coverage?.present ?? "?"}/${verifyObjects.length} unexpected=${coverage?.unexpected.length ?? 0} failureReason=${failureReason ?? "-"}`,
+          `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} objects=${verifyObjects.length} units=${required.length} RENDER=SUCCESS renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=${verifyTimedOut ? "TIMEOUT" : verification.toUpperCase()} verifyMs=${verifyMs}/${VERIFY_DEADLINE_MS} PREVIEW=${showable ? (verification === "verified" ? "VERIFIED" : "PARTIALLY_VERIFIED") : "NOT_VERIFIED"} PLAN=READY present=${coverage?.present ?? "?"}/${verifyObjects.length} confirmed=${coverage?.confirmedCount ?? 0} unconfirmed=${coverage?.unconfirmedCount ?? 0} forbidden=${coverage?.forbiddenCount ?? 0} unexpected=${coverage?.unexpected.length ?? 0} failureReason=${failureReason ?? "-"}`,
         );
 
 

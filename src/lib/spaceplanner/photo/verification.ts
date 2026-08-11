@@ -385,6 +385,11 @@ const HYPERNYMS: Readonly<Record<string, readonly string[]>> = {
   luggage: ["suitcase", "backpack", "holdall"],
 };
 
+/** The same map keyed by the stemmed head noun the normaliser produces. */
+const STEMMED_HYPERNYMS: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
+  Object.entries(HYPERNYMS).map(([key, values]) => [stemWord(key), values]),
+);
+
 const COLOUR_WORDS: ReadonlySet<string> = new Set(
   [
     "black", "white", "grey", "gray", "silver", "blue", "navy", "red", "green",
@@ -455,7 +460,10 @@ export function genericCandidates(
   const core = stripDescriptors(text);
   const head = headNoun(core);
   if (!head) return [];
-  const family = HYPERNYMS[head] ?? [];
+  // Phase 6AL — the head noun arrives STEMMED ("case" → "cas"), so the family
+  // map is keyed the same way. Without this the generic-word branch never
+  // fired and an ambiguous "a case" was reported as an invention.
+  const family = HYPERNYMS[head] ?? STEMMED_HYPERNYMS[head] ?? [];
 
   return items.filter((entry) => {
     const allowed = normaliseLabel(entry.label);
@@ -493,6 +501,35 @@ export interface IdentityDecision {
   normalisedInventory: string | null;
   decision: "matched" | "permitted_unplaced" | "ambiguous" | "unexpected" | "room_feature";
   reason: string;
+}
+
+/**
+ * Phase 6AL — object-level verification.
+ *
+ * Verification is no longer a single yes/no about the whole image. EVERY
+ * object the verifier reports is sorted into exactly one of three buckets:
+ *
+ *   CONFIRMED   — tied to a locked inventory belonging (placed or permitted
+ *                 unplaced). Evidence the render is the user's own.
+ *   UNCONFIRMED — a real-looking object we could not tie to one specific
+ *                 belonging, usually because several are equally compatible.
+ *                 AMBIGUITY IS NOT HALLUCINATION: it is reported, never fatal.
+ *   FORBIDDEN   — nothing in the inventory can account for it, or it exceeds
+ *                 an allowance. This, and only this, withholds the picture.
+ */
+export type ObjectClassification = "confirmed" | "unconfirmed" | "forbidden";
+
+export interface ObjectVerification {
+  observed: string;
+  classification: ObjectClassification;
+  matchedId: string | null;
+  matchedLabel: string | null;
+  reason: string;
+}
+
+/** True when several inventory belongings are equally compatible with a description. */
+function isAmbiguousDescription(text: string, items: readonly WhitelistEntry[]): boolean {
+  return genericCandidates(text, items).length > 1;
 }
 
 /**
@@ -636,7 +673,17 @@ export interface CategorisedVerification {
   usable: boolean;
   /** The material violations, if any, that make this render unusable. */
   materialIssues: string[];
-
+  /**
+   * Phase 6AL — one row per object the verifier reported, classified as
+   * CONFIRMED, UNCONFIRMED or FORBIDDEN. This is the object-level record the
+   * display decision is now made from.
+   */
+  observations: ObjectVerification[];
+  /** Objects we could not attribute to one belonging. Reported, never fatal. */
+  unconfirmed: string[];
+  confirmedCount: number;
+  unconfirmedCount: number;
+  forbiddenCount: number;
 }
 
 
@@ -690,7 +737,14 @@ export function quantityCheck(
     itemAliases?: readonly string[];
   },
   unplaced: readonly UnplacedAllowance[] = [],
-): { checks: QuantityCheck[]; unexpected: string[]; shortfalls: string[]; permitted: string[] } {
+): {
+  checks: QuantityCheck[];
+  unexpected: string[];
+  shortfalls: string[];
+  permitted: string[];
+  /** Phase 6AL — described objects we could not attribute, and did not blame. */
+  unconfirmed: string[];
+} {
   const allowed = new Map<string, { label: string; allowed: number }>();
   for (const entry of items) {
     const key = normaliseLabel(entry.label);
@@ -706,6 +760,7 @@ export function quantityCheck(
 
   const observed = new Map<string, number>();
   const invented = new Map<string, { label: string; count: number }>();
+  const unconfirmed: string[] = [];
 
   /**
    * Phase 6AF — a generic description is not a duplicate.
@@ -727,6 +782,13 @@ export function quantityCheck(
     const category = classifyReported(text, whitelists);
     if (category === "room_feature") continue;
     if (category === "unexpected") {
+      // Phase 6AL — ambiguity is not hallucination. A description several of
+      // the user's own belongings could equally be is UNCONFIRMED: reported,
+      // never counted against an allowance and never fatal.
+      if (isAmbiguousDescription(text, items)) {
+        unconfirmed.push(text);
+        continue;
+      }
       const key = normaliseLabel(text) || text.toLowerCase();
       const current = invented.get(key);
       if (current) current.count += count;
@@ -796,7 +858,7 @@ export function quantityCheck(
     unexpected.push(entry.count > 1 ? `${entry.label} ×${entry.count}` : entry.label);
   }
 
-  return { checks, unexpected, shortfalls, permitted: ledger.permitted };
+  return { checks, unexpected, shortfalls, permitted: ledger.permitted, unconfirmed };
 }
 
 
@@ -892,6 +954,7 @@ export function categoriseVerification(input: {
 
   const inventedItems: string[] = [];
   const featureIssues: string[] = [];
+  const strayUnconfirmed: string[] = [];
   // One ledger per reported list: the two lists describe the SAME image, so a
   // sighting in each must not consume the allowance twice.
   const strayLedger = unplacedLedger(input.unplaced ?? []);
@@ -902,8 +965,11 @@ export function categoriseVerification(input: {
     const category = classifyReported(text, whitelists);
     if (category === "room_feature") featureIssues.push(text);
     else if (category === "unexpected") {
+      // Phase 6AL — several of the user's belongings could be this. Ambiguous,
+      // therefore UNCONFIRMED, never an invention.
+      if (isAmbiguousDescription(text, items)) strayUnconfirmed.push(text);
       // Phase 6AH — a known belonging the planner left unplaced is permitted.
-      if (strayLedger.claim(text, observedCount(text)) > 0) inventedItems.push(text);
+      else if (strayLedger.claim(text, observedCount(text)) > 0) inventedItems.push(text);
     }
     // A whitelisted user item reported as "unexpected" is a duplicate-count
     // artefact of the checker, not an invention: the ID is already required.
@@ -1004,6 +1070,50 @@ export function categoriseVerification(input: {
   // or a contradicted support relationship. Nothing else withholds the image.
   const materialIssues = dedupe([...userInventory.unexpected, ...supportIssues]);
 
+  // Phase 6AL — the object-level record. Every reported object carries its own
+  // verdict, so the display decision is made per object rather than per image.
+  const observations: ObjectVerification[] = identityDecisions
+    .filter((entry) => entry.decision !== "room_feature")
+    .map((entry) => ({
+      observed: entry.observed,
+      classification:
+        entry.decision === "matched" || entry.decision === "permitted_unplaced"
+          ? ("confirmed" as const)
+          : entry.decision === "ambiguous"
+            ? ("unconfirmed" as const)
+            : ("forbidden" as const),
+      matchedId: entry.matchedId,
+      matchedLabel: entry.matchedLabel,
+      reason: entry.reason,
+    }));
+  // Quantity excesses are objects too: "extra box ×2" is a forbidden sighting
+  // even though no single description carries it.
+  const described = new Set(observations.map((entry) => normaliseLabel(entry.observed)));
+  for (const issue of quantities.unexpected) {
+    if (described.has(normaliseLabel(issue))) continue;
+    observations.push({
+      observed: issue,
+      classification: "forbidden",
+      matchedId: null,
+      matchedLabel: null,
+      reason: "more units than the locked inventory allows",
+    });
+  }
+
+  const unconfirmed = dedupe([...strayUnconfirmed, ...quantities.unconfirmed]);
+  const forbiddenCount = observations.filter((entry) => entry.classification === "forbidden").length;
+  const unconfirmedCount = Math.max(
+    observations.filter((entry) => entry.classification === "unconfirmed").length,
+    unconfirmed.length,
+  );
+  const confirmedCount = Math.max(
+    observations.filter((entry) => entry.classification === "confirmed").length,
+    userInventory.found.length,
+  );
+  // Nothing reported at all is silence, not evidence: the older image-level
+  // rule still applies so a terse verifier cannot withhold a good render.
+  const reportedAnything = observations.length > 0;
+
   return {
     userInventory,
     roomFeatures,
@@ -1013,13 +1123,21 @@ export function categoriseVerification(input: {
     permittedUnplaced: dedupe([...strayLedger.permitted, ...quantities.permitted]),
     identityDecisions,
     materialIssues,
-    usable: materialIssues.length === 0,
+    observations,
+    unconfirmed,
+    confirmedCount,
+    unconfirmedCount,
+    forbiddenCount,
+    // Phase 6AL — SHOW THE IMAGE when at least one object is confirmed and
+    // none is forbidden. Unconfirmed objects are surfaced, never fatal.
+    usable: materialIssues.length === 0 && (!reportedAnything || confirmedCount > 0),
     verified:
       userInventory.missing.length === 0 &&
       userInventory.unexpected.length === 0 &&
       quantities.shortfalls.length === 0 &&
       supportIssues.length === 0,
   };
+
 
 
 

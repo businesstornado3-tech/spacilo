@@ -516,6 +516,16 @@ export interface CoverageReport {
    * makes the preview partial, never rejected.
    */
   usable?: boolean;
+  /**
+   * Phase 6AL — objects the checker described but could not tie to one
+   * specific belonging. Ambiguity is reported, never treated as invention.
+   */
+  unconfirmed?: string[];
+  confirmedCount?: number;
+  unconfirmedCount?: number;
+  forbiddenCount?: number;
+
+
 
   /**
    * Fixed room features (doors, windows, radiators) the verifier says drifted.
@@ -553,6 +563,10 @@ export function coverageFrom(
     complete: userInventory.missing.length === 0 && required.length > 0,
     faithful: userInventory.unexpected.length === 0,
     usable: categories.usable,
+    unconfirmed: categories.unconfirmed,
+    confirmedCount: categories.confirmedCount,
+    unconfirmedCount: categories.unconfirmedCount,
+    forbiddenCount: categories.forbiddenCount,
     categories,
   };
 }

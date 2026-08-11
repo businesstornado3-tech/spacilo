@@ -335,13 +335,19 @@ export type Verdict = "verified" | "partial" | "incomplete" | "unfaithful" | "un
  */
 export function verdictFor(coverage: Coverage | null): Verdict {
   if (!coverage) return "unverified";
+  if (coverage.complete && coverage.faithful && (coverage.supportIssues?.length ?? 0) === 0) {
+    return "verified";
+  }
+  // Phase 6AQ — THE FINAL PREVIEW GATE. One problematic object no longer
+  // destroys an otherwise usable arrangement: while at least one belonging was
+  // confirmed in the picture, the render is PARTIAL and is shown, with the
+  // problem objects reported beside it. The verifier's own classifications —
+  // unexpected, unconfirmed, support mismatch, quantity — are untouched.
+  if (coverage.confirmedCount > 0) return "partial";
   if (!coverage.faithful) return "unfaithful";
-  // Phase 6AM: a contradicted support EXCLUDES its own object. It no longer
-  // rejects the picture — the remaining verified objects stay visible.
-  if (coverage.complete && (coverage.supportIssues?.length ?? 0) === 0) return "verified";
-  if ((coverage.supportIssues?.length ?? 0) > 0) return coverage.usable ? "partial" : "incomplete";
   return coverage.usable ? "partial" : "incomplete";
 }
+
 
 
 

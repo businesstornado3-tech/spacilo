@@ -599,30 +599,33 @@ export function useSpaceVisualisation(options: {
         abortReason: null,
       });
 
-      // FAIL-CLOSED, but only for MATERIAL faults (Phase 6T, narrowed in 6AK).
-      // An invented belonging, an impossible quantity or a contradicted support
-      // still withholds the picture. A belonging the checker simply could not
-      // account for does not: the image is real and its objects are the user's.
-      // Phase 6AM — support/placement drift is OBJECT-LEVEL exclusion, not a
-      // global rejection: the excluded object is reported and the remaining
-      // photographic arrangement stays on screen.
-      const inventedFinal = (finalCoverage?.unexpected?.length ?? 0) > 0;
-      if (response.verification === "unfaithful" || inventedFinal) {
-        setImageUrl(null);
-        setStatus("unfaithful");
-        return;
-      }
+      // Phase 6AQ — THE FINAL PREVIEW GATE, and the only gate.
+      // The picture is withheld ONLY when there is no usable confirmed
+      // photographic result: no coverage report at all, or not one single
+      // belonging confirmed in the image. An unconfirmed object, a wording
+      // mismatch, a contradicted support, an unplaced item or a lone
+      // unexpected object no longer erases an otherwise useful arrangement —
+      // each is reported next to the image instead. The verifier's
+      // classifications are unchanged; only this presentation gate moved.
       if (!finalCoverage || response.verification === "unverified") {
         setImageUrl(null);
         if (response.verifyTimedOut) setAbortReason("server_verify_timeout");
         setStatus("unverified");
         return;
       }
-      if (response.verification === "incomplete" && finalCoverage.usable === false) {
+      const confirmed = finalCoverage.confirmedCount ?? 0;
+      if (confirmed <= 0) {
         setImageUrl(null);
-        setStatus("incomplete");
+        setStatus(
+          (finalCoverage.unexpected?.length ?? 0) > 0
+            ? "unfaithful"
+            : finalCoverage.usable
+              ? "unverified"
+              : "incomplete",
+        );
         return;
       }
+
 
       // A verified — or usably partial — render is shown even if it arrived
       // after the user's budget: late is a bonus, and the plan was never

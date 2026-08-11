@@ -27,6 +27,8 @@ export function PhotoGallery({
   onAddMore,
   onReplace,
   onSelectRegion,
+  onUseWholePhoto,
+  selectedPhotoIds,
   quality,
   canAddMore = true,
 }: {
@@ -39,12 +41,17 @@ export function PhotoGallery({
   onReplace?: (id: string, file: File) => void;
   /** Opens the region selector for this photo. */
   onSelectRegion?: (id: string) => void;
+  /** Clears any drawn area so the whole photo is analysed again. */
+  onUseWholePhoto?: (id: string) => void;
+  /** Photos that currently have a drawn area. */
+  selectedPhotoIds?: string[];
   /** Advisory quality findings, keyed by photo id. */
   quality?: Record<string, PhotoQuality>;
   canAddMore?: boolean;
 }) {
   const [zoomed, setZoomed] = React.useState<VisionPhoto | null>(null);
   const retakeRef = React.useRef<HTMLInputElement>(null);
+  const replaceRef = React.useRef<HTMLInputElement>(null);
   const retakeFor = React.useRef<string | null>(null);
 
   if (photos.length === 0) return null;

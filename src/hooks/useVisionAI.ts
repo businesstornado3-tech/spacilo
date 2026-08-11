@@ -68,6 +68,9 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
   const [objects, setObjects] = React.useState<DetectedObject[]>([]);
   const [spaceScan, setSpaceScan] = React.useState<SpaceScanResult | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = React.useState<string | null>(null);
+  /** Phase 6AS — the last completed run finished with nothing detected. */
+  const [emptyResult, setEmptyResult] = React.useState(false);
   const [rejected, setRejected] = React.useState(0);
   const [selections, setSelections] = React.useState<PhotoSelection[]>([]);
   const [scope, setScope] = React.useState<InventoryScope>("whole");

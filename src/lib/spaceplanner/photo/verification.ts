@@ -228,10 +228,13 @@ export function normaliseLabel(label: string): string {
  * an older unit string must not silently fail to match.
  */
 function idsIn(text: string): string[] {
-  const matches = text
-    .toUpperCase()
-    .match(/\b(?:ITEMS?|FEATURES?|OBJECTS?)\s*[-_ ]?\s*\d+(?:\s*[-_]\s*\d+)?\b/g);
-  return (matches ?? []).map((match) => {
+  const upper = text.toUpperCase();
+  const matches = [
+    ...(upper.match(/\b(?:ITEMS?|FEATURES?|OBJECTS?)\s*[-_ ]?\s*\d+(?:\s*[-_]\s*\d+)?\b/g) ?? []),
+    // Phase 6AP — any canonical id shape the pipeline may mint ("OBJ-005").
+    ...(upper.match(/\b[A-Z]{2,12}[-_]\d+(?:[-_]\d+)?\b/g) ?? []),
+  ];
+  return matches.map((match) => {
     const trimmed = match.replace(/\s*[-_]\s*\d+\s*$/, (tail, offset: number) =>
       // Only a SECOND number group is a unit suffix; "ITEM-003" keeps its number.
       /\d/.test(match.slice(0, offset)) ? "" : tail,
@@ -239,6 +242,52 @@ function idsIn(text: string): string[] {
     return canonicalId(trimmed);
   });
 }
+
+/**
+ * Phase 6AP — THE VERIFIER RESPONSE CONTRACT.
+ *
+ * Every observed object arrives as "<CANONICAL-ID> | free wording" or, when the
+ * model cannot confidently tie it to the locked inventory, "UNKNOWN | wording".
+ * The ID is the identity; the wording is descriptive evidence only. Older,
+ * ID-less replies still parse — the description is then the whole string and
+ * the existing wording heuristics run exactly as before.
+ */
+export function splitObservation(raw: string): {
+  idPart: string | null;
+  unknown: boolean;
+  description: string;
+} {
+  const text = raw.trim();
+  const pipe = text.indexOf("|");
+  if (pipe < 0) return { idPart: null, unknown: /^unknown$/i.test(text), description: text };
+  const head = text.slice(0, pipe).trim();
+  const rest = text.slice(pipe + 1).trim();
+  if (/^unknown$/i.test(head)) return { idPart: null, unknown: true, description: rest || text };
+  return { idPart: head || null, unknown: false, description: rest || head };
+}
+
+/** The observation's wording, with any identity prefix removed. */
+export function observationDescription(raw: string): string {
+  return splitObservation(raw).description;
+}
+
+/** Did the verifier explicitly say it could not tie this object to inventory? */
+export function declaredUnknown(raw: string): boolean {
+  return splitObservation(raw).unknown;
+}
+
+/**
+ * Phase 6AP — ID-FIRST RESOLUTION. A valid canonical inventory id inside an
+ * observation resolves identity outright: no wording heuristic may override it.
+ */
+export function canonicalMatch(
+  reported: string,
+  items: readonly WhitelistEntry[],
+): WhitelistEntry | null {
+  const ids = new Set([canonicalId(reported), ...idsIn(reported)]);
+  return items.find((entry) => ids.has(canonicalId(entry.id))) ?? null;
+}
+
 
 
 function looksArchitectural(label: string): boolean {

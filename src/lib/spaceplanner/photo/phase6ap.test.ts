@@ -78,7 +78,8 @@ describe("Phase 6AP — the verifier response contract", () => {
   });
 
   it("6 — generic 'bottle' with one unique bottle resolves to it", () => {
-    expect(classifyReported("bottle", { items: inventory, features: [] })).toBe("user_item");
+    const one: WhitelistEntry[] = [{ id: "OBJ-005", label: "Water bottle", quantity: 1 }];
+    expect(classifyReported("bottle", { items: one, features: [] })).toBe("user_item");
   });
 
   it("7 — generic 'bottle' with two bottles stays unconfirmed, never forbidden", () => {

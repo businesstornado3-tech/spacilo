@@ -455,7 +455,10 @@ export function genericCandidates(
   const core = stripDescriptors(text);
   const head = headNoun(core);
   if (!head) return [];
-  const family = HYPERNYMS[head] ?? [];
+  // Phase 6AL — the head noun arrives STEMMED ("case" → "cas"), so the family
+  // map is keyed the same way. Without this the generic-word branch never
+  // fired and an ambiguous "a case" was reported as an invention.
+  const family = HYPERNYMS[head] ?? STEMMED_HYPERNYMS[head] ?? [];
 
   return items.filter((entry) => {
     const allowed = normaliseLabel(entry.label);

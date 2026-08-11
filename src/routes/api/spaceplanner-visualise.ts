@@ -182,6 +182,14 @@ export interface Coverage {
    * even if the verifier did not manage to enumerate every placed belonging.
    */
   usable: boolean;
+  /**
+   * Phase 6AL — objects the verifier described that could not be tied to one
+   * specific belonging. Ambiguity, not hallucination: reported, never fatal.
+   */
+  unconfirmed: string[];
+  confirmedCount: number;
+  unconfirmedCount: number;
+  forbiddenCount: number;
   /** Full per-category breakdown, for diagnostics and support. */
   categories: CategorisedVerification;
 }

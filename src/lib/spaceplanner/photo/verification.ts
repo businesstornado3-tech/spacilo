@@ -308,10 +308,13 @@ export function classifyReported(
     itemAliases?: readonly string[];
   },
 ): ObjectCategory {
-  const raw = reported.trim();
+  const observation = splitObservation(reported);
+  const raw = observation.description.trim() || reported.trim();
   if (!raw) return "unexpected";
 
-  const ids = new Set([canonicalId(raw), ...idsIn(raw)]);
+  // Phase 6AP — ID FIRST. A canonical id anywhere in the observation settles
+  // identity before any wording is looked at.
+  const ids = new Set([canonicalId(reported.trim()), ...idsIn(reported)]);
   const itemIds = new Set(whitelists.items.map((entry) => canonicalId(entry.id)));
   const featureIds = new Set(whitelists.features.map((entry) => canonicalId(entry.id)));
 
@@ -324,6 +327,12 @@ export function classifyReported(
 
   const label = normaliseLabel(raw);
   if (!label) return "room_feature"; // a bare state word describes nothing new
+
+  // Phase 6AP — the verifier said UNKNOWN with no canonical id. It must not be
+  // promoted into a belonging by wording alone; the caller decides between
+  // UNCONFIRMED and the existing integrity rules.
+  if (observation.unknown) return looksArchitectural(raw) ? "room_feature" : "unexpected";
+
   const aliases = (whitelists.itemAliases ?? []).map(normaliseLabel).filter(Boolean);
   if (aliases.some((alias) => alias === label || containsLabel(label, alias))) return "user_item";
   if (whitelists.items.some((entry) => normaliseLabel(entry.label) === label)) return "user_item";

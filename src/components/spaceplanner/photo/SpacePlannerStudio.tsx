@@ -30,6 +30,8 @@ import { EarningsEstimateCard } from "@/components/spaceplanner/photo/EarningsEs
 import { useVisionAI } from "@/hooks/useVisionAI";
 import { isVisualisationWorking, useSpaceVisualisation } from "@/hooks/useSpaceVisualisation";
 import { useStableScroll } from "@/hooks/useStableScroll";
+import { useHydrated } from "@/hooks/use-hydrated";
+import { Alert } from "@/components/common/Alert";
 import { InventoryLock } from "@/components/spaceplanner/photo/InventoryLock";
 import { SpacePlannerDiagnostics } from "@/components/spaceplanner/photo/SpacePlannerDiagnostics";
 import { PlannerProgress } from "@/components/spaceplanner/photo/PlannerProgress";
@@ -78,6 +80,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
   const [selectingSpace, setSelectingSpace] = React.useState<string | null>(null);
 
   const { anchor, hold, mark, reveal } = useStableScroll(step);
+  const hydrated = useHydrated();
   /** The "here's what you just added, here's the next action" block. */
   const stuffNextRef = React.useRef<HTMLDivElement>(null);
   const spaceNextRef = React.useRef<HTMLDivElement>(null);
@@ -308,14 +311,21 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
     // added a space photograph, both run at once instead of one after the
     // other, so step 4 is reached in the time of the slower one, not the sum.
     const alsoSpace = space.photos.length > 0 && !space.spaceScan;
-    await Promise.all([
+    // The two analyses stay independent — neither cancels or blocks the other.
+    const [outcome] = await Promise.all([
       stuff.analyse(),
       alsoSpace ? space.analyse().catch(() => undefined) : Promise.resolve(undefined),
     ]);
     hold();
     track("spaceplanner_items_detected", {
-      props: { count: stuff.photos.length, ms: Date.now() - startedAt },
+      props: { count: outcome.objects.length, ms: Date.now() - startedAt },
     });
+    // Phase 6AS — only a real detection advances the flow. An error or a
+    // zero-item result keeps the user here, with an explanation and a retry.
+    if (outcome.status !== "complete" || outcome.objects.length === 0) {
+      refreshPerf();
+      return;
+    }
     setInventory(null);
     setStep("review");
     // From here the product is waiting on the user, not the other way round.
@@ -477,6 +487,19 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 />
               ) : null}
 
+              {stuff.status === "error" ? (
+                <Alert tone="error" title="We couldn't analyse this photo.">
+                  Something went wrong on our side. Please try again, or add your items by hand.
+                </Alert>
+              ) : null}
+
+              {stuff.status === "complete" && stuff.emptyResult ? (
+                <Alert tone="warning" title="No belongings were identified in this photo.">
+                  Try another photo with better lighting, or move closer so each item is fully in
+                  frame.
+                </Alert>
+              ) : null}
+
               <div ref={stuffNextRef} className="scroll-mt-24 space-y-4">
                 <PhotoGallery
                   photos={stuff.photos}
@@ -492,9 +515,22 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 />
                 {stuff.photos.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    <Button type="button" size="lg" onClick={() => void analyseStuff()}>
+                    <Button
+                      type="button"
+                      size="lg"
+                      disabled={!hydrated}
+                      onClick={() => void analyseStuff()}
+                    >
                       <Sparkles aria-hidden="true" />
-                      {stuff.objects.length > 0 ? "Analyse again" : "Analyse my belongings"}
+                      {!hydrated
+                        ? "Preparing Spacilo AI…"
+                        : stuff.status === "error"
+                          ? "Try again"
+                          : stuff.emptyResult
+                            ? "Try another photo"
+                            : stuff.objects.length > 0
+                              ? "Analyse again"
+                              : "Analyse my belongings"}
                     </Button>
                     {stuff.objects.length > 0 ? (
                       <Button

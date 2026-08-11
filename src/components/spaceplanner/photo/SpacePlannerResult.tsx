@@ -17,9 +17,13 @@ function Metric({ label, value, hint }: { label: string; value: string; hint?: s
   return (
     <div className="rounded-xl bg-surface p-3">
       <dt className="type-overline text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 type-card-title">{value}</dd>
-      {hint ? <p className="mt-0.5 type-body-xs text-muted-foreground">{hint}</p> : null}
+      <dd className="mt-0.5 type-card-title">
+        {value}
+        {/* Only dt/dd may sit inside a dl group — the hint lives in the dd. */}
+        {hint ? <span className="mt-0.5 block type-body-xs text-muted-foreground">{hint}</span> : null}
+      </dd>
     </div>
+
   );
 }
 

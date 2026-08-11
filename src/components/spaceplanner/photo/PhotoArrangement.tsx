@@ -330,6 +330,14 @@ export function PhotoArrangement({
         </p>
       ) : null}
 
+      {hasVisual && coverage?.unconfirmed?.length ? (
+        <p className="mt-2 type-body-xs text-muted-foreground">
+          We could see {coverage.unconfirmed.join(", ")} in the preview but couldn&apos;t tie
+          {coverage.unconfirmed.length > 1 ? " them" : " it"} to one specific item in your
+          inventory. Nothing was added — your measured plan below is unchanged.
+        </p>
+      ) : null}
+
       {status === "partial" && onRetry ? (
         <div className="mt-3 flex flex-wrap gap-2">
           <Button type="button" size="sm" variant="secondary" onClick={onRetry}>

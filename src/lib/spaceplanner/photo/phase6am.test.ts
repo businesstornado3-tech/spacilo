@@ -112,12 +112,15 @@ describe("Phase 6AM — support mismatch is object-level", () => {
     expect(verdictFor(cover)).toBe("partial");
   });
 
-  it("TEST 3 — a genuinely invented object is still a global rejection", () => {
+  it("TEST 3 — a genuinely invented object is still reported (Phase 6AQ: partial, not hidden)", () => {
     const cover = coverage(tenItems, allIds, ["a bicycle"], [], []);
     expect(cover.faithful).toBe(false);
     expect(cover.usable).toBe(false);
-    expect(verdictFor(cover)).toBe("unfaithful");
+    // Phase 6AQ — the invention is still classified; with confirmed belongings
+    // in the picture the arrangement is shown as partial and the invention named.
+    expect(verdictFor(cover)).toBe("partial");
   });
+
 
   it("TEST 3b — quantity protection is unchanged", () => {
     const report = categoriseVerification({

@@ -563,6 +563,10 @@ export function coverageFrom(
     complete: userInventory.missing.length === 0 && required.length > 0,
     faithful: userInventory.unexpected.length === 0,
     usable: categories.usable,
+    unconfirmed: categories.unconfirmed,
+    confirmedCount: categories.confirmedCount,
+    unconfirmedCount: categories.unconfirmedCount,
+    forbiddenCount: categories.forbiddenCount,
     categories,
   };
 }

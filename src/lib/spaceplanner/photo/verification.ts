@@ -969,7 +969,8 @@ function candidateKeysFor(reported: string, items: readonly WhitelistEntry[]): s
       if (key) return [key];
     }
   }
-  const text = normaliseLabel(reported);
+  const described = observationDescription(reported) || reported;
+  const text = normaliseLabel(described);
   const keys = new Set<string>();
   for (const entry of items) {
     const key = normaliseLabel(entry.label);

@@ -359,7 +359,10 @@ export async function requestVisualisation(
             ? "unfaithful"
             : coverage.complete
               ? "verified"
-              : "incomplete"),
+              : coverage.usable === false
+                ? "incomplete"
+                : "partial"),
+
 
       diagnosticId: typeof payload.diagnosticId === "string" ? payload.diagnosticId : null,
       provider: typeof payload.provider === "string" ? payload.provider : null,

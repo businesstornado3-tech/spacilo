@@ -1274,26 +1274,37 @@ export function supportDrift(
   expected: readonly ExpectedSupport[],
   observations: readonly SupportObservation[],
 ): string[] {
-  const issues: string[] = [];
+  return dedupe(supportDriftDetailed(expected, observations).map((entry) => entry.message));
+}
+
+/**
+ * Phase 6AM — the same check, attributed per OBJECT so a contradicted support
+ * excludes its own object instead of rejecting the whole picture.
+ */
+export function supportDriftDetailed(
+  expected: readonly ExpectedSupport[],
+  observations: readonly SupportObservation[],
+): SupportMismatch[] {
+  const issues: SupportMismatch[] = [];
   for (const support of expected) {
     const observation = observations.find((entry) =>
       refersTo(entry.item, support.itemId, support.itemLabel),
     );
     // No observation is not evidence of drift: the verifier simply did not say.
     if (!observation) continue;
-    if (meansFloor(observation.restingOn)) {
-      issues.push(
-        `${support.itemLabel} should be resting on ${support.baseLabel}, but was drawn on the floor.`,
-      );
-      continue;
-    }
-    if (!refersTo(observation.restingOn, support.baseId, support.baseLabel)) {
-      issues.push(
-        `${support.itemLabel} should be resting on ${support.baseLabel}, but was drawn on ${observation.restingOn.trim()}.`,
-      );
-    }
+    const onFloor = meansFloor(observation.restingOn);
+    if (!onFloor && refersTo(observation.restingOn, support.baseId, support.baseLabel)) continue;
+    const observedBase = onFloor ? "the floor" : observation.restingOn.trim();
+    if (issues.some((entry) => entry.itemId === support.itemId)) continue;
+    issues.push({
+      itemId: support.itemId,
+      itemLabel: support.itemLabel,
+      expectedBase: support.baseLabel,
+      observedBase,
+      message: `${support.itemLabel} should be resting on ${support.baseLabel}, but was drawn on ${observedBase}.`,
+    });
   }
-  return dedupe(issues);
+  return issues;
 }
 
 

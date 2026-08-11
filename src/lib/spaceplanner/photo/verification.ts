@@ -1414,7 +1414,7 @@ function matchId(
     return allowed === label || containsLabel(label, allowed) || containsLabel(allowed, label);
   });
   if (!matches.length) {
-    const generic = uniqueGenericMatch(reported, whitelist);
+    const generic = uniqueGenericMatch(described, whitelist);
     if (generic) matches.push(generic);
   }
   const unclaimed = matches.find((entry) => !claimed.has(canonicalId(entry.id)));

@@ -335,7 +335,13 @@ const DESCRIPTOR_WORDS: ReadonlySet<string> = new Set(
     // condition and state
     "old", "new", "used", "worn", "spare", "folded", "stacked", "closed",
     "open", "empty", "full", "upright", "flat", "upside", "down",
+    // Phase 6AK — screen and appliance styling words. They describe HOW an
+    // object looks, never WHAT it is: a "flat screen television" is still the
+    // user's television, and a "smart tv" is not a second one.
+    "screen", "flatscreen", "widescreen", "curved", "smart", "led", "lcd",
+    "oled", "plasma", "hd", "4k", "digital", "portable", "modern", "vintage",
   ].map((word) => normaliseLabel(word)),
+
 );
 
 /**

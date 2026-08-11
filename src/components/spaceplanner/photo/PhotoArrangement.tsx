@@ -317,15 +317,26 @@ export function PhotoArrangement({
             </>
           ) : (
             <>
-              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
-              <span>
-                Visualisation could not reliably include every item
-                {coverage.missing.length ? ` (${coverage.missing.join(", ")})` : ""}. Your fit
-                analysis is unaffected.
+              <span className="rounded-full bg-signal-soft px-2 py-0.5 type-badge text-signal-soft-foreground">
+                {coverage.present} of {coverage.expected} items included
+              </span>
+              <span className="text-muted-foreground">
+                We couldn&apos;t confirm every item in the picture
+                {coverage.missing.length ? ` (${coverage.missing.join(", ")})` : ""} — your measured
+                plan below covers them all.
               </span>
             </>
           )}
         </p>
+      ) : null}
+
+      {status === "partial" && onRetry ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button type="button" size="sm" variant="secondary" onClick={onRetry}>
+            <RefreshCw aria-hidden="true" />
+            Try the preview again
+          </Button>
+        </div>
       ) : null}
 
       {status === "incomplete" ? (
@@ -338,6 +349,7 @@ export function PhotoArrangement({
           ) : null}
         </div>
       ) : null}
+
 
       {hasVisual && coverage?.featureNotes?.length ? (
         <p className="mt-2 flex items-start gap-2 type-body-xs text-muted-foreground">

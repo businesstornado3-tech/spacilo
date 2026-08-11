@@ -1039,7 +1039,11 @@ export function categoriseVerification(input: {
     unexpected: dedupe(featureIssues),
   };
 
-  const supportIssues = supportDrift(input.expectedSupports ?? [], reply.supports ?? []);
+  const supportMismatches = supportDriftDetailed(
+    input.expectedSupports ?? [],
+    reply.supports ?? [],
+  );
+  const supportIssues = dedupe(supportMismatches.map((entry) => entry.message));
 
   // Phase 6AI — explain every identity decision so a future false rejection
   // can be read rather than guessed at.

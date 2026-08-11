@@ -45,11 +45,18 @@ export type VisualisationStatus =
   | "preparing"
   | "rendering"
   | "verifying"
-  /** Checked and faithful. THE ONLY STATE THAT DISPLAYS AN IMAGE. */
+  /** Checked and faithful, with every placed item accounted for. */
   | "verified"
+  /**
+   * Phase 6AK — SHOWN. Nothing was invented, no quantity was exceeded and no
+   * support was contradicted, but the verifier could not account for every
+   * placed belonging. A best-effort preview beats no preview: the picture is
+   * displayed and the unaccounted items are named beside it.
+   */
+  | "partial"
   /** Contained objects the user does not own, or contradicted the plan. */
   | "unfaithful"
-  /** Faithful, but did not show every planned item. */
+  /** Faithful, but materially short of the plan. Never displayed. */
   | "incomplete"
   /** The render arrived but could not be checked. Never displayed. */
   | "unverified"
@@ -72,10 +79,11 @@ export function isVisualisationWorking(status: VisualisationStatus): boolean {
   return status === "preparing" || status === "rendering" || status === "verifying";
 }
 
-/** True only for the one state permitted to display the rendered image. */
+/** The states permitted to display the rendered image. */
 export function showsRenderedImage(status: VisualisationStatus): boolean {
-  return status === "verified";
+  return status === "verified" || status === "partial";
 }
+
 
 /**
  * Phase 6AD — WHY a preview stopped. Live failures were all reported as

@@ -1131,37 +1131,46 @@ export function categoriseVerification(input: {
   for (const observation of [...(reply.objects ?? []), ...reply.unexpected, ...strayFromPresent]) {
     const text = observation.trim();
     if (!text) continue;
-    const normalisedObserved = normaliseLabel(text);
+    const parsed = splitObservation(text);
+    const described = parsed.description || text;
+    const normalisedObserved = normaliseLabel(described);
     const category = classifyReported(text, whitelists);
-    const literal = items.find((entry) => {
-      const allowed = normaliseLabel(entry.label);
-      return (
-        allowed === normalisedObserved ||
-        containsLabel(normalisedObserved, allowed) ||
-        containsLabel(allowed, normalisedObserved)
-      );
-    });
-    const loose = genericCandidates(text, items);
+    // Phase 6AP — ID FIRST. A canonical inventory id is authoritative; the
+    // wording heuristics below are only consulted when there is no valid id.
+    const byId = canonicalMatch(text, items);
+    const literal =
+      byId ??
+      items.find((entry) => {
+        const allowed = normaliseLabel(entry.label);
+        return (
+          allowed === normalisedObserved ||
+          containsLabel(normalisedObserved, allowed) ||
+          containsLabel(allowed, normalisedObserved)
+        );
+      });
+    const loose = genericCandidates(described, items);
     const matched = literal ?? (loose.length === 1 ? loose[0]! : null);
-    const decision: IdentityDecision["decision"] =
-      category === "room_feature"
+    const decision: IdentityDecision["decision"] = byId
+      ? "matched"
+      : category === "room_feature"
         ? "room_feature"
         : category === "user_item"
           ? "matched"
           : permittedText.has(normalisedObserved)
             ? "permitted_unplaced"
-            : loose.length > 1
+            : loose.length > 1 || (parsed.unknown && loose.length > 0)
               ? "ambiguous"
               : "unexpected";
     identityDecisions.push({
-      observed: text,
+      observed: described,
       normalisedObserved,
       matchedId: decision === "matched" && matched ? matched.id : null,
       matchedLabel: decision === "matched" && matched ? matched.label : null,
       normalisedInventory: matched ? normaliseLabel(matched.label) : null,
       decision,
-      reason:
-        decision === "room_feature"
+      reason: byId
+        ? "canonical_id_match"
+        : decision === "room_feature"
           ? "architectural or whitelisted room feature"
           : decision === "matched"
             ? literal
@@ -1170,7 +1179,9 @@ export function categoriseVerification(input: {
             : decision === "permitted_unplaced"
               ? "belonging the planner intentionally left unplaced"
               : decision === "ambiguous"
-                ? `several inventory objects compatible: ${loose.map((entry) => entry.label).join(", ")}`
+                ? parsed.unknown
+                  ? "no_canonical_inventory_match"
+                  : `several inventory objects compatible: ${loose.map((entry) => entry.label).join(", ")}`
                 : "no compatible inventory object",
     });
   }

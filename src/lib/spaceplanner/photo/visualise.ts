@@ -85,7 +85,14 @@ export interface VisualisationRequest {
 
 
 /** How the server's own verification pass judged the returned image. */
-export type VerificationVerdict = "verified" | "incomplete" | "unfaithful" | "unverified";
+export type VerificationVerdict =
+  | "verified"
+  /** Phase 6AK — showable: nothing invented, but not every item accounted for. */
+  | "partial"
+  | "incomplete"
+  | "unfaithful"
+  | "unverified";
+
 
 export interface VisualisationResponse {
   image: string;
@@ -352,7 +359,10 @@ export async function requestVisualisation(
             ? "unfaithful"
             : coverage.complete
               ? "verified"
-              : "incomplete"),
+              : coverage.usable === false
+                ? "incomplete"
+                : "partial"),
+
 
       diagnosticId: typeof payload.diagnosticId === "string" ? payload.diagnosticId : null,
       provider: typeof payload.provider === "string" ? payload.provider : null,

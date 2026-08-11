@@ -177,9 +177,15 @@ export interface Coverage {
   complete: boolean;
   /** False only when the renderer invented BELONGINGS. */
   faithful: boolean;
+  /**
+   * Phase 6AK — nothing material is wrong with this image, so it may be shown
+   * even if the verifier did not manage to enumerate every placed belonging.
+   */
+  usable: boolean;
   /** Full per-category breakdown, for diagnostics and support. */
   categories: CategorisedVerification;
 }
+
 
 /** Re-exported for tests and callers that normalise labels themselves. */
 export function normaliseReported(label: string): string {
@@ -233,8 +239,12 @@ export function coverageOf(
       userInventory.expected.length > 0,
 
     faithful: userInventory.unexpected.length === 0,
+    // Phase 6AK — showable. Only inventions, impossible quantities and
+    // contradicted supports withhold a picture from the user.
+    usable: categories.usable,
     categories,
   };
+
 }
 
 
@@ -287,7 +297,7 @@ export function parseCheckReply(text: string): VerifierReply | null {
   return present ? { present, unexpected: [] } : null;
 }
 
-export type Verdict = "verified" | "incomplete" | "unfaithful" | "unverified";
+export type Verdict = "verified" | "partial" | "incomplete" | "unfaithful" | "unverified";
 
 /**
  * Turns an observation into a verdict. An absent or unreadable coverage report
@@ -296,13 +306,19 @@ export type Verdict = "verified" | "incomplete" | "unfaithful" | "unverified";
  * Phase 6T: support drift is a contradiction of the deterministic plan, so a
  * render that puts a supported object on the floor is unfaithful, exactly like
  * an invented object. THE PLAN WINS.
+ *
+ * Phase 6AK: a faithful render that simply did not account for every placed
+ * belonging is PARTIAL, not rejected. The picture is real, the objects in it
+ * are the user's own, and the missing lines are reported alongside it.
  */
 export function verdictFor(coverage: Coverage | null): Verdict {
   if (!coverage) return "unverified";
   if (!coverage.faithful) return "unfaithful";
   if ((coverage.supportIssues?.length ?? 0) > 0) return "unfaithful";
-  return coverage.complete ? "verified" : "incomplete";
+  if (coverage.complete) return "verified";
+  return coverage.usable ? "partial" : "incomplete";
 }
+
 
 
 /**
@@ -705,17 +721,19 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         // Phase 6AG — a render that succeeded and a check that ran out of time
         // is NOT "the preview timed out". Each stage is reported separately so
         // the log and the diagnostics panel can never conflate the two.
+        const showable = verification === "verified" || verification === "partial";
         const failureReason = verifyTimedOut
           ? "verification_timeout"
           : coverage === null
             ? "verification_unavailable"
-            : verification === "verified"
+            : showable
               ? null
               : verification;
 
         console.log(
-          `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} objects=${verifyObjects.length} units=${required.length} RENDER=SUCCESS renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=${verifyTimedOut ? "TIMEOUT" : verification.toUpperCase()} verifyMs=${verifyMs}/${VERIFY_DEADLINE_MS} PREVIEW=${verification === "verified" ? "VERIFIED" : "NOT_VERIFIED"} PLAN=READY present=${coverage?.present ?? "?"}/${verifyObjects.length} unexpected=${coverage?.unexpected.length ?? 0} failureReason=${failureReason ?? "-"}`,
+          `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} objects=${verifyObjects.length} units=${required.length} RENDER=SUCCESS renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=${verifyTimedOut ? "TIMEOUT" : verification.toUpperCase()} verifyMs=${verifyMs}/${VERIFY_DEADLINE_MS} PREVIEW=${showable ? (verification === "verified" ? "VERIFIED" : "PARTIAL") : "NOT_VERIFIED"} PLAN=READY present=${coverage?.present ?? "?"}/${verifyObjects.length} unexpected=${coverage?.unexpected.length ?? 0} failureReason=${failureReason ?? "-"}`,
         );
+
 
         // Phase 6AI — when the check did not pass, spell out how each observed
         // description was reconciled against the locked inventory, so a false

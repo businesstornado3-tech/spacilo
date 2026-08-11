@@ -45,11 +45,18 @@ export type VisualisationStatus =
   | "preparing"
   | "rendering"
   | "verifying"
-  /** Checked and faithful. THE ONLY STATE THAT DISPLAYS AN IMAGE. */
+  /** Checked and faithful, with every placed item accounted for. */
   | "verified"
+  /**
+   * Phase 6AK — SHOWN. Nothing was invented, no quantity was exceeded and no
+   * support was contradicted, but the verifier could not account for every
+   * placed belonging. A best-effort preview beats no preview: the picture is
+   * displayed and the unaccounted items are named beside it.
+   */
+  | "partial"
   /** Contained objects the user does not own, or contradicted the plan. */
   | "unfaithful"
-  /** Faithful, but did not show every planned item. */
+  /** Faithful, but materially short of the plan. Never displayed. */
   | "incomplete"
   /** The render arrived but could not be checked. Never displayed. */
   | "unverified"
@@ -72,10 +79,11 @@ export function isVisualisationWorking(status: VisualisationStatus): boolean {
   return status === "preparing" || status === "rendering" || status === "verifying";
 }
 
-/** True only for the one state permitted to display the rendered image. */
+/** The states permitted to display the rendered image. */
 export function showsRenderedImage(status: VisualisationStatus): boolean {
-  return status === "verified";
+  return status === "verified" || status === "partial";
 }
+
 
 /**
  * Phase 6AD — WHY a preview stopped. Live failures were all reported as
@@ -591,10 +599,10 @@ export function useSpaceVisualisation(options: {
         abortReason: null,
       });
 
-      // FAIL-CLOSED (Phase 6T). Only a render that was actually checked AND
-      // passed every check is SHOWN. Phase 6AG keeps the bytes internally, so
-      // "not displayed" no longer means "thrown away" — but the screen still
-      // falls back to the measured arrangement plan.
+      // FAIL-CLOSED, but only for MATERIAL faults (Phase 6T, narrowed in 6AK).
+      // An invented belonging, an impossible quantity or a contradicted support
+      // still withholds the picture. A belonging the checker simply could not
+      // account for does not: the image is real and its objects are the user's.
       const inventedFinal = (finalCoverage?.unexpected?.length ?? 0) > 0;
       const driftedFinal = (finalCoverage?.supportIssues?.length ?? 0) > 0;
       if (response.verification === "unfaithful" || inventedFinal || driftedFinal) {
@@ -608,18 +616,21 @@ export function useSpaceVisualisation(options: {
         setStatus("unverified");
         return;
       }
-      if (response.verification === "incomplete" || !finalCoverage.complete) {
+      if (response.verification === "incomplete" && finalCoverage.usable === false) {
         setImageUrl(null);
         setStatus("incomplete");
         return;
       }
 
-
-      // A verified render is shown even if it arrived after the user's budget:
-      // late is a bonus, and the plan was never hidden waiting for it.
+      // A verified — or usably partial — render is shown even if it arrived
+      // after the user's budget: late is a bonus, and the plan was never
+      // hidden waiting for it.
       setImageUrl(response.image);
-      setStatus("verified");
+      setStatus(
+        response.verification === "verified" && finalCoverage.complete ? "verified" : "partial",
+      );
       setAbortReason(null);
+
 
     } catch (cause) {
       if (run.current !== token) return;

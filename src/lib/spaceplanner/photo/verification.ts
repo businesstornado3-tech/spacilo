@@ -186,22 +186,38 @@ export function normaliseLabel(label: string): string {
     .replace(/\b\w+\b/g, stemWord)
     .trim();
 
+  /** Token-level canonicalisation: "tv" → "television", "bagpack" → "backpack". */
+  const applyWords = (value: string): string =>
+    value
+      .split(" ")
+      .filter(Boolean)
+      .map((word) => {
+        const canonical = STEMMED_WORD_SYNONYMS[word];
+        return canonical ? stemWord(canonical) : word;
+      })
+      .join(" ");
+
+  /**
+   * Phase 6AK — WORDS FIRST, then phrases, then words again.
+   *
+   * The live false rejection: "flat screen TV" only becomes the phrase
+   * "flat screen television" AFTER "tv" is canonicalised, so a phrase-first
+   * pass never fired and the user's own television was reported as an
+   * invention. Running the token pass on both sides of the phrase pass makes
+   * the order irrelevant while keeping both maps closed and deterministic.
+   */
+  text = applyWords(text);
+
   for (const [from, to] of PHRASE_SYNONYMS) {
-    const source = from.split(" ").map(stemWord).join(" ");
-    const target = to.split(" ").map(stemWord).join(" ");
+    const source = applyWords(from.split(" ").map(stemWord).join(" "));
+    const target = applyWords(to.split(" ").map(stemWord).join(" "));
     if (source === target) continue;
     text = ` ${text} `.split(` ${source} `).join(` ${target} `).trim();
   }
 
-  return text
-    .split(" ")
-    .filter(Boolean)
-    .map((word) => {
-      const canonical = STEMMED_WORD_SYNONYMS[word];
-      return canonical ? stemWord(canonical) : word;
-    })
-    .join(" ");
+  return applyWords(text);
 }
+
 
 
 /**
@@ -319,7 +335,13 @@ const DESCRIPTOR_WORDS: ReadonlySet<string> = new Set(
     // condition and state
     "old", "new", "used", "worn", "spare", "folded", "stacked", "closed",
     "open", "empty", "full", "upright", "flat", "upside", "down",
+    // Phase 6AK — screen and appliance styling words. They describe HOW an
+    // object looks, never WHAT it is: a "flat screen television" is still the
+    // user's television, and a "smart tv" is not a second one.
+    "screen", "flatscreen", "widescreen", "curved", "smart", "led", "lcd",
+    "oled", "plasma", "hd", "4k", "digital", "portable", "modern", "vintage",
   ].map((word) => normaliseLabel(word)),
+
 );
 
 /**
@@ -488,10 +510,19 @@ export interface UnplacedAllowance {
   reason?: string;
 }
 
-/** Capacity-limited claim book for intentionally unplaced belongings. */
+/**
+ * Capacity-limited claim book for intentionally unplaced belongings.
+ *
+ * Phase 6AK — matching here is SEMANTIC, exactly like the required-item
+ * matcher. The literal-only version rejected a known unplaced "glass table"
+ * the moment the verifier wrote "glass coffee table", and the user's own
+ * belonging was reported as an invention. Capacity is still strict: each
+ * unplaced unit can be claimed once and no more.
+ */
 export function unplacedLedger(unplaced: readonly UnplacedAllowance[] = []) {
   const remaining = unplaced
     .map((entry) => ({
+      id: entry.id,
       label: normaliseLabel(entry.label),
       original: entry.label,
       left: Math.max(0, Math.round(entry.quantity ?? 1)),
@@ -504,13 +535,17 @@ export function unplacedLedger(unplaced: readonly UnplacedAllowance[] = []) {
       let outstanding = Math.max(1, count);
       const label = normaliseLabel(text);
       if (!label) return outstanding;
+      const ids = new Set([canonicalId(text), ...idsIn(text)]);
       for (const entry of remaining) {
         if (outstanding <= 0) break;
         if (entry.left <= 0) continue;
         const same =
+          ids.has(canonicalId(entry.id)) ||
           entry.label === label ||
           containsLabel(label, entry.label) ||
-          containsLabel(entry.label, label);
+          containsLabel(entry.label, label) ||
+          // Loose but colour-compatible description of this one belonging.
+          genericCandidates(text, [{ id: entry.id, label: entry.original }]).length === 1;
         if (!same) continue;
         const take = Math.min(entry.left, outstanding);
         entry.left -= take;
@@ -519,6 +554,7 @@ export function unplacedLedger(unplaced: readonly UnplacedAllowance[] = []) {
       }
       return outstanding;
     },
+
     get permitted(): string[] {
       return [...claimed];
     },
@@ -589,8 +625,20 @@ export interface CategorisedVerification {
    * the picture.
    */
   verified: boolean;
+  /**
+   * Phase 6AK — USABLE, which is a weaker and far more useful thing than
+   * verified. The picture may be shown when nothing was invented, no quantity
+   * was exceeded and no support relationship was contradicted. A belonging the
+   * verifier simply did not enumerate — occluded, or described in words we
+   * could not tie to it — is a SHORTFALL, not a material violation, and the
+   * user is told about it rather than shown nothing at all.
+   */
+  usable: boolean;
+  /** The material violations, if any, that make this render unusable. */
+  materialIssues: string[];
 
 }
+
 
 /** One label's allowed-versus-observed quantity in a rendered image. */
 export interface QuantityCheck {
@@ -952,6 +1000,10 @@ export function categoriseVerification(input: {
     });
   }
 
+  // Phase 6AK — a MATERIAL violation is an invention, an impossible quantity
+  // or a contradicted support relationship. Nothing else withholds the image.
+  const materialIssues = dedupe([...userInventory.unexpected, ...supportIssues]);
+
   return {
     userInventory,
     roomFeatures,
@@ -960,12 +1012,15 @@ export function categoriseVerification(input: {
     quantityShortfalls: quantities.shortfalls,
     permittedUnplaced: dedupe([...strayLedger.permitted, ...quantities.permitted]),
     identityDecisions,
+    materialIssues,
+    usable: materialIssues.length === 0,
     verified:
       userInventory.missing.length === 0 &&
       userInventory.unexpected.length === 0 &&
       quantities.shortfalls.length === 0 &&
       supportIssues.length === 0,
   };
+
 
 
 }

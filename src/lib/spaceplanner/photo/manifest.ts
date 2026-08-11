@@ -511,6 +511,13 @@ export interface CoverageReport {
   /** True only when nothing was invented. */
   faithful: boolean;
   /**
+   * Phase 6AK — the render may be SHOWN: nothing invented, no impossible
+   * quantity, no contradicted support. An item the verifier did not enumerate
+   * makes the preview partial, never rejected.
+   */
+  usable?: boolean;
+
+  /**
    * Fixed room features (doors, windows, radiators) the verifier says drifted.
    * Reported for honesty; never a reason to withhold the render.
    */
@@ -545,7 +552,9 @@ export function coverageFrom(
     supportIssues: categories.supportIssues,
     complete: userInventory.missing.length === 0 && required.length > 0,
     faithful: userInventory.unexpected.length === 0,
+    usable: categories.usable,
     categories,
   };
 }
+
 

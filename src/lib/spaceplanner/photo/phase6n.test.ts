@@ -111,11 +111,15 @@ describe("render verification", () => {
     expect(verdictFor(coverage)).toBe("verified");
   });
 
-  it("reports a missing television as incomplete rather than verified", () => {
+  // Phase 6AK — an unaccounted television is a SHORTFALL, not an invention, so
+  // the picture is still shown as a partial arrangement with the gap named.
+  it("reports a missing television as partial rather than verified", () => {
     const coverage = coverageOf(required, ["u_02", "u_03"]);
     expect(coverage.missing).toContain("u_01");
-    expect(verdictFor(coverage)).toBe("incomplete");
+    expect(coverage.complete).toBe(false);
+    expect(verdictFor(coverage)).toBe("partial");
   });
+
 
   it("treats duplicate units of an allowed item as faithful", () => {
     const coverage = coverageOf(required, required, ["extra cardboard box", "2x suitcases"], [

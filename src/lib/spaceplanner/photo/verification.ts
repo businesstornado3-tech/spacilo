@@ -625,8 +625,20 @@ export interface CategorisedVerification {
    * the picture.
    */
   verified: boolean;
+  /**
+   * Phase 6AK — USABLE, which is a weaker and far more useful thing than
+   * verified. The picture may be shown when nothing was invented, no quantity
+   * was exceeded and no support relationship was contradicted. A belonging the
+   * verifier simply did not enumerate — occluded, or described in words we
+   * could not tie to it — is a SHORTFALL, not a material violation, and the
+   * user is told about it rather than shown nothing at all.
+   */
+  usable: boolean;
+  /** The material violations, if any, that make this render unusable. */
+  materialIssues: string[];
 
 }
+
 
 /** One label's allowed-versus-observed quantity in a rendered image. */
 export interface QuantityCheck {

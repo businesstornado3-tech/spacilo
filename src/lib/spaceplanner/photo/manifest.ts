@@ -552,7 +552,9 @@ export function coverageFrom(
     supportIssues: categories.supportIssues,
     complete: userInventory.missing.length === 0 && required.length > 0,
     faithful: userInventory.unexpected.length === 0,
+    usable: categories.usable,
     categories,
   };
 }
+
 

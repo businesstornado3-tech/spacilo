@@ -28,19 +28,44 @@ export function detectionCacheKey({ photos, selections, mode }: CacheKeyInput): 
 const MAX_ENTRIES = 12;
 const store = new Map<string, DetectedObject[]>();
 
+/**
+ * Phase 6AS — a result is only usable if it actually contains objects. An
+ * empty or malformed entry is never a cache hit: it is dropped and a fresh
+ * detection runs instead, so "analyse again" always means analyse again.
+ */
+function usableObjects(value: unknown): DetectedObject[] | null {
+  if (!Array.isArray(value)) return null;
+  const objects = value.filter(
+    (object): object is DetectedObject =>
+      Boolean(object) && typeof object === "object" && typeof (object as DetectedObject).id === "string",
+  );
+  return objects.length > 0 ? objects : null;
+}
+
 export function readDetectionCache(key: string): DetectedObject[] | null {
   const hit = store.get(key);
   if (!hit) return null;
+  const usable = usableObjects(hit);
+  if (!usable) {
+    store.delete(key);
+    return null;
+  }
   // Refresh recency.
   store.delete(key);
-  store.set(key, hit);
-  return hit.map((object) => ({ ...object }));
+  store.set(key, usable);
+  return usable.map((object) => ({ ...object }));
 }
 
 export function writeDetectionCache(key: string, objects: DetectedObject[]): void {
+  const usable = usableObjects(objects);
+  if (!usable) {
+    // Never cache an empty detection — it would silently starve every retry.
+    store.delete(key);
+    return;
+  }
   store.set(
     key,
-    objects.map((object) => ({ ...object })),
+    usable.map((object) => ({ ...object })),
   );
   while (store.size > MAX_ENTRIES) {
     const oldest = store.keys().next().value;

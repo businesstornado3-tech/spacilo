@@ -38,6 +38,11 @@ export type VisionMode = "belongings" | "space";
 /** Mode A: only what the user marked. Mode B: everything in the photo. */
 export type InventoryScope = "selected" | "whole";
 export type VisionStatus = "idle" | "analysing" | "complete" | "error";
+/** Phase 6AS — what a single analyse() run actually produced. */
+export interface AnalyseOutcome {
+  status: "complete" | "empty" | "error" | "idle";
+  objects: DetectedObject[];
+}
 
 let photoCounter = 0;
 
@@ -68,6 +73,9 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
   const [objects, setObjects] = React.useState<DetectedObject[]>([]);
   const [spaceScan, setSpaceScan] = React.useState<SpaceScanResult | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = React.useState<string | null>(null);
+  /** Phase 6AS — the last completed run finished with nothing detected. */
+  const [emptyResult, setEmptyResult] = React.useState(false);
   const [rejected, setRejected] = React.useState(0);
   const [selections, setSelections] = React.useState<PhotoSelection[]>([]);
   const [scope, setScope] = React.useState<InventoryScope>("whole");
@@ -194,17 +202,21 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
     setStatus("idle");
     setStageIndex(0);
     setError(null);
+    setErrorDetail(null);
+    setEmptyResult(false);
   }, []);
 
   /**
    * Runs the real pipeline. Progress reflects what is actually happening —
    * there are no artificial waits, so a fast scan finishes fast.
    */
-  const analyse = React.useCallback(async () => {
-    if (photos.length === 0) return;
+  const analyse = React.useCallback(async (): Promise<AnalyseOutcome> => {
+    if (photos.length === 0) return { status: "idle", objects: [] };
     setStatus("analysing");
     setStageIndex(0);
     setError(null);
+    setErrorDetail(null);
+    setEmptyResult(false);
     setElapsedMs(0);
     setTimings({ detectionMs: null, classificationMs: null, readyMs: null });
     setServerTimings(null);
@@ -216,6 +228,7 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
       setStageIndex((current) => Math.min(current + 1, stages.length - 2));
     }, 2600);
 
+    let outcome: AnalyseOutcome = { status: "error", objects: [] };
     try {
       const options = {
         mode: scope,
@@ -238,6 +251,7 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
       if (mode === "space") {
         setSpaceScan(result as SpaceScanResult);
         setObjects([]);
+        outcome = { status: "complete", objects: [] };
       } else {
         const belongings = result as { objects: DetectedObject[]; timings?: VisionStageTimings };
         const { objects: merged, report } = mergeDetectionsWithReport(belongings.objects);
@@ -246,6 +260,10 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
         // blocks it appearing.
         setObjects(merged);
         if (belongings.timings) setServerTimings(belongings.timings);
+        // Phase 6AS — zero detected objects is a real, distinct outcome and is
+        // never presented as a successful identification.
+        setEmptyResult(merged.length === 0);
+        outcome = { status: merged.length === 0 ? "empty" : "complete", objects: merged };
         onComplete?.(merged);
       }
       const classificationMs = Date.now() - classifyAt;
@@ -255,14 +273,18 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
         readyMs: Date.now() - startedAt,
       });
       setStatus("complete");
-    } catch {
+    } catch (cause) {
       setError("Spacilo AI couldn't finish that scan. Please try again, or add items yourself.");
+      // Developer diagnostics only — never rendered to a normal user.
+      setErrorDetail(cause instanceof Error ? cause.message : String(cause));
       setStatus("error");
     } finally {
       clearInterval(drift);
       setElapsedMs(Date.now() - startedAt);
     }
+    return outcome;
   }, [photos, stages, mode, spaceType, onComplete, scope, selections]);
+
 
 
   const summary = React.useMemo(() => summariseDetections(objects), [objects]);
@@ -307,6 +329,8 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
     summary,
     spaceScan,
     error,
+    errorDetail,
+    emptyResult,
     analyse,
     reset,
     editor,

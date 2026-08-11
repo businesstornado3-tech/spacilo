@@ -1098,26 +1098,55 @@ export function categoriseVerification(input: {
     });
   }
 
-  // Phase 6AK — a MATERIAL violation is an invention, an impossible quantity
-  // or a contradicted support relationship. Nothing else withholds the image.
-  const materialIssues = dedupe([...userInventory.unexpected, ...supportIssues]);
+  // Phase 6AM — a MATERIAL violation is an invention or an impossible
+  // quantity. A KNOWN belonging on the wrong support is an OBJECT-LEVEL
+  // exclusion and no longer withholds the picture from the user.
+  const materialIssues = dedupe([...userInventory.unexpected]);
 
   // Phase 6AL — the object-level record. Every reported object carries its own
   // verdict, so the display decision is made per object rather than per image.
+  // Phase 6AM — an object with a contradicted support is EXCLUDED here.
+  const mismatchedRefs = supportMismatches.map((entry) => ({
+    id: canonicalId(entry.itemId),
+    label: normaliseLabel(entry.itemLabel),
+    message: entry.message,
+  }));
+  const mismatchFor = (observed: string, matchedId: string | null) => {
+    const observedLabel = normaliseLabel(observed);
+    const observedIds = new Set([canonicalId(observed), ...idsIn(observed)]);
+    if (matchedId) observedIds.add(canonicalId(matchedId));
+    return (
+      mismatchedRefs.find(
+        (ref) =>
+          observedIds.has(ref.id) ||
+          (!!ref.label &&
+            !!observedLabel &&
+            (ref.label === observedLabel ||
+              containsLabel(observedLabel, ref.label) ||
+              containsLabel(ref.label, observedLabel))),
+      ) ?? null
+    );
+  };
+
   const observations: ObjectVerification[] = identityDecisions
     .filter((entry) => entry.decision !== "room_feature")
-    .map((entry) => ({
-      observed: entry.observed,
-      classification:
-        entry.decision === "matched" || entry.decision === "permitted_unplaced"
-          ? ("confirmed" as const)
-          : entry.decision === "ambiguous"
-            ? ("unconfirmed" as const)
-            : ("forbidden" as const),
-      matchedId: entry.matchedId,
-      matchedLabel: entry.matchedLabel,
-      reason: entry.reason,
-    }));
+    .map((entry) => {
+      const confirmed = entry.decision === "matched" || entry.decision === "permitted_unplaced";
+      const drift = confirmed ? mismatchFor(entry.observed, entry.matchedId) : null;
+      return {
+        observed: entry.observed,
+        classification: drift
+          ? ("support_mismatch" as const)
+          : confirmed
+            ? ("confirmed" as const)
+            : entry.decision === "ambiguous"
+              ? ("unconfirmed" as const)
+              : ("forbidden" as const),
+        matchedId: entry.matchedId,
+        matchedLabel: entry.matchedLabel,
+        reason: drift ? drift.message : entry.reason,
+      };
+    });
   // Quantity excesses are objects too: "extra box ×2" is a forbidden sighting
   // even though no single description carries it.
   const described = new Set(observations.map((entry) => normaliseLabel(entry.observed)));
@@ -1131,16 +1160,55 @@ export function categoriseVerification(input: {
       reason: "more units than the locked inventory allows",
     });
   }
+  // A contradicted support the verifier never separately described still
+  // deserves its own excluded row, so the user can be told which object it is.
+  for (const mismatch of supportMismatches) {
+    const alreadyRecorded = observations.some(
+      (entry) =>
+        entry.classification === "support_mismatch" &&
+        (entry.matchedId === mismatch.itemId ||
+          normaliseLabel(entry.observed) === normaliseLabel(mismatch.itemLabel)),
+    );
+    if (alreadyRecorded) continue;
+    observations.push({
+      observed: mismatch.itemLabel,
+      classification: "support_mismatch",
+      matchedId: mismatch.itemId,
+      matchedLabel: mismatch.itemLabel,
+      reason: mismatch.message,
+    });
+  }
 
-  const unconfirmed = dedupe([...strayUnconfirmed, ...quantities.unconfirmed]);
+  // Phase 6AM (secondary) — one physical unit is counted ONCE. A belonging the
+  // planner left unplaced that also surfaced in the ambiguity list must not be
+  // reported twice.
+  const permittedUnplaced = dedupe([...strayLedger.permitted, ...quantities.permitted]);
+  const permittedKeys = new Set(permittedUnplaced.map((value) => normaliseLabel(value)));
+  const excludedKeys = new Set(
+    observations
+      .filter((entry) => entry.classification === "support_mismatch")
+      .map((entry) => normaliseLabel(entry.observed)),
+  );
+  const unconfirmed = dedupe([...strayUnconfirmed, ...quantities.unconfirmed]).filter(
+    (value) => !permittedKeys.has(normaliseLabel(value)) && !excludedKeys.has(normaliseLabel(value)),
+  );
+
+  const excludedObservations = observations.filter(
+    (entry) => entry.classification === "support_mismatch",
+  );
+  const excluded = dedupe(excludedObservations.map((entry) => entry.observed));
   const forbiddenCount = observations.filter((entry) => entry.classification === "forbidden").length;
   const unconfirmedCount = Math.max(
     observations.filter((entry) => entry.classification === "unconfirmed").length,
     unconfirmed.length,
   );
+  // Found belongings that were excluded for support drift are not confirmed.
+  const foundConfirmed = userInventory.found.filter(
+    (id) => !mismatchedRefs.some((ref) => ref.id === canonicalId(id)),
+  ).length;
   const confirmedCount = Math.max(
     observations.filter((entry) => entry.classification === "confirmed").length,
-    userInventory.found.length,
+    foundConfirmed,
   );
   // Nothing reported at all is silence, not evidence: the older image-level
   // rule still applies so a terse verifier cannot withhold a good render.
@@ -1150,9 +1218,11 @@ export function categoriseVerification(input: {
     userInventory,
     roomFeatures,
     supportIssues,
+    supportMismatches,
+    excluded,
     quantities: quantities.checks,
     quantityShortfalls: quantities.shortfalls,
-    permittedUnplaced: dedupe([...strayLedger.permitted, ...quantities.permitted]),
+    permittedUnplaced,
     identityDecisions,
     materialIssues,
     observations,
@@ -1160,8 +1230,11 @@ export function categoriseVerification(input: {
     confirmedCount,
     unconfirmedCount,
     forbiddenCount,
-    // Phase 6AL — SHOW THE IMAGE when at least one object is confirmed and
-    // none is forbidden. Unconfirmed objects are surfaced, never fatal.
+    supportMismatchCount: supportMismatches.length,
+    excludedCount: excluded.length,
+    // Phase 6AM — SHOW THE IMAGE when at least one object is confirmed and no
+    // GLOBAL rejection condition (invention, impossible quantity) exists.
+    // Support mismatches exclude their own object and nothing more.
     usable: materialIssues.length === 0 && (!reportedAnything || confirmedCount > 0),
     verified:
       userInventory.missing.length === 0 &&

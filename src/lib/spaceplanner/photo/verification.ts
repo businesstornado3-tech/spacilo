@@ -1056,14 +1056,25 @@ export function categoriseVerification(input: {
   for (const entry of [...reply.unexpected, ...strayFromPresent]) {
     const text = entry.trim();
     if (!text) continue;
+    const parsed = splitObservation(text);
+    const described = parsed.description || text;
     const category = classifyReported(text, whitelists);
-    if (category === "room_feature") featureIssues.push(text);
+    if (category === "room_feature") featureIssues.push(described);
     else if (category === "unexpected") {
       // Phase 6AL — several of the user's belongings could be this. Ambiguous,
       // therefore UNCONFIRMED, never an invention.
-      if (isAmbiguousDescription(text, items)) strayUnconfirmed.push(text);
+      // Phase 6AP — a declared UNKNOWN that is still compatible with a
+      // belonging is UNCONFIRMED as well.
+      if (
+        isAmbiguousDescription(described, items) ||
+        (parsed.unknown && genericCandidates(described, items).length > 0)
+      ) {
+        strayUnconfirmed.push(described);
+      }
       // Phase 6AH — a known belonging the planner left unplaced is permitted.
-      else if (strayLedger.claim(text, observedCount(text)) > 0) inventedItems.push(text);
+      else if (strayLedger.claim(described, observedCount(described)) > 0) {
+        inventedItems.push(described);
+      }
     }
     // A whitelisted user item reported as "unexpected" is a duplicate-count
     // artefact of the checker, not an invention: the ID is already required.

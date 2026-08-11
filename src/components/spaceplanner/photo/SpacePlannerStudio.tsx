@@ -482,7 +482,11 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                   }
                   onChange={(selection) => {
                     stuff.setSelection(selection, stuffPhotoBeingSelected.id);
-                    if (selection) setSelectingStuff(null);
+                    // A drawn area only counts if Spacilo AI is told to respect it.
+                    if (selection) {
+                      stuff.setScope("selected");
+                      setSelectingStuff(null);
+                    }
                   }}
                 />
               ) : null}
@@ -507,9 +511,12 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                   onRotate={stuff.rotatePhoto}
                   onMove={stuff.movePhoto}
                   onReplace={stuff.replacePhoto}
-                  {...(stuff.scope === "selected"
-                    ? { onSelectRegion: (id: string) => setSelectingStuff(id) }
-                    : {})}
+                  onSelectRegion={(id: string) => setSelectingStuff(id)}
+                  onUseWholePhoto={(id: string) => {
+                    stuff.setSelection(null, id);
+                    setSelectingStuff(null);
+                  }}
+                  selectedPhotoIds={stuff.selections.map((entry) => entry.photoId)}
                   quality={stuff.quality}
                   canAddMore={stuff.canAddMore}
                 />

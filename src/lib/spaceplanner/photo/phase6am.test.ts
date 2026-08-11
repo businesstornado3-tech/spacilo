@@ -7,11 +7,10 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { verdictFor, type Coverage } from "@/routes/api/spaceplanner-visualise";
+import { coverageOf, verdictFor, type Coverage } from "@/routes/api/spaceplanner-visualise";
 
 import {
   categoriseVerification,
-  coverageOf,
   supportDriftDetailed,
   type ExpectedSupport,
   type WhitelistEntry,

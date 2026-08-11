@@ -721,17 +721,19 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         // Phase 6AG — a render that succeeded and a check that ran out of time
         // is NOT "the preview timed out". Each stage is reported separately so
         // the log and the diagnostics panel can never conflate the two.
+        const showable = verification === "verified" || verification === "partial";
         const failureReason = verifyTimedOut
           ? "verification_timeout"
           : coverage === null
             ? "verification_unavailable"
-            : verification === "verified"
+            : showable
               ? null
               : verification;
 
         console.log(
-          `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} objects=${verifyObjects.length} units=${required.length} RENDER=SUCCESS renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=${verifyTimedOut ? "TIMEOUT" : verification.toUpperCase()} verifyMs=${verifyMs}/${VERIFY_DEADLINE_MS} PREVIEW=${verification === "verified" ? "VERIFIED" : "NOT_VERIFIED"} PLAN=READY present=${coverage?.present ?? "?"}/${verifyObjects.length} unexpected=${coverage?.unexpected.length ?? 0} failureReason=${failureReason ?? "-"}`,
+          `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} verifyModel=${verifyModel()} planHash=${body.planHash ?? "-"} inventoryHash=${body.inventoryHash ?? "-"} objects=${verifyObjects.length} units=${required.length} RENDER=SUCCESS renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=${verifyTimedOut ? "TIMEOUT" : verification.toUpperCase()} verifyMs=${verifyMs}/${VERIFY_DEADLINE_MS} PREVIEW=${showable ? (verification === "verified" ? "VERIFIED" : "PARTIAL") : "NOT_VERIFIED"} PLAN=READY present=${coverage?.present ?? "?"}/${verifyObjects.length} unexpected=${coverage?.unexpected.length ?? 0} failureReason=${failureReason ?? "-"}`,
         );
+
 
         // Phase 6AI — when the check did not pass, spell out how each observed
         // description was reconciled against the locked inventory, so a false

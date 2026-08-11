@@ -1405,7 +1405,8 @@ function matchId(
   for (const entry of whitelist) {
     if (ids.has(canonicalId(entry.id))) return canonicalId(entry.id);
   }
-  const label = normaliseLabel(reported);
+  const described = observationDescription(reported) || reported;
+  const label = normaliseLabel(described);
   const matches = whitelist.filter((entry) => {
     const allowed = normaliseLabel(entry.label);
     // Both directions: "black television" names the television, and a bare

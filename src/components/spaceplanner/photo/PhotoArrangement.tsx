@@ -348,6 +348,20 @@ export function PhotoArrangement({
         </p>
       ) : null}
 
+      {/* Phase 6AQ — a genuinely unrecognised object is reported beside the
+          arrangement instead of destroying it. */}
+      {hasVisual && coverage?.unexpected?.length ? (
+        <p className="mt-2 type-body-xs text-muted-foreground">
+          Arrangement ready — some items could not be verified.{" "}
+          {coverage.unexpected
+            .map((label) => `${label} — not matched to anything in your inventory`)
+            .join("; ")}
+          . Nothing was added to your plan — your measured plan below is unchanged.
+        </p>
+      ) : null}
+
+
+
       {status === "partial" && onRetry ? (
         <div className="mt-3 flex flex-wrap gap-2">
           <Button type="button" size="sm" variant="secondary" onClick={onRetry}>

@@ -186,22 +186,38 @@ export function normaliseLabel(label: string): string {
     .replace(/\b\w+\b/g, stemWord)
     .trim();
 
+  /** Token-level canonicalisation: "tv" → "television", "bagpack" → "backpack". */
+  const applyWords = (value: string): string =>
+    value
+      .split(" ")
+      .filter(Boolean)
+      .map((word) => {
+        const canonical = STEMMED_WORD_SYNONYMS[word];
+        return canonical ? stemWord(canonical) : word;
+      })
+      .join(" ");
+
+  /**
+   * Phase 6AK — WORDS FIRST, then phrases, then words again.
+   *
+   * The live false rejection: "flat screen TV" only becomes the phrase
+   * "flat screen television" AFTER "tv" is canonicalised, so a phrase-first
+   * pass never fired and the user's own television was reported as an
+   * invention. Running the token pass on both sides of the phrase pass makes
+   * the order irrelevant while keeping both maps closed and deterministic.
+   */
+  text = applyWords(text);
+
   for (const [from, to] of PHRASE_SYNONYMS) {
-    const source = from.split(" ").map(stemWord).join(" ");
-    const target = to.split(" ").map(stemWord).join(" ");
+    const source = applyWords(from.split(" ").map(stemWord).join(" "));
+    const target = applyWords(to.split(" ").map(stemWord).join(" "));
     if (source === target) continue;
     text = ` ${text} `.split(` ${source} `).join(` ${target} `).trim();
   }
 
-  return text
-    .split(" ")
-    .filter(Boolean)
-    .map((word) => {
-      const canonical = STEMMED_WORD_SYNONYMS[word];
-      return canonical ? stemWord(canonical) : word;
-    })
-    .join(" ");
+  return applyWords(text);
 }
+
 
 
 /**

@@ -9,14 +9,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { rankCandidates, resolvePlace, splitQuery } from "@/lib/location/place-ranking";
 import { isPlausibleUkPoint, type SearchCentre } from "@/lib/location/schema";
 import { searchQueryKey } from "@/hooks/useStorageSearch";
+import type { PlaceCandidate } from "@/lib/location/place-ranking";
 
-const town = (over: Record<string, unknown>) => ({
+const town = (over: Partial<PlaceCandidate> = {}): PlaceCandidate => ({
   name_1: "Twinford",
   local_type: "Town",
   latitude: 51,
   longitude: -1,
   ...over,
 });
+
 
 describe("candidate hygiene", () => {
   it("removes duplicate provider rows instead of inventing ambiguity", () => {

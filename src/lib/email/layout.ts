@@ -17,7 +17,7 @@ import { brand } from "@/config/brand";
 
 const EMAIL_LOGO_URL =
   "https://home-stash-link.lovable.app/__l5e/assets-v1/" +
-  "7eeef25a-4975-47c1-8ff6-3f14e1aa90fc/earnroom-lockup.png";
+  "2ed11e8d-a66b-4710-8062-1c468565b872/earnroom-lockup.png";
 
 export const EMAIL_PALETTE = {
   /** Deep navy — headings and body copy. */

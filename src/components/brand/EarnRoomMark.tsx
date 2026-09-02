@@ -18,7 +18,7 @@ export function EarnRoomSymbol({ className }: { className?: string }) {
 }
 
 export function EarnRoomSymbolCompact({ className }: { className?: string }) {
-  return <EarnRoomSymbol className={className} />;
+  return <EarnRoomSymbol {...(className ? { className } : {})} />;
 }
 
 export function EarnRoomLockup({

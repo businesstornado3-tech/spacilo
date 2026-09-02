@@ -1,7 +1,6 @@
 /**
- * Guards the reversible EarnRoom brand migration: every customer-facing brand
- * string comes from `src/config/brand.ts`, and no legacy brand name survives
- * anywhere outside the documented rollback block.
+ * Guards the final EarnRoom brand migration: every customer-facing brand
+ * string comes from `src/config/brand.ts`, and no legacy brand name survives.
  */
 import { execSync } from "node:child_process";
 import { describe, expect, it } from "vitest";

@@ -30,6 +30,29 @@ export function webhookSecret(): string {
   return secret;
 }
 
+/**
+ * Stripe requires a separate event destination for connected-account events
+ * (`account.updated`) alongside the platform destination. Both destinations may
+ * point at the SAME endpoint URL, but each has its OWN signing secret, so the
+ * endpoint must be able to verify against either one.
+ *
+ * Verification itself is unchanged: raw body, Stripe SDK, WebCrypto HMAC,
+ * constant-time comparison, timestamp tolerance. A request that matches no
+ * configured secret is still rejected.
+ */
+export function webhookSecrets(): string[] {
+  const candidates = [
+    process.env["STRIPE_WEBHOOK_SECRET"],
+    process.env["STRIPE_CONNECT_WEBHOOK_SECRET"],
+  ].filter((value): value is string => Boolean(value && value.trim()));
+
+  const unique = [...new Set(candidates.map((value) => value.trim()))];
+  if (unique.length === 0) {
+    throw new Error("STRIPE_WEBHOOK_SECRET is not configured");
+  }
+  return unique;
+}
+
 /** Async signature verification — WebCrypto has no synchronous HMAC. */
 export async function verifiedStripeEvent(
   rawBody: string,
@@ -37,13 +60,23 @@ export async function verifiedStripeEvent(
 ): Promise<Stripe.Event> {
   if (!signature) throw new Error("Missing Stripe signature header");
   const stripe = stripeClient();
-  return stripe.webhooks.constructEventAsync(
-    rawBody,
-    signature,
-    webhookSecret(),
-    undefined,
-    Stripe.createSubtleCryptoProvider(),
-  );
+  const provider = Stripe.createSubtleCryptoProvider();
+
+  let lastError: unknown;
+  for (const secret of webhookSecrets()) {
+    try {
+      return await stripe.webhooks.constructEventAsync(
+        rawBody,
+        signature,
+        secret,
+        undefined,
+        provider,
+      );
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Stripe signature verification failed");
 }
 
 /**

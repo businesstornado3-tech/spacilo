@@ -1,27 +1,41 @@
 import { Link } from "@tanstack/react-router";
 
+import lockupAsset from "@/assets/brand/earnroom-lockup.png.asset.json";
+import wordmarkAsset from "@/assets/brand/earnroom-wordmark.png.asset.json";
 import { brand } from "@/config/brand";
-import { EarnRoomSymbol } from "@/components/brand/EarnRoomMark";
 import { cn } from "@/lib/utils";
 
 /**
- * Brand lock-up: the approved hexagonal EarnRoom symbol plus the wordmark.
- * The name is read from the central brand config so the migration is reversible.
+ * Approved EarnRoom artwork. The compact variant omits only the tagline where
+ * navigation height cannot keep it legible; its proportions are never altered.
  */
-export function Logo({ className, to = "/" }: { className?: string; to?: string }) {
+export function Logo({
+  className,
+  to = "/",
+  variant = "compact",
+}: {
+  className?: string;
+  to?: string;
+  variant?: "compact" | "full";
+}) {
+  const asset = variant === "full" ? lockupAsset : wordmarkAsset;
   return (
     <Link
       to={to}
       className={cn(
-        "inline-flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "inline-flex shrink-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className,
       )}
       aria-label={`${brand.name} home`}
     >
-      <EarnRoomSymbol className="size-9 shrink-0 text-primary" />
-      <span className="font-display text-[1.2rem] font-bold tracking-[-0.035em] text-foreground">
-        {brand.name}
-      </span>
+      <img
+        src={asset.url}
+        alt={`${brand.name}${variant === "full" ? ` — ${brand.tagline}` : ""}`}
+        className={cn(
+          "block w-auto object-contain object-left",
+          variant === "full" ? "h-20 sm:h-24" : "h-9 sm:h-10",
+        )}
+      />
     </Link>
   );
 }

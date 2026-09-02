@@ -6,7 +6,7 @@
 import { execSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 
-import { brand, PREVIOUS_BRAND } from "@/config/brand";
+import { brand } from "@/config/brand";
 
 const grep = (pattern: string) => {
   try {
@@ -24,12 +24,7 @@ describe("EarnRoom brand", () => {
   it("uses the EarnRoom names", () => {
     expect(brand.name).toBe("EarnRoom");
     expect(brand.ai).toBe("EarnRoom AI");
-    expect(brand.tagline).toBe("Space nearby. Income at home.");
-  });
-
-  it("keeps the previous brand available for a one-step rollback", () => {
-    expect(PREVIOUS_BRAND.name).toBe("Spacilo");
-    expect(PREVIOUS_BRAND.ai).toBe("Spacilo AI");
+    expect(brand.tagline).toBe("Make space earn.");
   });
 
   it("leaves no legacy brand name in product code", () => {

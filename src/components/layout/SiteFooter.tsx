@@ -91,7 +91,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)] lg:gap-16">
           <div className="max-w-xs">
-            <Logo />
+            <Logo variant="full" />
             <p className="mt-4 type-card-title">
               Turn unused space into income. Find trusted storage nearby.
             </p>

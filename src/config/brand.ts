@@ -1,9 +1,8 @@
 /**
  * Central brand configuration.
  *
- * REVERSIBLE MIGRATION: every customer-facing brand string is read from here.
- * To revert to the previous working brand, restore the values in
- * `PREVIOUS_BRAND` below into `brand` — no component changes are required.
+ * Every customer-facing brand string is read from here so the approved
+ * identity remains consistent across product, email and metadata surfaces.
  */
 export const brand = {
   name: "EarnRoom",
@@ -16,7 +15,7 @@ export const brand = {
   legalName: "EarnRoom",
   /** The AI experience name — deliberately prominent across the product. */
   ai: "EarnRoom AI",
-  tagline: "Space nearby. Income at home.",
+  tagline: "Make space earn.",
   propositions: {
     renter: "Space nearby. Income at home.",
     host: "Got space? Make money.",
@@ -47,16 +46,6 @@ export const brand = {
     "Hilsea",
     "Cosham",
   ],
-} as const;
-
-/** Kept for a one-step rollback of the EarnRoom brand migration. */
-export const PREVIOUS_BRAND = {
-  name: "Spacilo",
-  shortName: "Spacilo",
-  legalName: "Spacilo",
-  ai: "Spacilo AI",
-  tagline: "Space nearby. Income at home.",
-  supportEmail: "hello@earnroom.example",
 } as const;
 
 export type Brand = typeof brand;

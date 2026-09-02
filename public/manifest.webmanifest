@@ -1,5 +1,5 @@
 {
-  "name": "EarnRoom — Space nearby. Income at home.",
+  "name": "EarnRoom — Make space earn.",
   "short_name": "EarnRoom",
   "description": "Find affordable storage in garages, lofts and spare rooms near you, or earn from space you're not using.",
   "start_url": "/",
@@ -12,20 +12,20 @@
   "categories": ["lifestyle", "shopping", "utilities"],
   "icons": [
     {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
+      "src": "/pwa-icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
+      "src": "/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }

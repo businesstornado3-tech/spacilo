@@ -19,4 +19,4 @@ Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /api/
 
-Sitemap: https://home-stash-link.lovable.app/sitemap.xml
+Sitemap: https://earnroom.co.uk/sitemap.xml

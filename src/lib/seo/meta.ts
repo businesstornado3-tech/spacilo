@@ -13,7 +13,7 @@ export function siteOrigin(): string {
   const fromEnv =
     (typeof process !== "undefined" ? process.env?.["SITE_URL"] || process.env?.["VITE_SITE_URL"] : undefined) ||
     (typeof import.meta !== "undefined" ? (import.meta as { env?: Record<string, string> }).env?.["VITE_SITE_URL"] : undefined);
-  const origin = fromEnv || "https://home-stash-link.lovable.app";
+  const origin = fromEnv || "https://earnroom.co.uk";
   return origin.replace(/\/+$/, "");
 }
 

@@ -140,7 +140,10 @@ function tieBreakKey(candidate: PlaceCandidate): string {
 /** A candidate is only usable when it carries finite coordinates. */
 function hasUsablePoint(candidate: PlaceCandidate): boolean {
   return (
-    Number.isFinite(Number(candidate.latitude)) && Number.isFinite(Number(candidate.longitude))
+    typeof candidate.latitude === "number" &&
+    Number.isFinite(candidate.latitude) &&
+    typeof candidate.longitude === "number" &&
+    Number.isFinite(candidate.longitude)
   );
 }
 

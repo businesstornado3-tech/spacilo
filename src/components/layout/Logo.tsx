@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
-import iconAsset from "@/assets/brand/earnroom-icon.png.asset.json";
+import iconAsset from "@/assets/brand/earnroom-icon-transparent.png.asset.json";
 import lockupAsset from "@/assets/brand/earnroom-lockup.png.asset.json";
 import wordmarkAsset from "@/assets/brand/earnroom-wordmark-transparent.png.asset.json";
 import { brand } from "@/config/brand";

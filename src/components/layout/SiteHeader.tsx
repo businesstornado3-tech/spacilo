@@ -24,7 +24,7 @@ export function SiteHeader({ className }: { className?: string }) {
       )}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
-        <Logo />
+        <Logo variant="header" />
 
         <nav aria-label="Main" className="ml-6 hidden items-center gap-1 lg:flex">
           {marketingNav.map((item) => (

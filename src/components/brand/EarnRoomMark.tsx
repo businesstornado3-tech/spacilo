@@ -1,4 +1,4 @@
-import iconAsset from "@/assets/brand/earnroom-icon.png.asset.json";
+import iconAsset from "@/assets/brand/earnroom-icon-transparent.png.asset.json";
 import lockupAsset from "@/assets/brand/earnroom-lockup.png.asset.json";
 import { cn } from "@/lib/utils";
 

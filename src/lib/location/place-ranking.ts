@@ -81,27 +81,49 @@ function qualifierFields(candidate: PlaceCandidate): string {
 export function scorePlaceCandidate(query: string, candidate: PlaceCandidate): number | null {
   const name = normaliseName(String(candidate.name_1 ?? ""));
   if (!name) return null;
-  const { name: wanted, qualifier } = splitQuery(query);
-  if (!wanted) return null;
 
-  let score: number;
-  if (name === wanted) score = 1000;
-  else if (name.startsWith(`${wanted} `)) score = 400;
-  else if (name.endsWith(` ${wanted}`)) score = 300;
-  else if (name.includes(wanted)) score = 150;
-  else return null;
-
-  if (qualifier) {
-    const haystack = qualifierFields(candidate);
-    const hit = qualifier.split(" ").some((token) => token.length > 1 && haystack.includes(token));
-    if (hit) score += 500;
+  // "Place, Qualifier" is explicit. Without a comma the trailing words may
+  // still be a qualifier ("Ambridge AB1"), so every split is considered and
+  // the strongest interpretation wins.
+  const explicit = splitQuery(query);
+  const interpretations: { name: string; qualifier: string }[] = [explicit];
+  if (!explicit.qualifier) {
+    const tokens = explicit.name.split(" ").filter(Boolean);
+    for (let i = tokens.length - 1; i >= 1; i -= 1) {
+      interpretations.push({
+        name: tokens.slice(0, i).join(" "),
+        qualifier: tokens.slice(i).join(" "),
+      });
+    }
   }
 
-  score += settlementWeight(candidate.local_type);
-  // Prefer the tighter name when everything else ties ("London" over "London Fields").
-  score += Math.max(0, 20 - name.length) / 100;
-  return score;
+  let best: number | null = null;
+  for (const { name: wanted, qualifier } of interpretations) {
+    if (!wanted) continue;
+    let score: number;
+    if (name === wanted) score = 1000;
+    else if (name.startsWith(`${wanted} `)) score = 400;
+    else if (name.endsWith(` ${wanted}`)) score = 300;
+    else if (name.includes(wanted)) score = 150;
+    else continue;
+
+    if (qualifier) {
+      const haystack = qualifierFields(candidate);
+      const hit = qualifier
+        .split(" ")
+        .some((token) => token.length > 1 && haystack.includes(token));
+      if (hit) score += 500;
+      else score -= 200; // an unmatched qualifier makes this reading less likely
+    }
+
+    score += settlementWeight(candidate.local_type);
+    // Prefer the tighter name when everything else ties ("London" over "London Fields").
+    score += Math.max(0, 20 - name.length) / 100;
+    if (best === null || score > best) best = score;
+  }
+  return best;
 }
+
 
 /** Best candidate for the typed query, or null when none is a plausible match. */
 export function pickBestPlace<T extends PlaceCandidate>(query: string, candidates: T[]): T | null {

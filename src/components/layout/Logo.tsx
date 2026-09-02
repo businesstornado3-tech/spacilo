@@ -1,13 +1,13 @@
 import { Link } from "@tanstack/react-router";
 
 import lockupAsset from "@/assets/brand/earnroom-lockup.png.asset.json";
-import wordmarkAsset from "@/assets/brand/earnroom-wordmark.png.asset.json";
+import wordmarkAsset from "@/assets/brand/earnroom-wordmark-transparent.png.asset.json";
 import { brand } from "@/config/brand";
 import { cn } from "@/lib/utils";
 
 /**
- * Approved EarnRoom artwork. The compact variant omits only the tagline where
- * navigation height cannot keep it legible; its proportions are never altered.
+ * Approved EarnRoom artwork. The compact variant uses the exact icon and
+ * wordmark on transparency, with only the source whitespace tightened.
  */
 export function Logo({
   className,

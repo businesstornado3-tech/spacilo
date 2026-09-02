@@ -59,5 +59,4 @@ export const PREVIOUS_BRAND = {
   supportEmail: "hello@earnroom.example",
 } as const;
 
-
 export type Brand = typeof brand;

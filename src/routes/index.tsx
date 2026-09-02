@@ -70,4 +70,3 @@ function HomePage() {
     </MarketingLayout>
   );
 }
-

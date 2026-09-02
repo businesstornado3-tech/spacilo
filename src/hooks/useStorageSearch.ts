@@ -58,7 +58,8 @@ export function useSearchCentre(location: string) {
   const geocode = useServerFn(geocodeSearchLocation);
   const query = location.trim();
   return useQuery({
-    queryKey: ["location", "geocode", query.toUpperCase()],
+    // v2: candidate-ranking fix — never reuse a pre-fix cached resolution.
+    queryKey: ["location", "geocode", "v2", query.toUpperCase()],
     queryFn: async () => geocode({ data: { query } }),
     enabled: query.length >= 2,
     staleTime: 24 * 60 * 60 * 1000,
@@ -175,14 +176,22 @@ export function useStorageSearch(params: StorageSearchParams) {
     geocoded && !geocoded.ok
       ? geocoded.message
       : centreQuery.error
-        ? "Location lookup failed."
+        ? "Location lookup is unavailable right now. Please try again shortly."
         : null;
+  /** Same-strength places elsewhere: the user picks rather than us guessing. */
+  const locationAlternatives: SearchCentre[] =
+    geocoded && !geocoded.ok && geocoded.reason === "ambiguous"
+      ? geocoded.alternatives
+      : [];
+  /** True when the location itself failed — not a legitimate empty result. */
+  const locationUnresolved = Boolean(geocodeError);
 
   const hasLocation = params.location.trim().length >= 2;
 
   const spacesQuery = useQuery({
     queryKey: ["spaces", "search", centre?.lat ?? null, centre?.lng ?? null, radius],
     queryFn: () => searchPublishedSpaces({ centre, radiusMiles: radius, limit: 60 }),
+    // Never search stale/absent coordinates when a location was typed.
     enabled: !hasLocation || Boolean(centre),
     staleTime: 60 * 1000,
   });
@@ -242,6 +251,9 @@ export function useStorageSearch(params: StorageSearchParams) {
     centre,
     radius,
     geocodeError,
+    locationAlternatives,
+    locationUnresolved,
+    searchError: spacesQuery.error ? "We couldn't run that search. Please try again." : null,
     hasInventory,
     /** Confirmed items behind the fit results, for the requirement summary. */
     items: confirmed,

@@ -9,7 +9,12 @@ import { describe, expect, it } from "vitest";
 
 import { haversineMiles, withinRadius } from "@/lib/location/distance";
 import { normaliseRadius } from "@/lib/location/schema";
-import { pickBestPlace, scorePlaceCandidate, splitQuery } from "@/lib/location/place-ranking";
+import {
+  pickBestPlace,
+  resolvePlace,
+  scorePlaceCandidate,
+  splitQuery,
+} from "@/lib/location/place-ranking";
 
 interface Listing {
   id: string;
@@ -120,5 +125,47 @@ describe("place candidate ranking", () => {
       name: "ambridge",
       qualifier: "northshire",
     });
+  });
+
+  it("is order-independent when provider candidates are shuffled", () => {
+    const withPoints = [
+      { ...candidates[0], latitude: 51.5, longitude: -1.2 },
+      { ...candidates[1], latitude: 53.5, longitude: -2.2 },
+      { ...candidates[2], latitude: 52.5, longitude: -1.8 },
+    ];
+    const forward = pickBestPlace("Ambridge", withPoints);
+    const reverse = pickBestPlace("Ambridge", [...withPoints].reverse());
+    expect(forward?.county_unitary).toBe("Southshire");
+    expect(reverse).toEqual(forward);
+  });
+
+  it("uses stable metadata and coordinate tie-breaking", () => {
+    const tied = [
+      { name_1: "Twinford", local_type: "Town", county_unitary: "Zedshire", latitude: 51, longitude: -1 },
+      { name_1: "Twinford", local_type: "Town", county_unitary: "Ashshire", latitude: 52, longitude: -2 },
+    ];
+    expect(pickBestPlace("Twinford", tied)?.county_unitary).toBe("Ashshire");
+    expect(pickBestPlace("Twinford", [...tied].reverse())?.county_unitary).toBe("Ashshire");
+  });
+
+  it("reports materially distant same-strength places as alternatives", () => {
+    const result = resolvePlace("Twinford", [
+      { name_1: "Twinford", local_type: "Town", county_unitary: "Ashshire", latitude: 51, longitude: -1 },
+      { name_1: "Twinford", local_type: "Town", county_unitary: "Zedshire", latitude: 55, longitude: -3 },
+    ]);
+    expect(result.best?.county_unitary).toBe("Ashshire");
+    expect(result.alternatives.map((place) => place.county_unitary)).toEqual(["Zedshire"]);
+  });
+
+  it("does not resolve malformed coordinate candidates", () => {
+    const malformed = {
+      name_1: "Twinford",
+      local_type: "Town",
+      county_unitary: "Nowhere",
+      latitude: "bad",
+      longitude: -1,
+    } as unknown as { name_1: string; local_type: string; county_unitary: string; latitude: number; longitude: number };
+    const result = resolvePlace("Twinford", [malformed]);
+    expect(result).toEqual({ best: null, alternatives: [] });
   });
 });

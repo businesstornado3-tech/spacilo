@@ -124,14 +124,108 @@ export function scorePlaceCandidate(query: string, candidate: PlaceCandidate): n
   return best;
 }
 
+/** Stable identity string, used only as a final order-independent tie-break. */
+function tieBreakKey(candidate: PlaceCandidate): string {
+  return [
+    normaliseName(String(candidate.name_1 ?? "")),
+    normaliseName(String(candidate.county_unitary ?? "")),
+    normaliseName(String(candidate.district_borough ?? "")),
+    normaliseName(String(candidate.region ?? "")),
+    normaliseName(String(candidate.outcode ?? "")),
+    Number.isFinite(Number(candidate.latitude)) ? Number(candidate.latitude).toFixed(5) : "",
+    Number.isFinite(Number(candidate.longitude)) ? Number(candidate.longitude).toFixed(5) : "",
+  ].join("|");
+}
+
+/** A candidate is only usable when it carries finite coordinates. */
+function hasUsablePoint(candidate: PlaceCandidate): boolean {
+  return (
+    Number.isFinite(Number(candidate.latitude)) && Number.isFinite(Number(candidate.longitude))
+  );
+}
+
+export interface RankedPlace<T extends PlaceCandidate> {
+  row: T;
+  score: number;
+  key: string;
+}
+
+/**
+ * Deterministic ranking. The returned order depends only on the candidate
+ * data and the query — never on the order the provider happened to return.
+ * Candidates with missing coordinates may still be ranked for pure metadata
+ * callers; geographic resolution filters them before selecting a centre.
+ */
+export function rankCandidates<T extends PlaceCandidate>(
+  query: string,
+  candidates: readonly T[],
+): RankedPlace<T>[] {
+  const ranked: RankedPlace<T>[] = [];
+  const seen = new Set<string>();
+  for (const row of candidates ?? []) {
+    if (!row || typeof row !== "object") continue;
+    const score = scorePlaceCandidate(query, row);
+    if (score === null || !Number.isFinite(score)) continue;
+    const key = tieBreakKey(row);
+    if (seen.has(key)) continue; // duplicate rows must not create false ambiguity
+    seen.add(key);
+    ranked.push({ row, score, key });
+  }
+  // score desc → settlement significance desc → stable key asc.
+  return ranked.sort(
+    (a, b) =>
+      b.score - a.score ||
+      settlementWeight(b.row.local_type) - settlementWeight(a.row.local_type) ||
+      (a.key < b.key ? -1 : a.key > b.key ? 1 : 0),
+  );
+}
 
 /** Best candidate for the typed query, or null when none is a plausible match. */
-export function pickBestPlace<T extends PlaceCandidate>(query: string, candidates: T[]): T | null {
-  let best: { row: T; score: number } | null = null;
-  for (const row of candidates) {
-    const score = scorePlaceCandidate(query, row);
-    if (score === null) continue;
-    if (!best || score > best.score) best = { row, score };
-  }
-  return best?.row ?? null;
+export function pickBestPlace<T extends PlaceCandidate>(
+  query: string,
+  candidates: readonly T[],
+): T | null {
+  return rankCandidates(query, candidates)[0]?.row ?? null;
 }
+
+/** Degrees→miles is location-dependent; this rough figure only gauges "same area". */
+function roughMilesApart(a: PlaceCandidate, b: PlaceCandidate): number {
+  const dLat = (Number(a.latitude) - Number(b.latitude)) * 69;
+  const dLng =
+    (Number(a.longitude) - Number(b.longitude)) *
+    69 *
+    Math.cos(((Number(a.latitude) + Number(b.latitude)) / 2) * (Math.PI / 180));
+  return Math.hypot(dLat, dLng);
+}
+
+/** Runners-up are only "ambiguous" if they score as well and sit elsewhere. */
+const AMBIGUITY_SCORE_MARGIN = 1;
+const AMBIGUITY_MIN_MILES = 10;
+
+export interface PlaceResolution<T extends PlaceCandidate> {
+  best: T | null;
+  /** Same-strength candidates in a materially different place, best first. */
+  alternatives: T[];
+}
+
+export function resolvePlace<T extends PlaceCandidate>(
+  query: string,
+  candidates: readonly T[],
+): PlaceResolution<T> {
+  // Ranking can be useful with metadata-only fixtures, but resolution must
+  // never select a row that cannot produce a geographic centre.
+  const ranked = rankCandidates(query, candidates.filter(hasUsablePoint));
+  const top = ranked[0];
+  if (!top) return { best: null, alternatives: [] };
+  const alternatives = ranked
+    .slice(1)
+    .filter(
+      (entry) =>
+        top.score - entry.score <= AMBIGUITY_SCORE_MARGIN &&
+        roughMilesApart(top.row, entry.row) >= AMBIGUITY_MIN_MILES,
+    )
+    .slice(0, 4)
+    .map((entry) => entry.row);
+  return { best: top.row, alternatives };
+}
+

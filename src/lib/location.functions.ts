@@ -16,17 +16,34 @@ export const geocodeSearchLocation = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { getGeocodingProvider } = await import("@/lib/location/provider.server");
     try {
-      const centre = await getGeocodingProvider().geocode(data.query);
-      if (!centre) {
+      const resolution = await getGeocodingProvider().geocodeDetailed(data.query);
+      if (!resolution) {
+        // Resolution failed — this is NOT the same as a search with no results.
         return {
           ok: false as const,
+          reason: "not_found" as const,
           message: "We couldn't find that location. Try a full UK postcode, for example PO4 8LB.",
         };
       }
-      return { ok: true as const, centre };
+      if (resolution.alternatives.length > 0) {
+        // Fail closed: never search around an arbitrary winner when places
+        // elsewhere are equally plausible.
+        return {
+          ok: false as const,
+          reason: "ambiguous" as const,
+          message: "We found more than one place with that name. Choose one to search nearby.",
+          alternatives: [resolution.centre, ...resolution.alternatives],
+        };
+      }
+      return {
+        ok: true as const,
+        centre: resolution.centre,
+        alternatives: [],
+      };
     } catch {
       return {
         ok: false as const,
+        reason: "provider_error" as const,
         message: "Location lookup is unavailable right now. Please try again shortly.",
       };
     }

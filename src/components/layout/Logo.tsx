@@ -6,11 +6,45 @@ import wordmarkAsset from "@/assets/brand/earnroom-wordmark-transparent.png.asse
 import { brand } from "@/config/brand";
 import { cn } from "@/lib/utils";
 
+type BrandMarkVariant = "header" | "footer";
+
+function EarnRoomBrandMark({ variant }: { variant: BrandMarkVariant }) {
+  const isFooter = variant === "footer";
+
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center whitespace-nowrap",
+        isFooter ? "gap-3 sm:gap-3.5" : "gap-2.5 sm:gap-3.5",
+      )}
+      aria-hidden="true"
+    >
+      <img
+        src={iconAsset.url}
+        alt=""
+        className={cn(
+          "block h-auto w-auto shrink-0 object-contain",
+          isFooter ? "max-h-11 sm:max-h-12" : "max-h-9 sm:max-h-10",
+        )}
+      />
+      <span
+        className={cn(
+          "font-display font-[750] leading-none tracking-normal",
+          isFooter ? "text-[1.625rem] sm:text-[1.75rem]" : "text-[1.375rem] sm:text-[1.625rem]",
+        )}
+      >
+        <span className="text-ink">Earn</span>
+        <span className="text-primary">Room</span>
+      </span>
+    </span>
+  );
+}
+
 /**
  * Approved EarnRoom artwork. The compact variant uses the exact icon and
  * wordmark on transparency, with only the source whitespace tightened.
- * The header variant keeps the approved icon intact and renders the brand
- * name in the established display face for responsive optical balance.
+ * Header and footer variants keep the approved icon at its intrinsic aspect
+ * ratio and render the brand name separately for responsive optical balance.
  */
 export function Logo({
   className,
@@ -19,7 +53,7 @@ export function Logo({
 }: {
   className?: string;
   to?: string;
-  variant?: "compact" | "full" | "header";
+  variant?: "compact" | "full" | BrandMarkVariant;
 }) {
   const asset = variant === "full" ? lockupAsset : wordmarkAsset;
   return (
@@ -31,18 +65,8 @@ export function Logo({
       )}
       aria-label={`${brand.name} home`}
     >
-      {variant === "header" ? (
-        <span className="inline-flex h-10 items-center gap-2 sm:gap-3" aria-hidden="true">
-          <img
-            src={iconAsset.url}
-            alt=""
-            className="size-7 shrink-0 object-contain sm:size-9"
-          />
-          <span className="font-display text-lg font-[750] leading-none tracking-normal sm:text-[1.375rem]">
-            <span className="text-ink">Earn</span>
-            <span className="text-primary">Room</span>
-          </span>
-        </span>
+      {variant === "header" || variant === "footer" ? (
+        <EarnRoomBrandMark variant={variant} />
       ) : (
         <img
           src={asset.url}

@@ -70,13 +70,18 @@ const postcodesIoProvider: GeocodingProvider = {
       }
     }
 
-    // 3. Recognised place / town name.
-    const places = await getJson(`${BASE}/places?q=${encodeURIComponent(query)}&limit=1`);
-    const place = Array.isArray(places) ? places[0] : null;
+    // 3. Recognised place / town / neighbourhood name.
+    //    Many UK settlements share a name, so ask for a candidate list and
+    //    rank it deterministically instead of trusting the first row.
+    const places = await getJson(`${BASE}/places?q=${encodeURIComponent(query)}&limit=20`);
+    const place = Array.isArray(places) ? pickBestPlace(query, places as PlaceCandidate[]) : null;
     if (place) {
-      const label: string = place.name_1 ?? query;
-      return toCentre(place.latitude, place.longitude, label, null, "place");
+      const label: string = (place.name_1 as string) ?? query;
+      const district =
+        typeof place.outcode === "string" && place.outcode ? place.outcode.toUpperCase() : null;
+      return toCentre(place.latitude, place.longitude, label, district, "place");
     }
+
 
     return null;
   },

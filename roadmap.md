@@ -1,7 +1,14 @@
 # Phase 7C — EarnRoom migration
 
-- [ ] Complete UK-wide brand and positioning copy migration
-- [ ] Align structured metadata and public manifest with EarnRoom
-- [ ] Audit and update legal, privacy, cookies, AI and disclaimer surfaces using implemented behaviour
-- [ ] Publish current storage-policy wording without altering frozen Phase 7B search logic
-- [ ] Run legacy-string audit, focused tests, full tests, typecheck and build checks
+- [x] Complete UK-wide brand and positioning copy migration
+- [x] Align structured metadata and public manifest with EarnRoom
+- [x] Audit and update legal, privacy, cookies, AI and disclaimer surfaces using implemented behaviour
+- [x] Publish current storage-policy wording (version 1.1.0) without altering frozen Phase 7B search logic
+- [x] Run legacy-string audit, focused tests, full tests, typecheck and build checks
+
+Open items for the owner (not code work):
+
+- No registered legal entity confirmed — legal pages must not assert one until supplied.
+- `hello@earnroom.example` is a placeholder support address.
+- Legal, privacy and cookies copy still requires qualified UK review before launch.
+- No account-deletion / data-request workflow exists; privacy copy states this openly.

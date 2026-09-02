@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { brand } from "@/config/brand";
+import { siteOrigin } from "@/lib/seo/meta";
 import { AuthProvider } from "@/hooks/useAuth";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 
@@ -97,8 +98,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "twitter:description",
         content: `Find affordable storage in garages, lofts and spare rooms near you, or earn from space you're not using. ${brand.ai} helps both sides see what actually fits.`,
       },
-      { property: "og:image", content: "https://home-stash-link.lovable.app/og-image.png" },
-      { name: "twitter:image", content: "https://home-stash-link.lovable.app/og-image.png" },
+      { property: "og:image", content: `${siteOrigin()}/og-image.png` },
+      { name: "twitter:image", content: `${siteOrigin()}/og-image.png` },
       { name: "theme-color", content: "#0d6b4f" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: brand.shortName },

@@ -38,7 +38,7 @@ export function Logo({
             alt=""
             className="size-7 shrink-0 object-contain sm:size-9"
           />
-          <span className="type-display text-lg font-[750] leading-none tracking-normal sm:text-[1.375rem]">
+          <span className="font-display text-lg font-[750] leading-none tracking-normal sm:text-[1.375rem]">
             <span className="text-ink">Earn</span>
             <span className="text-primary">Room</span>
           </span>

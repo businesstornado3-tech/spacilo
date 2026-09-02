@@ -191,14 +191,8 @@ export function useStorageSearch(params: StorageSearchParams) {
   const spacesQuery = useQuery({
     // Include the typed location so unresolved searches cannot reuse a prior
     // null-coordinate cache entry from a different location.
-    queryKey: [
-      "spaces",
-      "search",
-      params.location.trim().toUpperCase(),
-      centre?.lat ?? null,
-      centre?.lng ?? null,
-      radius,
-    ],
+    queryKey: searchQueryKey(params.location, centre, radius),
+
     queryFn: () => searchPublishedSpaces({ centre, radiusMiles: radius, limit: 60 }),
     // Never search stale/absent coordinates when a location was typed.
     enabled: !hasLocation || Boolean(centre),

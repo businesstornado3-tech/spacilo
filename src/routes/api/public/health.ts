@@ -47,6 +47,7 @@ export const Route = createFileRoute("/api/public/health")({
           storage: configured("SUPABASE_URL"),
           payments: configured("STRIPE_SECRET_KEY"),
           paymentsWebhook: configured("STRIPE_WEBHOOK_SECRET"),
+          connectWebhook: configured("STRIPE_CONNECT_WEBHOOK_SECRET"),
           payouts: configured("PAYOUT_PROCESSOR_SECRET"),
           siteUrl: configured("SITE_URL"),
         } satisfies Record<string, CheckState>;

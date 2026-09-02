@@ -8,13 +8,7 @@ import { cn } from "@/lib/utils";
  * Brand lock-up: the approved hexagonal EarnRoom symbol plus the wordmark.
  * The name is read from the central brand config so the migration is reversible.
  */
-export function Logo({
-  className,
-  to = "/",
-}: {
-  className?: string;
-  to?: string;
-}) {
+export function Logo({ className, to = "/" }: { className?: string; to?: string }) {
   return (
     <Link
       to={to}

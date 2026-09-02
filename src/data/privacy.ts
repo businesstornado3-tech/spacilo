@@ -22,8 +22,7 @@ export const privacyIntro = {
 export const measurementSections: { heading: string; body: string }[] = [
   {
     heading: "We measure our own site, and nothing else",
-    body:
-      "Our analytics are first-party: the measurement is ours, the data stays in our own systems, and there is no advertising network, no third-party tracking script and no data sold or shared for marketing. We can't see what you do on other websites, and we don't try to.",
+    body: "Our analytics are first-party: the measurement is ours, the data stays in our own systems, and there is no advertising network, no third-party tracking script and no data sold or shared for marketing. We can't see what you do on other websites, and we don't try to.",
   },
   {
     heading: "No fingerprinting, no cross-device tracking",
@@ -34,13 +33,11 @@ export const measurementSections: { heading: string; body: string }[] = [
   },
   {
     heading: "What a page view records",
-    body:
-      "A page view records the page path with identifiers and query parameters stripped out, the website you arrived from (the site name only, never the full link), any campaign tag in the link you clicked, and a coarse device type — mobile, tablet or desktop. It does not record free text, photos, addresses or postcodes.",
+    body: "A page view records the page path with identifiers and query parameters stripped out, the website you arrived from (the site name only, never the full link), any campaign tag in the link you clicked, and a coarse device type — mobile, tablet or desktop. It does not record free text, photos, addresses or postcodes.",
   },
   {
     heading: "What account activity involves",
-    body:
-      "If you create an account, the product stores the information needed to provide the marketplace: your account and profile details, inventory, space listings, messages, bookings, payment records and support activity where you use those features. Hosts see the information needed to consider a request; a host does not receive a renter's private photos or item-level inventory unless the product explicitly shows a relevant summary.",
+    body: "If you create an account, the product stores the information needed to provide the marketplace: your account and profile details, inventory, space listings, messages, bookings, payment records and support activity where you use those features. Hosts see the information needed to consider a request; a host does not receive a renter's private photos or item-level inventory unless the product explicitly shows a relevant summary.",
   },
   {
     heading: "Uploaded photos and AI processing",
@@ -63,13 +60,11 @@ export const measurementSections: { heading: string; body: string }[] = [
   },
   {
     heading: "Respecting your choice",
-    body:
-      "If your browser sends a Do Not Track or Global Privacy Control signal, we don't measure your visit at all and nothing is stored in your browser for analytics. Browser storage can also be cleared at any time; doing so may sign you out or remove local conveniences such as recent searches.",
+    body: "If your browser sends a Do Not Track or Global Privacy Control signal, we don't measure your visit at all and nothing is stored in your browser for analytics. Browser storage can also be cleared at any time; doing so may sign you out or remove local conveniences such as recent searches.",
   },
   {
     heading: "Requests and legal review",
-    body:
-      "The product has not yet published a complete request workflow, named legal entity, universal retention schedule, lawful-basis statement or international-transfer statement. Those details, including how access, correction and deletion requests will be handled, need qualified UK privacy advice and confirmation from the service owner before public launch. This page must not be read as a claim that a legal review or compliance assessment has happened.",
+    body: "The product has not yet published a complete request workflow, named legal entity, universal retention schedule, lawful-basis statement or international-transfer statement. Those details, including how access, correction and deletion requests will be handled, need qualified UK privacy advice and confirmation from the service owner before public launch. This page must not be read as a claim that a legal review or compliance assessment has happened.",
   },
 ];
 

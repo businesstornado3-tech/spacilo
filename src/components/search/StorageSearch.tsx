@@ -122,12 +122,12 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
             {locationUnresolved
               ? "We couldn't resolve that location, so no search was run."
               : isLoading
-              ? "Searching…"
-              : `${results.length} ${results.length === 1 ? "space" : "spaces"}${
-                  centre
-                    ? ` within ${params.radius} ${params.radius === 1 ? "mile" : "miles"} of ${centre.label}`
-                    : ""
-                }`}
+                ? "Searching…"
+                : `${results.length} ${results.length === 1 ? "space" : "spaces"}${
+                    centre
+                      ? ` within ${params.radius} ${params.radius === 1 ? "mile" : "miles"} of ${centre.label}`
+                      : ""
+                  }`}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

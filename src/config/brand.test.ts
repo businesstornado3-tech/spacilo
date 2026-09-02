@@ -33,8 +33,14 @@ describe("EarnRoom brand", () => {
   });
 
   it("leaves no legacy brand name in product code", () => {
-    const offenders = [...grep("Spacilo"), ...grep("Spacilo AI"), ...grep("Project Stow"), ...grep("SpaceFit AI")].filter(
-      (line) => !line.startsWith("src/config/brand.ts") && !line.startsWith("src/config/brand.test.ts"),
+    const offenders = [
+      ...grep("Spacilo"),
+      ...grep("Spacilo AI"),
+      ...grep("Project Stow"),
+      ...grep("SpaceFit AI"),
+    ].filter(
+      (line) =>
+        !line.startsWith("src/config/brand.ts") && !line.startsWith("src/config/brand.test.ts"),
     );
     expect(offenders).toEqual([]);
   });

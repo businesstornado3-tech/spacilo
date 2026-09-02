@@ -61,7 +61,7 @@ describe("EarnRoom symbol", () => {
 
   it("is used by the header lock-up with the config-driven wordmark", () => {
     const logo = read("src/components/layout/Logo.tsx");
-    expect(logo).toContain("earnroom-wordmark.png.asset.json");
+    expect(logo).toContain("earnroom-wordmark-transparent.png.asset.json");
     expect(logo).toContain("earnroom-lockup.png.asset.json");
     expect(brand.name).toBe("EarnRoom");
   });

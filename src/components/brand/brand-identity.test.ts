@@ -44,7 +44,7 @@ describe("EarnRoom symbol", () => {
   const mark = read("src/components/brand/EarnRoomMark.tsx");
 
   it("uses the approved lockup and icon assets", () => {
-    expect(mark).toContain("earnroom-icon.png.asset.json");
+    expect(mark).toContain("earnroom-icon-transparent.png.asset.json");
     expect(mark).toContain("earnroom-lockup.png.asset.json");
     expect(mark).toContain("EarnRoomSymbolCompact");
   });

@@ -82,7 +82,7 @@ export function explainPlan(
   }
 
   if (lines.length === 0) {
-    return ["Add a few belongings and Spacilo AI will plan the space around them."];
+    return ["Add a few belongings and EarnRoom AI will plan the space around them."];
   }
 
   return reasons;

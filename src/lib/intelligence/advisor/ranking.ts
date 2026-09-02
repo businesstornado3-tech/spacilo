@@ -121,7 +121,7 @@ export function scoreListing(
     {
       id: "confidence",
       score: pct(assessment.confidence * 100),
-      detail: listing.hostConfirmed ? "Host-confirmed measurements" : "Spacilo AI estimate",
+      detail: listing.hostConfirmed ? "Host-confirmed measurements" : "EarnRoom AI estimate",
     },
   ];
 

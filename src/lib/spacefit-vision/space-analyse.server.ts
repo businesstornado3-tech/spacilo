@@ -1,5 +1,5 @@
 /**
- * Spacilo AI — host space scan orchestration.
+ * EarnRoom AI — host space scan orchestration.
  *
  * Runs entirely on the server. The browser never sees provider credentials and
  * never supplies image URLs: every read goes through the caller's own

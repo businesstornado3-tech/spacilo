@@ -192,6 +192,6 @@ describe("CSV export", () => {
     expect(csv).toContain("Europe/London");
     expect(csv).toContain(range.from.toISOString());
     expect(csv).toContain("Bookings,3");
-    expect(report.filename).toBe("spacilo-admin-marketplace-2026-01-09.csv");
+    expect(report.filename).toBe("earnroom-admin-marketplace-2026-01-09.csv");
   });
 });

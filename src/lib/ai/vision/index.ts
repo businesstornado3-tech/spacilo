@@ -1,5 +1,5 @@
 /**
- * Spacilo Vision AI — Phase 6C public surface.
+ * EarnRoom Vision AI — Phase 6C public surface.
  *
  * Import from here, never from the individual stage files: the stages are
  * implementation detail and are expected to be replaced model by model.

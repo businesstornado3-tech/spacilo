@@ -37,7 +37,7 @@ import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
 const title = "Scan your space — " + brand.name;
 const description =
-  "See what your garage, loft or spare room could hold and earn. Scan it with Spacilo AI — no account needed to try it.";
+  "See what your garage, loft or spare room could hold and earn. Scan it with EarnRoom AI — no account needed to try it.";
 
 export const Route = createFileRoute("/spacefit/space")({
   head: () => ({
@@ -109,7 +109,7 @@ function GuestSpacePage() {
         <SpaceFitAiMark size="sm" />
         <h1 className="mt-3 type-h1">What could your unused space earn?</h1>
         <p className="mt-2 type-body text-muted-foreground">
-          Photograph your garage, loft or spare room. Spacilo AI will estimate its size — you
+          Photograph your garage, loft or spare room. EarnRoom AI will estimate its size — you
           correct it, and we&apos;ll show what it could hold and what it could earn. No account
           needed to try it.
         </p>
@@ -189,7 +189,7 @@ function GuestSpacePage() {
             {outcome === "measured" ? (
               <p className="mt-1 type-body-sm text-muted-foreground">
                 {proposal.referenceUsed
-                  ? `Spacilo AI used ${proposal.referenceUsed} for scale. `
+                  ? `EarnRoom AI used ${proposal.referenceUsed} for scale. `
                   : ""}
                 {GUEST_SPACE_OUTCOME_COPY.measured.body}
               </p>
@@ -258,7 +258,7 @@ function GuestSpacePage() {
 
             {proposal.obstacles.length > 0 ? (
               <div className="mt-4">
-                <p className="type-label">What Spacilo AI spotted in the way</p>
+                <p className="type-label">What EarnRoom AI spotted in the way</p>
                 <ul className="mt-2 grid gap-1.5">
                   {proposal.obstacles.map((obstacle, index) => (
                     <li

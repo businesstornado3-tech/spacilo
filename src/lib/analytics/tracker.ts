@@ -25,8 +25,8 @@ import {
   sanitiseProps,
 } from "./events";
 
-export const VISITOR_STORAGE_KEY = "spacilo.va";
-export const SESSION_STORAGE_KEY = "spacilo.sa";
+export const VISITOR_STORAGE_KEY = "earnroom.va";
+export const SESSION_STORAGE_KEY = "earnroom.sa";
 
 /** The opaque visitor reference is regenerated on this cadence. */
 export const VISITOR_ROTATION_DAYS = 30;

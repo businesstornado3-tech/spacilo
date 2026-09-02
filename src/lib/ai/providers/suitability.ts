@@ -10,7 +10,7 @@ import { explain, factor, alternative } from "../core/explain";
 import { registerAiProvider } from "../core/provider-manager";
 import type { AiExplanationFactor, AiProvider } from "../core/types";
 
-const ENGINE_MODEL = "spacilo-reasoning-1";
+const ENGINE_MODEL = "earnroom-reasoning-1";
 
 /* ---------------------------------------------------------- suitability */
 
@@ -271,7 +271,7 @@ export function assessSuitability(input: SuitabilityInput): {
 }
 
 export const suitabilityProvider: AiProvider<SuitabilityInput, SuitabilityAssessment> = {
-  id: "spacilo-suitability",
+  id: "earnroom-suitability",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,
@@ -479,7 +479,7 @@ export function rankListings(input: RankingInput): RankingOutput {
 }
 
 export const rankingProvider: AiProvider<RankingInput, RankingOutput> = {
-  id: "spacilo-ranking",
+  id: "earnroom-ranking",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,

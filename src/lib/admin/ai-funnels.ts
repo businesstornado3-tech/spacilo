@@ -1,5 +1,5 @@
 /**
- * Spacilo AI founder analytics.
+ * EarnRoom AI founder analytics.
  *
  * Built only from the canonical analytics taxonomy in
  * `src/lib/analytics/events.ts` and from domain outcomes. Where a business

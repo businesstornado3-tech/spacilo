@@ -1,5 +1,5 @@
 /**
- * Why Spacilo — three promises, each already demonstrated above.
+ * Why EarnRoom — three promises, each already demonstrated above.
  */
 import { Boxes, Ruler, ShieldCheck } from "lucide-react";
 
@@ -9,7 +9,7 @@ const POINTS = [
   {
     icon: Ruler,
     title: "Know it fits before you book",
-    body: "Spacilo AI plans from real item dimensions and the room's usable footprint.",
+    body: "EarnRoom AI plans from real item dimensions and the room's usable footprint.",
   },
   {
     icon: Boxes,
@@ -28,7 +28,7 @@ export function WhySpacePlanner() {
     <section aria-labelledby="why-heading" className="py-9 sm:py-11">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <h2 id="why-heading" className="max-w-xl type-h2">
-          Why Spacilo.
+          Why EarnRoom.
         </h2>
 
         <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">

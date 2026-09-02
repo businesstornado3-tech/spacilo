@@ -1,5 +1,5 @@
 /**
- * Renter Spacilo AI card — dashboard and hub.
+ * Renter EarnRoom AI card — dashboard and hub.
  *
  * Renders EXISTING canonical inventory through the deterministic requirement
  * engine. It never triggers an AI call: rendering this card performs no vision

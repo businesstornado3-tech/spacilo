@@ -1,5 +1,5 @@
 /**
- * SpaceScanSummary — what Spacilo AI believes a host's space is worth holding.
+ * SpaceScanSummary — what EarnRoom AI believes a host's space is worth holding.
  *
  * Estimates only: usable area, dimensions, suitability and indicative income.
  * The host always sets their own price.
@@ -45,7 +45,7 @@ export function SpaceScanSummary({
     >
       <p className="inline-flex items-center gap-2 rounded-full bg-signal-soft px-3 py-1 type-badge text-signal-soft-foreground">
         <Sparkles className="size-3.5" aria-hidden="true" />
-        Spacilo AI analysed your space
+        EarnRoom AI analysed your space
       </p>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">

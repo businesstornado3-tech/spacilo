@@ -32,7 +32,7 @@ export function SpacePlannerResult({
   children,
   className,
   unplaced = [],
-  heading = "Spacilo AI SpacePlanner™",
+  heading = "EarnRoom AI SpacePlanner™",
 }: {
   result: PhotoPlanResult;
   /**

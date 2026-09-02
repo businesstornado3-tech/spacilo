@@ -3,7 +3,7 @@
  *
  * Deterministic by design: the same photos always produce the same proposals,
  * so the product is honest, demoable offline and unit-testable. These wrap the
- * existing Spacilo Vision simulation rather than reimplementing it — one
+ * existing EarnRoom Vision simulation rather than reimplementing it — one
  * detection engine, one taxonomy, one set of numbers.
  */
 import { summariseDetections } from "@/lib/vision/inventory";
@@ -17,8 +17,8 @@ import type { ProviderRequest, SpaceAnalysisProvider, VisionProvider } from "../
 
 const IDENTITY = {
   id: "mock-vision-v1",
-  label: "Spacilo AI (simulation)",
-  model: "spacilo-simulation",
+  label: "EarnRoom AI (simulation)",
+  model: "earnroom-simulation",
   remote: false,
 } as const;
 
@@ -58,7 +58,7 @@ export const mockVisionProvider: VisionProvider = {
 export const mockSpaceAnalysisProvider: SpaceAnalysisProvider = {
   ...IDENTITY,
   id: "mock-space-analysis-v1",
-  label: "Spacilo AI space analysis (simulation)",
+  label: "EarnRoom AI space analysis (simulation)",
   capabilities: ["space-analysis", "dimensions"],
 
   async analyseSpace(photos, spaceType, request?: ProviderRequest): Promise<DetectedSpace> {

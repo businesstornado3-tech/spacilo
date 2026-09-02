@@ -32,7 +32,7 @@ const INTERNAL_ROOTS = new Set(["/renter", "/host"]);
 
 /**
  * True only for genuinely customer-facing pages: the home page, marketing
- * pages, public listing/discovery pages and the public Spacilo AI entries.
+ * pages, public listing/discovery pages and the public EarnRoom AI entries.
  */
 export function isPublicAnalyticsPath(path: string | null | undefined): boolean {
   if (!path) return false;

@@ -1,5 +1,5 @@
 /**
- * Spacilo AI SpacePlanner™ — reusable scene definitions.
+ * EarnRoom AI SpacePlanner™ — reusable scene definitions.
  *
  * A "scene" is pure data: which room, which belongings, which extra objects a
  * visitor may add, and the narration shown while the planner reasons. Nothing

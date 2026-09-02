@@ -1,5 +1,5 @@
 /**
- * The Spacilo AI Score and the capability model.
+ * The EarnRoom AI Score and the capability model.
  *
  * Both are load-bearing: the score is shown to renters before payment and to
  * hosts before accepting, and the capability model is the only thing standing
@@ -14,7 +14,7 @@ import {
   capabilitiesFor,
   recommendationFor,
   simulationEngine,
-  spaciloScore,
+  earnroomScore,
   type InventoryLine,
 } from "@/lib/spaceplanner";
 
@@ -24,7 +24,7 @@ function lines(entries: Array<[string, number]>): InventoryLine[] {
   return entries.map(([id, quantity]) => ({ item: CATALOGUE_BY_ID.get(id)!, quantity }));
 }
 
-describe("Spacilo AI Score", () => {
+describe("EarnRoom AI Score", () => {
   it("bands ascend with the score", () => {
     expect(bandFor(98)).toBe("Excellent fit");
     expect(bandFor(90)).toBe("Very good fit");
@@ -36,20 +36,20 @@ describe("Spacilo AI Score", () => {
 
   it("is deterministic for the same inventory and space", () => {
     const input = lines([["medium-box", 6]]);
-    const a = spaciloScore(simulationEngine.plan(input, garage));
-    const b = spaciloScore(simulationEngine.plan(input, garage));
+    const a = earnroomScore(simulationEngine.plan(input, garage));
+    const b = earnroomScore(simulationEngine.plan(input, garage));
     expect(a.value).toBe(b.value);
   });
 
   it("scores a light load higher than an overloaded one", () => {
-    const light = spaciloScore(simulationEngine.plan(lines([["medium-box", 4]]), garage));
-    const heavy = spaciloScore(simulationEngine.plan(lines([["medium-box", 400]]), garage));
+    const light = earnroomScore(simulationEngine.plan(lines([["medium-box", 4]]), garage));
+    const heavy = earnroomScore(simulationEngine.plan(lines([["medium-box", 400]]), garage));
     expect(light.value).toBeGreaterThan(heavy.value);
     expect(heavy.checks.find((c) => c.id === "fit")?.state).toBe("failed");
   });
 
   it("stays within 0–100 and always names a recommendation", () => {
-    const score = spaciloScore(simulationEngine.plan(lines([["medium-box", 900]]), garage));
+    const score = earnroomScore(simulationEngine.plan(lines([["medium-box", 900]]), garage));
     expect(score.value).toBeGreaterThanOrEqual(0);
     expect(score.value).toBeLessThanOrEqual(100);
     expect(recommendationFor(score.band)).toBeTruthy();

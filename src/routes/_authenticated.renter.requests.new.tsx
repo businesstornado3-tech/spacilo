@@ -245,7 +245,7 @@ function NewRequestPage() {
               <p className="mt-2 type-body-sm text-muted-foreground">
                 {result.compatible
                   ? `${result.score}% fit — ${result.label}`
-                  : "Spacilo AI says this space may not suit your belongings."}
+                  : "EarnRoom AI says this space may not suit your belongings."}
               </p>
             ) : null}
           </section>

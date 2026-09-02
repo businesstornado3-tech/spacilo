@@ -1,5 +1,5 @@
 /**
- * SpaciloAIContext — one shared AI state for the whole product.
+ * EarnRoomAIContext — one shared AI state for the whole product.
  *
  * Any surface (planner, listing, host review, homepage) reads the same status,
  * confidence, recommendations and errors from here. Components never call a
@@ -44,7 +44,7 @@ import {
 import { activeProviders, platformCapabilities, supports } from "./registry";
 import { PROVIDER_SLOTS } from "./providers";
 
-export interface SpaciloAIState {
+export interface EarnRoomAIState {
   status: IntelligenceStatus;
   /** The stage currently running, when one is. */
   stage: PipelineStageId | null;
@@ -58,7 +58,7 @@ export interface SpaciloAIState {
   fallback: string | null;
 }
 
-export interface SpaciloAIContextValue extends SpaciloAIState {
+export interface EarnRoomAIContextValue extends EarnRoomAIState {
   capabilities: IntelligenceCapability[];
   supports: (capability: IntelligenceCapability) => boolean;
   health: ProviderHealth[];
@@ -77,7 +77,7 @@ export interface SpaciloAIContextValue extends SpaciloAIState {
   reset: () => void;
 }
 
-const EMPTY: SpaciloAIState = {
+const EMPTY: EarnRoomAIState = {
   status: "ready",
   stage: null,
   inventory: null,
@@ -90,10 +90,10 @@ const EMPTY: SpaciloAIState = {
   fallback: null,
 };
 
-const SpaciloAIContext = createContext<SpaciloAIContextValue | null>(null);
+const EarnRoomAIContext = createContext<EarnRoomAIContextValue | null>(null);
 
-export function SpaciloAIProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<SpaciloAIState>(EMPTY);
+export function EarnRoomAIProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<EarnRoomAIState>(EMPTY);
   const abortRef = useRef<AbortController | null>(null);
   const mounted = useRef(true);
 
@@ -122,7 +122,7 @@ export function SpaciloAIProvider({ children }: { children: ReactNode }) {
     async <T,>(
       stage: PipelineStageId,
       work: (signal: AbortSignal) => Promise<T>,
-      apply: (result: T) => Partial<SpaciloAIState>,
+      apply: (result: T) => Partial<EarnRoomAIState>,
     ): Promise<T | null> => {
       abortRef.current?.abort();
       const controller = new AbortController();
@@ -210,7 +210,7 @@ export function SpaciloAIProvider({ children }: { children: ReactNode }) {
     [guard],
   );
 
-  const value = useMemo<SpaciloAIContextValue>(() => {
+  const value = useMemo<EarnRoomAIContextValue>(() => {
     const providers = activeProviders();
     const health = PROVIDER_SLOTS.map((slot) => providerHealth(slot, providers[slot].id));
     return {
@@ -229,16 +229,16 @@ export function SpaciloAIProvider({ children }: { children: ReactNode }) {
     };
   }, [state, scanBelongings, scanSpace, plan, analyseBooking, run, cancel, reset]);
 
-  return <SpaciloAIContext.Provider value={value}>{children}</SpaciloAIContext.Provider>;
+  return <EarnRoomAIContext.Provider value={value}>{children}</EarnRoomAIContext.Provider>;
 }
 
-export function useIntelligence(): SpaciloAIContextValue {
-  const value = useContext(SpaciloAIContext);
-  if (!value) throw new Error("useIntelligence must be used inside <SpaciloAIProvider>.");
+export function useIntelligence(): EarnRoomAIContextValue {
+  const value = useContext(EarnRoomAIContext);
+  if (!value) throw new Error("useIntelligence must be used inside <EarnRoomAIProvider>.");
   return value;
 }
 
 /** Safe outside a provider — surfaces that only optionally use AI. */
-export function useOptionalIntelligence(): SpaciloAIContextValue | null {
-  return useContext(SpaciloAIContext);
+export function useOptionalIntelligence(): EarnRoomAIContextValue | null {
+  return useContext(EarnRoomAIContext);
 }

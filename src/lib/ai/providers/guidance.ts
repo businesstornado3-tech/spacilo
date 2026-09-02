@@ -8,7 +8,7 @@ import { explain, factor } from "../core/explain";
 import { registerAiProvider } from "../core/provider-manager";
 import type { AiProvider } from "../core/types";
 
-const ENGINE_MODEL = "spacilo-reasoning-1";
+const ENGINE_MODEL = "earnroom-reasoning-1";
 
 /* ------------------------------------------------------ booking advice */
 
@@ -59,7 +59,7 @@ export function buildBookingAdvice(input: BookingAdviceInput): BookingAdvice {
       `There is room for everything, with ${(input.usableVolumeM3 - input.inventoryVolumeM3 * 1.25).toFixed(1)} m³ to spare once packed.`,
     );
   }
-  if ((input.suitabilityScore ?? 0) >= 80) whyRecommended.push("Spacilo rates this a strong fit for your belongings.");
+  if ((input.suitabilityScore ?? 0) >= 80) whyRecommended.push("EarnRoom rates this a strong fit for your belongings.");
   if (input.groundFloor || input.accessRoute === "level") whyRecommended.push("Level, ground-floor access makes the handover quicker.");
   if (input.hasShelving) whyRecommended.push("Existing shelving means boxes stay off the floor.");
   if (input.distanceMiles !== undefined && input.distanceMiles <= 5) {
@@ -123,7 +123,7 @@ export function buildBookingAdvice(input: BookingAdviceInput): BookingAdvice {
 }
 
 export const bookingAssistantProvider: AiProvider<BookingAdviceInput, BookingAdvice> = {
-  id: "spacilo-booking-assistant",
+  id: "earnroom-booking-assistant",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,
@@ -238,7 +238,7 @@ export function assistInventory(input: InventoryAssistantInput): InventoryAssist
 }
 
 export const inventoryAssistantProvider: AiProvider<InventoryAssistantInput, InventoryAssistance> = {
-  id: "spacilo-inventory-assistant",
+  id: "earnroom-inventory-assistant",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,
@@ -358,7 +358,7 @@ export function suggestReplies(input: MessageAssistInput): MessageAssistOutput {
 }
 
 export const messageAssistProvider: AiProvider<MessageAssistInput, MessageAssistOutput> = {
-  id: "spacilo-message-assist",
+  id: "earnroom-message-assist",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,
@@ -461,7 +461,7 @@ export function buildNotificationDigest(input: NotificationDigestInput): Notific
 }
 
 export const notificationsProvider: AiProvider<NotificationDigestInput, NotificationDigest> = {
-  id: "spacilo-notifications",
+  id: "earnroom-notifications",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,

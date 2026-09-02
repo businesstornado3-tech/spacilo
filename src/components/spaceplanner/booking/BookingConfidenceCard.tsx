@@ -29,7 +29,7 @@ export function BookingConfidenceCard({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h3 id="booking-confidence-heading" className="type-h4">
-            Spacilo AI Score
+            EarnRoom AI Score
           </h3>
           {spaceName ? (
             <p className="type-body-sm text-muted-foreground">Planned against {spaceName}</p>

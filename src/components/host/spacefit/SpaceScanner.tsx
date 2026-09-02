@@ -1,5 +1,5 @@
 /**
- * Spacilo AI — host space scanner.
+ * EarnRoom AI — host space scanner.
  *
  * Photograph a space, get a PROPOSED set of measurements and obstacles, then
  * check and confirm them. Nothing reaches the listing until the host presses
@@ -144,7 +144,7 @@ export function SpaceScanner({
       }
       await refresh();
     } catch {
-      setError("Spacilo AI isn't available right now. Please try again shortly.");
+      setError("EarnRoom AI isn't available right now. Please try again shortly.");
     } finally {
       setScanning(false);
     }
@@ -155,7 +155,7 @@ export function SpaceScanner({
       <header className="flex flex-wrap items-center gap-3">
         <Sparkles className="size-5 shrink-0 text-primary" aria-hidden="true" />
         <div className="min-w-0">
-          <h3 className="type-h3">Scan my space with Spacilo AI</h3>
+          <h3 className="type-h3">Scan my space with EarnRoom AI</h3>
           <p className="type-body-sm text-muted-foreground">
             Photograph your space and we'll suggest measurements for you to check.
           </p>

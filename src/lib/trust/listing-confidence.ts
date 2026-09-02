@@ -73,7 +73,7 @@ function fitCheck(report: CompatibilityReport, spaceFit: SpaceFitResult | null):
         statusText: CHECK_STATE_TEXT.fail,
         detail:
           spaceFit.hard_failures[0]?.message ??
-          "Spacilo AI can't fit your current items into this space.",
+          "EarnRoom AI can't fit your current items into this space.",
       };
     }
     return {
@@ -195,7 +195,7 @@ export function capacityProvenance(space: HostSpaceLike): string {
     case "host_entered":
       return "Entered by the host";
     case "ai_estimate":
-      return "Estimated by Spacilo AI — not yet confirmed by the host";
+      return "Estimated by EarnRoom AI — not yet confirmed by the host";
     default:
       return "Not measured yet";
   }
@@ -267,7 +267,7 @@ function listingFacts(space: HostSpaceLike, capacityCovers: boolean | null): str
   if (measurement === "host_verified") facts.push("Host-confirmed dimensions");
   else if (measurement === "host_entered") facts.push("Dimensions entered by the host");
   else if (measurement === "ai_estimate")
-    facts.push("Dimensions estimated by Spacilo AI — not yet confirmed by the host");
+    facts.push("Dimensions estimated by EarnRoom AI — not yet confirmed by the host");
   return facts;
 }
 
@@ -333,6 +333,6 @@ function dedupe(values: string[]): string[] {
 /** Copy shown when the renter has nothing in My Stuff yet. Never a fake match. */
 export const NO_INVENTORY_COPY = {
   title: "Scan my stuff",
-  body: "Spacilo AI can estimate how much space you need and check this listing against your own items. Nothing is checked until you add them.",
+  body: "EarnRoom AI can estimate how much space you need and check this listing against your own items. Nothing is checked until you add them.",
   cta: "Scan my stuff",
 } as const;

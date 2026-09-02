@@ -1,10 +1,10 @@
 /**
- * <HeroGarageAnimation /> — the signature Spacilo visual.
+ * <HeroGarageAnimation /> — the signature EarnRoom visual.
  *
  * A real UK residential garage: concrete floor, brick walls, an up-and-over
  * door letting daylight in, shelving, a workbench and the belongings a real
  * household actually keeps out there. It sits still long enough to be
- * recognised, then Spacilo AI narrates a pass over the room while every
+ * recognised, then EarnRoom AI narrates a pass over the room while every
  * belonging moves — with weight, easing and settling — into an optimised
  * position, and the usable floor space climbs with it.
  *
@@ -44,7 +44,7 @@ export interface HeroGarageAnimationProps {
 
 export function HeroGarageAnimation({
   className,
-  caption = "Illustrative optimisation by Spacilo AI SpacePlanner™.",
+  caption = "Illustrative optimisation by EarnRoom AI SpacePlanner™.",
 }: HeroGarageAnimationProps) {
   const reduced = usePrefersReducedMotion();
   const { ref, inView } = useInView<HTMLDivElement>();
@@ -95,7 +95,7 @@ export function HeroGarageAnimation({
             role="img"
             aria-label={
               done
-                ? "A residential garage after Spacilo AI has organised it: bikes on the wall, boxes shelved and a clear walkway."
+                ? "A residential garage after EarnRoom AI has organised it: bikes on the wall, boxes shelved and a clear walkway."
                 : "A cluttered residential garage with bikes, boxes, a mattress and household belongings on the floor."
             }
           >
@@ -229,7 +229,7 @@ export function HeroGarageAnimation({
                   className="size-3.5 text-signal motion-safe:animate-twinkle"
                   aria-hidden="true"
                 />
-                Spacilo AI SpacePlanner™
+                EarnRoom AI SpacePlanner™
               </>
             )}
           </div>

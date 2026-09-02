@@ -1,5 +1,5 @@
 /**
- * Spacilo Vision AI — public entry point.
+ * EarnRoom Vision AI — public entry point.
  *
  * Belongings → Vision AI → Inventory → SpacePlanner → Compatibility → Booking
  * Space      → Vision AI → Space value → Listing → Bookings

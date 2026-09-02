@@ -10,7 +10,7 @@ import { explain, factor, alternative } from "../core/explain";
 import { registerAiProvider } from "../core/provider-manager";
 import type { AiProvider } from "../core/types";
 
-const ENGINE_MODEL = "spacilo-reasoning-1";
+const ENGINE_MODEL = "earnroom-reasoning-1";
 
 /* ------------------------------------------------------- host pricing */
 
@@ -174,7 +174,7 @@ export function priceSpace(input: HostPricingInput): {
 }
 
 export const hostPricingProvider: AiProvider<HostPricingInput, HostPricingGuidance> = {
-  id: "spacilo-host-pricing",
+  id: "earnroom-host-pricing",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,
@@ -314,7 +314,7 @@ export function reviewListing(input: ListingQualityInput): {
     issues.push({
       area: "dimensions",
       severity: "high",
-      message: "Without measurements Spacilo cannot tell renters whether their belongings fit.",
+      message: "Without measurements EarnRoom cannot tell renters whether their belongings fit.",
       suggestion: "Add width, depth and ceiling height — a rough tape measurement is fine.",
     });
   } else {
@@ -363,7 +363,7 @@ export function reviewListing(input: ListingQualityInput): {
         area: "pricing",
         severity: "medium",
         message: "The price is well above the local guide, which usually slows enquiries.",
-        suggestion: `Spacilo's guide for this space is about £${(input.guideMonthlyPence / 100).toFixed(0)} a month.`,
+        suggestion: `EarnRoom's guide for this space is about £${(input.guideMonthlyPence / 100).toFixed(0)} a month.`,
       });
     } else if (drift < 0.75) {
       score -= 5;
@@ -409,7 +409,7 @@ export function reviewListing(input: ListingQualityInput): {
 }
 
 export const listingQualityProvider: AiProvider<ListingQualityInput, ListingQualityReview> = {
-  id: "spacilo-listing-quality",
+  id: "earnroom-listing-quality",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,
@@ -537,7 +537,7 @@ function capitalise(text: string): string {
 }
 
 export const descriptionProvider: AiProvider<DescriptionInput, DescriptionOutput> = {
-  id: "spacilo-description",
+  id: "earnroom-description",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,
@@ -716,7 +716,7 @@ export function buildHostInsights(input: HostInsightsInput): HostInsightsOutput 
 }
 
 export const hostInsightsProvider: AiProvider<HostInsightsInput, HostInsightsOutput> = {
-  id: "spacilo-host-insights",
+  id: "earnroom-host-insights",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,

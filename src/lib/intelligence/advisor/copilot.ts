@@ -1,5 +1,5 @@
 /**
- * Milestone 1 + 12 — the Spacilo AI Copilot.
+ * Milestone 1 + 12 — the EarnRoom AI Copilot.
  *
  * The copilot is an intent router over the Intelligence Platform, not a
  * language model. It answers a question by finding the facts that answer it
@@ -296,7 +296,7 @@ export function askCopilot(question: string, context: CopilotContext): CopilotAn
 
 /** Suggested openers, tailored to what the platform can actually answer now. */
 export function copilotPrompts(context: CopilotContext): string[] {
-  if (!context.assessment) return ["What can you help with?", "How does Spacilo AI work?"];
+  if (!context.assessment) return ["What can you help with?", "How does EarnRoom AI work?"];
   const prompts = ["Will everything fit?", "How much space is left?", "What should I do first?"];
   if ((context.assessments ?? []).length > 1) prompts.push("Which space is best overall?");
   if ((context.hostInsights ?? []).length > 0) prompts.push("How can I earn more?");

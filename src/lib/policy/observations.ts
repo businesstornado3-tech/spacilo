@@ -1,7 +1,7 @@
 /**
  * Host suitability provenance.
  *
- * Spacilo AI can observe things about a space — "looks like a garage",
+ * EarnRoom AI can observe things about a space — "looks like a garage",
  * "no visible window". Those observations are proposals. They are stored
  * separately from the host's answers and only become part of the profile
  * when the host confirms or corrects them. A proposal never becomes

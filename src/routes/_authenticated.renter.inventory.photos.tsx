@@ -46,7 +46,7 @@ function InventoryPhotosPage() {
     <AppLayout
       mode="renter"
       title="Show us what you want to store."
-      description="Upload clear photos of your belongings. Spacilo AI will be able to analyse these in the next stage."
+      description="Upload clear photos of your belongings. EarnRoom AI will be able to analyse these in the next stage."
     >
       {isLoading || !inventory ? (
         <Skeleton className="h-72 w-full" />
@@ -81,7 +81,7 @@ function InventoryPhotosPage() {
                 </p>
                 <p className="mt-3 flex gap-2 type-body-sm text-muted-foreground">
                   <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                  You can always add items by hand — Spacilo AI is there to save time, not to
+                  You can always add items by hand — EarnRoom AI is there to save time, not to
                   decide for you.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-2">

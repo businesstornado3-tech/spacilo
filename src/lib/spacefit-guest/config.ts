@@ -211,4 +211,4 @@ export const GUEST_CLAIM_MESSAGES: Record<GuestClaimRejection, string> = {
 };
 
 export const GUEST_PREVIEW_DISCLAIMER =
-  "This is a preview. Spacilo AI estimates from photos and can be wrong — you review and correct everything, and nothing is saved until you create an account.";
+  "This is a preview. EarnRoom AI estimates from photos and can be wrong — you review and correct everything, and nothing is saved until you create an account.";

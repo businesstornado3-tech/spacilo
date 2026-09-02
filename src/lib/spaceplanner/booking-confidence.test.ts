@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { CATALOGUE_BY_ID } from "@/lib/spaceplanner/catalogue";
 import { buildPlan } from "@/lib/spaceplanner";
-import { spaciloScore } from "@/lib/spaceplanner/score";
+import { earnroomScore } from "@/lib/spaceplanner/score";
 import { SPACE_BY_ID } from "@/lib/spaceplanner/spaces";
 import {
   applySuggestions,
@@ -76,7 +76,7 @@ describe("listing geometry", () => {
 describe("booking confidence", () => {
   it("renders every required row", () => {
     const plan = buildPlan(small, garage);
-    const confidence = buildBookingConfidence(plan, spaciloScore(plan));
+    const confidence = buildBookingConfidence(plan, earnroomScore(plan));
     const rowIds = confidence.rows.map((row) => row.id);
     expect(rowIds).toEqual([
       "compatibility",
@@ -97,7 +97,7 @@ describe("booking confidence", () => {
     expect(toneForScore(60)).toBe("amber");
     expect(toneForScore(20)).toBe("red");
     const plan = buildPlan(small, garage);
-    const score = spaciloScore(plan);
+    const score = earnroomScore(plan);
     expect(["book", "review", "browse"]).toContain(ctaFor(score).intent);
     expect(ctaFor({ ...score, value: 95 }).label).toBe("Book this space");
     expect(ctaFor({ ...score, value: 60 }).label).toBe("Review packing suggestions");
@@ -108,7 +108,7 @@ describe("booking confidence", () => {
 describe("suggestions", () => {
   it("only suggests changes for checks that are not passing", () => {
     const plan = buildPlan(heavy, loft);
-    const score = spaciloScore(plan);
+    const score = earnroomScore(plan);
     const suggestions = buildSuggestions(plan, score);
     for (const suggestion of suggestions) {
       if (suggestion.kind !== "technique" || !suggestion.resolves) continue;
@@ -119,7 +119,7 @@ describe("suggestions", () => {
 
   it("applying a technique never lowers the score", () => {
     const plan = buildPlan(heavy, loft);
-    const score = spaciloScore(plan);
+    const score = earnroomScore(plan);
     const suggestions = buildSuggestions(plan, score).filter((s) => s.kind === "technique");
     if (!suggestions.length) return;
     const adjusted = applySuggestions(
@@ -134,7 +134,7 @@ describe("suggestions", () => {
 
   it("removing an item re-runs the engine with fewer lines", () => {
     const plan = buildPlan(heavy, loft);
-    const suggestions = buildSuggestions(plan, spaciloScore(plan));
+    const suggestions = buildSuggestions(plan, earnroomScore(plan));
     const remove = suggestions.find((s) => s.kind === "remove");
     if (!remove) return;
     const adjusted = applySuggestions(heavy, loft, suggestions, [remove.id]);

@@ -1,5 +1,5 @@
 /**
- * Spacilo AI SpacePlanner™ — visualisation endpoint (Lovable AI Gateway).
+ * EarnRoom AI SpacePlanner™ — visualisation endpoint (Lovable AI Gateway).
  *
  * PROVIDER: Google's image model through the Lovable AI Gateway, using the
  * platform's own `LOVABLE_API_KEY`. No separately funded vendor account is

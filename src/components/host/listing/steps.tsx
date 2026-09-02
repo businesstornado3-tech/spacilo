@@ -228,7 +228,7 @@ export function StepSize({ form, patch, spaceId }: StepProps) {
         <div className="mt-5 flex items-center gap-3 rounded-xl border border-dashed border-border-strong bg-card p-4">
           <Sparkles className="size-5 shrink-0 text-primary" aria-hidden="true" />
           <div>
-            <p className="type-label">Scan my space with Spacilo AI</p>
+            <p className="type-label">Scan my space with EarnRoom AI</p>
             <p className="type-body-sm text-muted-foreground">
               Available as soon as your draft listing is saved.
             </p>

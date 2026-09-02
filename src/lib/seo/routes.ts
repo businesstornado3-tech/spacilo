@@ -49,7 +49,7 @@ export const PUBLIC_LISTING_ROUTE_PREFIX = "/spaces/";
 /**
  * Path prefixes that must never be indexed: authenticated dashboards,
  * account/profile, messaging, booking/request workflows, private
- * Spacilo AI results, admin, auth callbacks, and other transactional flows.
+ * EarnRoom AI results, admin, auth callbacks, and other transactional flows.
  */
 export const PRIVATE_ROUTE_PREFIXES: readonly string[] = [
   "/renter",
@@ -67,7 +67,7 @@ export const PRIVATE_ROUTE_PREFIXES: readonly string[] = [
 
 /**
  * Paths that are private at that EXACT url only. `/spacefit` is the
- * authenticated Spacilo AI hub, but `/spacefit/stuff` and `/spacefit/space`
+ * authenticated EarnRoom AI hub, but `/spacefit/stuff` and `/spacefit/space`
  * are public marketing demos, so a prefix rule would be wrong here.
  */
 export const PRIVATE_EXACT_ROUTES: readonly string[] = ["/spacefit"] as const;

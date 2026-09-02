@@ -21,7 +21,7 @@ export function UnlockCard() {
         You've just seen the preview
       </p>
       <h3 id="planner-unlock" className="mt-3 type-h3">
-        Unlock Spacilo AI
+        Unlock EarnRoom AI
       </h3>
       <p className="mt-1 type-body-sm text-muted-foreground">
         Create your free account to unlock the complete planner.

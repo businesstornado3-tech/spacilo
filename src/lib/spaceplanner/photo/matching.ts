@@ -1,5 +1,5 @@
 /**
- * Matching a renter's belongings to real Spacilo listings.
+ * Matching a renter's belongings to real EarnRoom listings.
  *
  * Ranking is deterministic and explainable: estimated fit first, then how much
  * would remain, then price and distance. The fit figure is always an estimate.

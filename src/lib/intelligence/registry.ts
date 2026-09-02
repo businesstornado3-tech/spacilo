@@ -1,5 +1,5 @@
 /**
- * Provider registry — the Spacilo Intelligence Platform itself.
+ * Provider registry — the EarnRoom Intelligence Platform itself.
  *
  * The registry is the only place in the codebase that knows which engine is
  * active. Swapping the mock vision provider for OpenAI, Gemini, Azure AI
@@ -7,7 +7,7 @@
  * component, hook or route changes, because none of them can name a provider.
  *
  * Providers never carry credentials. A remote provider is a thin client that
- * calls a Spacilo server function, which holds the key server-side.
+ * calls a EarnRoom server function, which holds the key server-side.
  */
 import type { IntelligenceCapability } from "./contracts";
 import { emitIntelligenceEvent } from "./events";

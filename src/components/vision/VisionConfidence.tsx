@@ -22,7 +22,7 @@ export function VisionConfidence({ summary }: { summary: DetectedInventorySummar
       <span className="type-body-xs text-muted-foreground">
         {needsReview
           ? `${summary.reviewCount} ${summary.reviewCount === 1 ? "item needs" : "items need"} a quick check before planning.`
-          : "Spacilo AI estimates — please correct anything that looks wrong."}
+          : "EarnRoom AI estimates — please correct anything that looks wrong."}
       </span>
     </div>
   );

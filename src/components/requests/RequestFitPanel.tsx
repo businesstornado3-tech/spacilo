@@ -1,9 +1,9 @@
 /**
- * RequestFitPanel — Spacilo AI SpacePlanner™ inside a host's request review.
+ * RequestFitPanel — EarnRoom AI SpacePlanner™ inside a host's request review.
  *
  * The renter's estimated requirement is run against the host's own available
  * capacity so the host can see the estimated fit, what would remain and how
- * the request changes utilisation. Spacilo AI never accepts or declines — the
+ * the request changes utilisation. EarnRoom AI never accepts or declines — the
  * host remains the decision maker.
  */
 import * as React from "react";
@@ -46,7 +46,7 @@ export function RequestFitPanel({
 
   return (
     <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
-      <p className="type-overline text-muted-foreground">Spacilo AI SpacePlanner™</p>
+      <p className="type-overline text-muted-foreground">EarnRoom AI SpacePlanner™</p>
       <h2 className="mt-1 flex items-center gap-2 type-h3">
         <Sparkles className="size-5 text-signal-soft-foreground" aria-hidden="true" />
         Estimated fit for this request

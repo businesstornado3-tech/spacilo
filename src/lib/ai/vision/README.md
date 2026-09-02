@@ -1,4 +1,4 @@
-# Spacilo Vision AI — production platform (Phase 6C)
+# EarnRoom Vision AI — production platform (Phase 6C)
 
 Computer vision for storage: what someone owns, how big it is, how it must be
 handled, and what a host's space can actually take.
@@ -69,7 +69,7 @@ const analysis = await aiServices.vision.analyseDetailed({
 });
 ```
 
-Existing screens are unchanged: `spacilo-vision-pro` and `spacilo-scene-pro`
+Existing screens are unchanged: `earnroom-vision-pro` and `earnroom-scene-pro`
 are registered ahead of the legacy engine for the `vision` and `space-analysis`
 capabilities and return the same `DetectedInventory` / `DetectedSpace` shapes
 via `adapters.ts`.

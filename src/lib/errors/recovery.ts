@@ -32,7 +32,7 @@ export const RECOVERY_COPY: Record<RecoveryKind, RecoveryCopy> = {
     retryLabel: "Try again",
   },
   network: {
-    title: "We couldn't reach Spacilo",
+    title: "We couldn't reach EarnRoom",
     description:
       "The connection dropped on the way. This is usually temporary — try again in a moment.",
     retryLabel: "Try again",
@@ -44,7 +44,7 @@ export const RECOVERY_COPY: Record<RecoveryKind, RecoveryCopy> = {
     retryLabel: "Retry upload",
   },
   vision: {
-    title: "Spacilo AI couldn't read those photos",
+    title: "EarnRoom AI couldn't read those photos",
     description:
       "The images may be too dark or too close in. Retake them in good light with the whole space in frame, or add your items manually — the result is just as accurate.",
     retryLabel: "Try again",
@@ -52,7 +52,7 @@ export const RECOVERY_COPY: Record<RecoveryKind, RecoveryCopy> = {
   planner: {
     title: "The plan didn't finish",
     description:
-      "Spacilo AI stopped part way through optimising your layout. Your inventory is safe — run the plan again.",
+      "EarnRoom AI stopped part way through optimising your layout. Your inventory is safe — run the plan again.",
     retryLabel: "Run plan again",
   },
   payment: {

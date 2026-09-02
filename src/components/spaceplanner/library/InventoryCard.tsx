@@ -76,7 +76,7 @@ export function InventoryCard({
         <Stat label="Volume" value={formatVolume(summary.estimatedStorageVolume)} />
         <Stat label="Weight" value={`~${formatWeight(summary.weightKg)}`} />
         <Stat
-          label="Spacilo AI"
+          label="EarnRoom AI"
           value={
             inventory.lastScore === null ? "Not run yet" : `${inventory.lastScore} · ${bandFor(inventory.lastScore)}`
           }

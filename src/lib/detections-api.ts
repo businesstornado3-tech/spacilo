@@ -91,7 +91,7 @@ export interface ConfirmDecision {
 /**
  * Turns accepted suggestions into real inventory items.
  *
- * Sizes come from Spacilo's own catalogue, never from the photograph.
+ * Sizes come from EarnRoom's own catalogue, never from the photograph.
  * When no catalogue entry matches, dimensions stay empty and the item is
  * flagged `unknown` so the renter is asked for them later — an honest gap
  * beats an invented measurement.

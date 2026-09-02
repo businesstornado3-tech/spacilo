@@ -41,7 +41,7 @@ const RULES: Array<Omit<AttentionCondition, "value">> = [
     key: "open_support_cases",
     label: "Open support cases",
     severity: "attention",
-    hint: "A renter or host is waiting on Spacilo.",
+    hint: "A renter or host is waiting on EarnRoom.",
   },
   {
     key: "reported_reviews",

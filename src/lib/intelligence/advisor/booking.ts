@@ -74,7 +74,7 @@ export function assessBooking(
     ...(assessment.listing.availableNow ? [] : ["The space is not listed as available immediately."]),
     ...(assessment.listing.hostConfirmed
       ? []
-      : ["Measurements are Spacilo AI estimates rather than host-confirmed."]),
+      : ["Measurements are EarnRoom AI estimates rather than host-confirmed."]),
   ];
 
   return {

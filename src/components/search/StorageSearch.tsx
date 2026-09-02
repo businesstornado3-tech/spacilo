@@ -218,7 +218,7 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
         <div className="rounded-2xl border border-signal/25 bg-signal-soft/40 p-4">
           <p className="type-label">Not sure how much space you need?</p>
           <p className="mt-1 type-body-sm text-signal-soft-foreground">
-            Spacilo AI compares your belongings with each space and shows how well they suit each
+            EarnRoom AI compares your belongings with each space and shows how well they suit each
             other. It's an estimate, not a guarantee.
           </p>
           <Button asChild size="sm" className="mt-3">
@@ -246,7 +246,7 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
           <p className="mt-2 type-body-sm text-muted-foreground">
             {nearbyCount > 0
               ? `${nearbyCount} ${nearbyCount === 1 ? "space is" : "spaces are"} nearby, but none match your current filters.`
-              : "We're starting in Portsmouth, so coverage is still growing."}
+              : "Availability varies by location as more hosts join across the UK."}
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-3">
             <Button onClick={() => onParamsChange({ radius: Math.min(params.radius * 2, 20) })}>

@@ -1,5 +1,5 @@
 /**
- * Spacilo Digital Twin™ — data contracts (Phase 6, Milestone 1).
+ * EarnRoom Digital Twin™ — data contracts (Phase 6, Milestone 1).
  *
  * The twin is the single visual truth of a space. It is renderer-independent
  * by construction: nothing here imports Three.js, React, or any GPU concept,
@@ -25,7 +25,7 @@ import type { IconKey, Placement, SpaceKind, StorageSpace, WeightClass } from "@
 export type { IconKey, SpaceKind, StorageSpace, WeightClass };
 
 export const TWIN_CONTRACT_VERSION = "twin-1";
-export const TWIN_ENGINE_ID = "spacilo-digital-twin-v1";
+export const TWIN_ENGINE_ID = "earnroom-digital-twin-v1";
 
 /* ------------------------------------------------------------ primitives */
 

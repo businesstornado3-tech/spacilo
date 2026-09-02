@@ -1,7 +1,7 @@
 /**
  * Renter-facing safety check for My Stuff.
  *
- * Spacilo AI may have suggested what an item is — this panel is where the
+ * EarnRoom AI may have suggested what an item is — this panel is where the
  * renter confirms or corrects it. The published storage policy then decides
  * what that means, and the same rules run again on the server before any
  * request is sent, so nothing here can wave an item through.
@@ -137,7 +137,7 @@ function ScreenedItemRow({
       </div>
       <p className="mt-1 type-body-sm text-muted-foreground">
         Recorded as {policyCategoryLabel(item.policy_category)}
-        {item.provenance === "ai_proposed" ? " (suggested by Spacilo AI)" : ""}.
+        {item.provenance === "ai_proposed" ? " (suggested by EarnRoom AI)" : ""}.
       </p>
       {item.message ? <p className="mt-2 type-body-sm">{item.message}</p> : null}
 

@@ -66,7 +66,7 @@ export interface AiConfig {
 const MINUTE = 60_000;
 
 /**
- * Shorthand for the Phase 6B reasoning capabilities. They run on Spacilo's own
+ * Shorthand for the Phase 6B reasoning capabilities. They run on EarnRoom's own
  * engines by default; a remote vendor is added to `providers` ahead of the
  * local id and inherits the same timeouts, retries and caching.
  */
@@ -92,7 +92,7 @@ const DEFAULT_CONFIG: AiConfig = {
     vision: {
       kind: "vision",
       // Phase 6C production platform first; the legacy engine stays as fallback.
-      providers: ["spacilo-vision-pro", "spacilo-vision", "spacilo-vision-mock"],
+      providers: ["earnroom-vision-pro", "earnroom-vision", "earnroom-vision-mock"],
       timeoutMs: 45_000,
       retries: 1,
       cacheTtlMs: 30 * MINUTE,
@@ -101,7 +101,7 @@ const DEFAULT_CONFIG: AiConfig = {
     },
     "space-analysis": {
       kind: "image-analysis",
-      providers: ["spacilo-scene-pro", "spacilo-space", "spacilo-space-mock"],
+      providers: ["earnroom-scene-pro", "earnroom-space", "earnroom-space-mock"],
       timeoutMs: 45_000,
       retries: 1,
       cacheTtlMs: 30 * MINUTE,
@@ -110,7 +110,7 @@ const DEFAULT_CONFIG: AiConfig = {
     },
     inventory: {
       kind: "local",
-      providers: ["spacilo-inventory"],
+      providers: ["earnroom-inventory"],
       timeoutMs: 20_000,
       retries: 1,
       cacheTtlMs: 15 * MINUTE,
@@ -119,7 +119,7 @@ const DEFAULT_CONFIG: AiConfig = {
     },
     planner: {
       kind: "local",
-      providers: ["spacilo-planner"],
+      providers: ["earnroom-planner"],
       timeoutMs: 30_000,
       retries: 1,
       cacheTtlMs: 10 * MINUTE,
@@ -128,7 +128,7 @@ const DEFAULT_CONFIG: AiConfig = {
     },
     recommendations: {
       kind: "local",
-      providers: ["spacilo-recommendations"],
+      providers: ["earnroom-recommendations"],
       timeoutMs: 20_000,
       retries: 1,
       cacheTtlMs: 10 * MINUTE,
@@ -137,7 +137,7 @@ const DEFAULT_CONFIG: AiConfig = {
     },
     pricing: {
       kind: "local",
-      providers: ["spacilo-pricing"],
+      providers: ["earnroom-pricing"],
       timeoutMs: 15_000,
       retries: 2,
       cacheTtlMs: 60 * MINUTE,
@@ -146,7 +146,7 @@ const DEFAULT_CONFIG: AiConfig = {
     },
     search: {
       kind: "embedding",
-      providers: ["spacilo-search"],
+      providers: ["earnroom-search"],
       timeoutMs: 15_000,
       retries: 1,
       cacheTtlMs: 6 * 60 * MINUTE,
@@ -155,7 +155,7 @@ const DEFAULT_CONFIG: AiConfig = {
     },
     assistant: {
       kind: "llm",
-      providers: ["spacilo-assistant"],
+      providers: ["earnroom-assistant"],
       timeoutMs: 30_000,
       retries: 1,
       cacheTtlMs: 5 * MINUTE,
@@ -164,21 +164,21 @@ const DEFAULT_CONFIG: AiConfig = {
     },
 
     /* ------------------------------- Phase 6B applied intelligence */
-    suitability: reasoning("spacilo-suitability", { minConfidence: 0.55 }),
-    ranking: reasoning("spacilo-ranking", { cacheTtlMs: 5 * MINUTE }),
-    "host-pricing": reasoning("spacilo-host-pricing", { cacheTtlMs: 60 * MINUTE, retries: 2 }),
-    "listing-quality": reasoning("spacilo-listing-quality", { cacheTtlMs: 5 * MINUTE }),
-    description: reasoning("spacilo-description", { cacheTtlMs: 30 * MINUTE }),
-    "nl-search": reasoning("spacilo-nl-search", { cacheTtlMs: 6 * 60 * MINUTE, minConfidence: 0.4 }),
-    "booking-assistant": reasoning("spacilo-booking-assistant"),
-    "trust-summary": reasoning("spacilo-trust-summary", { cacheTtlMs: 60 * MINUTE }),
-    "inventory-assistant": reasoning("spacilo-inventory-assistant"),
-    seasonal: reasoning("spacilo-seasonal", { cacheTtlMs: 6 * 60 * MINUTE }),
-    notifications: reasoning("spacilo-notifications", { cacheTtlMs: 2 * MINUTE }),
-    "host-insights": reasoning("spacilo-host-insights", { cacheTtlMs: 30 * MINUTE }),
-    fraud: reasoning("spacilo-fraud", { cacheTtlMs: 5 * MINUTE, minConfidence: 0.6 }),
-    "message-assist": reasoning("spacilo-message-assist", { cacheTtlMs: 5 * MINUTE }),
-    "help-search": reasoning("spacilo-help-search", {
+    suitability: reasoning("earnroom-suitability", { minConfidence: 0.55 }),
+    ranking: reasoning("earnroom-ranking", { cacheTtlMs: 5 * MINUTE }),
+    "host-pricing": reasoning("earnroom-host-pricing", { cacheTtlMs: 60 * MINUTE, retries: 2 }),
+    "listing-quality": reasoning("earnroom-listing-quality", { cacheTtlMs: 5 * MINUTE }),
+    description: reasoning("earnroom-description", { cacheTtlMs: 30 * MINUTE }),
+    "nl-search": reasoning("earnroom-nl-search", { cacheTtlMs: 6 * 60 * MINUTE, minConfidence: 0.4 }),
+    "booking-assistant": reasoning("earnroom-booking-assistant"),
+    "trust-summary": reasoning("earnroom-trust-summary", { cacheTtlMs: 60 * MINUTE }),
+    "inventory-assistant": reasoning("earnroom-inventory-assistant"),
+    seasonal: reasoning("earnroom-seasonal", { cacheTtlMs: 6 * 60 * MINUTE }),
+    notifications: reasoning("earnroom-notifications", { cacheTtlMs: 2 * MINUTE }),
+    "host-insights": reasoning("earnroom-host-insights", { cacheTtlMs: 30 * MINUTE }),
+    fraud: reasoning("earnroom-fraud", { cacheTtlMs: 5 * MINUTE, minConfidence: 0.6 }),
+    "message-assist": reasoning("earnroom-message-assist", { cacheTtlMs: 5 * MINUTE }),
+    "help-search": reasoning("earnroom-help-search", {
       kind: "embedding",
       cacheTtlMs: 6 * 60 * MINUTE,
       minConfidence: 0.4,

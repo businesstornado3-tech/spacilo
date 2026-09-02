@@ -1,7 +1,7 @@
 /**
  * Mock learning provider.
  *
- * Records whether people kept or corrected what Spacilo AI proposed, and turns
+ * Records whether people kept or corrected what EarnRoom AI proposed, and turns
  * that into a calibration multiplier. It stores counts against non-identifying
  * subject keys only — no photos, no free text, no user ids — and is capped so
  * feedback can nudge confidence but never manufacture it.
@@ -12,7 +12,7 @@ import type { LearningProvider } from "../providers";
 
 const IDENTITY = {
   id: "mock-learning-v1",
-  label: "Spacilo AI learning (in-memory)",
+  label: "EarnRoom AI learning (in-memory)",
   model: "calibration-v1",
   remote: false,
 } as const;

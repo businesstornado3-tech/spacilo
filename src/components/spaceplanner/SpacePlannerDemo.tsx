@@ -1,5 +1,5 @@
 /**
- * Spacilo AI SpacePlanner™ — the interactive homepage demonstration.
+ * EarnRoom AI SpacePlanner™ — the interactive homepage demonstration.
  *
  * This is the visitor-mode surface of the shared planner: the same provider,
  * panels and canvas the renter dashboard and host review panel use, with a
@@ -269,7 +269,7 @@ function AddTray({ onAdd }: { onAdd: (itemId: string) => void }) {
     <div className="mt-4 rounded-2xl border border-dashed border-border-strong bg-surface p-3">
       <p className="type-label">Add one more thing</p>
       <p className="mt-0.5 type-body-sm text-muted-foreground">
-        Drag an object into the plan, or tap it — Spacilo AI replans instantly.
+        Drag an object into the plan, or tap it — EarnRoom AI replans instantly.
       </p>
       <ul className="mt-3 flex flex-wrap gap-2">
         {items.map((item) => (

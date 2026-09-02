@@ -1,5 +1,5 @@
 /**
- * Spacilo email template library.
+ * EarnRoom email template library.
  *
  * Templates only. No provider is configured, no key is read and nothing here
  * sends anything — wiring an email provider is a separate founder
@@ -346,7 +346,7 @@ export const EMAIL_TEMPLATES: Record<EmailTemplateId, EmailTemplate> = {
         data.messagePreview ? `"${data.messagePreview}"` : "Open the app to read and reply.",
       ],
       button: { label: "Read and reply", url: url(data, "/renter/messages") },
-      footnote: "Keep conversations and payments on Spacilo so support can help if something goes wrong.",
+      footnote: "Keep conversations and payments on EarnRoom so support can help if something goes wrong.",
     }),
   },
 
@@ -370,7 +370,7 @@ export const EMAIL_TEMPLATES: Record<EmailTemplateId, EmailTemplate> = {
     content: (data) => ({
       preheader: data.subjectLine ?? `An update from ${brand.name}.`,
       heading: data.subjectLine ?? `An update from ${brand.name}`,
-      paragraphs: [hi(data), data.body ?? "We've made a change that affects how you use Spacilo."],
+      paragraphs: [hi(data), data.body ?? "We've made a change that affects how you use EarnRoom."],
       button: { label: `Open ${brand.name}`, url: url(data, "/") },
       footnote: "Service update about your account — not a marketing email.",
     }),

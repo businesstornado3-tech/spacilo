@@ -30,7 +30,7 @@ import type { VisionPhoto } from "./contracts";
 
 const IDENTITY = {
   id: VISION_ENGINE_ID,
-  label: "Spacilo Vision Engine",
+  label: "EarnRoom Vision Engine",
   model: `vision-engine-${VISION_ENGINE_VERSION}`,
   remote: false,
 } as const;
@@ -75,7 +75,7 @@ export const visionEngineProvider: PlatformVisionProvider = {
 export const visionEngineSpaceProvider: SpaceAnalysisProvider = {
   ...IDENTITY,
   id: `${VISION_ENGINE_ID}-space`,
-  label: "Spacilo Vision Engine (space)",
+  label: "EarnRoom Vision Engine (space)",
   capabilities: ["space-analysis", "dimensions"],
 
   async analyseSpace(photos, spaceType, request?: ProviderRequest): Promise<DetectedSpace> {

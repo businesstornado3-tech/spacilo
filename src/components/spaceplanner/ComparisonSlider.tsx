@@ -34,7 +34,7 @@ export function ComparisonSlider({ plan, className }: { plan: SpacePlan; classNa
           <LayoutSimulation
             space={plan.space}
             pack={plan.after}
-            title="After — optimised by Spacilo AI"
+            title="After — optimised by EarnRoom AI"
             animate={false}
             showLabels={false}
             showCaption={false}

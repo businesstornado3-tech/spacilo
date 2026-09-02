@@ -1,11 +1,11 @@
 /**
- * ConfidenceBadge — how sure Spacilo AI is, stated plainly.
+ * ConfidenceBadge — how sure EarnRoom AI is, stated plainly.
  *
  * Vision AI proposes; people confirm. Phase 6O gives the bands their own
  * words, so a 61% guess can never look like a 95% observation:
  *   ≥80%  confident
  *   60–79% please check
- *   <60%  Spacilo AI isn't sure
+ *   <60%  EarnRoom AI isn't sure
  */
 import { cn } from "@/lib/utils";
 import { confidenceTier, formatConfidence } from "@/lib/vision";

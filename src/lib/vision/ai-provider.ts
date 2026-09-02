@@ -276,7 +276,7 @@ function roomFeatures(value: unknown): RoomFeature[] {
 }
 
 export const aiVisionProvider: VisionProvider = {
-  id: "spacilo-vision-ai",
+  id: "earnroom-vision-ai",
   model: "gateway/single-pass",
 
   async analyseBelongings(
@@ -292,7 +292,7 @@ export const aiVisionProvider: VisionProvider = {
       return {
         objects: cached,
         photoIds: photos.map((photo) => photo.id),
-        provider: "spacilo-vision-ai",
+        provider: "earnroom-vision-ai",
         model: "cache",
         analysedAt: Date.now(),
         // A cache hit costs nothing but the lookup itself.
@@ -321,7 +321,7 @@ export const aiVisionProvider: VisionProvider = {
     return {
       objects,
       photoIds: photos.map((photo) => photo.id),
-      provider: "spacilo-vision-ai",
+      provider: "earnroom-vision-ai",
       model: typeof payload["model"] === "string" ? String(payload["model"]) : "gateway",
       analysedAt: Date.now(),
       timings: stageTimings(payload, prepareMs, requestMs),
@@ -369,7 +369,7 @@ export const aiVisionProvider: VisionProvider = {
         : [],
       features: roomFeatures(space["features"]),
       confidence: Math.max(0.2, Math.min(0.95, positive(space["confidence"], 0.6))),
-      provider: "spacilo-vision-ai",
+      provider: "earnroom-vision-ai",
       analysedAt: Date.now(),
     };
     writeSpaceCache(cacheKey, result);

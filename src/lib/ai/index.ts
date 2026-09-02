@@ -1,5 +1,5 @@
 /**
- * Spacilo AI — public entry point (Phase 6A).
+ * EarnRoom AI — public entry point (Phase 6A).
  *
  * Application code imports from here and nowhere deeper. That is what keeps a
  * provider swap a configuration change rather than a refactor.
@@ -135,5 +135,5 @@ export type {
   VehicleSize,
 } from "./providers/guidance";
 export type { FraudAssessment, FraudInput, FraudOutput, FraudSignal, FraudSignalCode, FraudSubject } from "./providers/fraud";
-export { installSpaciloAi, isAiInstalled } from "./bootstrap";
+export { installEarnRoomAi, isAiInstalled } from "./bootstrap";
 

@@ -294,7 +294,7 @@ export const NOTIFICATION_CATEGORIES = [
   { value: "messages", label: "Messages", description: "New messages from a host or renter." },
   { value: "payments", label: "Payments", description: "Payments, payouts and refunds." },
   { value: "reviews", label: "Reviews", description: "Review invitations and published reviews." },
-  { value: "announcements", label: "Announcements", description: "Occasional Spacilo service updates." },
+  { value: "announcements", label: "Announcements", description: "Occasional EarnRoom service updates." },
 ] as const;
 
 export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number]["value"];

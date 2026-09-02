@@ -6,11 +6,16 @@
  * `PREVIOUS_BRAND` below into `brand` — no component changes are required.
  */
 export const brand = {
-  name: "Spacilo",
-  shortName: "Spacilo",
-  legalName: "Spacilo Ltd",
+  name: "EarnRoom",
+  shortName: "EarnRoom",
+  /**
+   * NO REGISTERED ENTITY HAS BEEN CONFIRMED. Until the owner supplies the
+   * registered company name, number and office, this stays the trading name
+   * and legal pages must not assert a corporate entity.
+   */
+  legalName: "EarnRoom",
   /** The AI experience name — deliberately prominent across the product. */
-  ai: "Spacilo AI",
+  ai: "EarnRoom AI",
   tagline: "Space nearby. Income at home.",
   propositions: {
     renter: "Space nearby. Income at home.",
@@ -18,13 +23,20 @@ export const brand = {
     ai: "Show us your stuff. We'll help find the space.",
     trust: "Storage between people, built around trust.",
   },
-  supportEmail: "hello@spacilo.example",
+  supportEmail: "hello@earnroom.example",
   locale: "en-GB",
   currency: "GBP",
   currencySymbol: "£",
   country: "United Kingdom",
-  /** Initial pilot areas — expandable, never hard-coded into logic. */
-  pilotAreas: [
+  /** The service is UK-wide; availability varies by location. */
+  serviceArea: "United Kingdom",
+  positioning: "Building a smarter way to use space across the UK.",
+  availabilityNote: "Available across the UK — availability varies by location.",
+  /**
+   * Areas where supply is currently concentrated. Marketing context only:
+   * never the scope of the business and never used in search logic.
+   */
+  focusAreas: [
     "Portsmouth",
     "Southsea",
     "Fratton",
@@ -37,14 +49,15 @@ export const brand = {
   ],
 } as const;
 
-/** Kept for a one-step rollback of the Spacilo brand migration. */
+/** Kept for a one-step rollback of the EarnRoom brand migration. */
 export const PREVIOUS_BRAND = {
-  name: "Project Stow",
-  shortName: "Stow",
-  legalName: "Project Stow Ltd",
-  ai: "SpaceFit AI",
-  tagline: "Your stuff. Space nearby.",
-  supportEmail: "hello@projectstow.example",
+  name: "Spacilo",
+  shortName: "Spacilo",
+  legalName: "Spacilo",
+  ai: "Spacilo AI",
+  tagline: "Space nearby. Income at home.",
+  supportEmail: "hello@earnroom.example",
 } as const;
+
 
 export type Brand = typeof brand;

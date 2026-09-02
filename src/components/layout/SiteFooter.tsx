@@ -97,7 +97,7 @@ export function SiteFooter() {
             </p>
             <p className="mt-2.5 type-body-sm text-muted-foreground">
               {brand.name} connects people who need storage with neighbours who have space to
-              spare — with Spacilo AI showing how everything fits before anyone books.
+              spare — with EarnRoom AI showing how everything fits before anyone books.
             </p>
           </div>
 
@@ -123,7 +123,7 @@ export function SiteFooter() {
             © {new Date().getFullYear()} {brand.name}. Built with AI. Powered by local communities.
           </p>
           <p className="type-body-sm text-muted-foreground">
-            Preparing for our {brand.pilotAreas[0]} pilot. Prices in GBP (£).
+            {brand.positioning} Prices in GBP (£).
           </p>
         </div>
       </div>

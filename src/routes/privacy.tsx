@@ -3,13 +3,13 @@ import { ShieldCheck } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { MarketingLayout, PageSection } from "@/components/layout/MarketingLayout";
-import { measurementSections, privacyIntro } from "@/data/privacy";
+import { legalReviewNotice, measurementSections, privacyIntro } from "@/data/privacy";
 import { publicRouteMeta } from "@/lib/seo/meta";
 import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
 const title = `Privacy and data — ${brand.name}`;
 const description =
-  "What Spacilo measures on its public site, what it never records, how long anonymous data is kept, and how we respect browser privacy signals.";
+  "How EarnRoom handles accounts, bookings, uploaded photos, AI-assisted estimates, anonymous analytics and browser storage, with launch review still required.";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
@@ -47,6 +47,8 @@ function PrivacyPage() {
             </article>
           ))}
         </div>
+
+        <p className="mt-8 max-w-3xl type-body-sm text-muted-foreground">{legalReviewNotice}</p>
       </PageSection>
     </MarketingLayout>
   );

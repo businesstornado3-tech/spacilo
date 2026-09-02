@@ -14,7 +14,7 @@ import type { ProviderRequest, RecommendationProvider } from "../providers";
 
 const IDENTITY = {
   id: "mock-recommendations-v1",
-  label: "Spacilo AI recommendations",
+  label: "EarnRoom AI recommendations",
   model: "spaceplanner-rules-v1",
   remote: false,
 } as const;

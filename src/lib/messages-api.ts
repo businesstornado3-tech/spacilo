@@ -121,7 +121,7 @@ export async function setConversationArchived(
   if (error) throw error;
 }
 
-/** Sends a thread to the Spacilo moderation queue. Never resolves it here. */
+/** Sends a thread to the EarnRoom moderation queue. Never resolves it here. */
 export async function reportConversation(input: {
   conversationId: string;
   reason: string;

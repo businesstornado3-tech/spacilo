@@ -114,11 +114,11 @@ describe("path normalisation", () => {
 
 describe("referrer handling", () => {
   it("keeps the host only and ignores our own pages", () => {
-    expect(referrerHost("https://www.google.com/search?q=storage+portsmouth", "spacilo.com")).toBe(
+    expect(referrerHost("https://www.google.com/search?q=storage+portsmouth", "earnroom.com")).toBe(
       "www.google.com",
     );
-    expect(referrerHost("https://spacilo.com/how-it-works", "spacilo.com")).toBeNull();
-    expect(referrerHost("", "spacilo.com")).toBeNull();
+    expect(referrerHost("https://earnroom.com/how-it-works", "earnroom.com")).toBeNull();
+    expect(referrerHost("", "earnroom.com")).toBeNull();
   });
 });
 

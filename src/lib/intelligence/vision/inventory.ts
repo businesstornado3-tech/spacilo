@@ -5,7 +5,7 @@
  * become "Medium box ×3", a bike becomes "Bicycle ×1", and each line carries
  * its own dimensions, weight, fragility, confidence and explanation.
  *
- * It also converts to the shapes the rest of Spacilo already speaks —
+ * It also converts to the shapes the rest of EarnRoom already speaks —
  * `DetectedObject` for the review screens and `InventoryLine` for the planner
  * — so nothing downstream has to learn a new vocabulary.
  */

@@ -9,7 +9,7 @@
  *     claim about what other hosts charge. The host always sets the final price.
  *
  *  2. PROJECT earnings over 1, 3, 6 and 12 months at a chosen occupancy.
- *     The renter pays the Spacilo service fee ON TOP of the storage price,
+ *     The renter pays the EarnRoom service fee ON TOP of the storage price,
  *     so a host keeps 100% of the price they set (see `src/lib/payments/fees.ts`).
  *
  * Deterministic and pure: no AI, no randomness, no network calls.

@@ -14,7 +14,7 @@ import type { PricingProvider, ProviderRequest } from "../providers";
 
 const IDENTITY = {
   id: "mock-pricing-v1",
-  label: "Spacilo AI pricing guidance",
+  label: "EarnRoom AI pricing guidance",
   model: "spacefit-price-v1",
   remote: false,
 } as const;

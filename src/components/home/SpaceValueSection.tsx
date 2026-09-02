@@ -1,8 +1,8 @@
 /**
- * SpaceValueSection — the Spacilo Earnings Estimator.
+ * SpaceValueSection — the EarnRoom Earnings Estimator.
  *
  * Two honest routes to the same answer: answer three quick questions, or let
- * Spacilo AI read a photo of the space. Both are indicative estimates.
+ * EarnRoom AI read a photo of the space. Both are indicative estimates.
  *
  * The two routes rotate gently while the section is on screen so a visitor
  * sees both without clicking — and rotation stops for good the moment they
@@ -85,13 +85,13 @@ export function SpaceValueSection() {
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <header className="max-w-xl">
           <p className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 type-badge text-muted-foreground">
-            <PoundSterling className="size-3.5" aria-hidden="true" /> Spacilo Earnings Estimator
+            <PoundSterling className="size-3.5" aria-hidden="true" /> EarnRoom Earnings Estimator
           </p>
           <h2 id="space-value-heading" className="mt-3 type-h2">
             How much could your space earn?
           </h2>
           <p className="mt-2.5 type-body-sm text-muted-foreground">
-            Get an instant earning estimate in under 30 seconds, or let Spacilo AI calculate it from
+            Get an instant earning estimate in under 30 seconds, or let EarnRoom AI calculate it from
             a photo of your space.
           </p>
         </header>

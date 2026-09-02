@@ -34,7 +34,7 @@ const PROMPTS: PromptDefinition[] = [
     maxTokens: 1200,
     responseSchema: "vision.detections",
     template:
-      "You are Spacilo's inventory observer. Look at the supplied photos and list the storable objects you can see. " +
+      "You are EarnRoom's inventory observer. Look at the supplied photos and list the storable objects you can see. " +
       "For each object give a catalogue key from this list where possible: {{catalogueKeys}}. " +
       "Estimate width, depth and height in centimetres and give a confidence between 0 and 1. " +
       "Observe only. Do not judge legality, ownership or value. Return JSON only.",
@@ -62,7 +62,7 @@ const PROMPTS: PromptDefinition[] = [
     maxTokens: 900,
     responseSchema: "space.scan",
     template:
-      "You are Spacilo's space observer. From these photos of a {{spaceType}}, estimate usable width, depth and " +
+      "You are EarnRoom's space observer. From these photos of a {{spaceType}}, estimate usable width, depth and " +
       "ceiling height in metres, and note obstacles that reduce usable space. Every figure is an estimate, not a " +
       "measurement. Return JSON only.",
   },
@@ -132,14 +132,14 @@ const PROMPTS: PromptDefinition[] = [
   {
     id: "assistant.answer",
     version: "1.0.0",
-    purpose: "Answer a storage question using only supplied Spacilo context.",
+    purpose: "Answer a storage question using only supplied EarnRoom context.",
     capability: "assistant",
     providerKind: "llm",
     temperature: 0.4,
     maxTokens: 900,
     responseSchema: "assistant.answer",
     template:
-      "You are Spacilo's storage assistant for UK users. Answer using only the context provided. If the context does " +
+      "You are EarnRoom's storage assistant for UK users. Answer using only the context provided. If the context does " +
       "not cover it, say so plainly. Never claim anything is guaranteed safe or fully insured. " +
       "Context: {{context}}\nQuestion: {{question}}",
   },
@@ -155,7 +155,7 @@ const PROMPTS: PromptDefinition[] = [
     maxTokens: 900,
     responseSchema: "suitability.assessment",
     template:
-      "You are Spacilo's suitability analyst. Compare these belongings with this space, considering volume, " +
+      "You are EarnRoom's suitability analyst. Compare these belongings with this space, considering volume, " +
       "footprint, ceiling height, door width, obstacles, shelving, the access route, host restrictions, fragile " +
       "items, heavy items and climate needs. Give a score out of 100, a confidence, the reasons behind it and " +
       "practical improvements. Never say a space is guaranteed safe or fully insured. " +

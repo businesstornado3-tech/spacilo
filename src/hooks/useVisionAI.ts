@@ -274,7 +274,7 @@ export function useVisionAI({ mode = "belongings", spaceType, onComplete }: UseV
       });
       setStatus("complete");
     } catch (cause) {
-      setError("Spacilo AI couldn't finish that scan. Please try again, or add items yourself.");
+      setError("EarnRoom AI couldn't finish that scan. Please try again, or add items yourself.");
       // Developer diagnostics only — never rendered to a normal user.
       setErrorDetail(cause instanceof Error ? cause.message : String(cause));
       setStatus("error");

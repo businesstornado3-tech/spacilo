@@ -1,5 +1,5 @@
 /**
- * Milestone 3 — the Spacilo garage shell.
+ * Milestone 3 — the EarnRoom garage shell.
  *
  * Derives a believable room from the measurements the platform already holds.
  * Nothing here is decorative for its own sake: shelving, a workbench and a

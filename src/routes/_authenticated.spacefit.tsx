@@ -1,5 +1,5 @@
 /**
- * Spacilo AI hub — the single signed-in home for both scan journeys.
+ * EarnRoom AI hub — the single signed-in home for both scan journeys.
  *
  * Mode-aware: renters see their canonical requirement, hosts see their space's
  * usable capacity and deterministic pricing guidance. The hub holds no
@@ -20,9 +20,9 @@ import { useActiveInventory, useInventoryItems } from "@/hooks/useInventory";
 import { useMySpaces } from "@/hooks/useMySpaces";
 import { hostSpaceFitState, renterSpaceFitState } from "@/lib/spacefit-hub";
 
-const title = "Spacilo AI — " + brand.name;
+const title = "EarnRoom AI — " + brand.name;
 const description =
-  "Scan what you need to store, or scan the space you want to rent out. Spacilo AI estimates, you confirm.";
+  "Scan what you need to store, or scan the space you want to rent out. EarnRoom AI estimates, you confirm.";
 
 export const Route = createFileRoute("/_authenticated/spacefit")({
   head: () => ({
@@ -43,13 +43,13 @@ function SpaceFitHubPage() {
   return (
     <AppLayout
       mode={isHost ? "host" : "renter"}
-      title="Spacilo AI"
+      title="EarnRoom AI"
       description="Estimates from photos. You confirm every figure."
     >
       {isHost ? <HostHub /> : <RenterHub />}
 
       <Alert tone="info" className="mt-6" title="AI proposes, you verify">
-        Spacilo AI estimates from photos and can be wrong. Nothing is saved, published or verified
+        EarnRoom AI estimates from photos and can be wrong. Nothing is saved, published or verified
         until you confirm it.
       </Alert>
     </AppLayout>
@@ -78,7 +78,7 @@ function RenterHub() {
           to="/renter/inventory/photos"
           icon={ScanLine}
           title="Scan my stuff"
-          body="Photograph your belongings and Spacilo AI will propose an itemised list you review."
+          body="Photograph your belongings and EarnRoom AI will propose an itemised list you review."
           cta={state.state === "empty" ? "Scan my stuff" : "Update scan"}
         />
         <HubLink

@@ -79,7 +79,7 @@ beforeEach(() => {
 
 describe("orchestrator", () => {
   it("returns a structured envelope on success", async () => {
-    registerAiProvider(echoProvider("spacilo-assistant"));
+    registerAiProvider(echoProvider("earnroom-assistant"));
     const response = await executeAi<EchoInput, { value: string }>({
       capability: "assistant",
       promptId: "assistant.answer",
@@ -88,8 +88,8 @@ describe("orchestrator", () => {
 
     expect(response.success).toBe(true);
     expect(response.result).toEqual({ value: "HELLO" });
-    expect(response.provider).toBe("spacilo-assistant");
-    expect(response.model).toBe("spacilo-assistant-model");
+    expect(response.provider).toBe("earnroom-assistant");
+    expect(response.model).toBe("earnroom-assistant-model");
     expect(response.promptId).toBe("assistant.answer");
     expect(response.promptVersion).toBe("1.0.0");
     expect(response.confidence).toBeCloseTo(0.9);
@@ -100,7 +100,7 @@ describe("orchestrator", () => {
 
   it("never throws — a failure becomes a structured error response", async () => {
     registerAiProvider(
-      echoProvider("spacilo-assistant", {
+      echoProvider("earnroom-assistant", {
         run: async () => {
           throw new Error("provider exploded");
         },
@@ -121,7 +121,7 @@ describe("orchestrator", () => {
     let attempts = 0;
     configureAi({ capabilities: { assistant: { retries: 2 } } });
     registerAiProvider(
-      echoProvider("spacilo-assistant", {
+      echoProvider("earnroom-assistant", {
         run: async (input) => {
           attempts += 1;
           if (attempts < 3) throw new Error("timeout while calling provider");
@@ -164,7 +164,7 @@ describe("orchestrator", () => {
   it("times out slow providers", async () => {
     configureAi({ capabilities: { assistant: { timeoutMs: 20, retries: 0 } } });
     registerAiProvider(
-      echoProvider("spacilo-assistant", {
+      echoProvider("earnroom-assistant", {
         run: () => new Promise(() => {}),
       }),
     );
@@ -178,7 +178,7 @@ describe("orchestrator", () => {
   it("validates provider output against the response schema", async () => {
     configureAi({ capabilities: { assistant: { retries: 0 } } });
     registerAiProvider(
-      echoProvider("spacilo-assistant", {
+      echoProvider("earnroom-assistant", {
         run: async () => ({ result: { value: 42 } as unknown as { value: string } }),
       }),
     );
@@ -196,7 +196,7 @@ describe("caching", () => {
   it("serves an identical request from cache", async () => {
     let calls = 0;
     registerAiProvider(
-      echoProvider("spacilo-assistant", {
+      echoProvider("earnroom-assistant", {
         run: async (input) => {
           calls += 1;
           return { result: { value: input.value }, confidence: 0.8 };
@@ -222,7 +222,7 @@ describe("caching", () => {
     setAiFlags({ caching: false });
     let calls = 0;
     registerAiProvider(
-      echoProvider("spacilo-assistant", {
+      echoProvider("earnroom-assistant", {
         run: async (input) => {
           calls += 1;
           return { result: { value: input.value } };
@@ -237,7 +237,7 @@ describe("caching", () => {
 
 describe("feature flags and configuration", () => {
   it("returns a disabled response when a capability is off", async () => {
-    registerAiProvider(echoProvider("spacilo-assistant"));
+    registerAiProvider(echoProvider("earnroom-assistant"));
     setAiFlags({ assistant: false });
     const response = await executeAi({ capability: "assistant", input: { value: "x" } });
     expect(response.success).toBe(false);
@@ -245,7 +245,7 @@ describe("feature flags and configuration", () => {
   });
 
   it("hides remote providers when remote calls are switched off", () => {
-    registerAiProvider(echoProvider("spacilo-assistant", { remote: true }));
+    registerAiProvider(echoProvider("earnroom-assistant", { remote: true }));
     expect(providersFor("assistant")).toHaveLength(1);
     setAiFlags({ remoteProviders: false });
     expect(providersFor("assistant")).toHaveLength(0);
@@ -254,13 +254,13 @@ describe("feature flags and configuration", () => {
   it("merges configuration overrides without losing defaults", () => {
     const config = configureAi({ capabilities: { pricing: { timeoutMs: 999 } } });
     expect(config.capabilities.pricing.timeoutMs).toBe(999);
-    expect(config.capabilities.pricing.providers).toContain("spacilo-pricing");
+    expect(config.capabilities.pricing.providers).toContain("earnroom-pricing");
   });
 });
 
 describe("logging and metrics", () => {
   it("records a log entry and a metric sample per request", async () => {
-    registerAiProvider(echoProvider("spacilo-assistant"));
+    registerAiProvider(echoProvider("earnroom-assistant"));
     await executeAi({ capability: "assistant", input: { value: "log" } });
 
     expect(aiLogEntries({ status: "succeeded" })).toHaveLength(1);
@@ -310,7 +310,7 @@ describe("rate limiting", () => {
 
 describe("job queue", () => {
   it("returns a job immediately and completes in the background", async () => {
-    registerAiProvider(echoProvider("spacilo-assistant"));
+    registerAiProvider(echoProvider("earnroom-assistant"));
     const job = enqueueAi<EchoInput, { value: string }>({
       capability: "assistant",
       input: { value: "queued" },
@@ -325,7 +325,7 @@ describe("job queue", () => {
   });
 
   it("cancels a queued job", async () => {
-    registerAiProvider(echoProvider("spacilo-assistant"));
+    registerAiProvider(echoProvider("earnroom-assistant"));
     const job = enqueueAi({ capability: "assistant", input: { value: "cancel" } });
     cancelAiJob(job.id);
     const settled = await awaitAiJob(job.id);

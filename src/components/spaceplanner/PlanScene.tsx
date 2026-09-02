@@ -1,5 +1,5 @@
 /**
- * PlanScene — the reusable Spacilo AI storage scene.
+ * PlanScene — the reusable EarnRoom AI storage scene.
  *
  * Plan view of a real room: timber-and-concrete floor, back-wall shelving, the
  * opening, the access strip and every belonging drawn as its own illustration.
@@ -257,7 +257,7 @@ export function PlanScene({
               {placementReason(active, space)}
             </>
           ) : (
-            "Hover or tab through an object to see why Spacilo AI put it there."
+            "Hover or tab through an object to see why EarnRoom AI put it there."
           )}
         </p>
       ) : null}

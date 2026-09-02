@@ -1,5 +1,5 @@
 /**
- * PhotoRegionSelector — the user decides what Spacilo AI looks at.
+ * PhotoRegionSelector — the user decides what EarnRoom AI looks at.
  *
  * A photograph almost always contains more than the person wants to store, and
  * a room almost always contains more than the host wants to let out. Rather

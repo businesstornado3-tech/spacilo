@@ -53,7 +53,7 @@ function ReportDialog({ conversationId }: { conversationId: string }) {
       setDetails("");
       toast.success(
         "Thanks — we'll take a look",
-        "The Spacilo team reviews reported conversations. You can keep using your booking as normal.",
+        "The EarnRoom team reviews reported conversations. You can keep using your booking as normal.",
       );
     } catch (cause) {
       toast.error(
@@ -73,7 +73,7 @@ function ReportDialog({ conversationId }: { conversationId: string }) {
         open={open}
         onOpenChange={setOpen}
         title="Report this conversation"
-        description="Tell us what's wrong. A person at Spacilo reads every report — nothing is decided automatically."
+        description="Tell us what's wrong. A person at EarnRoom reads every report — nothing is decided automatically."
         footer={
           <>
             <Button variant="secondary" onClick={() => setOpen(false)}>

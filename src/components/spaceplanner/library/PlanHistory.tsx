@@ -2,7 +2,7 @@
  * PlanHistory — every optimisation run, newest first.
  *
  * History is a record of what the planner actually produced: date, inventory,
- * storage type, Spacilo AI score, estimated fit, packing complexity and the
+ * storage type, EarnRoom AI score, estimated fit, packing complexity and the
  * recommendation that followed. Estimates, never guarantees.
  */
 import { History } from "lucide-react";
@@ -38,7 +38,7 @@ export function PlanHistory({ runs, inventoryId, limit = 10, className }: PlanHi
         <EmptyState
           className="mt-3"
           title="No runs yet"
-          description="Every time Spacilo AI plans a space, the result is recorded here."
+          description="Every time EarnRoom AI plans a space, the result is recorded here."
         />
       ) : (
         <div className="mt-3 overflow-x-auto rounded-2xl border border-border bg-card">
@@ -48,7 +48,7 @@ export function PlanHistory({ runs, inventoryId, limit = 10, className }: PlanHi
                 <Th>Date</Th>
                 <Th>Inventory</Th>
                 <Th>Storage</Th>
-                <Th>Spacilo AI</Th>
+                <Th>EarnRoom AI</Th>
                 <Th>Fit</Th>
                 <Th>Packing</Th>
                 <Th>Recommendation</Th>

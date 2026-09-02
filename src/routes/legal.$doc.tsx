@@ -6,7 +6,7 @@ import { Scale } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { MarketingLayout, PageSection } from "@/components/layout/MarketingLayout";
-import { findLegalDocument, type LegalSection } from "@/data/legal";
+import { findLegalDocument, LEGAL_REVIEW_NOTICE, type LegalSection } from "@/data/legal";
 import { publicRouteMeta } from "@/lib/seo/meta";
 import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
@@ -59,7 +59,8 @@ function LegalDocPage() {
           ))}
         </div>
 
-        <p className="mt-8 max-w-3xl type-body-sm text-muted-foreground">
+        <p className="mt-8 max-w-3xl type-body-sm text-muted-foreground">{LEGAL_REVIEW_NOTICE}</p>
+        <p className="mt-4 max-w-3xl type-body-sm text-muted-foreground">
           <Link to="/legal" className="underline underline-offset-2">
             All legal documents
           </Link>

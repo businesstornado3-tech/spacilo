@@ -9,7 +9,7 @@ import { explain, factor } from "../core/explain";
 import { registerAiProvider } from "../core/provider-manager";
 import type { AiProvider } from "../core/types";
 
-const ENGINE_MODEL = "spacilo-reasoning-1";
+const ENGINE_MODEL = "earnroom-reasoning-1";
 
 export interface FraudSubject {
   /** Pseudonymous id. Never a name, email or address. */
@@ -207,7 +207,7 @@ export function scoreFraudSignals(input: FraudInput): FraudOutput {
 }
 
 export const fraudProvider: AiProvider<FraudInput, FraudOutput> = {
-  id: "spacilo-fraud",
+  id: "earnroom-fraud",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,

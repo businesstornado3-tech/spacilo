@@ -119,7 +119,7 @@ export function validateRoomGeometry(input: {
   if (fromPhoto && confidence < LOW_GEOMETRY_CONFIDENCE) {
     issues.push({
       code: "low_confidence",
-      message: "Spacilo AI wasn't confident about these dimensions from the photographs.",
+      message: "EarnRoom AI wasn't confident about these dimensions from the photographs.",
     });
   }
 

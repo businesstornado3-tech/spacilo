@@ -124,7 +124,7 @@ export interface MotionPlanOptions {
 /**
  * Builds the animation from the real before→after difference.
  *
- * `plan.before` is the load as it arrives; `plan.after` is what Spacilo AI
+ * `plan.before` is the load as it arrives; `plan.after` is what EarnRoom AI
  * proposes. Every step below is one of those differences, and nothing else.
  */
 export function buildMotionPlan(plan: SpacePlan, options: MotionPlanOptions = {}): MotionPlan {

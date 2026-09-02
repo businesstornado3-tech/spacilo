@@ -327,7 +327,7 @@ export class DigitalTwinEngine {
         cursor === 0
           ? `${this.state.scene.room.name} — as loaded`
           : cursor >= this.state.motion.steps.length
-            ? `${this.state.scene.room.name} — optimised by Spacilo AI`
+            ? `${this.state.scene.room.name} — optimised by EarnRoom AI`
             : `${this.state.scene.room.name} — step ${cursor} of ${this.state.motion.steps.length}`,
     };
     this.state = {

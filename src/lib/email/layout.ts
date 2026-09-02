@@ -1,5 +1,5 @@
 /**
- * Shared Spacilo email layout.
+ * Shared EarnRoom email layout.
  *
  * Provider-agnostic on purpose: this module only RENDERS HTML and plain text.
  * No provider, API key, domain or send path is configured here, and nothing in

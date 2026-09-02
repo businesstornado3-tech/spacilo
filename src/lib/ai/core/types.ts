@@ -1,5 +1,5 @@
 /**
- * Spacilo AI — shared contracts (Phase 6A).
+ * EarnRoom AI — shared contracts (Phase 6A).
  *
  * Everything that crosses the AI boundary uses these shapes. Feature code
  * consumes `AiResponse` and nothing else: never a vendor payload, never a

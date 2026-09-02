@@ -82,14 +82,14 @@ function suitabilityFor(volume: number): SpaceSuitability {
 }
 
 export const simulationVisionProvider: VisionProvider = {
-  id: "spacilo-vision-simulation-v1",
+  id: "earnroom-vision-simulation-v1",
   model: "simulation",
 
   async analyseBelongings(photos) {
     const result: VisionResult = {
       objects: detectFromPhotos(photos),
       photoIds: photos.map((photo) => photo.id),
-      provider: "spacilo-vision-simulation-v1",
+      provider: "earnroom-vision-simulation-v1",
       model: "simulation",
       analysedAt: Date.now(),
     };
@@ -123,7 +123,7 @@ export const simulationVisionProvider: VisionProvider = {
       suitability: suitabilityFor(usableVolumeM3),
       observations,
       confidence: Math.min(0.94, 0.68 + photos.length * 0.07),
-      provider: "spacilo-vision-simulation-v1",
+      provider: "earnroom-vision-simulation-v1",
       analysedAt: Date.now(),
     } satisfies SpaceScanResult;
   },

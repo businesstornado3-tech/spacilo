@@ -157,7 +157,7 @@ export function dimensionsSignal(space: TrustSpaceInput): TrustSignal {
   if (space.measurement_source === "spacefit_ai") {
     return {
       key: "dimensions",
-      label: "Measurements estimated by Spacilo AI",
+      label: "Measurements estimated by EarnRoom AI",
       detail: `${size}. Estimated from photos and not yet confirmed by the host.`,
       tone: "estimated",
       source: "spacefit",
@@ -241,7 +241,7 @@ export function securitySignal(space: TrustSpaceInput): TrustSignal | null {
   return {
     key: "security",
     label: features.map(featureLabel).join(" · "),
-    detail: "Stated by the host. Spacilo hasn't inspected the space.",
+    detail: "Stated by the host. EarnRoom hasn't inspected the space.",
     tone: "declared",
     source: "host",
   };
@@ -322,4 +322,4 @@ export const TRUST_TONE_LABEL: Record<TrustTone, string> = {
 };
 
 export const TRUST_DISCLAIMER =
-  "Spacilo checks what it can and shows the rest as stated or estimated. Nothing here is a guarantee.";
+  "EarnRoom checks what it can and shows the rest as stated or estimated. Nothing here is a guarantee.";

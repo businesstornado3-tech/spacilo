@@ -31,7 +31,7 @@ export interface VisionProvider {
   ): Promise<SpaceScanResult>;
 }
 
-export type VisionProviderId = "spacilo-vision-ai" | "simulation" | (string & {});
+export type VisionProviderId = "earnroom-vision-ai" | "simulation" | (string & {});
 
 let override: VisionProvider | null = null;
 

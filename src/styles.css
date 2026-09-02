@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Spacilo design system.
+ * EarnRoom design system.
  *
  * All colour, typography, shadow and radius decisions live here.
  * Components must consume semantic tokens — never raw colour utilities.
@@ -119,13 +119,13 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.021 240);
 
-  /* Spacilo emerald — the action colour from the approved identity */
+  /* EarnRoom emerald — the action colour from the approved identity */
   --primary: oklch(0.53 0.125 162);
   --primary-foreground: oklch(0.995 0.004 160);
   --primary-soft: oklch(0.952 0.048 158);
   --primary-soft-foreground: oklch(0.42 0.1 160);
 
-  /* Deep navy ink — the Spacilo anchor colour */
+  /* Deep navy ink — the EarnRoom anchor colour */
   --ink: oklch(0.21 0.033 265);
   --ink-foreground: oklch(0.985 0.005 160);
 
@@ -426,7 +426,7 @@
 }
 
 :root {
-  /* Teal/emerald — reserved almost entirely for Spacilo AI */
+  /* Teal/emerald — reserved almost entirely for EarnRoom AI */
   --signal: oklch(0.72 0.15 163);
   --signal-foreground: oklch(0.21 0.033 265);
   --signal-soft: oklch(0.952 0.055 156);
@@ -435,7 +435,7 @@
   --accent-soft: oklch(0.968 0.026 168);
   --accent-soft-foreground: oklch(0.33 0.07 178);
 
-  /* Spacilo AI canvas — very soft green wash used behind AI storytelling */
+  /* EarnRoom AI canvas — very soft green wash used behind AI storytelling */
   --ai-canvas-from: oklch(0.989 0.009 155);
   --ai-canvas-to: oklch(0.976 0.017 158);
   --ai-canvas-glow: oklch(0.93 0.05 160 / 0.55);
@@ -546,7 +546,7 @@
   animation: stow-pop var(--duration-base) var(--ease-spring) both;
 }
 
-/** Scanning shimmer used by the Spacilo AI analysis state. */
+/** Scanning shimmer used by the EarnRoom AI analysis state. */
 @utility animate-sweep {
   animation: stow-sweep 1.5s var(--ease-out-soft) infinite;
 }

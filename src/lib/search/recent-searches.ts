@@ -8,7 +8,7 @@
  */
 import { normaliseLocationInput } from "@/lib/location/schema";
 
-export const RECENT_SEARCH_KEY = "spacilo.recent-searches.v1";
+export const RECENT_SEARCH_KEY = "earnroom.recent-searches.v1";
 export const MAX_RECENT_SEARCHES = 6;
 
 export interface RecentSearch {
@@ -17,7 +17,7 @@ export interface RecentSearch {
   radius: number;
 }
 
-/** Popular starting points for the pilot area. Static, never inferred. */
+/** Popular UK starting points. Static, never inferred or used for ranking. */
 export const POPULAR_SEARCHES: string[] = [
   "Portsmouth",
   "Southsea",

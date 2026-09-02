@@ -1,5 +1,5 @@
 /**
- * Rotation rules for the homepage Spacilo Earnings Estimator tabs.
+ * Rotation rules for the homepage EarnRoom Earnings Estimator tabs.
  * Pure data + timing — presentational only.
  */
 export type EarningsTabId = "quick" | "scan";

@@ -29,7 +29,7 @@ export const marketingNav: NavItem[] = [
 export const renterNav: NavItem[] = [
   { label: "Home", to: "/renter", icon: Home },
   { label: "My Stuff", to: "/renter/inventory", icon: Boxes },
-  { label: "Spacilo AI", to: "/spacefit", icon: Sparkles },
+  { label: "EarnRoom AI", to: "/spacefit", icon: Sparkles },
   { label: "My Planner", to: "/planner", icon: LayoutDashboard },
   { label: "Search", to: "/renter/search", icon: Search },
   { label: "Requests", to: "/renter/requests", icon: FileText },
@@ -43,7 +43,7 @@ export const renterNav: NavItem[] = [
 export const hostNav: NavItem[] = [
   { label: "Dashboard", to: "/host", icon: LayoutDashboard },
   { label: "Spaces", to: "/host/spaces", icon: Warehouse },
-  { label: "Spacilo AI", to: "/spacefit", icon: Sparkles },
+  { label: "EarnRoom AI", to: "/spacefit", icon: Sparkles },
   { label: "My Planner", to: "/planner", icon: LayoutDashboard },
   { label: "Bookings", to: "/host/bookings", icon: CalendarCheck },
   { label: "Messages", to: "/host/messages", icon: MessageSquare },

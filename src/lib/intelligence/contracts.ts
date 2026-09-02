@@ -1,5 +1,5 @@
 /**
- * Spacilo Intelligence Platform (SIP) — standard data contracts.
+ * EarnRoom Intelligence Platform (SIP) — standard data contracts.
  *
  * Every intelligence capability speaks these shapes, whichever provider is
  * active. Nothing above this layer imports a vendor SDK, a model name or a
@@ -22,11 +22,11 @@ import type {
   StorageSpace,
   WeightClass,
 } from "@/lib/spaceplanner/types";
-import type { SpaciloScore } from "@/lib/spaceplanner/score";
+import type { EarnRoomScore } from "@/lib/spaceplanner/score";
 
 export type { DetectedObject, VisionPhoto, VisionResult, SpaceScanResult };
 export type { InventoryLine, PackResult, SpacePlan, StorageSpace, WeightClass };
-export type { SpaciloScore };
+export type { EarnRoomScore };
 
 /** Everything the platform proposes carries provenance and a confidence. */
 export interface IntelligenceMeta {
@@ -114,7 +114,7 @@ export interface Recommendation {
 
 export interface PackingResult {
   plan: SpacePlan;
-  score: SpaciloScore;
+  score: EarnRoomScore;
   meta: IntelligenceMeta;
 }
 
@@ -133,7 +133,7 @@ export interface CompatibilityResult {
   verdict: CompatibilityVerdict;
   /** 0–100 estimate of how much of the required volume the space covers. */
   fitPercent: number;
-  score: SpaciloScore;
+  score: EarnRoomScore;
   recommendations: Recommendation[];
   meta: IntelligenceMeta;
 }

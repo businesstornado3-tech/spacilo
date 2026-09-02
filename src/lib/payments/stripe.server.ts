@@ -70,7 +70,7 @@ export function resolveAppOrigin(requestUrl?: string): string {
   }
 
   throw new Error(
-    "APP_ORIGIN is not configured and the request origin is not an allowed Spacilo host",
+    "APP_ORIGIN is not configured and the request origin is not an allowed EarnRoom host",
   );
 }
 

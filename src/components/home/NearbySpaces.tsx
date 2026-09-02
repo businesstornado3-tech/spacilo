@@ -1,9 +1,8 @@
 /**
- * Real storage nearby — illustrative pilot-area listings.
+ * Real storage nearby — illustrative sample listings.
  *
- * Presentational only: these are sample spaces for the Portsmouth pilot, and
- * the section exists to make "nearby storage" concrete before a visitor
- * searches. The single CTA browses the real marketplace.
+ * Presentational only: these are sample spaces used to make nearby storage
+ * concrete before a visitor searches. The single CTA browses the real marketplace.
  */
 import { Link } from "@tanstack/react-router";
 
@@ -25,8 +24,8 @@ export function NearbySpaces() {
               Real storage nearby.
             </h2>
             <p className="mt-2 max-w-md type-body-sm text-muted-foreground">
-              Garages, spare rooms, lofts and driveways from neighbours in the pilot area. Sample spaces shown
-              for illustration.
+              Garages, spare rooms, lofts and driveways from neighbours across the UK. Sample spaces shown
+              for illustration; availability varies by location.
             </p>
           </div>
         </div>

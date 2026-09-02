@@ -1,8 +1,8 @@
 /**
- * Homepage — Spacilo AI SpacePlanner™.
+ * Homepage — EarnRoom AI SpacePlanner™.
  *
  * The section has to earn the tap, so it shows the product doing its job as a
- * story: your stuff → your space → arranged by Spacilo AI. One curated
+ * story: your stuff → your space → arranged by EarnRoom AI. One curated
  * demonstration set is used throughout — the same belongings appear in every
  * frame — and it is a static asset, so the homepage never triggers the
  * analysis pipeline. The studio is code-split and only loaded once someone
@@ -63,12 +63,12 @@ export function SpacePlannerSection() {
         <Reveal>
           <div className="overflow-hidden rounded-[2rem] border border-signal-soft bg-gradient-to-b from-accent-soft/70 to-card shadow-card">
             <div className="p-5 sm:p-8">
-              <p className="type-overline text-signal">Spacilo AI SpacePlanner™</p>
+              <p className="type-overline text-signal">EarnRoom AI SpacePlanner™</p>
               <h2 id="spaceplanner-preview-heading" className="mt-2 text-balance type-h2">
                 Show us your stuff. Show us your space. We&apos;ll show you how it fits.
               </h2>
               <p className="mt-2.5 max-w-2xl type-body text-muted-foreground">
-                See how your belongings could fit before you book. Spacilo AI reads both sets of
+                See how your belongings could fit before you book. EarnRoom AI reads both sets of
                 photos, works out where every item can physically go, and shows you the result in
                 your actual space.
               </p>
@@ -121,7 +121,7 @@ export function SpacePlannerSection() {
                           className="w-full rounded-xl border border-signal-soft object-cover shadow-card"
                         />
                         <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-full bg-signal px-2.5 py-1 type-badge text-signal-foreground shadow-card">
-                          3 Arranged by Spacilo AI
+                          3 Arranged by EarnRoom AI
                         </span>
                         <button
                           type="button"

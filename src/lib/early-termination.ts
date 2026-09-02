@@ -73,7 +73,7 @@ export const PROPOSAL_MESSAGE: Record<ProposalRejection, string> = {
   already_open: "There's already an early end request waiting for an answer.",
 };
 
-/** Role-aware wording. Spacilo never adjudicates between the parties. */
+/** Role-aware wording. EarnRoom never adjudicates between the parties. */
 export function earlyTerminationStatusLabel(
   row: ChangeRequestRow,
   viewer: Party,

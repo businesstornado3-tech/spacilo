@@ -23,18 +23,18 @@ export type LiveScanErrorCode =
 
 export const LIVE_SCAN_ERROR_COPY: Record<LiveScanErrorCode, string> = {
   camera_permission_denied:
-    "We don't have camera access. You can still take or upload a photo for Spacilo AI analysis.",
+    "We don't have camera access. You can still take or upload a photo for EarnRoom AI analysis.",
   camera_unavailable:
     "We couldn't open a camera on this device. You can still take or upload a photo.",
   camera_no_frame:
     "We couldn't start the back camera. Try again, switch camera, or upload a photo instead.",
   live_model_load_failed:
-    "Live guidance isn't available right now, but you can still take a photo for Spacilo AI analysis.",
+    "Live guidance isn't available right now, but you can still take a photo for EarnRoom AI analysis.",
   live_model_unsupported:
-    "Live guidance isn't available on this device, but you can still take a photo for Spacilo AI analysis.",
+    "Live guidance isn't available on this device, but you can still take a photo for EarnRoom AI analysis.",
   capture_failed: "We couldn't capture that frame. Please try again.",
   post_capture_analysis_failed:
-    "Spacilo AI couldn't finish that scan. Please try again, or enter the details yourself.",
+    "EarnRoom AI couldn't finish that scan. Please try again, or enter the details yourself.",
 };
 
 /** [x, y, width, height] in source-pixel coordinates. */

@@ -186,7 +186,7 @@ function AdminDashboardRoute() {
       <AdminShell title="Founder console">
         <EmptyState
           title="You don't have access to this area"
-          description="The founder dashboard is only available to Spacilo platform admins."
+          description="The founder dashboard is only available to EarnRoom platform admins."
         />
       </AdminShell>
     );
@@ -236,13 +236,13 @@ function AdminDashboardRoute() {
   const financial: Array<{ label: string; value: string }> = [
     { label: "Gross booking value — booked", value: formatPence(metric(current, "gbv_booked_pence")) },
     { label: "Gross booking value — paid", value: formatPence(metric(current, "gbv_paid_pence")) },
-    { label: "Spacilo fees — booked", value: formatPence(metric(current, "fees_booked_pence")) },
-    { label: "Spacilo fees — paid", value: formatPence(metric(current, "fees_paid_pence")) },
+    { label: "EarnRoom fees — booked", value: formatPence(metric(current, "fees_booked_pence")) },
+    { label: "EarnRoom fees — paid", value: formatPence(metric(current, "fees_paid_pence")) },
     { label: "Host amount — booked", value: formatPence(metric(current, "host_amount_booked_pence")) },
     { label: "Host amount — paid", value: formatPence(metric(current, "host_amount_paid_pence")) },
     { label: "Refunds", value: formatPence(metric(current, "refunds_pence")) },
     { label: "Refunded fees", value: formatPence(metric(current, "refunded_fees_pence")) },
-    { label: "Net Spacilo fees after refunds", value: formatPence(metric(current, "net_fees_pence")) },
+    { label: "Net EarnRoom fees after refunds", value: formatPence(metric(current, "net_fees_pence")) },
     { label: "Refund count", value: formatCount(metric(current, "refund_count")) },
     { label: "Disputed payments", value: formatCount(metric(current, "disputed_count")) },
     { label: "Failed payments", value: formatCount(metric(current, "failed_payment_count")) },
@@ -312,7 +312,7 @@ function AdminDashboardRoute() {
               {countCard("storage_requests", "Storage requests")}
               {countCard("bookings", "Bookings")}
               {moneyCard("gbv_booked_pence", "Gross booking value")}
-              {moneyCard("net_fees_pence", "Net Spacilo fees")}
+              {moneyCard("net_fees_pence", "Net EarnRoom fees")}
             </div>
           )}
         </AdminSectionBlock>
@@ -553,20 +553,20 @@ function AdminDashboardRoute() {
           </details>
         </AdminSectionBlock>
 
-        {/* -------------------------------------------------------- Spacilo AI */}
+        {/* -------------------------------------------------------- EarnRoom AI */}
         <AdminSectionBlock
-          id="spacilo-ai"
-          title="Spacilo AI"
+          id="earnroom-ai"
+          title="EarnRoom AI"
           note="Renter and host journeys are reported separately. Aggregate counts only — no photo, scan or item detail reaches this console."
         >
           {breakdowns.isError ? (
             <ErrorState
-              title="Spacilo AI data couldn't be loaded"
+              title="EarnRoom AI data couldn't be loaded"
               description="This analytics breakdown is unavailable. No values have been substituted."
               onRetry={() => void breakdowns.refetch()}
             />
           ) : aiEmpty ? (
-            <EmptyState title="No Spacilo AI activity yet" description="Nothing was scanned in this period." />
+            <EmptyState title="No EarnRoom AI activity yet" description="Nothing was scanned in this period." />
           ) : (
             <div className="space-y-3">
               <div className="grid gap-3 lg:grid-cols-2">

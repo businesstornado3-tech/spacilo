@@ -24,7 +24,7 @@ import {
 } from "@/lib/notifications";
 
 const CHANNELS: { value: NotificationChannel; label: string }[] = [
-  { value: "inapp", label: "In Spacilo" },
+  { value: "inapp", label: "In EarnRoom" },
   { value: "email", label: "Email" },
 ];
 

@@ -1,5 +1,5 @@
 /**
- * Spacilo Vision AI — shared domain model.
+ * EarnRoom Vision AI — shared domain model.
  *
  * Vision AI OBSERVES and PROPOSES. People confirm, the deterministic
  * SpacePlanner engine decides. Nothing here measures anything: every number is

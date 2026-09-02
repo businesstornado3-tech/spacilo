@@ -102,7 +102,7 @@ export function InventoryLibrary({
           title={tab === "active" ? "No inventories yet" : "Nothing archived"}
           description={
             tab === "active"
-              ? "Create an inventory for each move, clearout or season — Spacilo AI plans each one separately."
+              ? "Create an inventory for each move, clearout or season — EarnRoom AI plans each one separately."
               : "Archived inventories stay here until you restore or delete them."
           }
           {...(tab === "active"

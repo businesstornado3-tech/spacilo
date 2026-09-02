@@ -348,7 +348,7 @@ describe("planner integration", () => {
     const result = await visionEngineProvider.analyseBelongings(PHOTOS);
     expect(result.objects.length).toBeGreaterThan(0);
     expect(result.itemCount).toBeGreaterThan(0);
-    expect(result.meta.provider).toBe("spacilo-vision-engine-v1");
+    expect(result.meta.provider).toBe("earnroom-vision-engine-v1");
   });
 });
 

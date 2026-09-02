@@ -106,7 +106,7 @@ describe("public vs internal traffic classification", () => {
   });
 });
 
-describe("Spacilo AI funnels", () => {
+describe("EarnRoom AI funnels", () => {
   const counts = {
     spacefit_stuff_started: 100,
     spacefit_stuff_completed: 60,

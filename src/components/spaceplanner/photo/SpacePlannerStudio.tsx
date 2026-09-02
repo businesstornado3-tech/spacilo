@@ -1,12 +1,12 @@
 /**
- * SpacePlannerStudio — the homepage Spacilo AI SpacePlanner™ experience.
+ * SpacePlannerStudio — the homepage EarnRoom AI SpacePlanner™ experience.
  *
  * Show us your stuff → confirm what's yours → show us your space → we show you
  * how it fits, what it's worth, and then draw it.
  *
  * Two principles drive the flow:
  *   1. The USER decides what counts. Either they mark exactly what they want
- *      to store (Mode A) or they ask for the whole photo (Mode B). Spacilo AI
+ *      to store (Mode A) or they ask for the whole photo (Mode B). EarnRoom AI
  *      never decides that for them.
  *   2. Numbers first, pictures second. The analytical result — fit, capacity,
  *      earning potential — appears as soon as it exists; the arranged image
@@ -421,12 +421,12 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
             <VisionAnalysis
               stages={stuff.stages}
               stageIndex={stuff.stageIndex}
-              title="Spacilo AI is scanning your belongings"
+              title="EarnRoom AI is scanning your belongings"
             />
           ) : (
             <>
               <fieldset className="rounded-2xl border border-border bg-surface p-4">
-                <legend className="px-1 type-label">What should Spacilo AI look at?</legend>
+                <legend className="px-1 type-label">What should EarnRoom AI look at?</legend>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {(
                     [
@@ -453,7 +453,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 <p className="mt-2 type-body-xs text-muted-foreground">
                   {stuff.scope === "selected"
                     ? "Draw round each item you want to store. Anything you don't select is ignored."
-                    : "Spacilo AI will list everything it can see, including things around your belongings."}
+                    : "EarnRoom AI will list everything it can see, including things around your belongings."}
                 </p>
               </fieldset>
 
@@ -466,7 +466,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                 }}
                 rejected={stuff.rejected}
                 disabled={!stuff.canAddMore}
-                title="Show Spacilo AI your belongings"
+                title="Show EarnRoom AI your belongings"
                 hint="Photograph the whole item where possible — one clear photo per item, or per group of similar items."
               />
 
@@ -482,7 +482,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                   }
                   onChange={(selection) => {
                     stuff.setSelection(selection, stuffPhotoBeingSelected.id);
-                    // A drawn area only counts if Spacilo AI is told to respect it.
+                    // A drawn area only counts if EarnRoom AI is told to respect it.
                     if (selection) {
                       stuff.setScope("selected");
                       setSelectingStuff(null);
@@ -530,7 +530,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                     >
                       <Sparkles aria-hidden="true" />
                       {!hydrated
-                        ? "Preparing Spacilo AI…"
+                        ? "Preparing EarnRoom AI…"
                         : stuff.status === "error"
                           ? "Try again"
                           : stuff.emptyResult
@@ -546,7 +546,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
                         size="lg"
                         onClick={() => setStep("review")}
                       >
-                        See what Spacilo AI found
+                        See what EarnRoom AI found
                         <ArrowRight aria-hidden="true" />
                       </Button>
                     ) : null}
@@ -570,7 +570,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
             />
           ) : (
             <p className="type-body-sm text-muted-foreground">
-              Add photos of your belongings and run Spacilo AI to build your inventory.
+              Add photos of your belongings and run EarnRoom AI to build your inventory.
             </p>
           )}
         </div>
@@ -583,7 +583,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
             <VisionAnalysis
               stages={space.stages}
               stageIndex={space.stageIndex}
-              title="Spacilo AI is analysing your space"
+              title="EarnRoom AI is analysing your space"
             />
           ) : (
             <>
@@ -799,7 +799,7 @@ export function SpacePlannerStudio({ onExplore }: { onExplore?: () => void }) {
             </>
           ) : (
             <p className="type-body-sm text-muted-foreground">
-              Scan your belongings and a space, and Spacilo AI will show you how they fit.
+              Scan your belongings and a space, and EarnRoom AI will show you how they fit.
             </p>
           )}
         </div>

@@ -9,7 +9,7 @@ import { SpacePlannerSection } from "@/components/home/SpacePlannerSection";
 import { MarketplaceEntry } from "@/components/home/MarketplaceEntry";
 import { SpacePlannerDemo } from "@/components/spaceplanner/SpacePlannerDemo";
 import { NearbySpaces } from "@/components/home/NearbySpaces";
-import { MeetSpaciloAI } from "@/components/home/MeetSpaciloAI";
+import { MeetEarnRoomAI } from "@/components/home/MeetEarnRoomAI";
 
 import { SpaceValueSection } from "@/components/home/SpaceValueSection";
 import { WhySpacePlanner } from "@/components/home/WhySpacePlanner";
@@ -17,7 +17,7 @@ import { FinalCta } from "@/components/home/FinalCta";
 
 const title = `${brand.name} | AI Storage Planning & Neighbourhood Storage`;
 const description =
-  "Try Spacilo AI SpacePlanner free: plan what fits in a garage, loft or spare room in seconds, then find trusted neighbourhood storage near you.";
+  "Try EarnRoom AI SpacePlanner free: plan what fits in a garage, loft or spare room in seconds, then find trusted neighbourhood storage near you.";
 
 export const Route = createFileRoute("/")({
   head: () => {
@@ -40,7 +40,10 @@ export const Route = createFileRoute("/")({
                 "@type": "Organization",
                 name: brand.name,
                 url: canonicalUrl("/"),
-                areaServed: brand.pilotAreas,
+                areaServed: {
+                  "@type": "Country",
+                  name: brand.serviceArea,
+                },
               },
             ],
           }),
@@ -60,7 +63,7 @@ function HomePage() {
       <MarketplaceEntry />
       <SpacePlannerDemo />
       <NearbySpaces />
-      <MeetSpaciloAI />
+      <MeetEarnRoomAI />
       <SpaceValueSection />
       <WhySpacePlanner />
       <FinalCta />

@@ -15,6 +15,10 @@
  */
 import { brand } from "@/config/brand";
 
+const EMAIL_LOGO_URL =
+  "https://home-stash-link.lovable.app/__l5e/assets-v1/" +
+  "2ed11e8d-a66b-4710-8062-1c468565b872/earnroom-lockup.png";
+
 export const EMAIL_PALETTE = {
   /** Deep navy — headings and body copy. */
   ink: "#0b1b2b",
@@ -105,7 +109,7 @@ export function renderEmailHtml(content: EmailContent): string {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:${EMAIL_PALETTE.surface};border:1px solid ${EMAIL_PALETTE.border};border-radius:16px">
     <tbody>
       <tr><td style="padding:24px 24px 0">
-        <span style="font-size:20px;font-weight:700;letter-spacing:-0.01em;color:${EMAIL_PALETTE.accent}">${escapeHtml(brand.name)}</span>
+        <img src="${EMAIL_LOGO_URL}" width="250" alt="${escapeHtml(brand.name)} — ${escapeHtml(brand.tagline)}" style="display:block;width:250px;max-width:100%;height:auto;border:0">
       </td></tr>
       <tr><td style="padding:16px 24px 8px">
         <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;color:${EMAIL_PALETTE.ink}">${escapeHtml(content.heading)}</h1>

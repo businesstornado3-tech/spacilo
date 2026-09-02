@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Boxes, MapPin, Ruler } from "lucide-react";
 
+import { EarnRoomSymbolCompact } from "@/components/brand/EarnRoomMark";
 import { brand } from "@/config/brand";
 import { cn } from "@/lib/utils";
 import { useCountUp } from "@/hooks/use-motion";
@@ -39,6 +40,7 @@ export function SpaceFitAiMark({
         className,
       )}
     >
+      <EarnRoomSymbolCompact className={size === "sm" ? "size-4" : "size-5"} />
       {brand.ai}
       <SpaceFitSpark />
     </span>

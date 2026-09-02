@@ -33,7 +33,7 @@ export function HeroSection({ visual }: HeroSectionProps) {
       <div className="mx-auto grid w-full max-w-6xl gap-5 px-4 pb-4 pt-4 sm:gap-6 sm:px-6 sm:pb-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)] lg:items-center lg:gap-10 lg:pb-8 lg:pt-7">
         <div className="animate-fade order-1 min-w-0 lg:col-start-1 lg:row-start-1">
           <h1 className="max-w-[16ch] text-balance type-h1 sm:text-[2.6rem] sm:leading-[1.05] lg:text-[3.1rem] lg:leading-[1.04]">
-            <span className="block">Turn space into income.</span>
+            <span className="block">Make space earn.</span>
             <span className="block text-muted-foreground">Store nearby.</span>
           </h1>
 

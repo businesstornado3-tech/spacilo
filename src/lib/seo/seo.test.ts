@@ -56,7 +56,7 @@ describe("structured data", () => {
     expect(() => JSON.stringify(org)).not.toThrow();
     expect(org["@type"]).toBe("Organization");
     expect(org.url).toMatch(/^https?:\/\//);
-    expect(org.logo).toContain("favicon.svg");
+    expect(org.logo).toContain("favicon.png");
 
     const site = websiteJsonLd();
     expect(site["@type"]).toBe("WebSite");
@@ -117,11 +117,11 @@ describe("robots.txt and sitemap wiring", () => {
 });
 
 describe("favicon single source of truth", () => {
-  it("root.tsx references only the approved SVG/ICO favicon, no stray icon files", () => {
+  it("root.tsx references only the approved raster favicon", () => {
     const root = read("src/routes/__root.tsx");
-    expect(root).toContain("/favicon.svg");
-    expect(root).toContain("/favicon.ico");
-    expect(root).not.toContain("/favicon.png");
+    expect(root).toContain("/favicon.png");
+    expect(root).not.toContain("/favicon.svg");
+    expect(root).not.toContain("/favicon.ico");
   });
 });
 

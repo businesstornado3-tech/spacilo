@@ -47,7 +47,7 @@ type PublicMetaOptions = {
 /** Meta + links for a public, indexable route: title, description, canonical, OG/Twitter. */
 export function publicRouteMeta({ title, description, path, image, ogType = "website" }: PublicMetaOptions) {
   const url = canonicalUrl(path);
-  const ogImage = image ?? `${siteOrigin()}/og-image.svg`;
+  const ogImage = image ?? `${siteOrigin()}/og-image.png`;
   return {
     meta: [
       { title },

@@ -166,7 +166,28 @@ function sortResults(
   }
 }
 
+/**
+ * Cache identity for a storage search. Location text, resolved coordinates and
+ * radius are all part of the key so results for one place/radius can never be
+ * displayed for another, and an unresolved location cannot reuse a prior hit.
+ */
+export function searchQueryKey(
+  location: string,
+  centre: SearchCentre | null,
+  radius: number,
+): (string | number | null)[] {
+  return [
+    "spaces",
+    "search",
+    location.trim().toUpperCase(),
+    centre?.lat ?? null,
+    centre?.lng ?? null,
+    radius,
+  ];
+}
+
 export function useStorageSearch(params: StorageSearchParams) {
+
   const radius = normaliseRadius(params.radius);
   const centreQuery = useSearchCentre(params.location);
   const geocoded = centreQuery.data;
@@ -191,14 +212,8 @@ export function useStorageSearch(params: StorageSearchParams) {
   const spacesQuery = useQuery({
     // Include the typed location so unresolved searches cannot reuse a prior
     // null-coordinate cache entry from a different location.
-    queryKey: [
-      "spaces",
-      "search",
-      params.location.trim().toUpperCase(),
-      centre?.lat ?? null,
-      centre?.lng ?? null,
-      radius,
-    ],
+    queryKey: searchQueryKey(params.location, centre, radius),
+
     queryFn: () => searchPublishedSpaces({ centre, radiusMiles: radius, limit: 60 }),
     // Never search stale/absent coordinates when a location was typed.
     enabled: !hasLocation || Boolean(centre),

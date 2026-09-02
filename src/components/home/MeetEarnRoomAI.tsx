@@ -1,5 +1,5 @@
 /**
- * Meet Spacilo AI — four honest steps, one CTA.
+ * Meet EarnRoom AI — four honest steps, one CTA.
  *
  * Presentational: nothing here loads AI code. It explains the pipeline the
  * real scan journeys run, in the order a visitor experiences it.
@@ -21,7 +21,7 @@ const STEPS = [
     icon: ScanSearch,
     step: "Step 2",
     title: "Understand",
-    body: "Spacilo AI recognises items and proposes what it sees.",
+    body: "EarnRoom AI recognises items and proposes what it sees.",
   },
   {
     icon: Ruler,
@@ -37,7 +37,7 @@ const STEPS = [
   },
 ];
 
-export function MeetSpaciloAI() {
+export function MeetEarnRoomAI() {
   return (
     <section
       aria-labelledby="meet-ai-heading"
@@ -50,7 +50,7 @@ export function MeetSpaciloAI() {
               <SpaceFitAiMark size="sm" />
             </div>
             <h2 id="meet-ai-heading" className="mt-3 text-balance type-h2">
-              Meet Spacilo AI. Don't measure boxes — just show us.
+              Meet EarnRoom AI. Don't measure boxes — just show us.
             </h2>
             <p className="mt-2 max-w-lg type-body-sm text-muted-foreground">
               Estimates you can review and correct. Never a guarantee, always a starting point.
@@ -73,7 +73,7 @@ export function MeetSpaciloAI() {
 
         <div className="mt-6 flex flex-wrap items-center gap-4">
           <ScanStuffButton from="homepage_meet_ai" block={false}>
-            Try Spacilo AI
+            Try EarnRoom AI
           </ScanStuffButton>
           <p className="type-badge text-muted-foreground">
             Typical fit indicator: <span className="text-foreground">92% estimated fit</span> —

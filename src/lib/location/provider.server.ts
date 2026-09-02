@@ -17,7 +17,7 @@ import {
   postcodeDistrict,
   type SearchCentre,
 } from "./schema";
-import { resolvePlace, type PlaceCandidate } from "./place-ranking";
+import { resolvePlace, splitQuery, type PlaceCandidate } from "./place-ranking";
 
 
 export interface GeocodeResolution {
@@ -122,7 +122,11 @@ const postcodesIoProvider: GeocodingProvider = {
     // 3. Recognised place / town / neighbourhood name.
     //    Many UK settlements share a name, so ask for a candidate list and
     //    rank it deterministically instead of trusting the first row.
-    const places = await getJson(`${BASE}/places?q=${encodeURIComponent(query)}&limit=20`);
+    // The provider endpoint accepts a place name, not the display label we
+    // generate for a chosen candidate ("Newport, Isle of Wight, PO30").
+    // Keep the full query for qualifier-aware ranking below.
+    const placeQuery = query.includes(",") ? splitQuery(query).name : query;
+    const places = await getJson(`${BASE}/places?q=${encodeURIComponent(placeQuery)}&limit=20`);
     const resolution = Array.isArray(places)
       ? resolvePlace(query, places as PlaceCandidate[])
       : { best: null, alternatives: [] };

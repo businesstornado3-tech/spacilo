@@ -17,7 +17,7 @@ export const brand = {
   ai: "EarnRoom AI",
   tagline: "Make space earn.",
   propositions: {
-    renter: "Space nearby. Income at home.",
+    renter: "Find storage. Make space earn.",
     host: "Got space? Make money.",
     ai: "Show us your stuff. We'll help find the space.",
     trust: "Storage between people, built around trust.",

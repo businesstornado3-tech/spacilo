@@ -425,7 +425,7 @@ UK postcode conventions
 UK spelling
 UK date formatting
 
-The initial pilot market will eventually be:
+The product is intended for people across the United Kingdom. Early supply and marketing activity may be concentrated in selected local areas, including:
 
 Portsmouth
 Southsea
@@ -437,7 +437,7 @@ North End
 Hilsea
 Cosham
 
-Do not hard-code the product so that it cannot expand beyond Portsmouth.
+Treat these as launch-focus examples only. Do not present them as the geographic scope of EarnRoom or hard-code the product around one location.
 
 IMPORTANT TRUST PRINCIPLE
 

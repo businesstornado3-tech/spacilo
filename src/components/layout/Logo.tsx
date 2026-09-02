@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
 
 import { brand } from "@/config/brand";
-import { SpaciloSymbol } from "@/components/brand/SpaciloMark";
+import { EarnRoomSymbol } from "@/components/brand/EarnRoomMark";
 import { cn } from "@/lib/utils";
 
 /**
- * Brand lock-up: the approved hexagonal Spacilo symbol plus the wordmark.
+ * Brand lock-up: the approved hexagonal EarnRoom symbol plus the wordmark.
  * The name is read from the central brand config so the migration is reversible.
  */
 export function Logo({
@@ -24,7 +24,7 @@ export function Logo({
       )}
       aria-label={`${brand.name} home`}
     >
-      <SpaciloSymbol className="size-9 shrink-0 text-primary" />
+      <EarnRoomSymbol className="size-9 shrink-0 text-primary" />
       <span className="font-display text-[1.2rem] font-bold tracking-[-0.035em] text-foreground">
         {brand.name}
       </span>

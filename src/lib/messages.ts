@@ -34,7 +34,7 @@ export interface ConversationSummary {
 export const CONVERSATION_REPORT_REASONS = [
   { value: "abusive", label: "Abusive or threatening" },
   { value: "spam", label: "Spam or advertising" },
-  { value: "off_platform", label: "Asking to move off Spacilo" },
+  { value: "off_platform", label: "Asking to move off EarnRoom" },
   { value: "personal_information", label: "Asking for personal contact details" },
   { value: "scam", label: "Possible scam or fraud" },
   { value: "other", label: "Something else" },
@@ -96,15 +96,15 @@ export const isUnderReview = (row: { moderation_status: string }): boolean =>
   row.moderation_status === "under_review";
 
 export const MODERATION_NOTICE =
-  "This conversation has been reported and is being reviewed by the Spacilo team.";
+  "This conversation has been reported and is being reviewed by the EarnRoom team.";
 
 /**
  * Copy shown above every thread. Deliberately the same before and after a
- * booking: keeping messages on Spacilo is what makes support, evidence and
+ * booking: keeping messages on EarnRoom is what makes support, evidence and
  * refunds possible.
  */
 export const PRIVACY_NOTICE =
-  "Keep messages in Spacilo. Phone numbers, emails and the exact address are never shared here — the full address appears on the booking once it's confirmed.";
+  "Keep messages in EarnRoom. Phone numbers, emails and the exact address are never shared here — the full address appears on the booking once it's confirmed.";
 
 export const ADDRESS_NOTICE: Record<"before" | "after", string> = {
   before: "The exact address stays hidden until a booking is confirmed.",

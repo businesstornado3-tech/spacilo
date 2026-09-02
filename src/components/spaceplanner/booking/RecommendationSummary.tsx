@@ -1,5 +1,5 @@
 /**
- * RecommendationSummary — what Spacilo AI suggests, with live scoring.
+ * RecommendationSummary — what EarnRoom AI suggests, with live scoring.
  *
  * Toggling a suggestion re-runs the deterministic engine, so the score above
  * moves for a real reason. Nothing is saved and nothing is sent to the host.

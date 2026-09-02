@@ -6,7 +6,7 @@
  *
  * It never starts the camera on mount, never uploads a preview frame, and never
  * shows a metre figure. Live labels are provisional; the captured photo goes to
- * the existing secure Spacilo AI pipeline, which remains the authority.
+ * the existing secure EarnRoom AI pipeline, which remains the authority.
  */
 import { track } from "@/lib/analytics/tracker";
 import * as React from "react";
@@ -49,8 +49,8 @@ export interface LiveScannerProps extends Omit<UseLiveScanOptions, "onCapture"> 
 }
 
 const HEADLINE: Record<LiveScanMode, string> = {
-  renter: "Show Spacilo AI what you want to store",
-  host: "Show Spacilo AI the space you want to offer",
+  renter: "Show EarnRoom AI what you want to store",
+  host: "Show EarnRoom AI the space you want to offer",
 };
 
 export function LiveScanner({ fallback, className, ...options }: LiveScannerProps) {
@@ -87,7 +87,7 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
           <div className="flex flex-wrap items-center gap-3">
             <ScanLine className="size-5 shrink-0 text-signal" aria-hidden="true" />
             <div className="min-w-0">
-              <h3 className="type-h3">Spacilo AI Live Scan</h3>
+              <h3 className="type-h3">EarnRoom AI Live Scan</h3>
               <p className="type-body-sm text-muted-foreground">{HEADLINE[mode]}</p>
             </div>
             <Badge variant="neutral" className="ml-auto">
@@ -135,7 +135,7 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
               playsInline
               muted
               autoPlay
-              aria-label="Live camera view for Spacilo AI Live Scan"
+              aria-label="Live camera view for EarnRoom AI Live Scan"
               className="size-full object-cover"
             />
 
@@ -190,7 +190,7 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
             {cameraReady ? (
               <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2 rounded-full bg-background/90 px-3 py-1.5 type-body-sm">
                 <span className="size-2 rounded-full bg-destructive" aria-hidden="true" />
-                Spacilo AI
+                EarnRoom AI
                 <span className="font-medium">
                   {scan.status === "preparing"
                     ? "Preparing…"
@@ -235,7 +235,7 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
                 {!cameraReady
                   ? CAMERA_STATE_COPY[scan.cameraState]
                   : scan.status === "preparing"
-                    ? "Preparing Spacilo AI Live Scan…"
+                    ? "Preparing EarnRoom AI Live Scan…"
                     : CAPTURE_READINESS_LABEL[scan.guidance.readiness]}
               </Badge>
             </div>
@@ -269,7 +269,7 @@ export function LiveScanner({ fallback, className, ...options }: LiveScannerProp
                   <p>Possible fixed obstruction: {obstructions.join(", ")}.</p>
                 ) : null}
                 <p>
-                  We can&apos;t measure in metres from a live camera view — Spacilo AI works the
+                  We can&apos;t measure in metres from a live camera view — EarnRoom AI works the
                   measurements out from the photo you capture, and you confirm them.
                 </p>
               </div>

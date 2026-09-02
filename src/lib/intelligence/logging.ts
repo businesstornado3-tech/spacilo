@@ -34,7 +34,7 @@ export function logIntelligence(entry: Omit<IntelligenceLogEntry, "at">): void {
   buffer.push(full);
   if (buffer.length > MAX_ENTRIES) buffer.shift();
   if (!verbose) return;
-  const line = `[spacilo-ai] ${full.capability}/${full.provider} ${full.message}`;
+  const line = `[earnroom-ai] ${full.capability}/${full.provider} ${full.message}`;
   if (full.level === "error") console.error(line, full.detail ?? {});
   else if (full.level === "warn") console.warn(line, full.detail ?? {});
   else console.info(line, full.detail ?? {});

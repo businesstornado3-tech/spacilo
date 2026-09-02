@@ -1,5 +1,5 @@
 /**
- * The Spacilo AI Score.
+ * The EarnRoom AI Score.
  *
  * A single, deterministic confidence figure derived only from facts the
  * planner already computed: whether everything fits, whether the opening and
@@ -29,7 +29,7 @@ export interface ScoreCheck {
 
 export type PackingComplexity = "Easy" | "Moderate" | "Involved";
 
-export interface SpaciloScore {
+export interface EarnRoomScore {
   /** 0–100. */
   value: number;
   band: ScoreBand;
@@ -112,7 +112,7 @@ export function packingComplexity(plan: SpacePlan): PackingComplexity {
   return "Easy";
 }
 
-export function spaciloScore(plan: SpacePlan): SpaciloScore {
+export function earnroomScore(plan: SpacePlan): EarnRoomScore {
   const m = plan.metrics;
   const door = doorClearance(plan.lines, plan.space);
   const ceiling = ceilingClearance(plan.lines, plan.space);

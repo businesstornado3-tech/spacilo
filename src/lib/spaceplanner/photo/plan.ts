@@ -1,7 +1,7 @@
 /**
  * Photo SpacePlanner — the shared brain behind every "how does it fit?" result.
  *
- * Inputs are what Spacilo AI observed (belongings, a space) and the output is
+ * Inputs are what EarnRoom AI observed (belongings, a space) and the output is
  * one consistent result shape used by the homepage, the renter dashboard, the
  * host dashboard, listings and host request review. Nothing here measures
  * anything: every figure is an estimate, expressed as a range where the

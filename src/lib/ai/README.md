@@ -1,4 +1,4 @@
-# Spacilo AI Foundation (Phase 6A)
+# EarnRoom AI Foundation (Phase 6A)
 
 The production AI layer. Everything above it imports from `@/lib/ai` and
 nowhere deeper, so a provider swap is a configuration change rather than a
@@ -27,7 +27,7 @@ src/lib/ai/
 │   └── orchestrator.ts      executeAi / enqueueAi / streamAi
 ├── providers/local.ts       adapters over the existing intelligence engines
 ├── services/index.ts        the only API the app calls
-└── bootstrap.ts             installSpaciloAi(), called once in src/router.tsx
+└── bootstrap.ts             installEarnRoomAi(), called once in src/router.tsx
 ```
 
 ## Calling AI
@@ -66,11 +66,11 @@ for await (const chunk of assistantAi.stream({ question, context })) { ... }
 
 1. Implement `AiProvider<Input, Output>` (`id`, `kind`, `model`, `remote`,
    `capabilities`, `run`, optional `stream`, `estimateCost`, `healthCheck`).
-2. `registerAiProvider(myProvider)` inside `installSpaciloAi()`.
+2. `registerAiProvider(myProvider)` inside `installEarnRoomAi()`.
 3. Add its id to the capability's `providers` list in `core/config.ts` — order
    is the fallback order.
 
-Remote providers hold no credentials: they call a Spacilo server function which
+Remote providers hold no credentials: they call a EarnRoom server function which
 reads the key server-side. `setAiFlags({ remoteProviders: false })` disables
 them all instantly.
 

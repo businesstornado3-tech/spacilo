@@ -13,7 +13,7 @@ export function SpacePlannerCard({ mode }: { mode: "renter" | "host" }) {
 
   return (
     <section className="rounded-2xl border border-signal-soft bg-card p-5 shadow-card">
-      <p className="type-overline text-muted-foreground">Spacilo AI SpacePlanner™</p>
+      <p className="type-overline text-muted-foreground">EarnRoom AI SpacePlanner™</p>
       <h2 className="mt-1 type-h3">
         {renter
           ? "Plan your storage before you book."
@@ -21,8 +21,8 @@ export function SpacePlannerCard({ mode }: { mode: "renter" | "host" }) {
       </h2>
       <p className="mt-1.5 type-body-sm text-muted-foreground">
         {renter
-          ? "Photograph your belongings and a space, and Spacilo AI estimates how much room you need and how it could fit."
-          : "Photograph your space and Spacilo AI estimates usable capacity, what could fit, and its earning potential."}
+          ? "Photograph your belongings and a space, and EarnRoom AI estimates how much room you need and how it could fit."
+          : "Photograph your space and EarnRoom AI estimates usable capacity, what could fit, and its earning potential."}
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">

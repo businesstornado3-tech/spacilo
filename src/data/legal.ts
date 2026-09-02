@@ -4,12 +4,12 @@
  * IMPORTANT: none of this text is legal advice and none of it has been
  * reviewed by a solicitor. Every document here is a structured placeholder so
  * the product has stable, linkable URLs before launch. The wording must be
- * replaced with solicitor-approved copy before Spacilo takes real money.
+ * replaced with solicitor-approved copy before EarnRoom takes real money.
  */
 import { brand } from "@/config/brand";
 
 export const LEGAL_REVIEW_NOTICE =
-  "This document is a placeholder written by the Spacilo team. It has not been reviewed or approved by a qualified solicitor and must be replaced with professionally drafted wording before launch.";
+  "This document is a placeholder written by the EarnRoom team. It has not been reviewed or approved by a qualified solicitor and must be replaced with professionally drafted wording before launch.";
 
 export interface LegalSection {
   heading: string;
@@ -31,52 +31,56 @@ export const LEGAL_DOCUMENTS: readonly LegalDocument[] = [
     title: "Terms of service",
     description: `The agreement between you and ${brand.name} when you use the marketplace.`,
     intro: `${brand.name} is a marketplace that introduces people who need storage to people with spare space. We are not a storage operator, a warehouse, a removals company or an insurer.`,
-    sections: [
-      {
-        heading: "What we do and don't do",
-        body: `${brand.name} provides the platform, the fit estimates, the storage policy, the messaging and the payment rails. The storage itself is provided by the host, in their own property, under the arrangement the two of you agree.`,
-      },
-      {
-        heading: "Your account",
-        body: "You must be 18 or over, give accurate information, keep your login details secure, and use the platform only for lawful storage that the published storage policy permits.",
-      },
-      {
-        heading: "Bookings and payment",
-        body: "A booking is formed when a host accepts a request and payment is confirmed by our payment provider. Prices shown at review are the prices charged; if a host changes their price before you pay, you are asked to review the new price again.",
-      },
-      {
-        heading: "Limits of our responsibility",
-        body: `${brand.name} does not guarantee that a space is safe, dry, secure or suitable. Fit scores, scans and screening are estimates and checks, not guarantees. Nothing on the platform is insurance.`,
-      },
-      {
-        heading: "Ending an agreement",
-        body: "Either party can end a booking under the cancellation policy. Serious breaches of these terms, the storage policy or the law may result in an account being suspended.",
-      },
-    ],
+      sections: [
+        {
+          heading: "What we do and don't do",
+          body: `${brand.name} provides the platform, the fit estimates, the storage policy, the messaging and the payment rails. The storage itself is provided by the host, in their own property, under the arrangement the two of you agree.`,
+        },
+        {
+          heading: "Your account",
+          body: "You must be 18 or over, give accurate information, keep your login details secure, and use the platform only for lawful storage that the published storage policy permits.",
+        },
+        {
+          heading: "Bookings and payment",
+          body: "A booking is formed when a host accepts a request and payment is confirmed by our payment provider. Prices shown at review are the prices charged; if a host changes their price before you pay, you are asked to review the new price again.",
+        },
+        {
+          heading: "Uploaded photos and AI-assisted features",
+          body: `${brand.name} may process listing photos, inventory photos, host space-scan photos and booking-evidence photos to provide the feature you request. AI-assisted scans and visualisations produce estimates or proposals; you remain responsible for checking important details and the service does not identify lawful storage, guarantee fit or replace a person's judgement.`,
+        },
+        {
+          heading: "Limits of our responsibility",
+          body: `${brand.name} does not guarantee that a space is safe, dry, secure or suitable. Fit scores, scans and screening are estimates and checks, not guarantees. Nothing on the platform is insurance.`,
+        },
+        {
+          heading: "Ending an agreement",
+          body: "Either party can end a booking under the cancellation policy. Serious breaches of these terms, the storage policy or the law may result in an account being suspended.",
+        },
+      ],
   },
   {
     slug: "cookies",
     title: "Cookie policy",
     description: `How ${brand.name} uses browser storage, and what it deliberately doesn't do.`,
     intro: `${brand.name} keeps browser storage to the minimum needed to sign you in and to measure our own site.`,
-    sections: [
-      {
-        heading: "Strictly necessary",
-        body: "Your signed-in session is stored in your browser so you stay logged in between pages. Without it the product cannot work.",
-      },
-      {
-        heading: "First-party measurement",
-        body: "An opaque, rotating random value lets us count visits without identifying you. There is no advertising network, no third-party tracker and no cross-site profile.",
-      },
-      {
-        heading: "Preferences",
-        body: "Small local values remember things like recent searches on your own device. They never leave your browser unless you act on them.",
-      },
-      {
-        heading: "Your control",
-        body: "Clearing your browser storage removes all of the above. Blocking it will sign you out but will not stop you browsing public pages.",
-      },
-    ],
+      sections: [
+        {
+          heading: "Strictly necessary",
+          body: "Your signed-in session is stored in your browser so you stay logged in between pages. Without it the product cannot work.",
+        },
+        {
+          heading: "First-party measurement",
+          body: "An opaque, rotating random value lets us count visits without identifying you. There is no advertising network, no third-party tracker and no cross-site profile. Do Not Track and Global Privacy Control signals disable this measurement.",
+        },
+        {
+          heading: "Preferences",
+          body: "Small local values remember things like recent searches on your own device. They never leave your browser unless you act on them.",
+        },
+        {
+          heading: "Your control",
+          body: "Clearing your browser storage removes the local values above. Blocking it may sign you out but will not stop you browsing public pages. This page does not claim that every browser-storage question has received legal review.",
+        },
+      ],
   },
   {
     slug: "refunds",
@@ -131,7 +135,7 @@ export const LEGAL_DOCUMENTS: readonly LegalDocument[] = [
   {
     slug: "host-agreement",
     title: "Host agreement",
-    description: "What you commit to when you list space on Spacilo.",
+    description: "What you commit to when you list space on EarnRoom.",
     intro:
       "Listing a space is a commitment to a real person that their belongings will be somewhere safe, accessible as described, and treated with care.",
     sections: [
@@ -196,10 +200,10 @@ export const LEGAL_DOCUMENTS: readonly LegalDocument[] = [
         heading: "No safety guarantee",
         body: "A high fit score is not a statement that a space is safe, dry, secure or insured. It is a spatial estimate only.",
       },
-      {
-        heading: "Your data",
-        body: "Scan photos are used to produce your own estimate. They are not sold, and they are not used to identify people.",
-      },
+        {
+          heading: "Your data",
+          body: `${brand.name} sends selected photos to its AI processing service when you request a scan or visualisation. The current service uses Google Gemini models through the Lovable AI Gateway. Photos are not used as anonymous site analytics or sold for advertising; storage and retention details are described on the privacy page and still require launch review.`,
+        },
     ],
   },
 ];

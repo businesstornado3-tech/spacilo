@@ -1,12 +1,12 @@
 /**
- * FitScore — the Spacilo AI Score dial.
+ * FitScore — the EarnRoom AI Score dial.
  *
  * A single figure with its band, backed by the deterministic checks in
  * `@/lib/spaceplanner/score`. Used on the homepage demo, the listing planner
  * and the host review panel, so the number always means the same thing.
  */
 import { cn } from "@/lib/utils";
-import type { SpaciloScore } from "@/lib/spaceplanner";
+import type { EarnRoomScore } from "@/lib/spaceplanner";
 
 const RADIUS = 34;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -19,7 +19,7 @@ function toneFor(value: number) {
 }
 
 export interface FitScoreProps {
-  score: SpaciloScore;
+  score: EarnRoomScore;
   size?: "sm" | "md";
   className?: string;
 }
@@ -34,7 +34,7 @@ export function FitScore({ score, size = "md", className }: FitScoreProps) {
         viewBox="0 0 80 80"
         className={cn("shrink-0", size === "sm" ? "size-14" : "size-20")}
         role="img"
-        aria-label={`Spacilo AI Score ${score.value} out of 100 — ${score.band}`}
+        aria-label={`EarnRoom AI Score ${score.value} out of 100 — ${score.band}`}
       >
         <circle cx="40" cy="40" r={RADIUS} className="fill-none stroke-surface" strokeWidth={8} />
         <circle
@@ -59,7 +59,7 @@ export function FitScore({ score, size = "md", className }: FitScoreProps) {
         </text>
       </svg>
       <div className="min-w-0">
-        <p className="type-badge text-muted-foreground">Spacilo AI Score</p>
+        <p className="type-badge text-muted-foreground">EarnRoom AI Score</p>
         <p className={cn("type-h4", tone)}>{score.band}</p>
         <p className="type-body-sm text-muted-foreground">
           Estimated fit {score.fitPercent}% · packing {score.complexity.toLowerCase()}
@@ -70,7 +70,7 @@ export function FitScore({ score, size = "md", className }: FitScoreProps) {
 }
 
 /** The full check list — used before booking and by hosts reviewing requests. */
-export function FitScoreChecks({ score }: { score: SpaciloScore }) {
+export function FitScoreChecks({ score }: { score: EarnRoomScore }) {
   return (
     <dl className="grid gap-2 sm:grid-cols-2">
       {score.checks.map((check) => (

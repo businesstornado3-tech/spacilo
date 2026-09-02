@@ -18,7 +18,7 @@ import type { Group } from "three";
 import type { TwinObject as TwinObjectModel } from "@/lib/twin/contracts";
 import { modelFor, partsForLod, type MaterialRole } from "@/lib/twin/library";
 
-/** Palette roles resolved once. Kept in sync with the Spacilo brand tokens. */
+/** Palette roles resolved once. Kept in sync with the EarnRoom brand tokens. */
 export const TWIN_MATERIALS: Record<MaterialRole, { color: string; roughness: number; metalness: number }> = {
   card: { color: "#d9c7a7", roughness: 0.9, metalness: 0 },
   cardboard: { color: "#c8ab7d", roughness: 0.95, metalness: 0 },

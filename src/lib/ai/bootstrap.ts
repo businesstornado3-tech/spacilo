@@ -14,7 +14,7 @@ import { installVisionProProviders } from "./providers/vision-pro";
 
 let installed = false;
 
-export function installSpaciloAi(): void {
+export function installEarnRoomAi(): void {
   if (installed) return;
   installLocalAiProviders();
   installVisionProProviders();

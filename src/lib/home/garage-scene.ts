@@ -1,6 +1,6 @@
 /**
- * Data for the signature Spacilo hero animation: one realistic UK residential
- * garage, the belongings a real household keeps in it, and where Spacilo AI
+ * Data for the signature EarnRoom hero animation: one realistic UK residential
+ * garage, the belongings a real household keeps in it, and where EarnRoom AI
  * moves each of them.
  *
  * This module is pure data — no React, no AI, no network. It exists on its own

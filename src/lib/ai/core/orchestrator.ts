@@ -1,7 +1,7 @@
 /**
  * The AI Orchestrator.
  *
- * Every AI request in Spacilo passes through here. Nothing else may call a
+ * Every AI request in EarnRoom passes through here. Nothing else may call a
  * provider. In one place it handles validation, security, rate limiting,
  * caching, routing, timeouts, retries, provider fallback, structured
  * responses, logging, metrics and graceful degradation.
@@ -152,7 +152,7 @@ export async function executeAi<I, O>(request: AiRequest<I, O>): Promise<AiRespo
   if (isOverBudget()) {
     const stale = readStaleAiCache<AiResponse<O>>(cacheKey);
     if (stale) {
-      warnings.push({ code: "budget_degraded", message: "Showing a recent Spacilo AI result." });
+      warnings.push({ code: "budget_degraded", message: "Showing a recent EarnRoom AI result." });
       return { ...stale, requestId, cached: true, degraded: true, warnings };
     }
     const error = new AiError("budget_exceeded");
@@ -193,7 +193,7 @@ export async function executeAi<I, O>(request: AiRequest<I, O>): Promise<AiRespo
         if (confidence < config.minConfidence) {
           warnings.push({
             code: "low_confidence",
-            message: "Spacilo AI is not fully confident here — please check the details.",
+            message: "EarnRoom AI is not fully confident here — please check the details.",
           });
         }
 
@@ -281,7 +281,7 @@ export async function executeAi<I, O>(request: AiRequest<I, O>): Promise<AiRespo
       attempts,
       warnings: [
         ...warnings,
-        { code: "degraded", message: "Showing a recent Spacilo AI result while the service recovers." },
+        { code: "degraded", message: "Showing a recent EarnRoom AI result while the service recovers." },
       ],
     };
   }

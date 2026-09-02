@@ -11,8 +11,8 @@
  * than nudging a figure.
  */
 import { buildPlan } from "./index";
-import { bandFor, recommendationFor, spaciloScore } from "./score";
-import type { CheckState, ScoreCheck, SpaciloScore } from "./score";
+import { bandFor, recommendationFor, earnroomScore } from "./score";
+import type { CheckState, ScoreCheck, EarnRoomScore } from "./score";
 import type { InventoryLine, SpacePlan, StorageSpace } from "./types";
 import { itemVolume } from "./catalogue";
 
@@ -44,13 +44,13 @@ export interface BookingCta {
   helper: string;
 }
 
-export function ctaFor(score: SpaciloScore): BookingCta {
+export function ctaFor(score: EarnRoomScore): BookingCta {
   const tone = toneForScore(score.value);
   if (tone === "green") {
     return {
       intent: "book",
       label: "Book this space",
-      helper: "Spacilo AI expects your belongings to fit with room to work.",
+      helper: "EarnRoom AI expects your belongings to fit with room to work.",
     };
   }
   if (tone === "amber") {
@@ -67,17 +67,17 @@ export function ctaFor(score: SpaciloScore): BookingCta {
   };
 }
 
-const checkById = (score: SpaciloScore, id: string): ScoreCheck | undefined =>
+const checkById = (score: EarnRoomScore, id: string): ScoreCheck | undefined =>
   score.checks.find((check) => check.id === id);
 
-const COMPLEXITY_TONE: Record<SpaciloScore["complexity"], ConfidenceTone> = {
+const COMPLEXITY_TONE: Record<EarnRoomScore["complexity"], ConfidenceTone> = {
   Easy: "green",
   Moderate: "amber",
   Involved: "amber",
 };
 
 export interface BookingConfidence {
-  score: SpaciloScore;
+  score: EarnRoomScore;
   tone: ConfidenceTone;
   rows: ConfidenceRow[];
   /** Cubic metres estimated to be left over once everything is in. */
@@ -85,7 +85,7 @@ export interface BookingConfidence {
   cta: BookingCta;
 }
 
-export function buildBookingConfidence(plan: SpacePlan, score: SpaciloScore): BookingConfidence {
+export function buildBookingConfidence(plan: SpacePlan, score: EarnRoomScore): BookingConfidence {
   const m = plan.metrics;
   const free = Math.max(0, Math.round((m.usableVolume - m.requiredVolume) * 10) / 10);
 
@@ -172,8 +172,8 @@ const biggestLine = (lines: InventoryLine[]): InventoryLine | null =>
 const tallestLine = (lines: InventoryLine[]): InventoryLine | null =>
   [...lines].sort((a, b) => b.item.height - a.item.height)[0] ?? null;
 
-/** Everything Spacilo AI can suggest for this plan, worst problem first. */
-export function buildSuggestions(plan: SpacePlan, score: SpaciloScore): PlannerSuggestion[] {
+/** Everything EarnRoom AI can suggest for this plan, worst problem first. */
+export function buildSuggestions(plan: SpacePlan, score: EarnRoomScore): PlannerSuggestion[] {
   const out: PlannerSuggestion[] = [];
   const lines = plan.lines;
 
@@ -259,7 +259,7 @@ export function buildSuggestions(plan: SpacePlan, score: SpaciloScore): PlannerS
 
 export interface AdjustedPlan {
   plan: SpacePlan | null;
-  score: SpaciloScore | null;
+  score: EarnRoomScore | null;
   /** Difference against the untouched plan, in score points. */
   delta: number;
 }
@@ -277,7 +277,7 @@ export function applySuggestions(
   appliedIds: string[],
 ): AdjustedPlan {
   const base = lines.length ? buildPlan(lines, space) : null;
-  const baseScore = base ? spaciloScore(base) : null;
+  const baseScore = base ? earnroomScore(base) : null;
   if (!base || !baseScore) return { plan: null, score: null, delta: 0 };
 
   const applied = suggestions.filter((s) => appliedIds.includes(s.id));
@@ -286,7 +286,7 @@ export function applySuggestions(
   if (!keptLines.length) return { plan: base, score: baseScore, delta: 0 };
 
   const plan = buildPlan(keptLines, space);
-  const raw = spaciloScore(plan);
+  const raw = earnroomScore(plan);
 
   const resolved = new Set(
     applied.filter((s) => s.kind === "technique" && s.resolves).map((s) => s.resolves as string),
@@ -305,7 +305,7 @@ export function applySuggestions(
 
   const value = Math.max(0, Math.min(100, raw.value + relief));
   const band = bandFor(value);
-  const score: SpaciloScore = {
+  const score: EarnRoomScore = {
     ...raw,
     value,
     band,
@@ -330,7 +330,7 @@ export interface ComparisonResult {
   id: string;
   name: string;
   score: number;
-  band: SpaciloScore["band"];
+  band: EarnRoomScore["band"];
   fitPercent: number;
   itemCount: number;
   tone: ConfidenceTone;
@@ -346,7 +346,7 @@ export function compareInventories(
     .filter((entry) => entry.lines.length > 0)
     .map((entry) => {
       const plan = buildPlan(entry.lines, space);
-      const score = spaciloScore(plan);
+      const score = earnroomScore(plan);
       return {
         id: entry.id,
         name: entry.name,

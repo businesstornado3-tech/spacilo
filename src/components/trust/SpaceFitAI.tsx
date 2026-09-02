@@ -7,7 +7,7 @@ import { useCountUp } from "@/hooks/use-motion";
 import { spaceFitBand, SPACEFIT_DISCLAIMER } from "@/lib/spacefit";
 import type { SpaceFitBand } from "@/types/models";
 
-/** The four-point sparkle that marks anything Spacilo AI touches. */
+/** The four-point sparkle that marks anything EarnRoom AI touches. */
 export function SpaceFitSpark({ className }: { className?: string | undefined }) {
   return (
     <span aria-hidden="true" className={cn("animate-twinkle text-signal", className)}>
@@ -17,7 +17,7 @@ export function SpaceFitSpark({ className }: { className?: string | undefined })
 }
 
 /**
- * "Spacilo AI ✦" wordmark. Intelligent and quiet — not a chatbot avatar.
+ * "EarnRoom AI ✦" wordmark. Intelligent and quiet — not a chatbot avatar.
  */
 export function SpaceFitAiMark({
   size = "md",
@@ -92,7 +92,7 @@ export function AnimatedSpaceFitScore({
         aria-valuenow={Math.round(target)}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={`Spacilo AI estimate ${Math.round(target)} per cent — ${label}`}
+        aria-label={`EarnRoom AI estimate ${Math.round(target)} per cent — ${label}`}
       >
         <div className="grid size-[82%] place-items-center rounded-full bg-card text-center">
           <div>

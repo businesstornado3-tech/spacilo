@@ -94,7 +94,7 @@ function readBox(value: unknown): { x: number; y: number; w: number; h: number }
 const normalise = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
 /**
- * Maps a free-text vendor label onto the Spacilo taxonomy. Unknown labels fall
+ * Maps a free-text vendor label onto the EarnRoom taxonomy. Unknown labels fall
  * back to a generic class rather than being invented into the vocabulary.
  */
 export function matchClassKey(label: string): string {

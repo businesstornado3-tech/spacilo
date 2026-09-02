@@ -1,5 +1,5 @@
 /**
- * Spacilo Vision AI — real, evidence-based detection endpoint.
+ * EarnRoom Vision AI — real, evidence-based detection endpoint.
  *
  * CORE PRINCIPLE: never invent the user's inventory. Everything returned here
  * must be traceable to something visible in the photographs supplied.

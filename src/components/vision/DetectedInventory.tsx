@@ -30,7 +30,7 @@ export function DetectedInventory({
   if (objects.length === 0) {
     return (
       <p className="rounded-xl border border-border bg-card p-4 type-body-sm text-muted-foreground">
-        Nothing detected yet. Add photos and run Spacilo AI, or add items yourself.
+        Nothing detected yet. Add photos and run EarnRoom AI, or add items yourself.
       </p>
     );
   }
@@ -62,7 +62,7 @@ export function DetectedInventory({
         >
           <TextInput
             value={draft}
-            aria-label="Add an item Spacilo AI missed"
+            aria-label="Add an item EarnRoom AI missed"
             placeholder="Add something we missed…"
             onChange={(event) => setDraft(event.target.value)}
           />

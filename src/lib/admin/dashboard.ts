@@ -257,7 +257,7 @@ export function toCsv(rows: (string | number | null)[][]): string {
 
 export function csvPreamble(reportName: string, range: DateRange): (string | number | null)[][] {
   return [
-    [`Spacilo admin — ${reportName}`],
+    [`EarnRoom admin — ${reportName}`],
     [`Range (UTC)`, range.from.toISOString(), range.to.toISOString()],
     [`Timezone`, REPORTING_TIMEZONE],
     [],
@@ -272,7 +272,7 @@ export function buildCsvReport(
 ): CsvReport {
   const rows = [...csvPreamble(reportName, range), headings, ...dataRows];
   const stamp = range.from.toISOString().slice(0, 10);
-  const filename = `spacilo-admin-${reportName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${stamp}.csv`;
+  const filename = `earnroom-admin-${reportName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${stamp}.csv`;
   return { filename, rows };
 }
 

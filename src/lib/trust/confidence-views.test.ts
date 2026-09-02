@@ -186,7 +186,7 @@ describe("listing confidence — consolidated FIT / POLICY / SUITABILITY", () =>
   it("keeps provenance honest — AI proposals never read as confirmed", () => {
     expect(capacityProvenance(hostSpace())).toBe("Host-confirmed measurements");
     expect(capacityProvenance(hostSpace({ measurement_source: "ai_estimated" }))).toContain(
-      "Estimated by Spacilo AI",
+      "Estimated by EarnRoom AI",
     );
     expect(capacityProvenance(hostSpace({ measurement_source: "ai_estimated" }))).not.toMatch(
       /verified|guaranteed/i,

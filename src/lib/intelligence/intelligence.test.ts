@@ -1,5 +1,5 @@
 /**
- * Spacilo Intelligence Platform — foundation tests.
+ * EarnRoom Intelligence Platform — foundation tests.
  *
  * These prove the two claims the platform is built on: the same input always
  * produces the same answer, and swapping a provider changes the answer without

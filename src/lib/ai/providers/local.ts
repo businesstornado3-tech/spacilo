@@ -1,7 +1,7 @@
 /**
  * Local provider adapters.
  *
- * These wrap Spacilo's own deterministic engines behind the AI provider
+ * These wrap EarnRoom's own deterministic engines behind the AI provider
  * contract, so the orchestrator is exercised on exactly the same path a remote
  * vendor will use in Phase 6B. Registering OpenAI, Gemini or anything else
  * later is a `registerAiProvider` call plus a config edit — no UI change.
@@ -28,7 +28,7 @@ import { explain, factor } from "../core/explain";
 import { registerAiProvider } from "../core/provider-manager";
 import type { AiProvider, AiStreamChunk } from "../core/types";
 
-const ENGINE_MODEL = "spacilo-engine-1";
+const ENGINE_MODEL = "earnroom-engine-1";
 
 /* --------------------------------------------------------------- vision */
 
@@ -37,7 +37,7 @@ export interface VisionInput {
 }
 
 export const visionProvider: AiProvider<VisionInput, DetectedInventory> = {
-  id: "spacilo-vision",
+  id: "earnroom-vision",
   kind: "vision",
   model: ENGINE_MODEL,
   remote: false,
@@ -71,7 +71,7 @@ export interface SpaceInput {
 }
 
 export const spaceProvider: AiProvider<SpaceInput, DetectedSpace> = {
-  id: "spacilo-space",
+  id: "earnroom-space",
   kind: "image-analysis",
   model: ENGINE_MODEL,
   remote: false,
@@ -109,7 +109,7 @@ export interface InventorySummary {
 }
 
 export const inventoryProvider: AiProvider<InventoryInput, InventorySummary> = {
-  id: "spacilo-inventory",
+  id: "earnroom-inventory",
   kind: "local",
   model: ENGINE_MODEL,
   remote: false,
@@ -148,7 +148,7 @@ export interface PlannerInput {
 }
 
 export const plannerProvider: AiProvider<PlannerInput, PackingResult> = {
-  id: "spacilo-planner",
+  id: "earnroom-planner",
   kind: "local",
   model: ENGINE_MODEL,
   remote: false,
@@ -177,7 +177,7 @@ export interface RecommendationInput {
 }
 
 export const recommendationProvider: AiProvider<RecommendationInput, Recommendation[]> = {
-  id: "spacilo-recommendations",
+  id: "earnroom-recommendations",
   kind: "local",
   model: ENGINE_MODEL,
   remote: false,
@@ -209,7 +209,7 @@ export interface PricingInput {
 }
 
 export const pricingProvider: AiProvider<PricingInput, PricingEstimate> = {
-  id: "spacilo-pricing",
+  id: "earnroom-pricing",
   kind: "local",
   model: ENGINE_MODEL,
   remote: false,
@@ -266,9 +266,9 @@ export function cosine(a: number[], b: number[]): number {
 }
 
 export const searchProvider: AiProvider<SearchInput, SearchOutput> = {
-  id: "spacilo-search",
+  id: "earnroom-search",
   kind: "embedding",
-  model: "spacilo-embed-64",
+  model: "earnroom-embed-64",
   remote: false,
   capabilities: ["search"],
   async run(input) {
@@ -331,9 +331,9 @@ function composeAnswer(input: AssistantInput): AssistantOutput {
 }
 
 export const assistantProvider: AiProvider<AssistantInput, AssistantOutput> = {
-  id: "spacilo-assistant",
+  id: "earnroom-assistant",
   kind: "llm",
-  model: "spacilo-assistant-1",
+  model: "earnroom-assistant-1",
   remote: false,
   capabilities: ["assistant"],
   async run(input) {

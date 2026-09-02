@@ -1,7 +1,7 @@
 /**
  * SpacePlannerProvider — the single source of planner state.
  *
- * Every planner surface in Spacilo (homepage demo, renter dashboard, listing
+ * Every planner surface in EarnRoom (homepage demo, renter dashboard, listing
  * "will it fit?", host booking review) mounts this provider and renders the
  * shared panels beneath it. The deterministic engine in `@/lib/spaceplanner`
  * does the thinking; this context only holds intent, capability and phase, so
@@ -17,11 +17,11 @@ import {
   capabilitiesFor,
   itemVolume,
   simulationEngine,
-  spaciloScore,
+  earnroomScore,
   type InventoryLine,
   type PlannerCapabilities,
   type PlannerMode,
-  type SpaciloScore,
+  type EarnRoomScore,
   type SpacePlan,
   type SpacePlannerEngine,
   type StorageSpace,
@@ -40,7 +40,7 @@ export interface PlannerContextValue {
   atItemLimit: boolean;
   space: StorageSpace;
   plan: SpacePlan | null;
-  score: SpaciloScore | null;
+  score: EarnRoomScore | null;
   phase: PlannerPhase;
   /** Set once a run has completed in this session — drives the unlock card. */
   hasCompletedRun: boolean;
@@ -63,7 +63,7 @@ export interface SpacePlannerProviderProps {
   initialQuantities?: Record<string, number>;
   /** Swappable planning engine — defaults to the deterministic simulation. */
   engine?: SpacePlannerEngine;
-  onRunComplete?: (plan: SpacePlan, score: SpaciloScore) => void;
+  onRunComplete?: (plan: SpacePlan, score: EarnRoomScore) => void;
 }
 
 const FALLBACK_SPACE = SPACE_BY_ID.get("garage")!;
@@ -109,7 +109,7 @@ export function SpacePlannerProvider({
     () => (itemCount > 0 ? engine.plan(lines, space) : null),
     [engine, lines, space, itemCount],
   );
-  const score = React.useMemo(() => (plan ? spaciloScore(plan) : null), [plan]);
+  const score = React.useMemo(() => (plan ? earnroomScore(plan) : null), [plan]);
 
   const setQuantity = React.useCallback(
     (itemId: string, quantity: number) => {

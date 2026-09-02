@@ -30,19 +30,19 @@ export type AiRecovery =
   | "none";
 
 const MESSAGES: Record<AiErrorCode, string> = {
-  disabled: "This Spacilo AI feature is switched off at the moment.",
+  disabled: "This EarnRoom AI feature is switched off at the moment.",
   invalid_input: "That request could not be read. Check the details and try again.",
   payload_too_large: "That upload is too large. Try fewer or smaller photos.",
   unsupported_media: "That file type is not supported. Use a JPEG, PNG or WebP photo.",
   prompt_injection: "That request contained instructions we cannot accept.",
   rate_limited: "You have made a lot of requests. Please wait a moment and try again.",
-  budget_exceeded: "Spacilo AI is busy right now. Please try again shortly.",
-  provider_unavailable: "Spacilo AI is unavailable right now. You can still continue by hand.",
+  budget_exceeded: "EarnRoom AI is busy right now. Please try again shortly.",
+  provider_unavailable: "EarnRoom AI is unavailable right now. You can still continue by hand.",
   timeout: "That took too long. Try again with less to analyse.",
-  invalid_response: "Spacilo AI returned something we could not use. Please try again.",
-  low_confidence: "Spacilo AI is not confident here — please check the details yourself.",
+  invalid_response: "EarnRoom AI returned something we could not use. Please try again.",
+  low_confidence: "EarnRoom AI is not confident here — please check the details yourself.",
   cancelled: "That request was cancelled.",
-  unknown: "Something went wrong with Spacilo AI. Please try again.",
+  unknown: "Something went wrong with EarnRoom AI. Please try again.",
 };
 
 const RECOVERY: Record<AiErrorCode, AiRecovery> = {

@@ -5,7 +5,7 @@
  * "Watch live demo" scroll to, and start, the real simulation.
  */
 export const DEMO_ANCHOR_ID = "spaceplanner-demo";
-const START_EVENT = "spacilo:spaceplanner-start";
+const START_EVENT = "earnroom:spaceplanner-start";
 
 export function scrollToDemo() {
   if (typeof document === "undefined") return;

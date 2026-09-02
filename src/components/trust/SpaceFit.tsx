@@ -63,7 +63,7 @@ export function SpaceFitMeter({
         aria-valuenow={value}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label="Spacilo AI compatibility estimate"
+        aria-label="EarnRoom AI compatibility estimate"
       >
         <div
           className={cn("h-full rounded-full transition-none", BAR_CLASSES[band])}

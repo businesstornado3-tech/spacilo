@@ -2,7 +2,7 @@
  * Detection taxonomy.
  *
  * The complete vocabulary the Vision Engine may propose, with cautious UK
- * estimates. It extends the existing Spacilo Vision taxonomy rather than
+ * estimates. It extends the existing EarnRoom Vision taxonomy rather than
  * replacing it: every entry either reuses a class already defined there or
  * adds a new one, and both feed the same SpacePlanner catalogue.
  *

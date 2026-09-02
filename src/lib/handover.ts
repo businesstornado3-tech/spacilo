@@ -7,7 +7,7 @@
  * confirmation RPCs remain the only things that move a booking on.
  *
  * Nothing here certifies condition. Photos and notes are a record provided by
- * the renter and the host, never a Spacilo or AI verification.
+ * the renter and the host, never a EarnRoom or AI verification.
  */
 import type { Enums, Tables } from "@/integrations/supabase/types";
 import type { LifecycleBooking } from "@/lib/bookings-lifecycle";

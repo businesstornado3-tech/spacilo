@@ -1,8 +1,8 @@
-# SpaceShare UK
+# EarnRoom
 
 We are building a production-quality, mobile-first UK peer-to-peer storage marketplace.
 
-For now, use the temporary working brand name Project Stow throughout the application. The brand name must be stored centrally so it can easily be changed across the entire application later.
+EarnRoom is the central trading name used throughout the application. Brand values live in `src/config/brand.ts` so future brand changes remain reversible.
 
 The marketplace will eventually allow:
 
@@ -248,9 +248,9 @@ DESKTOP NAVIGATION
 
 Create a clean top navigation.
 
-Temporary logo:
+Product logo:
 
-Project Stow
+EarnRoom
 
 Navigation:
 
@@ -425,7 +425,7 @@ UK postcode conventions
 UK spelling
 UK date formatting
 
-The initial pilot market will eventually be:
+The product is intended for people across the United Kingdom. Early supply and marketing activity may be concentrated in selected local areas, including:
 
 Portsmouth
 Southsea
@@ -437,7 +437,7 @@ North End
 Hilsea
 Cosham
 
-Do not hard-code the product so that it cannot expand beyond Portsmouth.
+Treat these as launch-focus examples only. Do not present them as the geographic scope of EarnRoom or hard-code the product around one location.
 
 IMPORTANT TRUST PRINCIPLE
 

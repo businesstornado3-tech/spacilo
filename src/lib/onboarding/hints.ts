@@ -9,11 +9,11 @@
  * touches the network, the database or any business logic.
  */
 
-export const ONBOARDING_HINT_STORAGE_KEY = "spacilo.onboarding.v1";
+export const ONBOARDING_HINT_STORAGE_KEY = "earnroom.onboarding.v1";
 
 export const ONBOARDING_HINTS = {
-  home_search: "Tell us where you need space — Spacilo AI ranks trusted spaces near you.",
-  vision_upload: "Upload a photo and Spacilo AI will understand your space.",
+  home_search: "Tell us where you need space — EarnRoom AI ranks trusted spaces near you.",
+  vision_upload: "Upload a photo and EarnRoom AI will understand your space.",
   planner: "Drag items in to see how everything fits before you book.",
   digital_twin: "Preview your storage in 3D before booking.",
   listing_create: "Add a few photos and measurements — we'll suggest a fair price.",

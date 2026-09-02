@@ -45,7 +45,7 @@ export function ContinuePlanningCard({
           {formatVolume(summary.estimatedStorageVolume)} estimated · {space.name}
           {inventory.lastScore === null
             ? ""
-            : ` · Spacilo AI ${inventory.lastScore} (${bandFor(inventory.lastScore)})`}
+            : ` · EarnRoom AI ${inventory.lastScore} (${bandFor(inventory.lastScore)})`}
         </p>
         <p className="mt-1 type-body-sm text-muted-foreground">
           Last opened {relativeTime(inventory.lastOpenedAt ?? inventory.updatedAt)}

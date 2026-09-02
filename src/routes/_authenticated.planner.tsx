@@ -39,7 +39,7 @@ import {
 
 const title = "My planner — " + brand.name;
 const description =
-  "Save unlimited inventories, reopen any plan and see every Spacilo AI optimisation you have run.";
+  "Save unlimited inventories, reopen any plan and see every EarnRoom AI optimisation you have run.";
 
 export const Route = createFileRoute("/_authenticated/planner")({
   head: () => ({
@@ -75,7 +75,7 @@ function PlannerWorkspacePage() {
     <AppLayout
       mode={mode === "host" ? "host" : "renter"}
       title="My planner"
-      description="Your saved inventories and every plan Spacilo AI has run for you."
+      description="Your saved inventories and every plan EarnRoom AI has run for you."
     >
       <CoachMark id="planner" className="mb-4" />
       {open ? (
@@ -106,7 +106,7 @@ function PlannerWorkspacePage() {
           <PlanHistory runs={runs ?? []} />
 
           <Alert tone="info" title="Estimates, not guarantees">
-            Volumes, weights and fit scores are Spacilo AI estimates from typical household sizes.
+            Volumes, weights and fit scores are EarnRoom AI estimates from typical household sizes.
             Check the real space before you book.
           </Alert>
         </div>

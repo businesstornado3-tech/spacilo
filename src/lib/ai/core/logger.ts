@@ -45,7 +45,7 @@ export function logAi(entry: Omit<AiLogEntry, "at">): void {
   if (buffer.length > logging.maxEntries) buffer.shift();
   for (const listener of [...listeners]) listener(full);
   if (!logging.verbose) return;
-  const line = `[spacilo-ai] ${full.capability}/${full.provider} ${full.status} ${full.latencyMs}ms`;
+  const line = `[earnroom-ai] ${full.capability}/${full.provider} ${full.status} ${full.latencyMs}ms`;
   if (full.status === "failed") console.error(line, { code: full.errorCode });
   else console.info(line);
 }

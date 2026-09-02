@@ -1,7 +1,7 @@
 /**
- * Spacilo service fee (Prompt 11).
+ * EarnRoom service fee (Prompt 11).
  *
- * The renter pays the agreed monthly storage price PLUS a Spacilo service
+ * The renter pays the agreed monthly storage price PLUS a EarnRoom service
  * fee. The host's storage entitlement is never reduced by the fee.
  *
  *   service fee = max(£5.00, 12% of the storage price)

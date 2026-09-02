@@ -1,5 +1,5 @@
 /**
- * RecommendationPanel — what Spacilo AI suggests, and why.
+ * RecommendationPanel — what EarnRoom AI suggests, and why.
  *
  * Every line comes from the placements actually drawn (`plan.explanations`)
  * plus the deterministic score checks, so nothing here is marketing copy.
@@ -23,7 +23,7 @@ export function RecommendationPanel() {
     >
       <h3 id="planner-recommendations" className="flex items-center gap-2 type-h4">
         <Info className="size-4 text-signal-soft-foreground" aria-hidden="true" />
-        Why Spacilo AI planned it this way
+        Why EarnRoom AI planned it this way
       </h3>
       <ul className="mt-3 grid gap-2.5">
         {[...plan.explanations, ...actions].map((line) => (

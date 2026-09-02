@@ -118,7 +118,7 @@ function physicalDimension(spaceFit: {
     return {
       status: "compatible_with_care",
       headline: "Fit not estimated yet",
-      detail: "Add your belongings and the space's measurements for a Spacilo AI estimate.",
+      detail: "Add your belongings and the space's measurements for a EarnRoom AI estimate.",
       reasons: [],
     };
   }
@@ -126,7 +126,7 @@ function physicalDimension(spaceFit: {
     return {
       status: "not_compatible",
       headline: "Unlikely to fit",
-      detail: `Spacilo AI estimates ${spaceFit.score}% — your belongings probably need more room than this space offers.`,
+      detail: `EarnRoom AI estimates ${spaceFit.score}% — your belongings probably need more room than this space offers.`,
       reasons: ["spacefit_low"],
     };
   }
@@ -134,14 +134,14 @@ function physicalDimension(spaceFit: {
     return {
       status: "compatible_with_care",
       headline: "Tight but possible",
-      detail: `Spacilo AI estimates ${spaceFit.score}%. It's an estimate, not a measurement.`,
+      detail: `EarnRoom AI estimates ${spaceFit.score}%. It's an estimate, not a measurement.`,
       reasons: ["spacefit_tight"],
     };
   }
   return {
     status: "compatible",
     headline: spaceFit.label ?? "Good fit",
-    detail: `Spacilo AI estimates ${spaceFit.score}% based on what you've told us.`,
+    detail: `EarnRoom AI estimates ${spaceFit.score}% based on what you've told us.`,
     reasons: [],
   };
 }

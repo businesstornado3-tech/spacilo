@@ -1,5 +1,5 @@
 /**
- * Spacilo AI SpacePlanner™ — public demo domain model.
+ * EarnRoom AI SpacePlanner™ — public demo domain model.
  *
  * Everything here is pure data and pure functions. There is no AI call, no
  * network request and no randomness: the same inventory and the same space

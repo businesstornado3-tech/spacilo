@@ -6,7 +6,7 @@
  * remains the only thing that changes status; this panel sits alongside it and
  * records what was handed over, optional photos, optional condition notes and
  * any reported issue. Everything shown here is provided by the renter and the
- * host — nothing is verified by Spacilo or by SpaceFit.
+ * host — nothing is verified by EarnRoom or by SpaceFit.
  */
 import * as React from "react";
 import { AlertTriangle, ImagePlus, Loader2 } from "lucide-react";

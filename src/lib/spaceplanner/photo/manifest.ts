@@ -2,7 +2,7 @@
  * Inventory Lock and the placement manifest — SpacePlanner's single source of
  * truth.
  *
- * Once someone confirms what Spacilo AI found, that confirmed list becomes a
+ * Once someone confirms what EarnRoom AI found, that confirmed list becomes a
  * canonical inventory with a stable id and signature. Every downstream step —
  * the analytical plan, the visualisation prompt and the completeness check —
  * reads from this one object. The image layer is never allowed to reinterpret

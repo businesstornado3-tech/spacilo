@@ -3,7 +3,7 @@
  *
  * These are representative UK space types with cautious usable dimensions —
  * they are not real listings and never claim to be. Real listings carry the
- * host's own measurements and Spacilo AI estimates.
+ * host's own measurements and EarnRoom AI estimates.
  */
 import type { StorageSpace } from "./types";
 

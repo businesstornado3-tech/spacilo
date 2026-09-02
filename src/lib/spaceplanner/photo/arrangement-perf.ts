@@ -50,7 +50,7 @@ function now(): number {
 function browserMark(name: ArrangementMark): void {
   try {
     if (typeof performance !== "undefined" && typeof performance.mark === "function") {
-      performance.mark(`spacilo:${name}`);
+      performance.mark(`earnroom:${name}`);
     }
   } catch {
     /* marks are diagnostics; never let one break a scan */

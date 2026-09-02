@@ -21,16 +21,16 @@ export const ANALYTICS_EVENTS = [
   "signup_completed",
   "login_completed",
 
-  // ---- Spacilo AI: public SpacePlanner demonstration (no account, no upload)
+  // ---- EarnRoom AI: public SpacePlanner demonstration (no account, no upload)
   "spaceplanner_demo_started",
   "spaceplanner_demo_completed",
   "spaceplanner_demo_object_added",
 
-  // ---- Spacilo AI: renter ("scan my stuff")
+  // ---- EarnRoom AI: renter ("scan my stuff")
   "spacefit_stuff_started",
   "spacefit_stuff_completed",
 
-  // ---- Spacilo AI: host ("scan my space")
+  // ---- EarnRoom AI: host ("scan my space")
   "spacefit_space_started",
   "spacefit_space_completed",
 
@@ -82,7 +82,7 @@ export const ANALYTICS_EVENTS = [
   "digital_twin_viewed",
   "payment_completed",
   "host_onboarding_completed",
-  // ---- Spacilo AI SpacePlanner™ funnel (counts and enums only, never images)
+  // ---- EarnRoom AI SpacePlanner™ funnel (counts and enums only, never images)
   "spaceplanner_started",
   "spaceplanner_mode_selected",
   "spaceplanner_capture_started",

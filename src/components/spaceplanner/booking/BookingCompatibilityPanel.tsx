@@ -97,7 +97,7 @@ export function BookingCompatibilityPanel({
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="type-overline text-primary">Spacilo AI</p>
+          <p className="type-overline text-primary">EarnRoom AI</p>
           <h2 id="will-it-fit" className="mt-1 type-h2">
             Will my belongings fit?
           </h2>
@@ -124,7 +124,7 @@ export function BookingCompatibilityPanel({
 
       {!geometry ? (
         <p className="mt-4 rounded-xl bg-surface p-3 type-body-sm text-muted-foreground">
-          This host hasn&apos;t published enough measurements yet for Spacilo AI to plan the space.
+          This host hasn&apos;t published enough measurements yet for EarnRoom AI to plan the space.
           Ask them for the internal size and door width and we&apos;ll check the fit for you.
         </p>
       ) : (
@@ -142,7 +142,7 @@ export function BookingCompatibilityPanel({
               {!launched ? (
                 <Button className="mt-4" size="lg" onClick={() => setLaunched(true)}>
                   <Sparkles className="size-4" aria-hidden="true" />
-                  Launch Spacilo AI
+                  Launch EarnRoom AI
                 </Button>
               ) : null}
 

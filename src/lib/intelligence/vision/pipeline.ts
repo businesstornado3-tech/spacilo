@@ -37,7 +37,7 @@ import { preprocessImages } from "./preprocess";
 import { buildRelationships } from "./relationships";
 import { analyseScene } from "./scene";
 
-export const VISION_ENGINE_ID = "spacilo-vision-engine-v1";
+export const VISION_ENGINE_ID = "earnroom-vision-engine-v1";
 export const VISION_ENGINE_VERSION = "1.0.0";
 
 /* -------------------------------------------------------- stage registry */

@@ -23,7 +23,7 @@ export interface HomeListing {
   photoAlt: string;
 }
 
-/** Illustrative mock listings for the Portsmouth pilot area. No real addresses. */
+/** Illustrative mock listings used to demonstrate nearby storage. No real addresses. */
 export const homeListings: HomeListing[] = [
   {
     id: "l1",

@@ -1,5 +1,5 @@
 /**
- * Spacilo Space Intelligence Engine — public entry point.
+ * EarnRoom Space Intelligence Engine — public entry point.
  *
  * Import from here, never from a stage file. The stage layout can change
  * freely; this surface is the contract.

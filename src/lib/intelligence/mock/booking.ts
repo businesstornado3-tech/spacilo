@@ -13,7 +13,7 @@ import { mockRecommendationProvider } from "./recommendations";
 
 const IDENTITY = {
   id: "mock-booking-v1",
-  label: "Spacilo AI booking intelligence",
+  label: "EarnRoom AI booking intelligence",
   model: "spaceplanner-deterministic-v1",
   remote: false,
 } as const;

@@ -4,7 +4,7 @@ import { brand } from "@/config/brand";
 import { cn } from "@/lib/utils";
 
 /**
- * The approved Spacilo symbol — a faithful vector reproduction of the final
+ * The approved EarnRoom symbol — a faithful vector reproduction of the final
  * approved brand asset.
  *
  * Geometry (do not reinterpret):
@@ -53,7 +53,7 @@ function MarkPaths({
   );
 }
 
-export function SpaciloSymbol({ className }: { className?: string }) {
+export function EarnRoomSymbol({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 64 64"
@@ -71,7 +71,7 @@ export function SpaciloSymbol({ className }: { className?: string }) {
  * Small-size / icon-only variant: identical approved geometry with slightly
  * heavier optical weights so the $ stays recognisable at favicon sizes.
  */
-export function SpaciloSymbolCompact({ className }: { className?: string }) {
+export function EarnRoomSymbolCompact({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 64 64"
@@ -86,7 +86,7 @@ export function SpaciloSymbolCompact({ className }: { className?: string }) {
 }
 
 /** Symbol + wordmark lock-up. */
-export function SpaciloLockup({
+export function EarnRoomLockup({
   className,
   symbolClassName,
   wordmarkClassName,
@@ -97,7 +97,7 @@ export function SpaciloLockup({
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <SpaciloSymbol className={cn("size-9 text-primary", symbolClassName)} />
+      <EarnRoomSymbol className={cn("size-9 text-primary", symbolClassName)} />
       <span
         className={cn(
           "font-display text-[1.2rem] font-bold tracking-[-0.035em] text-foreground",
@@ -111,4 +111,4 @@ export function SpaciloLockup({
 }
 
 /** Kept so `React` import stays meaningful for consumers using refs/ids later. */
-export type SpaciloMarkProps = React.ComponentProps<typeof SpaciloSymbol>;
+export type EarnRoomMarkProps = React.ComponentProps<typeof EarnRoomSymbol>;

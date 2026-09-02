@@ -1,5 +1,5 @@
 /**
- * InventoryLock — "Here's what Spacilo AI found".
+ * InventoryLock — "Here's what EarnRoom AI found".
  *
  * The deliberate pause between photographing belongings and photographing the
  * space. Confirming here creates the canonical inventory that every later step
@@ -44,7 +44,7 @@ export function InventoryLock({
       <header>
         <p className="type-overline text-muted-foreground">Your belongings</p>
         <h3 id="inventory-lock-heading" className="mt-1 type-h3">
-          Here&apos;s what Spacilo AI found
+          Here&apos;s what EarnRoom AI found
         </h3>
         <p className="mt-1 type-body-sm text-muted-foreground">
           {flagged.length === 0

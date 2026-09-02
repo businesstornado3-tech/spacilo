@@ -1,7 +1,7 @@
 /**
  * EarningsEstimateCard — what a space like this could earn.
  *
- * Always a range, always based on the *usable* capacity Spacilo AI estimated
+ * Always a range, always based on the *usable* capacity EarnRoom AI estimated
  * rather than the raw volume of the room, and always labelled as an estimate.
  * No guarantees are made or implied.
  */

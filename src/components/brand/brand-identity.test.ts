@@ -46,8 +46,8 @@ const ARM_LOWER = "M6 38v8l26 14 26-14V32H44";
 /** The stylised $ spine, shared by the master mark and the small-size variant. */
 const DOLLAR_SPINE = "M38 26c0-2.6-2.7-4.4-6-4.4s-6 1.8-6 4.4";
 
-describe("Spacilo symbol", () => {
-  const mark = read("src/components/brand/SpaciloMark.tsx");
+describe("EarnRoom symbol", () => {
+  const mark = read("src/components/brand/EarnRoomMark.tsx");
 
   it("reproduces the approved open hexagonal frame", () => {
     expect(mark).toContain(ARM_UPPER);
@@ -63,7 +63,7 @@ describe("Spacilo symbol", () => {
   });
 
   it("ships an icon-only variant derived from the same geometry", () => {
-    expect(mark).toContain("SpaciloSymbolCompact");
+    expect(mark).toContain("EarnRoomSymbolCompact");
     expect(mark.split("MarkPaths").length).toBeGreaterThan(3);
   });
 
@@ -78,9 +78,9 @@ describe("Spacilo symbol", () => {
 
   it("is used by the header lock-up with the config-driven wordmark", () => {
     const logo = read("src/components/layout/Logo.tsx");
-    expect(logo).toContain("SpaciloSymbol");
+    expect(logo).toContain("EarnRoomSymbol");
     expect(logo).toContain("{brand.name}");
-    expect(brand.name).toBe("Spacilo");
+    expect(brand.name).toBe("EarnRoom");
   });
 });
 
@@ -122,8 +122,8 @@ describe("customer-facing brand purity", () => {
     expect(() => statSync("src/hooks/useSpaceFitMatches.ts")).not.toThrow();
   });
 
-  it("names Spacilo AI as the intelligence layer", () => {
-    expect(brand.ai).toBe("Spacilo AI");
+  it("names EarnRoom AI as the intelligence layer", () => {
+    expect(brand.ai).toBe("EarnRoom AI");
   });
 });
 
@@ -137,7 +137,7 @@ describe("approved palette", () => {
     expect(css).toContain("--ink: oklch(0.21 0.033 265)");
   });
 
-  it("keeps the Spacilo AI signal emerald with a mint surface", () => {
+  it("keeps the EarnRoom AI signal emerald with a mint surface", () => {
     expect(css).toContain("--signal: oklch(0.72 0.15 163)");
     expect(css).toContain("--signal-soft: oklch(0.952 0.055 156)");
   });

@@ -3,7 +3,7 @@
  *
  * Deliberately NOT the renter/host AppLayout: the founder console is an
  * operational surface, so it does not inherit marketplace navigation (Home,
- * My Stuff, Search, Requests…). It keeps the Spacilo brand lock-up, offers an
+ * My Stuff, Search, Requests…). It keeps the EarnRoom brand lock-up, offers an
  * explicit route back to the marketplace experience, and exposes only
  * admin-scoped section navigation.
  *
@@ -30,7 +30,7 @@ export const ADMIN_SECTIONS: AdminSection[] = [
   { id: "marketplace", label: "Marketplace" },
   { id: "finance", label: "Finance" },
   { id: "traffic", label: "Traffic" },
-  { id: "spacilo-ai", label: "Spacilo AI" },
+  { id: "earnroom-ai", label: "EarnRoom AI" },
   { id: "operations", label: "Operations" },
 ];
 

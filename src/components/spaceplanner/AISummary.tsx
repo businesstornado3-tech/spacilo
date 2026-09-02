@@ -81,7 +81,7 @@ export function AIExplanation({ plan }: { plan: SpacePlan }) {
     >
       <h3 id="sp-reasoning" className="flex items-center gap-2 type-h4">
         <Info className="size-4 text-signal-soft-foreground" aria-hidden="true" />
-        Why Spacilo AI planned it this way
+        Why EarnRoom AI planned it this way
       </h3>
       <ul className="mt-3 grid gap-2.5">
         {plan.explanations.map((line) => (

@@ -10,7 +10,7 @@ import { registerAiProvider } from "../core/provider-manager";
 import type { AiProvider } from "../core/types";
 import { cosine, embedText } from "./local";
 
-const ENGINE_MODEL = "spacilo-reasoning-1";
+const ENGINE_MODEL = "earnroom-reasoning-1";
 
 /* ------------------------------------------- natural-language search */
 
@@ -215,7 +215,7 @@ function capitalise(text: string): string {
 }
 
 export const nlSearchProvider: AiProvider<NlSearchInput, NlSearchOutput> = {
-  id: "spacilo-nl-search",
+  id: "earnroom-nl-search",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,
@@ -316,7 +316,7 @@ export function seasonalThemes(input: SeasonalInput = {}): SeasonalOutput {
 }
 
 export const seasonalProvider: AiProvider<SeasonalInput, SeasonalOutput> = {
-  id: "spacilo-seasonal",
+  id: "earnroom-seasonal",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,
@@ -374,7 +374,7 @@ export function buildTrustSummary(input: TrustSummaryInput): TrustSummaryOutput 
   let strength = 30;
 
   if (input.verifiedHost) {
-    points.push({ id: "verified", label: "Verified host", detail: "Identity checks completed with Spacilo.", kind: "identity" });
+    points.push({ id: "verified", label: "Verified host", detail: "Identity checks completed with EarnRoom.", kind: "identity" });
     strength += 15;
   }
   if ((input.reviewCount ?? 0) >= 5 && (input.hostRating ?? 0) >= 4.5) {
@@ -441,7 +441,7 @@ export function buildTrustSummary(input: TrustSummaryInput): TrustSummaryOutput 
     points.push({
       id: "experienced",
       label: `${input.bookingsCompleted} bookings completed`,
-      detail: "A track record of completed stays on Spacilo.",
+      detail: "A track record of completed stays on EarnRoom.",
       kind: "reputation",
     });
     strength += 7;
@@ -451,7 +451,7 @@ export function buildTrustSummary(input: TrustSummaryInput): TrustSummaryOutput 
 }
 
 export const trustSummaryProvider: AiProvider<TrustSummaryInput, TrustSummaryOutput> = {
-  id: "spacilo-trust-summary",
+  id: "earnroom-trust-summary",
   kind: "llm",
   model: ENGINE_MODEL,
   remote: false,
@@ -524,9 +524,9 @@ export function matchHelpArticles(input: HelpSearchInput): HelpSearchOutput {
 }
 
 export const helpSearchProvider: AiProvider<HelpSearchInput, HelpSearchOutput> = {
-  id: "spacilo-help-search",
+  id: "earnroom-help-search",
   kind: "embedding",
-  model: "spacilo-embed-64",
+  model: "earnroom-embed-64",
   remote: false,
   capabilities: ["help-search"],
   async run(input) {

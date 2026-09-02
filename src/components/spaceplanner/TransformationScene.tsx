@@ -1,5 +1,5 @@
 /**
- * The signature Spacilo AI moment, as a reusable scene.
+ * The signature EarnRoom AI moment, as a reusable scene.
  *
  * A believably untidy garage, the planner reasoning out loud, then every
  * belonging moving into its optimised position. Both layouts come from the
@@ -92,7 +92,7 @@ export function TransformationScene({ explain = false, className }: Transformati
           organised={organised}
           thinking={thinking}
           {...(explain ? { explain: true } : {})}
-          label={`Plan view of a ${SPACE.name.toLowerCase()}, ${organised ? "organised by Spacilo AI" : "before planning"}`}
+          label={`Plan view of a ${SPACE.name.toLowerCase()}, ${organised ? "organised by EarnRoom AI" : "before planning"}`}
         />
 
         {/* Reasoning strip — replaces any spinner. */}
@@ -125,7 +125,7 @@ export function TransformationScene({ explain = false, className }: Transformati
         </div>
       </div>
       <p className="mt-2 type-badge text-muted-foreground">
-        Illustrative plan produced by Spacilo AI SpacePlanner™ from real item dimensions.
+        Illustrative plan produced by EarnRoom AI SpacePlanner™ from real item dimensions.
       </p>
     </div>
   );

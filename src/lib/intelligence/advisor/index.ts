@@ -1,5 +1,5 @@
 /**
- * Spacilo Advisor — public entry point (Milestone 16).
+ * EarnRoom Advisor — public entry point (Milestone 16).
  *
  * Surfaces import from here and nowhere deeper, so the internals can be
  * reorganised or replaced without a single component changing.

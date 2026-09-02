@@ -1,5 +1,5 @@
 /**
- * Vision taxonomy — the vocabulary Spacilo Vision AI is allowed to propose.
+ * Vision taxonomy — the vocabulary EarnRoom Vision AI is allowed to propose.
  *
  * Deliberately specific: "Two-seater sofa", never "object". Every entry carries
  * cautious UK estimates and, where one exists, the SpacePlanner catalogue item

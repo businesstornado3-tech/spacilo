@@ -1,5 +1,5 @@
 /**
- * "Your Stuff. Your Space. Just Show Us." — the Spacilo AI entry point.
+ * "Your Stuff. Your Space. Just Show Us." — the EarnRoom AI entry point.
  *
  * A core product surface, not marketing copy: both cards route into the real
  * scan journeys, and this section is the seed for AI inventory recognition,
@@ -134,7 +134,7 @@ export function SpaceFitEntry({
             Your stuff. Your space. Just show us.
           </h2>
           <p className="mx-auto mt-2.5 max-w-lg type-body text-muted-foreground">
-            Spacilo AI works out what fits — whether that's your belongings or your spare space.
+            EarnRoom AI works out what fits — whether that's your belongings or your spare space.
           </p>
         </div>
 

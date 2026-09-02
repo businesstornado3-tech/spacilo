@@ -1,7 +1,7 @@
 /**
  * Intelligence health and diagnostics.
  *
- * Rolling per-slot statistics so a surface can honestly say "Spacilo AI is
+ * Rolling per-slot statistics so a surface can honestly say "EarnRoom AI is
  * ready", "working" or "unavailable" instead of guessing. Counters only — no
  * request contents are ever retained.
  */

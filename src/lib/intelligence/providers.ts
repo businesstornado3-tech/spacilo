@@ -3,7 +3,7 @@
  *
  * These are the only contracts a vendor integration has to satisfy. A future
  * OpenAI, Gemini, Azure or Rekognition provider implements the same methods,
- * registers itself, and every screen in Spacilo keeps working unchanged —
+ * registers itself, and every screen in EarnRoom keeps working unchanged —
  * because no component ever names a provider.
  *
  * Requests carry an optional AbortSignal so any long-running analysis can be

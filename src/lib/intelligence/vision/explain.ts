@@ -76,7 +76,7 @@ export function explainObject(input: {
 
   if (classification.hazard !== "none") {
     lines.push(
-      `Flagged for a human check (${classification.hazard.replace(/_/g, " ")}). Spacilo AI does not decide what may be stored — you and your host confirm against the storage policy.`,
+      `Flagged for a human check (${classification.hazard.replace(/_/g, " ")}). EarnRoom AI does not decide what may be stored — you and your host confirm against the storage policy.`,
     );
   }
 

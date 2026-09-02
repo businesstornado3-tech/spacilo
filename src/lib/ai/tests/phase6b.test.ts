@@ -1,12 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { installSpaciloAi } from "../bootstrap";
+import { installEarnRoomAi } from "../bootstrap";
 import { parseSearchQuery, buildTrustSummary, matchHelpArticles, seasonalThemes } from "../providers/discovery";
 import { buildBookingAdvice, assistInventory, suggestReplies, buildNotificationDigest } from "../providers/guidance";
 import { scoreFraudSignals } from "../providers/fraud";
 import { aiServices } from "../services";
 
 beforeAll(() => {
-  installSpaciloAi();
+  installEarnRoomAi();
 });
 
 describe("natural-language search", () => {

@@ -30,7 +30,7 @@ export function InventorySelector({
           No saved inventories yet
         </p>
         <p className="mt-1 type-body-sm text-muted-foreground">
-          Add what you&apos;re storing once and Spacilo AI can check it against any listing.
+          Add what you&apos;re storing once and EarnRoom AI can check it against any listing.
         </p>
         <Button asChild size="sm" className="mt-3">
           <Link to="/planner">Create an inventory</Link>

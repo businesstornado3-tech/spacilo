@@ -49,7 +49,7 @@ export function AIThinkingTimeline({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
-      <p className="type-label">Spacilo AI is planning your space</p>
+      <p className="type-label">EarnRoom AI is planning your space</p>
       <ol className="mt-3 grid gap-1.5" aria-live="polite">
         {THINKING_STAGES.map((stage, index) => {
           const complete = index < active;

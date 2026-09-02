@@ -40,8 +40,8 @@ export interface PlannerLibraryRepository {
   recordRun(run: Omit<PlanRun, "id" | "ranAt">): Promise<PlanRun>;
 }
 
-const INVENTORY_KEY = "spacilo.planner.inventories.v1";
-const RUN_KEY = "spacilo.planner.runs.v1";
+const INVENTORY_KEY = "earnroom.planner.inventories.v1";
+const RUN_KEY = "earnroom.planner.runs.v1";
 const MAX_RUNS = 60;
 
 const newId = () =>

@@ -122,7 +122,7 @@ const GARAGE_RUN: VisionDetection[] = [
   }),
 ];
 
-describe("Spacilo AI Vision — three views of one garage", () => {
+describe("EarnRoom AI Vision — three views of one garage", () => {
   const result = reconcileDetections(GARAGE_RUN);
   const find = (needle: string) =>
     result.find((d) => d.label.toLowerCase().includes(needle))!;

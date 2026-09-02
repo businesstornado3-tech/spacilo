@@ -36,7 +36,7 @@ export function confidenceTier(confidence: number): ConfidenceTier {
 export function confidenceTierCopy(tier: ConfidenceTier): string {
   if (tier === "confident") return "Looks clear";
   if (tier === "check") return "Please check";
-  return "Spacilo AI isn't sure — please confirm or correct it";
+  return "EarnRoom AI isn't sure — please confirm or correct it";
 }
 
 /** A dimension we can plan with, or null when the value is unusable. */

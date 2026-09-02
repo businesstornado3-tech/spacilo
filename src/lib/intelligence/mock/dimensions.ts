@@ -14,8 +14,8 @@ import type { DimensionProvider, ProviderRequest } from "../providers";
 
 const IDENTITY = {
   id: "mock-dimensions-v1",
-  label: "Spacilo AI measurements (simulation)",
-  model: "spacilo-simulation",
+  label: "EarnRoom AI measurements (simulation)",
+  model: "earnroom-simulation",
   remote: false,
 } as const;
 

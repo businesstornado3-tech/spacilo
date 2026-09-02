@@ -1,5 +1,5 @@
 /**
- * Spacilo physical placement engine — public entry point.
+ * EarnRoom physical placement engine — public entry point.
  *
  * The planner decides where things go. The image model only draws it.
  */

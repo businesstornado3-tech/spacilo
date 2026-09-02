@@ -1,5 +1,5 @@
 /**
- * Phase 6 Part 2 — the signature Spacilo experience.
+ * Phase 6 Part 2 — the signature EarnRoom experience.
  *
  * A real Digital Twin, narrated by the planner's own reasoning: the room is
  * seen, the belongings are read, the unused space and the access route are

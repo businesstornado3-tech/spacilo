@@ -41,7 +41,7 @@ export function HeroSection({ visual }: HeroSectionProps) {
             <Sparkles className="mt-0.5 size-4 shrink-0 text-signal" aria-hidden="true" />
             <span>
               Rent from trusted local hosts or earn from your unused space — and{" "}
-              <span className="text-foreground">Spacilo AI SpacePlanner™</span> shows how your
+              <span className="text-foreground">EarnRoom AI SpacePlanner™</span> shows how your
               belongings fit before you book.
             </span>
           </p>

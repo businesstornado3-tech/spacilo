@@ -42,7 +42,7 @@ describe("storage documents", () => {
   it("renders a receipt with the ledger amounts and references", () => {
     const doc = buildStorageDocument("receipt", transaction(), party);
     expect(doc.title).toBe("Payment receipt");
-    expect(doc.filename).toBe("spacilo-receipt-TX-ABC123.html");
+    expect(doc.filename).toBe("earnroom-receipt-TX-ABC123.html");
     expect(doc.html).toContain("£80");
     expect(doc.html).toContain("£90");
     expect(doc.html).toContain("PS-3F2A9C");

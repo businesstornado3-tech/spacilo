@@ -22,7 +22,7 @@ import { toDetectedInventory, toDetectedSpace } from "../vision/adapters";
 import { installVisionBackends } from "../vision/install";
 import { VISION_PLATFORM_VERSION, type VisionAnalysis, type VisionImage } from "../vision/types";
 
-const MODEL = `spacilo-vision-${VISION_PLATFORM_VERSION}`;
+const MODEL = `earnroom-vision-${VISION_PLATFORM_VERSION}`;
 
 export interface VisionProInput {
   photos: VisionPhoto[];
@@ -53,7 +53,7 @@ function visionExplanation(analysis: VisionAnalysis, headline: string) {
 }
 
 export const visionProProvider: AiProvider<VisionProInput, DetectedInventory> = {
-  id: "spacilo-vision-pro",
+  id: "earnroom-vision-pro",
   kind: "vision",
   model: MODEL,
   remote: false,
@@ -79,7 +79,7 @@ export const visionProProvider: AiProvider<VisionProInput, DetectedInventory> = 
 };
 
 export const scenePro: AiProvider<VisionProInput, DetectedSpace> = {
-  id: "spacilo-scene-pro",
+  id: "earnroom-scene-pro",
   kind: "image-analysis",
   model: MODEL,
   remote: false,

@@ -7,11 +7,11 @@
  * every contract here carries reasons, evidence and a confidence — an opinion
  * with no traceable basis cannot be constructed.
  */
-import type { InventoryLine, Recommendation, SpaciloScore, StorageSpace } from "../contracts";
+import type { InventoryLine, Recommendation, EarnRoomScore, StorageSpace } from "../contracts";
 import type { SpaceAnalysis } from "../space/contracts";
 
 export const ADVISOR_CONTRACT_VERSION = "advisor-1";
-export const ADVISOR_ENGINE_ID = "spacilo-advisor-v1";
+export const ADVISOR_ENGINE_ID = "earnroom-advisor-v1";
 
 /* --------------------------------------------------------------- inputs */
 
@@ -57,7 +57,7 @@ export interface RecommendationRequest {
 export interface ListingAssessment {
   listing: AdvisorListing;
   analysis: SpaceAnalysis;
-  score: SpaciloScore;
+  score: EarnRoomScore;
   /** Share of required volume the space covers, 0–100. */
   fitPercent: number;
   /** Floor left clear once the proposed pack is in, 0–100. */

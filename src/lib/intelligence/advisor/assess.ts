@@ -5,7 +5,7 @@
  * engines itself, so a ranking, a comparison and a booking check all quote the
  * same numbers. Results are memoised on a stable key (Milestone 18).
  */
-import { buildPlan, spaciloScore } from "@/lib/spaceplanner";
+import { buildPlan, earnroomScore } from "@/lib/spaceplanner";
 import type { InventoryLine } from "@/lib/spaceplanner/types";
 
 import { analyseSpace } from "../space/engine";
@@ -62,7 +62,7 @@ export function assessListing(
   }
 
   const plan = buildPlan(lines, listing.space);
-  const score = spaciloScore(plan);
+  const score = earnroomScore(plan);
   const analysis = analyseSpace({
     space: listing.space,
     features: listing.features,

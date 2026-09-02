@@ -1,5 +1,5 @@
 /**
- * The homepage is the marketplace, with Spacilo AI SpacePlanner™ layered on
+ * The homepage is the marketplace, with EarnRoom AI SpacePlanner™ layered on
  * top as the differentiator.
  *
  * These tests lock the three messages every visitor must receive (find storage
@@ -36,7 +36,7 @@ describe("homepage structure", () => {
     "MarketplaceEntry",
     "SpacePlannerDemo",
     "NearbySpaces",
-    "MeetSpaciloAI",
+    "MeetEarnRoomAI",
     "SpaceValueSection",
     "WhySpacePlanner",
     "FinalCta",

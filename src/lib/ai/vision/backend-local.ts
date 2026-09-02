@@ -85,8 +85,8 @@ function ocrFor(photoId: string, classKey: string, seed: number): BackendOcrRead
 }
 
 export const localVisionBackend: VisionBackend = {
-  id: "spacilo-local-vision",
-  vendor: "spacilo",
+  id: "earnroom-local-vision",
+  vendor: "earnroom",
   model: "deterministic-local-v1",
   remote: false,
   available: () => true,

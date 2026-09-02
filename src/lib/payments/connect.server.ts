@@ -1,7 +1,7 @@
 /**
  * Stripe Connect — server only (Prompt 12).
  *
- * Spacilo never sees bank details, sort codes or identity documents.
+ * EarnRoom never sees bank details, sort codes or identity documents.
  * Stripe collects all regulated onboarding information through its own hosted
  * flow; we persist only the account reference and the readiness flags Stripe
  * reports back.
@@ -100,7 +100,7 @@ export async function ensureConnectedAccount(
     {
       country: CONNECT_COUNTRY,
       ...(email ? { email } : {}),
-      // Platform-controlled account: Spacilo owns pricing, fees and
+      // Platform-controlled account: EarnRoom owns pricing, fees and
       // loss liability; Stripe collects and owns the onboarding requirements.
       controller: {
         fees: { payer: "application" },

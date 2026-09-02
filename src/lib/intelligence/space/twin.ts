@@ -22,7 +22,7 @@ import type {
 import { SPACE_CONTRACT_VERSION } from "./contracts";
 import { round2 } from "./geometry";
 
-export const SPACE_ENGINE_ID = "spacilo-space-engine";
+export const SPACE_ENGINE_ID = "earnroom-space-engine";
 export const SPACE_ENGINE_VERSION = "1.0";
 
 function surfaces(space: StorageSpace, geometry: RoomGeometry): TwinSurface[] {

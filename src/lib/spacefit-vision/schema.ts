@@ -6,7 +6,7 @@
  *
  * The schema deliberately carries NO physical measurements: an ordinary
  * photograph cannot give reliable dimensions, so the provider only identifies
- * objects and Spacilo's own catalogue supplies typical sizes.
+ * objects and EarnRoom's own catalogue supplies typical sizes.
  *
  * Two kinds of certainty are modelled SEPARATELY:
  *  - object_confidence   — how sure the provider is about WHAT it is
@@ -182,13 +182,13 @@ export type VisionErrorCategory =
   | "unknown";
 
 export const VISION_ERROR_MESSAGES: Record<VisionErrorCategory, string> = {
-  provider_unavailable: "Spacilo AI Vision isn't available right now. Please try again shortly.",
+  provider_unavailable: "EarnRoom AI Vision isn't available right now. Please try again shortly.",
   provider_timeout: "That took longer than expected. Please try again.",
   rate_limited: "You've run a few scans in quick succession. Please wait a moment and try again.",
-  payment_required: "Spacilo AI Vision is temporarily unavailable. Please try again later.",
+  payment_required: "EarnRoom AI Vision is temporarily unavailable. Please try again later.",
   malformed_response: "We couldn't read the results of that scan. Please try again.",
   photo_unavailable: "We couldn't open one of your photos.",
   unsupported_image: "One of your photos isn't a supported image.",
-  not_configured: "Spacilo AI Vision isn't switched on for this environment yet.",
+  not_configured: "EarnRoom AI Vision isn't switched on for this environment yet.",
   unknown: "Something went wrong while analysing your photos.",
 };

@@ -1,4 +1,4 @@
-# Spacilo — production robots.txt
+# EarnRoom — production robots.txt
 # Robots directives are not a security control; private/authenticated
 # routes are also protected server-side by authorization.
 

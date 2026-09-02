@@ -1,5 +1,5 @@
 /**
- * Spacilo AI SpacePlanner™ — public entry point.
+ * EarnRoom AI SpacePlanner™ — public entry point.
  *
  * `buildPlan` is the whole demo brain: pure, synchronous and deterministic.
  *

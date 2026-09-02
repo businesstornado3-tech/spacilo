@@ -1,7 +1,7 @@
 /**
  * SPACEFIT ESTIMATE — what the renter's CONFIRMED belongings actually need.
  *
- * Every figure comes from `src/lib/spacefit/requirement.ts`. Spacilo AI only
+ * Every figure comes from `src/lib/spacefit/requirement.ts`. EarnRoom AI only
  * ever proposes items; the numbers below are deterministic maths over the
  * inventory the renter has confirmed.
  */
@@ -59,7 +59,7 @@ export function RequirementCard({
     >
       <h2 id="spacefit-estimate-heading" className="flex items-center gap-2 type-h2">
         <Sparkles className="size-5 text-primary" aria-hidden="true" />
-        Spacilo AI estimate
+        EarnRoom AI estimate
       </h2>
       <p className="mt-1 type-body-sm text-muted-foreground">
         Based on the {requirement.itemCount === 1 ? "item" : `${requirement.itemCount} items`}{" "}

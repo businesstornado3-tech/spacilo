@@ -1,7 +1,7 @@
 /**
  * Feature services.
  *
- * These are the only functions the rest of Spacilo calls. Each one names a
+ * These are the only functions the rest of EarnRoom calls. Each one names a
  * capability and a prompt, hands the request to the orchestrator, and returns
  * a structured response. No component may reach a provider or a prompt.
  */

@@ -1,5 +1,5 @@
 /**
- * Spacilo Intelligence Platform — public entry point.
+ * EarnRoom Intelligence Platform — public entry point.
  *
  * Everything above this layer imports from here and nowhere deeper. That is
  * what makes the vendor swap a registration change rather than a refactor.

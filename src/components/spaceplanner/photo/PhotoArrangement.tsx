@@ -3,7 +3,7 @@
  * arranged inside it.
  *
  * The photo is the foundation: walls, floor, door and everything already in
- * the room stay exactly as photographed. When Spacilo AI has produced a real
+ * the room stay exactly as photographed. When EarnRoom AI has produced a real
  * edited photograph it is shown as "AI arranged". When it has not, the panel
  * says so plainly and offers a retry — the geometric fit overlay is only ever
  * labelled as fit analysis, never as an AI visualisation.

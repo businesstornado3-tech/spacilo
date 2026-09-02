@@ -111,7 +111,7 @@ export function HeroCinematic({ className }: { className?: string }) {
             role="img"
             aria-label={
               done
-                ? "An unused home space after Spacilo AI has organised it: belongings stored neatly along the walls with a clear walkway."
+                ? "An unused home space after EarnRoom AI has organised it: belongings stored neatly along the walls with a clear walkway."
                 : "An unused home space with household belongings left across the floor."
             }
           >

@@ -19,7 +19,7 @@ export function ScanUploader({
   onInteract,
   disabled = false,
   rejected = 0,
-  title = "Show Spacilo AI your belongings",
+  title = "Show EarnRoom AI your belongings",
   hint = "Photograph each room or corner. More angles, better estimates.",
   className,
 }: {

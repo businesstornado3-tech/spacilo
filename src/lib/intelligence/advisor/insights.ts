@@ -67,7 +67,7 @@ export function buildHostInsights(assessment: ListingAssessment): HostInsight[] 
       title: "Reorganise into clear zones",
       detail: `Organisation scores ${pct(analysis.health.organisation)} — marked zones make the space feel larger and safer.`,
       evidence: [
-        `${analysis.zones.length} zone(s) proposed by Spacilo AI.`,
+        `${analysis.zones.length} zone(s) proposed by EarnRoom AI.`,
         `Utilisation ${pct(analysis.health.utilisation)}%.`,
       ],
       upliftPence: null,

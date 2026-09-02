@@ -16,13 +16,13 @@ export type IntelligenceErrorCode =
   | "cancelled";
 
 const MESSAGES: Record<IntelligenceErrorCode, string> = {
-  vision_failed: "Spacilo AI could not read those photos. Try clearer, brighter shots.",
-  provider_offline: "Spacilo AI is unavailable right now. You can still add things by hand.",
-  low_confidence: "Spacilo AI is not confident enough here. Please check the details yourself.",
+  vision_failed: "EarnRoom AI could not read those photos. Try clearer, brighter shots.",
+  provider_offline: "EarnRoom AI is unavailable right now. You can still add things by hand.",
+  low_confidence: "EarnRoom AI is not confident enough here. Please check the details yourself.",
   unsupported_image: "That file type is not supported. Use a JPEG, PNG or WebP photo.",
   analysis_timeout: "That took too long to analyse. Try again with fewer photos.",
   dimension_unknown: "Measurements could not be estimated from these photos. Enter them by hand.",
-  not_supported: "The active Spacilo AI provider does not offer this yet.",
+  not_supported: "The active EarnRoom AI provider does not offer this yet.",
   cancelled: "Analysis was cancelled.",
 };
 

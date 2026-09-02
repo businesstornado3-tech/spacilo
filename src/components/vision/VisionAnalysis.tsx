@@ -13,7 +13,7 @@ export function VisionAnalysis({
   stages,
   stageIndex,
   complete = false,
-  title = "Spacilo AI is analysing your photos",
+  title = "EarnRoom AI is analysing your photos",
 }: {
   stages: VisionStage[];
   stageIndex: number;
@@ -29,7 +29,7 @@ export function VisionAnalysis({
     >
       <p className="inline-flex items-center gap-2 rounded-full bg-signal-soft px-3 py-1 type-badge text-signal-soft-foreground">
         <Sparkles className="size-3.5" aria-hidden="true" />
-        Spacilo Vision AI
+        EarnRoom Vision AI
       </p>
       <h3 className="mt-3 type-h4">{title}</h3>
 

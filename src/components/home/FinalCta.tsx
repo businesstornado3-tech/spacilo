@@ -15,7 +15,7 @@ export function FinalCta() {
           Ready to reclaim your space?
         </h2>
         <p className="mx-auto mt-3 max-w-lg type-body text-muted-foreground">
-          Whether you're looking for storage or have unused space to earn from, Spacilo makes it
+          Whether you're looking for storage or have unused space to earn from, EarnRoom makes it
           simple.
         </p>
 

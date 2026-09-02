@@ -1,7 +1,7 @@
 /**
  * ScanMySpacePanel — the first step of the host journey.
  *
- * Photograph the garage, loft or spare room; Spacilo AI estimates the usable
+ * Photograph the garage, loft or spare room; EarnRoom AI estimates the usable
  * storage and what it could realistically earn. Nothing here is a promise.
  */
 import * as React from "react";
@@ -45,7 +45,7 @@ export function ScanMySpacePanel({
             onFiles={vision.addFiles}
             rejected={vision.rejected}
             disabled={!vision.canAddMore}
-            title="Show Spacilo AI your space"
+            title="Show EarnRoom AI your space"
             hint="Photograph the whole space, plus the door or access route."
           />
           <PhotoGallery
@@ -60,7 +60,7 @@ export function ScanMySpacePanel({
         <VisionAnalysis
           stages={vision.stages}
           stageIndex={vision.stageIndex}
-          title="Spacilo AI is analysing your space"
+          title="EarnRoom AI is analysing your space"
         />
       )}
 

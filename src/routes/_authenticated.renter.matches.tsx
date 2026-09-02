@@ -50,7 +50,7 @@ function MatchesPage() {
           <EmptyState
             icon={Boxes}
             title="Add what you're storing first"
-            description="Spacilo AI compares your confirmed belongings with each space, so we need your inventory before we can match."
+            description="EarnRoom AI compares your confirmed belongings with each space, so we need your inventory before we can match."
           />
           <div className="flex flex-wrap justify-center gap-2">
             <Button asChild>

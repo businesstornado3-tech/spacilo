@@ -55,7 +55,7 @@ export interface AdvisorLearningSummary {
   byOutcome: Record<AdvisorLearningOutcome, number>;
 }
 
-const STORAGE_KEY = "spacilo.intelligence.memory.v1";
+const STORAGE_KEY = "earnroom.intelligence.memory.v1";
 const MAX_EVENTS = 400;
 const MAX_SIGNALS = 500;
 

@@ -34,7 +34,7 @@ import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
 
 const title = "Scan your stuff — " + brand.name;
 const description =
-  "See how much storage your belongings really need. Scan your things with Spacilo AI — no account needed to try it.";
+  "See how much storage your belongings really need. Scan your things with EarnRoom AI — no account needed to try it.";
 
 export const Route = createFileRoute("/spacefit/stuff")({
   head: () => ({
@@ -96,7 +96,7 @@ function GuestStuffPage() {
         <SpaceFitAiMark size="sm" />
         <h1 className="mt-3 type-h1">How much space do you actually need?</h1>
         <p className="mt-2 type-body text-muted-foreground">
-          Photograph your belongings and Spacilo AI will suggest what it sees. You correct the list
+          Photograph your belongings and EarnRoom AI will suggest what it sees. You correct the list
           — we&apos;ll work out the storage space it needs. No account needed to try it.
         </p>
 
@@ -132,7 +132,7 @@ function GuestStuffPage() {
         <section className="mt-4 rounded-2xl border border-border bg-card p-5">
           <h2 className="type-h3">2. Check the list</h2>
           <p className="mt-1 type-body-sm text-muted-foreground">
-            Spacilo AI proposes — you decide. Change quantities, remove anything wrong, add what it
+            EarnRoom AI proposes — you decide. Change quantities, remove anything wrong, add what it
             missed.
           </p>
 
@@ -143,7 +143,7 @@ function GuestStuffPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate type-label">{item.label}</p>
                     <p className="type-body-sm text-muted-foreground">
-                      {item.source === "ai" ? "Suggested by Spacilo AI" : "Added by you"}
+                      {item.source === "ai" ? "Suggested by EarnRoom AI" : "Added by you"}
                       {item.possibleRestrictedItem ? " · check this is allowed in storage" : ""}
                     </p>
                   </div>

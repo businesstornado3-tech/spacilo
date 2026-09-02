@@ -25,7 +25,7 @@ export interface PhotoQuality {
 }
 
 export const QUALITY_ADVICE: Record<PhotoIssue, string> = {
-  too_small: "This photo is quite low resolution — a larger photo helps Spacilo AI see detail.",
+  too_small: "This photo is quite low resolution — a larger photo helps EarnRoom AI see detail.",
   too_dark: "This photo looks dark. More light will improve the estimate.",
   too_bright: "This photo looks washed out. Try again without strong backlight.",
   low_detail: "This photo looks blurry or very plain. Hold steady and fill the frame.",

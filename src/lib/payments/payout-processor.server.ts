@@ -15,7 +15,7 @@
  *  4. `stripe_transfer_id` is UNIQUE in the database, the last line of defence.
  *
  * The amount transferred is always the snapshotted host entitlement. The
- * Spacilo service fee is never part of it.
+ * EarnRoom service fee is never part of it.
  */
 import { stripeClient } from "@/lib/payments/stripe.server";
 import {
@@ -107,7 +107,7 @@ export async function releaseEligibleHostEarnings(limit = 25): Promise<ReleaseRe
           currency: earning.currency.toLowerCase(),
           destination,
           transfer_group: group,
-          description: `Spacilo host earnings ${earning.period_label}`,
+          description: `EarnRoom host earnings ${earning.period_label}`,
           metadata: transferMetadata(earning),
         },
         { idempotencyKey: transferIdempotencyKey(earning.id) },

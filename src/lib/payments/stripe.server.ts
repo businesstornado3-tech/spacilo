@@ -54,6 +54,9 @@ export async function verifiedStripeEvent(
 const ALLOWED_HOST_PATTERNS = [
   /^localhost(:\d+)?$/,
   /^127\.0\.0\.1(:\d+)?$/,
+  // Production domain (apex and www) — Stripe redirects must land on it.
+  /^earnroom\.co\.uk$/i,
+  /^www\.earnroom\.co\.uk$/i,
   /^[a-z0-9-]+\.lovable\.app$/i,
   /^[a-z0-9-]+\.lovableproject\.com$/i,
 ];

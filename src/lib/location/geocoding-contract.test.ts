@@ -31,7 +31,7 @@ describe("candidate hygiene", () => {
   it("never selects a candidate without usable coordinates", () => {
     const resolution = resolvePlace("Twinford", [
       town({ county_unitary: "Ashshire", latitude: null, longitude: null }),
-      town({ county_unitary: "Zedshire", latitude: undefined, longitude: undefined }),
+      town({ county_unitary: "Zedshire", latitude: null, longitude: null }),
     ]);
     expect(resolution.best).toBeNull();
   });

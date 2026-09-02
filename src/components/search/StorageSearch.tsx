@@ -63,6 +63,9 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
     nearbyCount,
     incompatibleCount,
     isLoading,
+    locationAlternatives,
+    locationUnresolved,
+    searchError,
   } = search;
   // Deterministic requirement, so the renter can size spaces themselves too.
   const requirement = hasInventory ? estimateRequiredSpace(items) : null;
@@ -97,7 +100,7 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
     }
   }
 
-  const noResults = !isLoading && results.length === 0;
+  const noResults = !isLoading && !locationUnresolved && !searchError && results.length === 0;
 
   return (
     <div className="space-y-6">
@@ -116,7 +119,9 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="type-body-sm text-muted-foreground" aria-live="polite">
-            {isLoading
+            {locationUnresolved
+              ? "We couldn't resolve that location, so no search was run."
+              : isLoading
               ? "Searching…"
               : `${results.length} ${results.length === 1 ? "space" : "spaces"}${
                   centre
@@ -181,6 +186,33 @@ export function StorageSearch({ params, onParamsChange }: StorageSearchProps) {
           </div>
         </div>
       </div>
+
+      {searchError ? (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
+          <p className="type-body-sm text-foreground">{searchError}</p>
+        </div>
+      ) : null}
+
+      {locationAlternatives.length > 0 ? (
+        <div className="rounded-2xl border border-signal/25 bg-signal-soft/40 p-4">
+          <p className="type-label">More than one place matches "{params.location}"</p>
+          <p className="mt-1 type-body-sm text-signal-soft-foreground">
+            Choose the place you mean. We won't search until you've selected one.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {locationAlternatives.map((alt) => (
+              <Button
+                key={`${alt.lat},${alt.lng}`}
+                size="sm"
+                variant="secondary"
+                onClick={() => onParamsChange({ location: alt.label })}
+              >
+                {alt.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {!hasInventory && results.length > 0 ? (
         <div className="rounded-2xl border border-signal/25 bg-signal-soft/40 p-4">

@@ -17,20 +17,41 @@ import {
   postcodeDistrict,
   type SearchCentre,
 } from "./schema";
-import { pickBestPlace, type PlaceCandidate } from "./place-ranking";
+import { resolvePlace, type PlaceCandidate } from "./place-ranking";
 
+
+export interface GeocodeResolution {
+  centre: SearchCentre;
+  /**
+   * Equally plausible places elsewhere in the country. Non-empty means the
+   * query was genuinely ambiguous and the user should be able to correct it.
+   */
+  alternatives: SearchCentre[];
+}
 
 export interface GeocodingProvider {
   readonly name: string;
   /** Resolve free text (postcode, outcode or place) to a single best point. */
   geocode(query: string): Promise<SearchCentre | null>;
+  /** Same resolution, plus any same-strength alternatives for disambiguation. */
+  geocodeDetailed(query: string): Promise<GeocodeResolution | null>;
 }
 
 const BASE = "https://api.postcodes.io";
 
 async function getJson(url: string): Promise<any | null> {
-  const response = await fetch(url, { headers: { accept: "application/json" } });
-  if (!response.ok) return null;
+  let response: Response;
+  try {
+    response = await fetch(url, { headers: { accept: "application/json" } });
+  } catch (error) {
+    // Preserve transport/service failures so the server function can tell
+    // users to retry instead of reporting a false "not found" result.
+    throw new Error("Geocoding service request failed", { cause: error });
+  }
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new Error(`Geocoding service returned ${response.status}`);
+  }
   const body = (await response.json()) as { status?: number; result?: unknown };
   if (!body || body.status !== 200 || !body.result) return null;
   return body.result;
@@ -49,9 +70,27 @@ function toCentre(
   return { ...point, label, district, precision };
 }
 
+function placeToCentre(place: PlaceCandidate, fallbackLabel: string): SearchCentre | null {
+  const label = typeof place.name_1 === "string" && place.name_1 ? place.name_1 : fallbackLabel;
+  const district =
+    typeof place.outcode === "string" && place.outcode ? place.outcode.toUpperCase() : null;
+  const context = [place.district_borough, place.county_unitary, place.region].find(
+    (value): value is string =>
+      typeof value === "string" &&
+      value.trim().length > 0 &&
+      value.trim().toLowerCase() !== label.trim().toLowerCase(),
+  );
+  // The user must be able to see WHICH same-named place was chosen.
+  const fullLabel = [label, context, district].filter(Boolean).join(", ");
+  return toCentre(place.latitude, place.longitude, fullLabel, district, "place");
+}
+
 const postcodesIoProvider: GeocodingProvider = {
   name: "postcodes.io",
   async geocode(rawQuery) {
+    return (await this.geocodeDetailed(rawQuery))?.centre ?? null;
+  },
+  async geocodeDetailed(rawQuery) {
     const query = normaliseLocationInput(rawQuery);
     if (query.length < 2) return null;
 
@@ -59,7 +98,14 @@ const postcodesIoProvider: GeocodingProvider = {
     if (isPostcode(query)) {
       const result = await getJson(`${BASE}/postcodes/${encodeURIComponent(query)}`);
       if (result) {
-        return toCentre(result.latitude, result.longitude, query, postcodeDistrict(query), "postcode");
+        const centre = toCentre(
+          result.latitude,
+          result.longitude,
+          query,
+          postcodeDistrict(query),
+          "postcode",
+        );
+        return centre ? { centre, alternatives: [] } : null;
       }
     }
 
@@ -68,7 +114,8 @@ const postcodesIoProvider: GeocodingProvider = {
       const result = await getJson(`${BASE}/outcodes/${encodeURIComponent(query.toUpperCase())}`);
       if (result) {
         const code = String(result.outcode ?? query).toUpperCase();
-        return toCentre(result.latitude, result.longitude, code, code, "district");
+        const centre = toCentre(result.latitude, result.longitude, code, code, "district");
+        return centre ? { centre, alternatives: [] } : null;
       }
     }
 
@@ -76,14 +123,18 @@ const postcodesIoProvider: GeocodingProvider = {
     //    Many UK settlements share a name, so ask for a candidate list and
     //    rank it deterministically instead of trusting the first row.
     const places = await getJson(`${BASE}/places?q=${encodeURIComponent(query)}&limit=20`);
-    const place = Array.isArray(places) ? pickBestPlace(query, places as PlaceCandidate[]) : null;
-    if (place) {
-      const label: string = (place.name_1 as string) ?? query;
-      const district =
-        typeof place.outcode === "string" && place.outcode ? place.outcode.toUpperCase() : null;
-      return toCentre(place.latitude, place.longitude, label, district, "place");
+    const resolution = Array.isArray(places)
+      ? resolvePlace(query, places as PlaceCandidate[])
+      : { best: null, alternatives: [] };
+    if (resolution.best) {
+      const centre = placeToCentre(resolution.best, query);
+      if (centre) {
+        const alternatives = resolution.alternatives
+          .map((row) => placeToCentre(row, query))
+          .filter((row): row is SearchCentre => row !== null);
+        return { centre, alternatives };
+      }
     }
-
 
     return null;
   },

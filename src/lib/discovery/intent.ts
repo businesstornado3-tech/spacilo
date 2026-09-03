@@ -204,6 +204,12 @@ export type IntentReading = {
   objectives: readonly Signal<Objective>[];
   belongings: readonly Signal<BelongingCategory>[];
   spaces: readonly Signal<SpaceKind>[];
+  problems: readonly Signal<ProblemConcept>[];
+  segment: AudienceSegment;
+  /** True when the query implies the person controls a physical space. */
+  ownsSpace: boolean;
+  /** Pattern ids that fired in the semantic concept layer. */
+  concepts: readonly string[];
   timeframe: Timeframe;
   location: LocationReading;
   stage: JourneyStage;

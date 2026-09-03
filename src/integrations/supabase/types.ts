@@ -17,36 +17,42 @@ export type Database = {
       analytics_daily_rollups: {
         Row: {
           created_at: string
+          device_breakdown: Json
           event_name: string
           public_events: number
           public_sessions: number
           public_unique_visitors: number
           rollup_date: string
           sessions: number
+          source_breakdown: Json
           total_events: number
           unique_visitors: number
           updated_at: string
         }
         Insert: {
           created_at?: string
+          device_breakdown?: Json
           event_name: string
           public_events?: number
           public_sessions?: number
           public_unique_visitors?: number
           rollup_date: string
           sessions?: number
+          source_breakdown?: Json
           total_events?: number
           unique_visitors?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
+          device_breakdown?: Json
           event_name?: string
           public_events?: number
           public_sessions?: number
           public_unique_visitors?: number
           rollup_date?: string
           sessions?: number
+          source_breakdown?: Json
           total_events?: number
           unique_visitors?: number
           updated_at?: string

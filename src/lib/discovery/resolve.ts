@@ -46,10 +46,9 @@ export function resolveDiscovery(query: string, options: ResolveOptions = {}): D
     reading,
     plan,
     supply,
-    duplicateOf: undefined,
     duplicateOfExisting: Boolean(options.duplicateOf),
     contentCompleteness: cluster?.sections?.length ? 1 : cluster ? 0.5 : 0,
-  } as Parameters<typeof scoreOpportunity>[0]);
+  });
 
   const claimsSupply = reading.location.kind !== "none";
   const indexation = decideIndexation({

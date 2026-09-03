@@ -317,7 +317,7 @@ export function readIntent(rawQuery: string): IntentReading {
     belongings,
     spaces,
     problems: concepts.problems,
-    segment: concepts.segment,
+    segment,
     ownsSpace: concepts.ownsSpace,
     concepts: concepts.matched,
     timeframe,

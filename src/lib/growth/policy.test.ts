@@ -35,7 +35,9 @@ beforeEach(() => {
 describe("growth policy gates", () => {
   it("fails closed when there is no lawful contact or usable channel", () => {
     const result = evaluatePolicy({ opportunity: opportunity(), channel: null, consent: "none", hasContact: false, recentSends24h: 0, hoursSinceLastContact: null, suppressed: false, now: 1 });
-    expect(result.verdict).toBe("DEFER");
+    // A strong need (80/100) with no authorised channel escalates the *policy*
+    // question to the founder — never a request to approve this individual.
+    expect(result.verdict).toBe("ESCALATE");
     expect(result.checks.find((check) => check.id === "contact_available")?.passed).toBe(false);
     expect(result.checks.find((check) => check.id === "consent_basis")?.passed).toBe(false);
     expect(decideCampaign(opportunity(), result, 1).value).toBe("CAPTURE_ONLY");

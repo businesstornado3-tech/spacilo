@@ -12,10 +12,16 @@ import type { IntentReading } from "@/lib/discovery/intent";
 import type { UserRole } from "@/lib/discovery/taxonomy";
 import { growthConfig, scoreBand } from "./config";
 import { getConnector } from "./connectors";
+import { clusterKey, readSemantics, type SemanticReading } from "./semantics";
+import { decideCampaign, evaluatePolicy, type PolicyContext } from "./policy";
+import { buildCampaign, recipientHash } from "./campaign";
 import type {
   AudienceReading,
   AuditEvent,
+  Campaign,
   CampaignDecision,
+  ChannelId,
+  ConsentState,
   FitResult,
   GrowthInsight,
   GrowthOpportunity,
@@ -71,7 +77,8 @@ function scalarProps(value: unknown): Record<string, string | number | boolean> 
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const out: Record<string, string | number | boolean> = {};
   for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
-    if (/address|postcode|email|phone|name|message|body|note|photo|image|query|search/i.test(key)) continue;
+    if (/address|postcode|email|phone|name|message|body|note|photo|image|query|search/i.test(key))
+      continue;
     if (typeof raw === "string" && raw.length <= 64 && raw.trim()) out[key] = raw.trim();
     else if (typeof raw === "number" && Number.isFinite(raw)) out[key] = raw;
     else if (typeof raw === "boolean") out[key] = raw;
@@ -81,7 +88,8 @@ function scalarProps(value: unknown): Record<string, string | number | boolean> 
 
 /** Converts stored first-party events into non-identifying radar observations. */
 export function analyticsRowToSignal(row: GrowthAnalyticsRow): SourceSignal | null {
-  if (row.environment !== "production" || row.is_bot || !RADAR_EVENTS.has(row.event_name)) return null;
+  if (row.environment !== "production" || row.is_bot || !RADAR_EVENTS.has(row.event_name))
+    return null;
   const text = EVENT_TEXT[row.event_name];
   if (!text) return null;
   return {
@@ -113,7 +121,10 @@ function growthRole(role: UserRole, reading: IntentReading): GrowthRole {
   if (reading.segment === "business") return "BUSINESS";
   if (reading.segment === "student") return "STUDENT";
   if (role === "host" || role === "prospective_host") return "HOST";
-  if (reading.timeframe === "moving_period" || reading.objectives.some((item) => item.value === "move")) {
+  if (
+    reading.timeframe === "moving_period" ||
+    reading.objectives.some((item) => item.value === "move")
+  ) {
     return "MOVING_TRANSITION";
   }
   if (role === "renter") return "RENTER";
@@ -134,44 +145,71 @@ function evidence(reading: IntentReading): Array<{ quote: string; field: string 
   return items;
 }
 
-function situation(reading: IntentReading, items: ReturnType<typeof evidence>): Situation {
-  const role = growthRole(reading.role, reading);
-  const problem = reading.problems[0]?.value ?? null;
+function situation(
+  reading: IntentReading,
+  semantics: SemanticReading,
+  items: ReturnType<typeof evidence>,
+): Situation {
+  const problem = semantics.problem ?? reading.problems[0]?.value ?? null;
   return {
-    summary: `${role.toLowerCase()} need: ${problem ?? reading.objectives[0]?.value ?? "storage or space help"}`,
+    summary: semantics.summary,
     achieving: reading.objectives[0]?.value ?? null,
     problem,
-    cause: null,
-    need: reading.objectives[0]?.value ?? null,
-    likelyNext: reading.stage,
-    urgency: reading.timeframe === "short_term" || reading.timeframe === "moving_period" ? "weeks" : "unknown",
+    cause: semantics.cause,
+    need: semantics.need ?? reading.objectives[0]?.value ?? null,
+    likelyNext: semantics.likelyNext ?? reading.stage,
+    urgency: semantics.urgency,
     belongings: reading.belongings.map((item) => item.value),
     spaces: reading.spaces.map((item) => item.value),
-    temporary: reading.timeframe === "temporary" || reading.timeframe === "moving_period",
-    residentialOrBusiness: reading.segment === "business" ? "business" : "residential",
+    temporary: semantics.temporary,
+    residentialOrBusiness:
+      semantics.situationType === "BUSINESS_OVERFLOW" || reading.segment === "business"
+        ? "business"
+        : "residential",
     location: {
       label: locationLabel(reading.location),
       slug: reading.location.kind === "place" ? reading.location.place.slug : null,
       kind: reading.location.kind,
     },
-    confidence: reading.confidence,
-    evidence: items,
+    confidence: Math.max(reading.confidence, semantics.confidence),
+    evidence: [...items, ...semantics.evidence].slice(0, 12),
     reading,
   };
 }
 
-function audience(reading: IntentReading, items: ReturnType<typeof evidence>): AudienceReading {
-  const primary = growthRole(reading.role, reading);
-  const roles = new Set<GrowthRole>([primary]);
-  if (reading.timeframe === "moving_period") roles.add("MOVING_TRANSITION");
+/**
+ * Audience is multi-dimensional on purpose: someone can be a moving household
+ * *and* a business, and forcing a single label loses the reason they searched.
+ */
+function audience(
+  reading: IntentReading,
+  semantics: SemanticReading,
+  items: ReturnType<typeof evidence>,
+): AudienceReading {
+  const fallback = growthRole(reading.role, reading);
+  const roles = new Set<GrowthRole>(semantics.roles.filter((role) => role !== "UNKNOWN"));
+  if (roles.size === 0) roles.add(fallback);
   if (reading.segment === "business") roles.add("BUSINESS");
   if (reading.segment === "student") roles.add("STUDENT");
+
+  // The situation the engine actually recognised wins over the generic reader.
+  const bySituation: Partial<Record<SemanticReading["situationType"], GrowthRole>> = {
+    HOST_UNDERUSED_SPACE: "HOST",
+    BUSINESS_OVERFLOW: "BUSINESS",
+    STUDENT_TRANSITION: "STUDENT",
+    MOVING_TRANSITION: "MOVING_TRANSITION",
+    PROPERTY_TRANSITION: "PROPERTY_RELATED",
+    RENTER_CAPACITY: "RENTER",
+  };
+  const primary = bySituation[semantics.situationType] ?? fallback;
+  roles.add(primary);
+
   return {
     roles: [...roles],
     primary,
     segment: reading.segment,
     discoveryRole: reading.role,
-    confidence: reading.confidence,
+    confidence: Math.max(reading.confidence, semantics.confidence),
     evidence: items,
   };
 }
@@ -180,7 +218,9 @@ function fit(resolution: DiscoveryResolution): FitResult {
   const capabilities = resolution.plan.primary
     ? [resolution.plan.primary.id, ...resolution.plan.secondary.map((item) => item.id)]
     : [];
-  const existing = Boolean(resolution.destination && resolution.plan.primary && resolution.opportunity === null);
+  const existing = Boolean(
+    resolution.destination && resolution.plan.primary && resolution.opportunity === null,
+  );
   const verdict = existing
     ? capabilities.length > 1
       ? "BEST_COMBINATION"
@@ -196,7 +236,9 @@ function fit(resolution: DiscoveryResolution): FitResult {
       : null,
     reasons: resolution.explanation,
     confidence: resolution.reading.confidence,
-    ...(verdict === "NEW_OPPORTUNITY" ? { unmetNeed: resolution.reading.problems[0]?.value ?? "emerging storage or space need" } : {}),
+    ...(verdict === "NEW_OPPORTUNITY"
+      ? { unmetNeed: resolution.reading.problems[0]?.value ?? "emerging storage or space need" }
+      : {}),
   };
 }
 
@@ -208,12 +250,18 @@ function supply(reading: IntentReading): SupplyContext {
     ctaMode: renter ? "capture_demand" : "host_acquisition",
     mayClaimAvailability: false,
     reasons: renter
-      ? ["No live supply count was provided to this radar run.", "Availability is never claimed from an analytics event."]
+      ? [
+          "No live supply count was provided to this radar run.",
+          "Availability is never claimed from an analytics event.",
+        ]
       : ["Host and supply acquisition intent is not blocked by renter supply."],
   };
 }
 
-function scores(reading: IntentReading, resolution: DiscoveryResolution): GrowthOpportunity["scores"] {
+function scores(
+  reading: IntentReading,
+  resolution: DiscoveryResolution,
+): GrowthOpportunity["scores"] {
   const sourceConfidence = 0.8;
   const intentConfidence = reading.confidence;
   const opportunity = Math.round(
@@ -224,7 +272,8 @@ function scores(reading: IntentReading, resolution: DiscoveryResolution): Growth
   );
   const eligibility = Math.round(opportunity * clamp01(intentConfidence));
   const conversionLikelihood = Math.round(
-    clamp01((resolution.destination ? 0.65 : 0.25) + (reading.stage === "transaction" ? 0.2 : 0)) * 100,
+    clamp01((resolution.destination ? 0.65 : 0.25) + (reading.stage === "transaction" ? 0.2 : 0)) *
+      100,
   );
   return {
     opportunity,
@@ -234,27 +283,59 @@ function scores(reading: IntentReading, resolution: DiscoveryResolution): Growth
     intentConfidence,
     band: scoreBand(opportunity),
     factors: [
-      { name: "first_party_source", value: sourceConfidence, weight: 20, note: "EarnRoom-owned behavioural event." },
-      { name: "intent_confidence", value: intentConfidence, weight: 35, note: "Evidence available to the deterministic reader." },
-      { name: "discovery_score", value: resolution.score.total / 100, weight: 45, note: "Existing capability and usefulness assessment." },
+      {
+        name: "first_party_source",
+        value: sourceConfidence,
+        weight: 20,
+        note: "EarnRoom-owned behavioural event.",
+      },
+      {
+        name: "intent_confidence",
+        value: intentConfidence,
+        weight: 35,
+        note: "Evidence available to the deterministic reader.",
+      },
+      {
+        name: "discovery_score",
+        value: resolution.score.total / 100,
+        weight: 45,
+        note: "Existing capability and usefulness assessment.",
+      },
     ],
   };
 }
 
 function decision(reading: IntentReading, score: GrowthOpportunity["scores"]): CampaignDecision {
-  const reasons = ["No contact handle is attached to first-party analytics.", "Outbound automation is disabled by default."];
+  const reasons = [
+    "No contact handle is attached to first-party analytics.",
+    "Outbound automation is disabled by default.",
+  ];
   if (score.opportunity < growthConfig().thresholds.campaignFloor) {
-    return { value: "RETAIN_FOR_INSIGHT", reasons: [...reasons, "Opportunity is below the campaign floor."] };
+    return {
+      value: "RETAIN_FOR_INSIGHT",
+      reasons: [...reasons, "Opportunity is below the campaign floor."],
+    };
   }
   if (reading.unknown || score.intentConfidence < growthConfig().thresholds.confidenceFloor) {
-    return { value: "CAPTURE_ONLY", reasons: [...reasons, "Intent confidence is not sufficient for outreach."] };
+    return {
+      value: "CAPTURE_ONLY",
+      reasons: [...reasons, "Intent confidence is not sufficient for outreach."],
+    };
   }
-  return { value: "CAPTURE_ONLY", reasons: [...reasons, "Keep the signal for an in-product or demand-capture journey."] };
+  return {
+    value: "CAPTURE_ONLY",
+    reasons: [...reasons, "Keep the signal for an in-product or demand-capture journey."],
+  };
 }
 
 function insights(opportunity: GrowthOpportunity): GrowthInsight[] {
   if (opportunity.fit.verdict !== "NEW_OPPORTUNITY") return [];
-  const kind = opportunity.audience.primary === "HOST" ? "HOST_SUPPLY" : opportunity.audience.primary === "RENTER" ? "RENTER_DEMAND" : "PRODUCT";
+  const kind =
+    opportunity.audience.primary === "HOST"
+      ? "HOST_SUPPLY"
+      : opportunity.audience.primary === "RENTER"
+        ? "RENTER_DEMAND"
+        : "PRODUCT";
   return [
     {
       id: `insight:${opportunity.key}`,
@@ -300,32 +381,68 @@ export function buildGrowthPipeline(signal: SourceSignal, now = Date.now()): Pip
       opportunity: null,
       campaign: null,
       insights: [],
-      audit: [{ id: `${signal.id}:blocked`, at: now, actor: "system", action: "action_blocked", reason: "Connector is not enabled for analysis.", source: signal.connectorId, referenceId: signal.id }],
+      audit: [
+        {
+          id: `${signal.id}:blocked`,
+          at: now,
+          actor: "system",
+          action: "action_blocked",
+          reason: "Connector is not enabled for analysis.",
+          source: signal.connectorId,
+          referenceId: signal.id,
+        },
+      ],
       dropped: { stage: "connector", reason: "Connector is unavailable or blocked." },
       tiers: [],
     };
   }
+
   const resolution = resolveDiscovery(signal.text);
+  const semantics = readSemantics(signal.text, resolution.reading);
   const items = evidence(resolution.reading);
-  if (resolution.reading.unknown) {
+  // Keep the cheap understanding gate for genuinely meaningless observations,
+  // while allowing a new sentence shape through when semantics has evidence.
+  if (resolution.reading.unknown && semantics.uncertain) {
     return {
       signal,
       opportunity: null,
       campaign: null,
       insights: [],
-      audit: [{ id: `${signal.id}:dropped`, at: now, actor: "system", action: "action_blocked", reason: "The observation carried no usable intent evidence.", source: signal.connectorId, referenceId: signal.id }],
+      audit: [
+        {
+          id: `${signal.id}:dropped`,
+          at: now,
+          actor: "system",
+          action: "action_blocked",
+          reason: "The observation carried no usable intent evidence.",
+          source: signal.connectorId,
+          referenceId: signal.id,
+        },
+      ],
       dropped: { stage: "understanding", reason: "No usable intent evidence." },
       tiers: [0],
     };
   }
+
   const growthScores = scores(resolution.reading, resolution);
+  const locationSlug =
+    resolution.reading.location.kind === "place" ? resolution.reading.location.place.slug : null;
+  const semanticRole =
+    semantics.roles[0] ?? growthRole(resolution.reading.role, resolution.reading);
   const opportunity: GrowthOpportunity = {
-    key: hashKey(`${resolution.reading.problems[0]?.value ?? "unknown"}:${resolution.reading.segment}:${resolution.reading.role}:${resolution.reading.stage}`),
+    key: hashKey(
+      clusterKey({
+        situationType: semantics.situationType,
+        role: semanticRole,
+        segment: resolution.reading.segment,
+        locationSlug,
+      }),
+    ),
     signalId: signal.id,
     connectorId: signal.connectorId,
-    situation: situation(resolution.reading, items),
-    painPoints: resolution.reading.problems.map((problem): PainPoint => ({ id: problem.value, label: problem.value.replaceAll("_", " "), description: problem.value.replaceAll("_", " "), confidence: problem.weight, evidence: [{ quote: problem.evidence, field: "problem" }], emergent: false })),
-    audience: audience(resolution.reading, items),
+    situation: situation(resolution.reading, semantics, items),
+    painPoints: semantics.painPoints,
+    audience: audience(resolution.reading, semantics, items),
     fit: fit(resolution),
     supply: supply(resolution.reading),
     scores: growthScores,
@@ -334,22 +451,80 @@ export function buildGrowthPipeline(signal: SourceSignal, now = Date.now()): Pip
     firstSeen: signal.observedAt,
     latestSeen: signal.observedAt,
     frequency: signal.occurrences ?? 1,
-    evidence: items,
+    evidence: [...items, ...semantics.evidence].slice(0, 12),
   };
-  const opportunityInsights = insights(opportunity);
+
+  const contact = signal.contact;
+  const channel: ChannelId | null = contact?.channel ?? null;
+  const policyContext: PolicyContext = {
+    opportunity,
+    channel,
+    consent: contact?.consent ?? "none",
+    hasContact: Boolean(contact?.address),
+    recentSends24h: 0,
+    hoursSinceLastContact: null,
+    suppressed: contact?.consent === "withdrawn",
+    now,
+  };
+  const policy = evaluatePolicy(policyContext);
+  const finalDecision = decideCampaign(opportunity, policy, now);
+  const finalOpportunity: GrowthOpportunity = { ...opportunity, decision: finalDecision };
+  const campaign: Campaign | null =
+    contact && channel && policy.verdict !== "BLOCK"
+      ? buildCampaign({
+          opportunity: finalOpportunity,
+          supply: finalOpportunity.supply,
+          decision: finalDecision,
+          policy,
+          channel,
+          recipient: recipientHash(channel, contact.address),
+          now,
+        })
+      : null;
+
+  const opportunityInsights = insights(finalOpportunity);
   return {
     signal,
-    opportunity,
-    campaign: null,
+    opportunity: finalOpportunity,
+    campaign,
     insights: opportunityInsights,
     audit: [
-      audit(signal, opportunity, "signal_ingested", "Accepted from the first-party production analytics stream.", { signalId: signal.id }),
-      audit(signal, opportunity, "classified", `Role ${opportunity.audience.primary}; segment ${opportunity.audience.segment}.`),
-      audit(signal, opportunity, "opportunity_created", `Scored ${opportunity.scores.opportunity}/100 (${opportunity.scores.band}).`),
-      audit(signal, opportunity, "policy_evaluated", opportunity.decision.reasons.join(" ")), 
+      audit(
+        signal,
+        finalOpportunity,
+        "signal_ingested",
+        "Accepted from the first-party production analytics stream.",
+        { signalId: signal.id },
+      ),
+      audit(
+        signal,
+        finalOpportunity,
+        "classified",
+        `Role ${finalOpportunity.audience.primary}; segment ${finalOpportunity.audience.segment}.`,
+      ),
+      audit(
+        signal,
+        finalOpportunity,
+        "opportunity_created",
+        `Scored ${finalOpportunity.scores.opportunity}/100 (${finalOpportunity.scores.band}).`,
+      ),
+      audit(signal, finalOpportunity, "policy_evaluated", policy.reasons.join(" ")),
+      ...(campaign
+        ? [
+            audit(
+              signal,
+              finalOpportunity,
+              "campaign_generated",
+              `Campaign ${campaign.state.toLowerCase()}; delivery remains disabled in this pipeline.`,
+            ),
+          ]
+        : []),
     ],
     dropped: null,
-    tiers: [0, opportunity.scores.opportunity >= growthConfig().budgets.deepReasoningFloor ? 1 : 0],
+    tiers: [
+      0,
+      finalOpportunity.scores.opportunity >= growthConfig().budgets.deepReasoningFloor ? 1 : 0,
+    ],
   };
 }
 
@@ -369,10 +544,15 @@ export function mergeGrowthOpportunities(results: readonly PipelineResult[]): Gr
       latestSeen: Math.max(previous.latestSeen, opportunity.latestSeen),
       frequency: previous.frequency + opportunity.frequency,
       evidence: [...previous.evidence, ...opportunity.evidence].slice(0, 12),
-      scores: opportunity.scores.opportunity >= previous.scores.opportunity ? opportunity.scores : previous.scores,
+      scores:
+        opportunity.scores.opportunity >= previous.scores.opportunity
+          ? opportunity.scores
+          : previous.scores,
     });
   }
-  return [...byKey.values()].sort((a, b) => b.scores.opportunity - a.scores.opportunity || b.frequency - a.frequency);
+  return [...byKey.values()].sort(
+    (a, b) => b.scores.opportunity - a.scores.opportunity || b.frequency - a.frequency,
+  );
 }
 
 export function mergeGrowthInsights(results: readonly PipelineResult[]): GrowthInsight[] {
@@ -380,7 +560,12 @@ export function mergeGrowthInsights(results: readonly PipelineResult[]): GrowthI
   for (const result of results) {
     for (const insight of result.insights) {
       const previous = byId.get(insight.id);
-      byId.set(insight.id, previous ? { ...insight, evidenceCount: previous.evidenceCount + insight.evidenceCount } : insight);
+      byId.set(
+        insight.id,
+        previous
+          ? { ...insight, evidenceCount: previous.evidenceCount + insight.evidenceCount }
+          : insight,
+      );
     }
   }
   return [...byId.values()].sort((a, b) => b.confidence - a.confidence);

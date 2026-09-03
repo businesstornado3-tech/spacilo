@@ -15,6 +15,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { rebuildChunks, refreshWindow } from "@/lib/analytics/rollups";
+import type { GrowthLearningSignal } from "@/lib/growth/types";
 
 const refreshInput = z.object({
   /** How far back to look, in days. Bounded so a run can never be unbounded. */
@@ -25,7 +27,10 @@ export interface GrowthRadarRefreshResult {
   scanned: number;
   opportunities: number;
   insights: number;
+  campaigns: number;
+  recommendations: number;
   audited: number;
+  rollupsWritten: number;
 }
 
 export const refreshGrowthRadar = createServerFn({ method: "POST" })
@@ -48,24 +53,50 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
       buildGrowthPipeline,
       mergeGrowthOpportunities,
       mergeGrowthInsights,
+      buildInnovationRecommendations,
+      totalsByOpportunity,
       growthConfig,
       isGrowthFlagEnabled,
       persistGrowthOpportunity,
       persistGrowthInsight,
+      persistGrowthCampaign,
+      persistInnovationRecommendation,
       persistGrowthAudit,
     } = await import("@/lib/growth");
 
-    if (!isGrowthFlagEnabled("AI_OPPORTUNITY_RADAR_ENABLED")) {
-      return { scanned: 0, opportunities: 0, insights: 0, audited: 0 };
+    const rollupWindow = refreshWindow(data.days);
+    let rollupsWritten = 0;
+    for (const chunk of rebuildChunks(rollupWindow)) {
+      const { data: written, error: rollupError } = await supabaseAdmin.rpc(
+        "analytics_rebuild_daily_rollups",
+        {
+          p_from: chunk.from.toISOString(),
+          p_to: chunk.to.toISOString(),
+        },
+      );
+      if (rollupError) throw new Error(rollupError.message);
+      rollupsWritten += written ?? 0;
     }
 
-    const since = new Date(Date.now() - data.days * 24 * 60 * 60 * 1000).toISOString();
+    if (!isGrowthFlagEnabled("AI_OPPORTUNITY_RADAR_ENABLED")) {
+      return {
+        scanned: 0,
+        opportunities: 0,
+        insights: 0,
+        campaigns: 0,
+        recommendations: 0,
+        audited: 0,
+        rollupsWritten,
+      };
+    }
+
     const { data: rows, error } = await supabaseAdmin
       .from("analytics_events")
       .select("id,event_name,path,props,occurred_at,environment,is_bot")
       .eq("environment", "production")
       .eq("is_bot", false)
-      .gte("occurred_at", since)
+      .gte("occurred_at", rollupWindow.from.toISOString())
+      .lt("occurred_at", rollupWindow.to.toISOString())
       .order("occurred_at", { ascending: false })
       .limit(growthConfig().budgets.maxSignalsPerRun);
     if (error) throw new Error(error.message);
@@ -99,16 +130,48 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
 
     const opportunities = mergeGrowthOpportunities(results);
     const insights = mergeGrowthInsights(results);
+    const campaigns = results.flatMap((result) =>
+      result.campaign
+        ? [{ campaign: result.campaign, sourceIdentity: result.signal.connectorId }]
+        : [],
+    );
+    const { data: learningRows, error: learningError } = await supabaseAdmin
+      .from("growth_learning_signals")
+      .select("opportunity_key,channel,outcome,value_pence,occurred_at")
+      .order("occurred_at", { ascending: false })
+      .limit(5000);
+    if (learningError) throw new Error(learningError.message);
+    const learningSignals: GrowthLearningSignal[] = (learningRows ?? []).map((row) => ({
+      opportunityKey: row.opportunity_key,
+      channel: row.channel,
+      outcome: row.outcome,
+      ...(row.value_pence === null ? {} : { valuePence: row.value_pence }),
+      at: Date.parse(row.occurred_at),
+    }));
+    const recommendations = buildInnovationRecommendations(
+      opportunities,
+      totalsByOpportunity(learningSignals),
+      growthConfig().thresholds.insightValidationCount,
+    );
     const auditEvents = results.flatMap((result) => result.audit);
 
-    for (const opportunity of opportunities) await persistGrowthOpportunity(supabaseAdmin, opportunity);
+    for (const opportunity of opportunities)
+      await persistGrowthOpportunity(supabaseAdmin, opportunity);
     for (const insight of insights) await persistGrowthInsight(supabaseAdmin, insight);
+    for (const { campaign, sourceIdentity } of campaigns) {
+      await persistGrowthCampaign(supabaseAdmin, campaign, sourceIdentity);
+    }
+    for (const recommendation of recommendations)
+      await persistInnovationRecommendation(supabaseAdmin, recommendation);
     for (const event of auditEvents) await persistGrowthAudit(supabaseAdmin, event);
 
     return {
       scanned: results.length,
       opportunities: opportunities.length,
       insights: insights.length,
+      campaigns: campaigns.length,
+      recommendations: recommendations.length,
       audited: auditEvents.length,
+      rollupsWritten,
     };
   });

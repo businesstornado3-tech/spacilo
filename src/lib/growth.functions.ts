@@ -16,6 +16,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { rebuildChunks, refreshWindow } from "@/lib/analytics/rollups";
+import type { GrowthLearningSignal } from "@/lib/growth/types";
 
 const refreshInput = z.object({
   /** How far back to look, in days. Bounded so a run can never be unbounded. */

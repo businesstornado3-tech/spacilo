@@ -39,7 +39,7 @@ export function SiteHeader({ className }: { className?: string }) {
           ))}
         </nav>
 
-        <div className="ml-auto hidden items-center gap-2 lg:flex">
+        <div className="ml-auto hidden items-center gap-2 xl:flex">
           {loading ? null : signedIn ? (
             <>
               <Button variant="secondary" asChild>
@@ -59,7 +59,7 @@ export function SiteHeader({ className }: { className?: string }) {
           )}
         </div>
 
-        <div className="ml-auto flex items-center gap-2 lg:hidden">
+        <div className="ml-auto flex items-center gap-2 xl:hidden">
           {signedIn ? (
             <Button size="sm" variant="secondary" asChild>
               <Link to={dashboardTo}>Dashboard</Link>

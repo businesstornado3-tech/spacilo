@@ -26,7 +26,7 @@ export const Route = createFileRoute("/storage/$location")({
       ...meta,
       // Supply is loaded from real marketplace data in the browser. Until a
       // server-side supply gate exists, never let a location shell be indexed.
-      meta: meta.meta.map((entry) => entry.name === "robots" ? { ...entry, content: "noindex, follow" } : entry),
+      meta: meta.meta.map((entry) => ("name" in entry && entry.name === "robots" ? { ...entry, content: "noindex, follow" } : entry)),
       scripts: [jsonLdScript(webPageJsonLd({ name: title, description, path })), jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Storage", path: "/search" }, { name: place.name, path }]))],
     };
   },

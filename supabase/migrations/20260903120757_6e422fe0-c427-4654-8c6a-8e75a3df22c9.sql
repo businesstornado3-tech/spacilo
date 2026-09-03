@@ -1,0 +1,2 @@
+CREATE POLICY "Platform admins view stripe disputes" ON public.stripe_disputes FOR SELECT TO authenticated USING (public.is_platform_admin(auth.uid()));
+CREATE POLICY "Platform admins view stripe webhook events" ON public.stripe_webhook_events FOR SELECT TO authenticated USING (public.is_platform_admin(auth.uid()));

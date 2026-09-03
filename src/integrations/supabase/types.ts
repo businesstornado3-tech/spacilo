@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_daily_rollups: {
+        Row: {
+          created_at: string
+          event_name: string
+          public_events: number
+          public_sessions: number
+          public_unique_visitors: number
+          rollup_date: string
+          sessions: number
+          total_events: number
+          unique_visitors: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_name: string
+          public_events?: number
+          public_sessions?: number
+          public_unique_visitors?: number
+          rollup_date: string
+          sessions?: number
+          total_events?: number
+          unique_visitors?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_name?: string
+          public_events?: number
+          public_sessions?: number
+          public_unique_visitors?: number
+          rollup_date?: string
+          sessions?: number
+          total_events?: number
+          unique_visitors?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           device: string | null
@@ -1219,6 +1258,48 @@ export type Database = {
           },
         ]
       }
+      growth_attributions: {
+        Row: {
+          attribution_model: string
+          audience: string | null
+          campaign_id: string | null
+          destination: string | null
+          event_name: string
+          geography: string | null
+          id: string
+          metadata: Json
+          occurred_at: string
+          opportunity_key: string | null
+          source: string | null
+        }
+        Insert: {
+          attribution_model: string
+          audience?: string | null
+          campaign_id?: string | null
+          destination?: string | null
+          event_name: string
+          geography?: string | null
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          opportunity_key?: string | null
+          source?: string | null
+        }
+        Update: {
+          attribution_model?: string
+          audience?: string | null
+          campaign_id?: string | null
+          destination?: string | null
+          event_name?: string
+          geography?: string | null
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          opportunity_key?: string | null
+          source?: string | null
+        }
+        Relationships: []
+      }
       growth_audit_events: {
         Row: {
           action: string
@@ -1303,9 +1384,43 @@ export type Database = {
         }
         Relationships: []
       }
+      growth_campaign_attempts: {
+        Row: {
+          attempt_number: number
+          attempted_at: string
+          campaign_id: string
+          error_code: string | null
+          id: string
+          metadata: Json
+          provider_reference: string | null
+          status: string
+        }
+        Insert: {
+          attempt_number: number
+          attempted_at?: string
+          campaign_id: string
+          error_code?: string | null
+          id?: string
+          metadata?: Json
+          provider_reference?: string | null
+          status: string
+        }
+        Update: {
+          attempt_number?: number
+          attempted_at?: string
+          campaign_id?: string
+          error_code?: string | null
+          id?: string
+          metadata?: Json
+          provider_reference?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       growth_campaigns: {
         Row: {
           attempt_count: number
+          campaign_fingerprint: string | null
           channel: string | null
           created_at: string
           decision: Json
@@ -1313,15 +1428,21 @@ export type Database = {
           id: string
           idempotency_key: string
           last_error: string | null
+          last_response_at: string | null
+          locked_at: string | null
           message: Json | null
           opportunity_key: string
           policy: Json
+          recipient_identity_hash: string | null
+          send_lock: string | null
           sent_at: string | null
+          source_identity: string | null
           state: string
           updated_at: string
         }
         Insert: {
           attempt_count?: number
+          campaign_fingerprint?: string | null
           channel?: string | null
           created_at?: string
           decision?: Json
@@ -1329,15 +1450,21 @@ export type Database = {
           id?: string
           idempotency_key: string
           last_error?: string | null
+          last_response_at?: string | null
+          locked_at?: string | null
           message?: Json | null
           opportunity_key: string
           policy?: Json
+          recipient_identity_hash?: string | null
+          send_lock?: string | null
           sent_at?: string | null
+          source_identity?: string | null
           state?: string
           updated_at?: string
         }
         Update: {
           attempt_count?: number
+          campaign_fingerprint?: string | null
           channel?: string | null
           created_at?: string
           decision?: Json
@@ -1345,10 +1472,15 @@ export type Database = {
           id?: string
           idempotency_key?: string
           last_error?: string | null
+          last_response_at?: string | null
+          locked_at?: string | null
           message?: Json | null
           opportunity_key?: string
           policy?: Json
+          recipient_identity_hash?: string | null
+          send_lock?: string | null
           sent_at?: string | null
+          source_identity?: string | null
           state?: string
           updated_at?: string
         }
@@ -1404,6 +1536,60 @@ export type Database = {
           permissions?: Json
           rate_limit?: Json
           retention_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      growth_innovation_opportunities: {
+        Row: {
+          audience: string
+          components: Json
+          conversion_count: number
+          created_at: string
+          evidence_count: number
+          geography: string | null
+          id: string
+          kind: string
+          opportunity_key: string
+          priority_score: number
+          problem: string
+          recommendation: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience: string
+          components?: Json
+          conversion_count?: number
+          created_at?: string
+          evidence_count?: number
+          geography?: string | null
+          id?: string
+          kind: string
+          opportunity_key: string
+          priority_score?: number
+          problem: string
+          recommendation: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          components?: Json
+          conversion_count?: number
+          created_at?: string
+          evidence_count?: number
+          geography?: string | null
+          id?: string
+          kind?: string
+          opportunity_key?: string
+          priority_score?: number
+          problem?: string
+          recommendation?: string
+          status?: string
+          title?: string
           updated_at?: string
         }
         Relationships: []
@@ -3854,6 +4040,10 @@ export type Database = {
       }
       analytics_is_public_path: { Args: { p_path: string }; Returns: boolean }
       analytics_prune: { Args: { p_keep_days?: number }; Returns: number }
+      analytics_rebuild_daily_rollups: {
+        Args: { p_from: string; p_to: string }
+        Returns: number
+      }
       apply_storage_refund_to_earning: {
         Args: {
           p_payment_id: string

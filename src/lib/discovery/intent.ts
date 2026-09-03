@@ -231,6 +231,15 @@ function collect<T extends string>(text: string, lexicon: Lexicon<T>): Signal<T>
   return [...found.values()].sort((a, b) => b.weight - a.weight || a.value.localeCompare(b.value));
 }
 
+function mergeSignals<T extends string>(base: readonly Signal<T>[], additions: readonly Signal<T>[]): Signal<T>[] {
+  const found = new Map<T, Signal<T>>();
+  for (const signal of [...base, ...additions]) {
+    const existing = found.get(signal.value);
+    if (!existing || existing.weight < signal.weight) found.set(signal.value, signal);
+  }
+  return [...found.values()].sort((a, b) => b.weight - a.weight || a.value.localeCompare(b.value));
+}
+
 export function normaliseQuery(raw: string): string {
   return raw.toLowerCase().replace(/[^\p{L}\p{N}\s'-]/gu, " ").replace(/\s+/g, " ").trim();
 }

@@ -50,7 +50,7 @@ describe("growth policy gates", () => {
   });
 
   it("keeps frequency and cooldown as independent gates", () => {
-    setGrowthConfig({ flags: { AI_AUTONOMOUS_SEND_ENABLED: true } });
+    setGrowthConfig({ flags: { ...defaultAutonomyConfig().flags, AI_AUTONOMOUS_SEND_ENABLED: true } });
     registerChannel({ id: "email", label: "Email", enabled: true, requiresConsent: true, acceptsLegitimateInterest: true, perRecipientPerDay: 1, cooldownHours: 168, requiresSenderIdentity: true });
     const result = evaluatePolicy({ opportunity: opportunity(), channel: "email", consent: "granted", hasContact: true, recentSends24h: 1, hoursSinceLastContact: 2, suppressed: false, now: 1 });
     expect(result.checks.find((check) => check.id === "frequency_cap")?.passed).toBe(false);

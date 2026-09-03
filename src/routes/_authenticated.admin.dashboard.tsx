@@ -604,6 +604,73 @@ function AdminDashboardRoute() {
           )}
         </AdminSectionBlock>
 
+        {/* ------------------------------------------------------ Growth radar */}
+        <AdminSectionBlock
+          id="growth"
+          title="Growth radar"
+          note="Non-identifying first-party behaviour, grouped into underlying needs. The radar observes and scores only — it never contacts anyone and never claims a space is available."
+          actions={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => refreshRadar.mutate(30)}
+              disabled={refreshRadar.isPending}
+            >
+              {refreshRadar.isPending ? "Refreshing…" : "Refresh radar"}
+            </Button>
+          }
+        >
+          {opportunities.isError || insights.isError ? (
+            <ErrorState
+              title="Growth radar data couldn't be loaded"
+              description="No opportunity or insight figures have been substituted."
+              onRetry={() => void opportunities.refetch()}
+            />
+          ) : opportunities.isLoading ? (
+            <Skeleton className="h-24 w-full" />
+          ) : opportunityRows.length === 0 ? (
+            <EmptyState
+              title="No opportunities detected yet"
+              description="Refresh the radar once EarnRoom has recorded production activity."
+            />
+          ) : (
+            <div className="space-y-4">
+              <ul className="space-y-2">
+                {opportunityRows.slice(0, 10).map((row) => (
+                  <li
+                    key={row.key}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card p-3"
+                  >
+                    <span className="min-w-0">
+                      <span className="block type-body-sm font-medium">{growthSummary(row)}</span>
+                      <span className="block type-body-xs text-muted-foreground">
+                        {growthRoleLabel(row)} · seen {formatCount(row.frequency)}×
+                      </span>
+                    </span>
+                    <Badge variant="neutral">{growthScoreLabel(row)}</Badge>
+                  </li>
+                ))}
+              </ul>
+
+              {insightRows.length > 0 ? (
+                <div>
+                  <h3 className="type-label">Unmet needs to review</h3>
+                  <ul className="mt-2 space-y-1.5">
+                    {insightRows.map((insight) => (
+                      <li key={insight.insight_key} className="flex justify-between gap-3 type-body-sm">
+                        <span className="min-w-0 truncate">{insight.title}</span>
+                        <span className="tabular-nums text-muted-foreground">
+                          {formatCount(insight.evidence_count)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </AdminSectionBlock>
+
         {/* -------------------------------------------------------- Operations */}
         <AdminSectionBlock
           id="operations"

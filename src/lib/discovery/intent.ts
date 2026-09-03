@@ -295,6 +295,13 @@ export function readIntent(rawQuery: string): IntentReading {
   const spaces = collect(query, SPACE_LEXICON);
   const location = readLocation(rawQuery);
   const role = readRole(query, objectives, concepts);
+  const segment = concepts.segment !== "undetermined"
+    ? concepts.segment
+    : belongings.some((item) => item.value === "student")
+      ? "student"
+      : belongings.some((item) => item.value === "business_inventory" || item.value === "equipment")
+        ? "business"
+        : "undetermined";
   const timeframe = readTimeframe(query);
   const stage = readStage(query, location, objectives);
 

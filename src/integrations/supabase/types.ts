@@ -972,6 +972,9 @@ export type Database = {
           status: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence: number | null
           updated_at: string
+          vat_amount_pence: number
+          vat_policy_status: string
+          vat_rate_percent: number | null
           weekly_rate_snapshot: number | null
         }
         Insert: {
@@ -1031,6 +1034,9 @@ export type Database = {
           status?: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence?: number | null
           updated_at?: string
+          vat_amount_pence?: number
+          vat_policy_status?: string
+          vat_rate_percent?: number | null
           weekly_rate_snapshot?: number | null
         }
         Update: {
@@ -1090,6 +1096,9 @@ export type Database = {
           status?: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence?: number | null
           updated_at?: string
+          vat_amount_pence?: number
+          vat_policy_status?: string
+          vat_rate_percent?: number | null
           weekly_rate_snapshot?: number | null
         }
         Relationships: [
@@ -2096,6 +2105,9 @@ export type Database = {
           stripe_payment_intent_id: string | null
           succeeded_at: string | null
           updated_at: string
+          vat_amount_pence: number
+          vat_policy_status: string
+          vat_rate_percent: number | null
         }
         Insert: {
           amount_received_pence?: number | null
@@ -2137,6 +2149,9 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           succeeded_at?: string | null
           updated_at?: string
+          vat_amount_pence?: number
+          vat_policy_status?: string
+          vat_rate_percent?: number | null
         }
         Update: {
           amount_received_pence?: number | null
@@ -2178,6 +2193,9 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           succeeded_at?: string | null
           updated_at?: string
+          vat_amount_pence?: number
+          vat_policy_status?: string
+          vat_rate_percent?: number | null
         }
         Relationships: [
           {
@@ -3455,6 +3473,9 @@ export type Database = {
           status: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence: number | null
           updated_at: string
+          vat_amount_pence: number
+          vat_policy_status: string
+          vat_rate_percent: number | null
           weekly_rate_snapshot: number | null
         }
         SetofOptions: {
@@ -3551,6 +3572,9 @@ export type Database = {
           stripe_payment_intent_id: string | null
           succeeded_at: string | null
           updated_at: string
+          vat_amount_pence: number
+          vat_policy_status: string
+          vat_rate_percent: number | null
         }
         SetofOptions: {
           from: "*"
@@ -3601,6 +3625,9 @@ export type Database = {
           stripe_payment_intent_id: string | null
           succeeded_at: string | null
           updated_at: string
+          vat_amount_pence: number
+          vat_policy_status: string
+          vat_rate_percent: number | null
         }
         SetofOptions: {
           from: "*"
@@ -3732,6 +3759,9 @@ export type Database = {
           status: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence: number | null
           updated_at: string
+          vat_amount_pence: number
+          vat_policy_status: string
+          vat_rate_percent: number | null
           weekly_rate_snapshot: number | null
         }
         SetofOptions: {
@@ -3808,6 +3838,9 @@ export type Database = {
           status: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence: number | null
           updated_at: string
+          vat_amount_pence: number
+          vat_policy_status: string
+          vat_rate_percent: number | null
           weekly_rate_snapshot: number | null
         }
         SetofOptions: {
@@ -3876,6 +3909,9 @@ export type Database = {
           status: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence: number | null
           updated_at: string
+          vat_amount_pence: number
+          vat_policy_status: string
+          vat_rate_percent: number | null
           weekly_rate_snapshot: number | null
         }
         SetofOptions: {
@@ -3957,6 +3993,9 @@ export type Database = {
           status: Database["public"]["Enums"]["booking_status"]
           storage_amount_pence: number | null
           updated_at: string
+          vat_amount_pence: number
+          vat_policy_status: string
+          vat_rate_percent: number | null
           weekly_rate_snapshot: number | null
         }
         SetofOptions: {

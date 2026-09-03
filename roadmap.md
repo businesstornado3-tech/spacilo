@@ -34,3 +34,9 @@ Open items for the owner (not code work):
 - [x] Keep outbound sending disabled and all campaign decisions capture-only
 - [x] Verify privacy filtering, blocked connectors, supply claims, emergency stop and repeat aggregation with regression tests
 - [ ] Add separately authorised connectors only after legal, terms and consent review
+
+## Public AI provider terminology cleanup
+
+- [ ] Replace unnecessary provider/platform names in public privacy and AI-disclaimer copy with accurate provider-neutral disclosure
+- [ ] Verify public routes and UI expose no other provider/platform names without changing AI, admin, geography, analytics or marketplace behaviour
+- [ ] Run the full test suite, typecheck, build and public runtime/console checks

@@ -123,6 +123,10 @@ function MapPanel({
           ? ` ${places.length - plotted.length} named place(s) have no catalogue coordinate and appear in the table only.`
           : ""}
       </p>
+      <p className="mt-1 type-body-xs text-muted-foreground">
+        Data source: production location-intent analytics (aggregated). Data status:
+        DERIVED_FROM_PRODUCTION. Freshness is reported in Data health &amp; provenance.
+      </p>
     </div>
   );
 }

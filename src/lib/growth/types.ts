@@ -259,6 +259,8 @@ export type Campaign = {
   opportunityKey: string;
   /** Deterministic; a retry can never produce a second send. */
   idempotencyKey: string;
+  /** Hashed recipient reference only; raw addresses never enter a campaign. */
+  recipientIdentityHash: string | null;
   channel: ChannelId | null;
   message: CampaignMessage | null;
   state: CampaignState;

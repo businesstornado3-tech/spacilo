@@ -1260,6 +1260,7 @@ export type Database = {
       }
       growth_attributions: {
         Row: {
+          attribution_key: string | null
           attribution_model: string
           audience: string | null
           campaign_id: string | null
@@ -1273,6 +1274,7 @@ export type Database = {
           source: string | null
         }
         Insert: {
+          attribution_key?: string | null
           attribution_model: string
           audience?: string | null
           campaign_id?: string | null
@@ -1286,6 +1288,7 @@ export type Database = {
           source?: string | null
         }
         Update: {
+          attribution_key?: string | null
           attribution_model?: string
           audience?: string | null
           campaign_id?: string | null
@@ -1653,6 +1656,7 @@ export type Database = {
           channel: string | null
           created_at: string
           id: string
+          idempotency_key: string | null
           metadata: Json
           occurred_at: string
           opportunity_key: string
@@ -1663,6 +1667,7 @@ export type Database = {
           channel?: string | null
           created_at?: string
           id?: string
+          idempotency_key?: string | null
           metadata?: Json
           occurred_at?: string
           opportunity_key: string
@@ -1673,6 +1678,7 @@ export type Database = {
           channel?: string | null
           created_at?: string
           id?: string
+          idempotency_key?: string | null
           metadata?: Json
           occurred_at?: string
           opportunity_key?: string

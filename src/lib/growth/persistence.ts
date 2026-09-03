@@ -1,7 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database, Json } from "@/integrations/supabase/types";
-import type { AuditEvent, GrowthInsight, GrowthOpportunity } from "./types";
+import type {
+  AuditEvent,
+  Campaign,
+  GrowthInsight,
+  GrowthLearningSignal,
+  GrowthOpportunity,
+} from "./types";
+import type { GrowthAttributionRecord } from "./attribution";
 
 export type GrowthPersistenceClient = SupabaseClient<Database>;
 
@@ -21,7 +28,7 @@ function jsonArray(value: unknown): Json[] {
  */
 export async function persistGrowthOpportunity(
   client: GrowthPersistenceClient,
-  opportunity: GrowthOpportunity,
+  opportunity: GrowthOpportunity & { learnedScore?: number },
 ): Promise<void> {
   const { data: previous, error: lookupError } = await client
     .from("growth_opportunities")
@@ -52,7 +59,11 @@ export async function persistGrowthOpportunity(
       audience: json(opportunity.audience),
       fit: json(opportunity.fit),
       supply: json(opportunity.supply),
-      scores: json(opportunity.scores),
+      scores: json(
+        opportunity.learnedScore === undefined
+          ? opportunity.scores
+          : { ...opportunity.scores, learnedScore: opportunity.learnedScore },
+      ),
       campaign_decision: json(opportunity.decision),
       status: opportunity.status,
       first_seen_at: new Date(firstSeen).toISOString(),
@@ -132,7 +143,7 @@ export async function persistGrowthAudit(
  */
 export async function persistGrowthCampaign(
   client: GrowthPersistenceClient,
-  campaign: import("./types").Campaign,
+  campaign: Campaign,
   sourceIdentity: string,
 ): Promise<void> {
   const { data: existing, error: lookupError } = await client
@@ -148,6 +159,7 @@ export async function persistGrowthCampaign(
     idempotency_key: campaign.idempotencyKey,
     campaign_fingerprint: campaign.idempotencyKey,
     source_identity: sourceIdentity,
+    recipient_identity_hash: campaign.recipientIdentityHash,
     channel: campaign.channel,
     message: json(campaign.message),
     state: campaign.state,
@@ -157,6 +169,131 @@ export async function persistGrowthCampaign(
     expires_at: campaign.expiresAt ? new Date(campaign.expiresAt).toISOString() : null,
   });
   if (error && error.code !== "23505") throw new Error(error.message);
+}
+
+/** Claims a campaign send lock atomically; a false result means another worker won. */
+export async function claimGrowthCampaignLock(
+  client: GrowthPersistenceClient,
+  campaignId: string,
+  lock: string,
+  now: number,
+): Promise<boolean> {
+  const { data, error } = await client
+    .from("growth_campaigns")
+    .update({ send_lock: lock, locked_at: new Date(now).toISOString() })
+    .eq("id", campaignId)
+    .is("send_lock", null)
+    .is("sent_at", null)
+    .select("id")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+/** Releases the worker's lock and persists the exact result of one adapter attempt. */
+export async function persistGrowthCampaignResult(
+  client: GrowthPersistenceClient,
+  campaignId: string,
+  lock: string,
+  result: {
+    state: Campaign["state"];
+    attemptNumber: number;
+    sentAt: number | null;
+    lastError: string | null;
+  },
+): Promise<void> {
+  const { data, error } = await client
+    .from("growth_campaigns")
+    .update({
+      state: result.state,
+      attempt_count: result.attemptNumber,
+      sent_at: result.sentAt ? new Date(result.sentAt).toISOString() : null,
+      last_error: result.lastError,
+      send_lock: null,
+      locked_at: null,
+    })
+    .eq("id", campaignId)
+    .eq("send_lock", lock)
+    .select("id")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Campaign result could not release its send lock.");
+}
+
+export async function persistGrowthCampaignAttempt(
+  client: GrowthPersistenceClient,
+  input: {
+    campaignId: string;
+    attemptNumber: number;
+    status: string;
+    providerReference: string | null;
+    errorCode?: string | null;
+    attemptedAt: number;
+    metadata?: unknown;
+  },
+): Promise<void> {
+  const { error } = await client.from("growth_campaign_attempts").upsert(
+    {
+      campaign_id: input.campaignId,
+      attempt_number: input.attemptNumber,
+      status: input.status,
+      provider_reference: input.providerReference,
+      error_code: input.errorCode ?? null,
+      attempted_at: new Date(input.attemptedAt).toISOString(),
+      metadata: json(input.metadata ?? {}),
+    },
+    { onConflict: "campaign_id,attempt_number" },
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function persistGrowthLearningSignal(
+  client: GrowthPersistenceClient,
+  signal: GrowthLearningSignal,
+  metadata: unknown = {},
+  idempotencyKey?: string,
+): Promise<void> {
+  const { error } = await client.from("growth_learning_signals").insert({
+    idempotency_key: idempotencyKey ?? null,
+    opportunity_key: signal.opportunityKey,
+    channel: signal.channel,
+    outcome: signal.outcome,
+    value_pence: signal.valuePence ?? null,
+    occurred_at: new Date(signal.at).toISOString(),
+    metadata: json(metadata),
+  });
+  // The unique partial index makes keyed retries safe while allowing
+  // deliberately unkeyed internal observations to coexist.
+  if (error && error.code !== "23505") throw new Error(error.message);
+}
+
+export async function persistGrowthAttribution(
+  client: GrowthPersistenceClient,
+  record: GrowthAttributionRecord,
+): Promise<boolean> {
+  const { data: existing, error: lookupError } = await client
+    .from("growth_attributions")
+    .select("id")
+    .eq("attribution_key", record.idempotencyKey)
+    .maybeSingle();
+  if (lookupError) throw new Error(lookupError.message);
+  if (existing) return false;
+
+  const { error } = await client.from("growth_attributions").insert({
+    attribution_key: record.idempotencyKey,
+    attribution_model: record.attributionModel,
+    opportunity_key: record.opportunityKey,
+    campaign_id: record.campaignId,
+    event_name: record.eventName,
+    destination: record.destination,
+    source: record.source,
+    audience: record.audience,
+    geography: record.geography,
+    occurred_at: new Date(record.occurredAt).toISOString(),
+    metadata: json(record.metadata),
+  });
+  if (error && error.code !== "23505") throw new Error(error.message);
+  return !error;
 }
 
 /** Persists a human-review innovation recommendation idempotently. */

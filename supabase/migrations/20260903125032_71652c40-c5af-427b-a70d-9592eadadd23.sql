@@ -1,0 +1,3 @@
+ALTER TABLE public.growth_learning_signals ADD COLUMN IF NOT EXISTS idempotency_key text;
+CREATE UNIQUE INDEX IF NOT EXISTS growth_learning_signals_idempotency_key_idx ON public.growth_learning_signals (idempotency_key) WHERE idempotency_key IS NOT NULL;
+COMMENT ON COLUMN public.growth_learning_signals.idempotency_key IS 'Stable event key for retry-safe learning ingestion; raw identity is never stored.';

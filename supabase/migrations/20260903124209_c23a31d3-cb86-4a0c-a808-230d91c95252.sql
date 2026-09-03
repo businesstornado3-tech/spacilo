@@ -1,0 +1,2 @@
+ALTER TABLE public.growth_attributions ADD COLUMN IF NOT EXISTS attribution_key text;
+CREATE UNIQUE INDEX IF NOT EXISTS growth_attributions_attribution_key_idx ON public.growth_attributions (attribution_key) WHERE attribution_key IS NOT NULL;

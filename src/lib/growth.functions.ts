@@ -42,6 +42,7 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
       throw new Error("You don't have access to this area.");
     }
 
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const {
       analyticsRowToSignal,
       buildGrowthPipeline,
@@ -73,9 +74,14 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
       const signal = analyticsRowToSignal(row);
       return signal ? [signal] : [];
     });
-    const signalIds = candidateSignals.map((signal) => `${signal.id}:signal_ingested`);
+    // The service client is necessary here: analytics_events is intentionally
+    // not readable from a browser, even for a signed-in admin.
+    const signalIds = candidateSignals.flatMap((signal) => [
+      `${signal.id}:signal_ingested`,
+      `${signal.id}:dropped`,
+    ]);
     const { data: ingested, error: ingestedError } = signalIds.length
-      ? await supabase
+      ? await supabaseAdmin
           .from("growth_audit_events")
           .select("event_key")
           .in("event_key", signalIds)
@@ -84,16 +90,20 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
 
     const alreadyIngested = new Set((ingested ?? []).map((event) => event.event_key));
     const results = candidateSignals
-      .filter((signal) => !alreadyIngested.has(`${signal.id}:signal_ingested`))
+      .filter(
+        (signal) =>
+          !alreadyIngested.has(`${signal.id}:signal_ingested`) &&
+          !alreadyIngested.has(`${signal.id}:dropped`),
+      )
       .map((signal) => buildGrowthPipeline(signal));
 
     const opportunities = mergeGrowthOpportunities(results);
     const insights = mergeGrowthInsights(results);
     const auditEvents = results.flatMap((result) => result.audit);
 
-    for (const opportunity of opportunities) await persistGrowthOpportunity(supabase, opportunity);
-    for (const insight of insights) await persistGrowthInsight(supabase, insight);
-    for (const event of auditEvents) await persistGrowthAudit(supabase, event);
+    for (const opportunity of opportunities) await persistGrowthOpportunity(supabaseAdmin, opportunity);
+    for (const insight of insights) await persistGrowthInsight(supabaseAdmin, insight);
+    for (const event of auditEvents) await persistGrowthAudit(supabaseAdmin, event);
 
     return {
       scanned: results.length,

@@ -12,13 +12,13 @@ interface FooterLink {
 
 const columns: { heading: string; links: FooterLink[] }[] = [
   {
-    heading: "Browse",
+    heading: "Explore",
     links: [
+      { label: "Discover", to: "/discover" },
+      { label: "Tools", to: "/tools" },
+      { label: "Guides", to: "/guides" },
       { label: "Find storage", to: "/search" },
-      { label: "Garages", to: "/search", search: { types: ["garage"] } },
-      { label: "Lofts", to: "/search", search: { types: ["loft"] } },
-      { label: "Spare rooms", to: "/search", search: { types: ["room"] } },
-      { label: "Commercial", to: "/search", search: { types: ["commercial"] } },
+      { label: "About EarnRoom", to: "/about" },
     ],
   },
   {

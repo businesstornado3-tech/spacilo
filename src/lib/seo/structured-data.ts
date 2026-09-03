@@ -18,6 +18,10 @@ export function organizationJsonLd() {
     name: brand.name,
     url: siteOrigin(),
     logo: `${siteOrigin()}/favicon.png`,
+    areaServed: {
+      "@type": "Country",
+      name: brand.serviceArea,
+    },
   };
 }
 

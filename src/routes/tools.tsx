@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { ArrowRight, ScanLine } from "lucide-react";
 
 import { brand } from "@/config/brand";
@@ -11,14 +11,22 @@ const title = `${brand.name} tools`;
 const description = "Explore EarnRoom tools for belongings, spaces, storage fit and finding published storage nearby.";
 
 export const Route = createFileRoute("/tools")({
-  head: () => ({
-    ...publicRouteMeta({ title, description, path: "/tools" }),
-    scripts: [jsonLdScript(itemListJsonLd(capabilityIndex().map((link) => ({ name: link.label, path: link.to })))), jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Tools", path: "/tools" }]))],
-  }),
+  head: ({ matches }) => {
+    const base = publicRouteMeta({ title, description, path: "/tools" });
+    const isChildPage = matches.some((match) => String(match.routeId) === "/tools/$slug");
+    return {
+      ...base,
+      links: isChildPage ? [] : base.links,
+      scripts: [jsonLdScript(itemListJsonLd(capabilityIndex().map((link) => ({ name: link.label, path: link.to })))), jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Tools", path: "/tools" }]))],
+    };
+  },
   component: ToolsPage,
 });
 
 function ToolsPage() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  if (pathname !== "/tools") return <Outlet />;
+
   return (
     <MarketingLayout>
       <PageSection>

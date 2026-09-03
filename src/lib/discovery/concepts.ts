@@ -139,8 +139,17 @@ const PATTERNS: readonly Pattern[] = [
     segment: "student",
   },
   {
+    id: "student_storage_transition",
+    test: /\b(store|keep)\s+my\s+(things|stuff|belongings)\b/,
+    also: /\b(over summer|between terms?|between semesters?|during the holidays?)\b/,
+    problems: [["transition", 0.8]],
+    objectives: [["store", 0.75]],
+    segment: "student",
+  },
+  {
     id: "needs_somewhere",
     test: /\b(where\s+can\s+(i|we|students|my)\b[\s\S]{0,20}\b(store|keep|put)|somewhere\s+to\s+(store|keep|put)|place\s+to\s+(store|keep|put)|need\s+(somewhere|storage|space))\b/,
+    also: /\b(my|our|the|these|those|personal|household|belongings|things|stuff|furniture|boxes|clothes|equipment|stock|inventory)\b/,
     problems: [["needs_somewhere_to_store", 0.85]],
     objectives: [
       ["store", 0.8],

@@ -24,31 +24,7 @@ export const Route = createFileRoute("/")({
     const base = publicRouteMeta({ title, description, path: "/" });
     return {
       ...base,
-      scripts: [
-        {
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@graph": [
-              {
-                "@type": "WebSite",
-                name: brand.name,
-                url: canonicalUrl("/"),
-                description,
-              },
-              {
-                "@type": "Organization",
-                name: brand.name,
-                url: canonicalUrl("/"),
-                areaServed: {
-                  "@type": "Country",
-                  name: brand.serviceArea,
-                },
-              },
-            ],
-          }),
-        },
-      ],
+      scripts: [],
     };
   },
   component: HomePage,

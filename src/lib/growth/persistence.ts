@@ -64,6 +64,7 @@ export async function persistGrowthOpportunity(
           ? opportunity.scores
           : { ...opportunity.scores, learnedScore: opportunity.learnedScore },
       ),
+      intelligence: json(opportunity.intelligence ?? {}),
       campaign_decision: json(opportunity.decision),
       status: opportunity.status,
       first_seen_at: new Date(firstSeen).toISOString(),

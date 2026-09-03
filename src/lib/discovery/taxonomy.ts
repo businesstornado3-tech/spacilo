@@ -123,6 +123,9 @@ export const INTENT_DIMENSIONS = [
   "location",
   "timeframe",
   "journey_stage",
+  "problem",
+  "segment",
 ] as const;
+
 
 export type IntentDimension = (typeof INTENT_DIMENSIONS)[number];

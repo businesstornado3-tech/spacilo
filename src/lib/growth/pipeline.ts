@@ -338,9 +338,13 @@ export function buildGrowthPipeline(signal: SourceSignal, now = Date.now()): Pip
       tiers: [],
     };
   }
+
   const resolution = resolveDiscovery(signal.text);
+  const semantics = readSemantics(signal.text, resolution.reading);
   const items = evidence(resolution.reading);
-  if (resolution.reading.unknown) {
+  // Keep the cheap understanding gate for genuinely meaningless observations,
+  // while allowing a new sentence shape through when semantics has evidence.
+  if (resolution.reading.unknown && semantics.uncertain) {
     return {
       signal,
       opportunity: null,
@@ -351,14 +355,22 @@ export function buildGrowthPipeline(signal: SourceSignal, now = Date.now()): Pip
       tiers: [0],
     };
   }
+
   const growthScores = scores(resolution.reading, resolution);
+  const locationSlug = resolution.reading.location.kind === "place" ? resolution.reading.location.place.slug : null;
+  const semanticRole = semantics.roles[0] ?? growthRole(resolution.reading.role, resolution.reading);
   const opportunity: GrowthOpportunity = {
-    key: hashKey(`${resolution.reading.problems[0]?.value ?? "unknown"}:${resolution.reading.segment}:${resolution.reading.role}:${resolution.reading.stage}`),
+    key: hashKey(clusterKey({
+      situationType: semantics.situationType,
+      role: semanticRole,
+      segment: resolution.reading.segment,
+      locationSlug,
+    })),
     signalId: signal.id,
     connectorId: signal.connectorId,
-    situation: situation(resolution.reading, items),
-    painPoints: resolution.reading.problems.map((problem): PainPoint => ({ id: problem.value, label: problem.value.replaceAll("_", " "), description: problem.value.replaceAll("_", " "), confidence: problem.weight, evidence: [{ quote: problem.evidence, field: "problem" }], emergent: false })),
-    audience: audience(resolution.reading, items),
+    situation: situation(resolution.reading, semantics, items),
+    painPoints: semantics.painPoints,
+    audience: audience(resolution.reading, semantics, items),
     fit: fit(resolution),
     supply: supply(resolution.reading),
     scores: growthScores,
@@ -367,22 +379,51 @@ export function buildGrowthPipeline(signal: SourceSignal, now = Date.now()): Pip
     firstSeen: signal.observedAt,
     latestSeen: signal.observedAt,
     frequency: signal.occurrences ?? 1,
-    evidence: items,
+    evidence: [...items, ...semantics.evidence].slice(0, 12),
   };
-  const opportunityInsights = insights(opportunity);
+
+  const contact = signal.contact;
+  const channel: ChannelId | null = contact?.channel ?? null;
+  const policyContext: PolicyContext = {
+    opportunity,
+    channel,
+    consent: contact?.consent ?? "none",
+    hasContact: Boolean(contact?.address),
+    recentSends24h: 0,
+    hoursSinceLastContact: null,
+    suppressed: contact?.consent === "withdrawn",
+    now,
+  };
+  const policy = evaluatePolicy(policyContext);
+  const finalDecision = decideCampaign(opportunity, policy, now);
+  const finalOpportunity: GrowthOpportunity = { ...opportunity, decision: finalDecision };
+  const campaign: Campaign | null = contact && channel && policy.verdict !== "BLOCK"
+    ? buildCampaign({
+        opportunity: finalOpportunity,
+        supply: finalOpportunity.supply,
+        decision: finalDecision,
+        policy,
+        channel,
+        recipient: recipientHash(channel, contact.address),
+        now,
+      })
+    : null;
+
+  const opportunityInsights = insights(finalOpportunity);
   return {
     signal,
-    opportunity,
-    campaign: null,
+    opportunity: finalOpportunity,
+    campaign,
     insights: opportunityInsights,
     audit: [
-      audit(signal, opportunity, "signal_ingested", "Accepted from the first-party production analytics stream.", { signalId: signal.id }),
-      audit(signal, opportunity, "classified", `Role ${opportunity.audience.primary}; segment ${opportunity.audience.segment}.`),
-      audit(signal, opportunity, "opportunity_created", `Scored ${opportunity.scores.opportunity}/100 (${opportunity.scores.band}).`),
-      audit(signal, opportunity, "policy_evaluated", opportunity.decision.reasons.join(" ")), 
+      audit(signal, finalOpportunity, "signal_ingested", "Accepted from the first-party production production analytics stream.", { signalId: signal.id }),
+      audit(signal, finalOpportunity, "classified", `Role ${finalOpportunity.audience.primary}; segment ${finalOpportunity.audience.segment}.`),
+      audit(signal, finalOpportunity, "opportunity_created", `Scored ${finalOpportunity.scores.opportunity}/100 (${finalOpportunity.scores.band}).`),
+      audit(signal, finalOpportunity, "policy_evaluated", policy.reasons.join(" ")),
+      ...(campaign ? [audit(signal, finalOpportunity, "campaign_generated", `Campaign ${campaign.state.toLowerCase()}; delivery remains disabled in this pipeline.`)] : []),
     ],
     dropped: null,
-    tiers: [0, opportunity.scores.opportunity >= growthConfig().budgets.deepReasoningFloor ? 1 : 0],
+    tiers: [0, finalOpportunity.scores.opportunity >= growthConfig().budgets.deepReasoningFloor ? 1 : 0],
   };
 }
 

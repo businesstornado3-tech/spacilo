@@ -1703,6 +1703,7 @@ export type Database = {
           first_seen_at: string
           fit: Json
           frequency: number
+          intelligence: Json
           key: string
           latest_seen_at: string
           pain_points: Json
@@ -1722,6 +1723,7 @@ export type Database = {
           first_seen_at?: string
           fit?: Json
           frequency?: number
+          intelligence?: Json
           key: string
           latest_seen_at?: string
           pain_points?: Json
@@ -1741,6 +1743,7 @@ export type Database = {
           first_seen_at?: string
           fit?: Json
           frequency?: number
+          intelligence?: Json
           key?: string
           latest_seen_at?: string
           pain_points?: Json
@@ -4047,6 +4050,11 @@ export type Database = {
         Returns: Json
       }
       admin_dashboard_trends: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
+      admin_data_health: { Args: never; Returns: Json }
+      admin_demand_geography: {
         Args: { p_from: string; p_to: string }
         Returns: Json
       }

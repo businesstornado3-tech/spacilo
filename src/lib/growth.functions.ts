@@ -119,7 +119,9 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
 
     const opportunities = mergeGrowthOpportunities(results);
     const insights = mergeGrowthInsights(results);
-    const campaigns = results.flatMap((result) => (result.campaign ? [result.campaign] : []));
+    const campaigns = results.flatMap((result) =>
+      result.campaign ? [{ campaign: result.campaign, sourceIdentity: result.signal.connectorId }] : [],
+    );
     const { data: learningRows, error: learningError } = await supabaseAdmin
       .from("growth_learning_signals")
       .select("opportunity_key,channel,outcome,value_pence,occurred_at")

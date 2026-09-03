@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as FindStorageRouteImport } from './routes/find-storage'
@@ -93,6 +94,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DesignSystemRoute = DesignSystemRouteImport.update({
@@ -506,6 +512,7 @@ const AuthenticatedRenterRequestsRequestIdBookingRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/design-system': typeof DesignSystemRoute
   '/discover': typeof DiscoverRoute
   '/find-storage': typeof FindStorageRoute
@@ -583,6 +590,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/design-system': typeof DesignSystemRoute
   '/discover': typeof DiscoverRoute
   '/find-storage': typeof FindStorageRoute
@@ -659,6 +667,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/about': typeof AboutRoute
   '/design-system': typeof DesignSystemRoute
   '/discover': typeof DiscoverRoute
   '/find-storage': typeof FindStorageRoute
@@ -738,6 +747,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/design-system'
     | '/discover'
     | '/find-storage'
@@ -815,6 +825,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/design-system'
     | '/discover'
     | '/find-storage'
@@ -890,6 +901,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/about'
     | '/design-system'
     | '/discover'
     | '/find-storage'
@@ -969,6 +981,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AboutRoute: typeof AboutRoute
   DesignSystemRoute: typeof DesignSystemRoute
   DiscoverRoute: typeof DiscoverRoute
   FindStorageRoute: typeof FindStorageRoute
@@ -1013,6 +1026,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/design-system': {
@@ -1702,6 +1722,7 @@ const ToolsRouteWithChildren = ToolsRoute._addFileChildren(ToolsRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AboutRoute: AboutRoute,
   DesignSystemRoute: DesignSystemRoute,
   DiscoverRoute: DiscoverRoute,
   FindStorageRoute: FindStorageRoute,

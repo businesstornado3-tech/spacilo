@@ -640,6 +640,13 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
 
         const model = imageModel();
         const diagnosticId = `vis_${Date.now().toString(36)}`;
+        // Kept server-side for operational diagnostics; public responses use
+        // provider-neutral labels so implementation details are not exposed.
+        const internalDiagnostics = {
+          provider: PROVIDER,
+          model,
+          planHash: body.planHash ?? null,
+        };
         const prompt = buildRenderPrompt({
           instruction: body.instruction ?? "",
           manifest,
@@ -683,7 +690,7 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
             (cause.name === "TimeoutError" || cause.name === "AbortError");
           const renderMs = Date.now() - startedRender;
           console.error(
-            `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} stage=render RENDER=${timedOut ? "TIMEOUT" : "UNREACHABLE"} renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=NOT_RUN PREVIEW=NOT_VERIFIED PLAN=READY`,
+            `[spaceplanner-visualise] ${diagnosticId} provider=${internalDiagnostics.provider} model=${internalDiagnostics.model} stage=render RENDER=${timedOut ? "TIMEOUT" : "UNREACHABLE"} renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=NOT_RUN PREVIEW=NOT_VERIFIED PLAN=READY`,
           );
           return Response.json(
             {

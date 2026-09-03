@@ -14,7 +14,16 @@ import { breadcrumbJsonLd, jsonLdScript, webPageJsonLd } from "@/lib/seo/structu
 import { track } from "@/lib/analytics/tracker";
 
 export const Route = createFileRoute("/storage/$location")({
-  loader: ({ params }) => { const place = placeBySlug(params.location); if (!place) throw notFound(); return { place }; },
+  loader: async ({ params }) => {
+    const place = placeBySlug(params.location);
+    if (!place) throw notFound();
+    try {
+      const spaces = await listPublishedSpaces(100);
+      return { place, publishedSpaces: spaces.filter((space) => listingMatchesPlace(space, place)) };
+    } catch {
+      return { place, publishedSpaces: [] };
+    }
+  },
   head: ({ params, loaderData }) => {
     const place = loaderData?.place ?? placeBySlug(params.location);
     if (!place) return { ...publicRouteMeta({ title: `Storage — ${brand.name}`, description: "Find published storage.", path: `/storage/${params.location}` }) };
@@ -22,11 +31,10 @@ export const Route = createFileRoute("/storage/$location")({
     const title = `Storage in ${place.name} — ${brand.name}`;
     const description = `See published storage spaces in ${place.name}, with approximate location, price and fit information.`;
     const meta = publicRouteMeta({ title, description, path });
+    const hasSupply = (loaderData?.publishedSpaces.length ?? 0) > 0;
     return {
       ...meta,
-      // Supply is loaded from real marketplace data in the browser. Until a
-      // server-side supply gate exists, never let a location shell be indexed.
-      meta: meta.meta.map((entry) => ("name" in entry && entry.name === "robots" ? { ...entry, content: "noindex, follow" } : entry)),
+      meta: meta.meta.map((entry) => ("name" in entry && entry.name === "robots" ? { ...entry, content: hasSupply ? "index, follow" : "noindex, follow" } : entry)),
       scripts: [jsonLdScript(webPageJsonLd({ name: title, description, path })), jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Storage", path: "/search" }, { name: place.name, path }]))],
     };
   },

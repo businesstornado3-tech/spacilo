@@ -41,6 +41,7 @@ export const PUBLIC_ROUTES: readonly PublicRouteEntry[] = [
   { path: "/discover", label: "Discovery" },
   { path: "/tools", label: "EarnRoom tools" },
   { path: "/guides", label: "Storage guides" },
+  { path: "/guides/student-storage", label: "Student storage" },
 ] as const;
 
 /**

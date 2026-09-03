@@ -35,4 +35,24 @@ describe("discovery safety", () => {
     const score = scoreOpportunity({ reading, plan });
     expect(decideIndexation({ hasDedicatedPage: true, hasReviewedContent: true, claimsSupply: true, publishedSpaces: 0, exposesPrivateData: false, score }).status).toBe("NOINDEX");
   });
+
+  it.each(HARDENING_CASES)("reads %s through the open intent pipeline", (query, problem, role, capability) => {
+    const result = resolveDiscovery(query);
+    if (problem !== "none") expect(result.reading.problems.map((item) => item.value)).toContain(problem);
+    expect(result.reading.role).toBe(role);
+    expect(result.plan.primary?.id).toBe(capability);
+    expect(result.destination).toBeTruthy();
+    expect(result.indexation.status).toMatch(/INDEX|NOINDEX|OPPORTUNITY_ONLY|CANONICAL_TO_EXISTING_PAGE|NOT_PUBLISHED/);
+  });
+
+  it("routes a named renter location to the canonical storage experience", () => {
+    expect(resolveDiscovery("storage Oxford").destination).toBe("/storage/oxford");
+    expect(resolveDiscovery("storage near me").destination).toBe("/search");
+  });
+
+  it("keeps host location acquisition independent from renter supply", () => {
+    const result = resolveDiscovery("make money from my garage in Leeds");
+    expect(result.reading.role).toBe("prospective_host");
+    expect(result.indexation.status).not.toBe("NOINDEX");
+  });
 });

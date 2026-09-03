@@ -13,6 +13,7 @@ import type { UserRole } from "@/lib/discovery/taxonomy";
 import { growthConfig, scoreBand } from "./config";
 import { getConnector } from "./connectors";
 import { clusterKey, readSemantics, type SemanticReading } from "./semantics";
+import { analyseOpportunity, mergeIntelligence } from "./intelligence";
 import { decideCampaign, evaluatePolicy, type PolicyContext } from "./policy";
 import { buildCampaign, recipientHash } from "./campaign";
 import type {
@@ -425,6 +426,17 @@ export function buildGrowthPipeline(signal: SourceSignal, now = Date.now()): Pip
   }
 
   const growthScores = scores(resolution.reading, resolution);
+  const supplyContext = supply(resolution.reading);
+  // Deep intelligence runs on every accepted signal: it is deterministic and
+  // cheap. Paid reasoning stays behind the tiering budget below.
+  const intelligence = analyseOpportunity({
+    text: signal.text,
+    reading: resolution.reading,
+    semantics,
+    supply: supplyContext,
+    hasContact: Boolean(signal.contact?.address),
+    now,
+  });
   const locationSlug =
     resolution.reading.location.kind === "place" ? resolution.reading.location.place.slug : null;
   const semanticRole =
@@ -444,7 +456,8 @@ export function buildGrowthPipeline(signal: SourceSignal, now = Date.now()): Pip
     painPoints: semantics.painPoints,
     audience: audience(resolution.reading, semantics, items),
     fit: fit(resolution),
-    supply: supply(resolution.reading),
+    supply: supplyContext,
+    intelligence,
     scores: growthScores,
     decision: decision(resolution.reading, growthScores),
     status: resolution.opportunity ? "ACTIONABLE" : "OBSERVING",
@@ -544,6 +557,11 @@ export function mergeGrowthOpportunities(results: readonly PipelineResult[]): Gr
       latestSeen: Math.max(previous.latestSeen, opportunity.latestSeen),
       frequency: previous.frequency + opportunity.frequency,
       evidence: [...previous.evidence, ...opportunity.evidence].slice(0, 12),
+      // Repeat observations reinforce one dimension at a time rather than
+      // overwriting a stronger earlier reading.
+      ...(previous.intelligence && opportunity.intelligence
+        ? { intelligence: mergeIntelligence(previous.intelligence, opportunity.intelligence) }
+        : { intelligence: opportunity.intelligence ?? previous.intelligence }),
       scores:
         opportunity.scores.opportunity >= previous.scores.opportunity
           ? opportunity.scores

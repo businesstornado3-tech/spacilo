@@ -24,6 +24,9 @@ export const Route = createFileRoute("/tools")({
 });
 
 function ToolsPage() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  if (pathname !== "/tools") return <Outlet />;
+
   return (
     <MarketingLayout>
       <PageSection>

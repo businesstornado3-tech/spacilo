@@ -64,4 +64,32 @@ describe("discovery safety", () => {
     expect(result.reading.role).toBe("prospective_host");
     expect(result.indexation.status).not.toBe("NOINDEX");
   });
+
+  it("keeps business equipment out of the student-storage cluster", () => {
+    const result = resolveDiscovery("store business equipment");
+    expect(result.reading.segment).toBe("business");
+    expect(result.reading.segment).not.toBe("student");
+    expect(result.cluster?.id).toBe("use_case_business_stock");
+    expect(result.destination).toBe("/guides/business-stock-storage");
+  });
+
+  it("recognises student belongings without inventing local supply", () => {
+    const result = resolveDiscovery("store my things over summer");
+    expect(result.reading.segment).toBe("student");
+    expect(result.cluster?.id).toBe("use_case_student_storage");
+    expect(result.indexation.status).toBe("INDEX");
+  });
+
+  it("records an unmatched but actionable query as an opportunity", () => {
+    const result = resolveDiscovery("where can I keep my musical instruments");
+    expect(result.destination).toBeTruthy();
+    expect(result.opportunity).toBeTruthy();
+    expect(result.explanation.join(" ")).toContain("capability:");
+  });
+
+  it("does not make a supply claim for a host asking about a named place", () => {
+    const result = resolveDiscovery("can I earn from my garage in Oxford");
+    expect(result.reading.role).toBe("prospective_host");
+    expect(result.indexation.reasons).not.toContain("supply_claim_without_supply");
+  });
 });

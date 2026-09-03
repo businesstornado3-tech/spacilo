@@ -231,7 +231,10 @@ function readAudiences(input: IntelligenceInput): Dimension<readonly GrowthRole[
 /* --------------------------------------------------------------- location */
 
 const POSTCODE_DISTRICT = /\b([A-Z]{1,2}\d{1,2}[A-Z]?)\b/;
-const FROM_TO = /\bfrom\s+([a-z][a-z\s-]{2,24}?)\s+to\s+([a-z][a-z\s-]{2,24})\b/;
+// Stops the destination at the first connective so "to leeds and need space"
+// yields "leeds" rather than swallowing the rest of the sentence.
+const FROM_TO =
+  /\bfrom\s+([a-z][a-z\s-]{2,24}?)\s+to\s+([a-z][a-z-]{2,24}(?:\s+(?!and\b|but\b|for\b|in\b|on\b|so\b|because\b|with\b|next\b|this\b|need\b|then\b)[a-z][a-z-]{1,24}){0,2})/;
 
 function readLocationIntelligence(text: string, input: IntelligenceInput): LocationIntelligence {
   const reading = input.reading.location;
@@ -331,7 +334,7 @@ function readAssets(input: IntelligenceInput): Dimension<readonly string[]> {
 
 const CONTEXT_PATTERNS: readonly (readonly [string, RegExp])[] = [
   ["property_sale", /\b(selling|sold|completion|exchange|viewings?)\b/],
-  ["renovation", /\b(renovat|refurb|building work|extension|decorating|damp|flood)\b/],
+  ["renovation", /\b(renovat\w*|refurb\w*|building work|extension|decorating|damp|flood\w*)\b/],
   ["bereavement_or_probate", /\b(probate|passed away|inherited|estate)\b/],
   ["downsizing", /\b(downsiz|smaller (?:place|house|flat))\b/],
   ["new_baby_or_family_change", /\b(baby|nursery|new arrival|moving in together|separating|divorce)\b/],

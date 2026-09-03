@@ -60,6 +60,12 @@ import {
   type AiStage,
 } from "@/lib/admin/ai-funnels";
 import { buildAttention, isAllClear, SEVERITY_LABEL, type AlertSeverity } from "@/lib/admin/attention";
+import {
+  useGrowthOpportunities,
+  useGrowthInsights,
+  useRefreshGrowthRadar,
+  type GrowthOpportunityRow,
+} from "@/hooks/useGrowthRadar";
 
 const title = "Founder dashboard — " + brand.name;
 const description = "Internal operational overview of traffic, accounts, marketplace activity and finances.";
@@ -161,6 +167,26 @@ const SEVERITY_TONE: Record<AlertSeverity, "error" | "warning" | "info"> = {
   attention: "warning",
   informational: "info",
 };
+
+/** Reads persisted radar JSON defensively — a missing field never renders a guess. */
+function growthText(source: Record<string, unknown> | null, key: string): string | null {
+  const value = source?.[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function growthSummary(row: GrowthOpportunityRow): string {
+  return growthText(row.situation, "summary") ?? "Unclassified need";
+}
+
+function growthRoleLabel(row: GrowthOpportunityRow): string {
+  const primary = growthText(row.audience, "primary");
+  return primary ? primary.replaceAll("_", " ").toLowerCase() : "audience unknown";
+}
+
+function growthScoreLabel(row: GrowthOpportunityRow): string {
+  const score = row.scores?.["opportunity"];
+  return typeof score === "number" && Number.isFinite(score) ? `${Math.round(score)}/100` : "—";
+}
 
 function AdminDashboardRoute() {
   const admin = useIsPlatformAdmin();

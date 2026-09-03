@@ -5,6 +5,13 @@ import path from "node:path";
 import { PUBLIC_ROUTES, PRIVATE_ROUTE_PREFIXES, isPrivateRoute } from "@/lib/seo/routes";
 import { publicRouteMeta, privateRouteMeta, canonicalUrl } from "@/lib/seo/meta";
 import { organizationJsonLd, websiteJsonLd, listingJsonLd } from "@/lib/seo/structured-data";
+import { marketingNav } from "@/config/navigation";
+import { capabilityIndex } from "@/lib/discovery/linking";
+import { CAPABILITIES } from "@/lib/discovery/capabilities";
+import { GUIDE_CLUSTERS } from "@/lib/discovery/clusters";
+import { Route as ToolsRoute } from "@/routes/tools";
+import { Route as GuidesRoute } from "@/routes/guides";
+import { Route as AboutRoute } from "@/routes/about";
 
 function read(p: string) {
   return fs.readFileSync(path.resolve(process.cwd(), p), "utf8");

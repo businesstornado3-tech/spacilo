@@ -11,10 +11,15 @@ const title = `${brand.name} tools`;
 const description = "Explore EarnRoom tools for belongings, spaces, storage fit and finding published storage nearby.";
 
 export const Route = createFileRoute("/tools")({
-  head: () => ({
-    ...publicRouteMeta({ title, description, path: "/tools" }),
-    scripts: [jsonLdScript(itemListJsonLd(capabilityIndex().map((link) => ({ name: link.label, path: link.to })))), jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Tools", path: "/tools" }]))],
-  }),
+  head: ({ matches }) => {
+    const base = publicRouteMeta({ title, description, path: "/tools" });
+    const isChildPage = matches.some((match) => match.routeId === "/tools/$slug");
+    return {
+      ...base,
+      links: isChildPage ? [] : base.links,
+      scripts: [jsonLdScript(itemListJsonLd(capabilityIndex().map((link) => ({ name: link.label, path: link.to })))), jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Tools", path: "/tools" }]))],
+    };
+  },
   component: ToolsPage,
 });
 

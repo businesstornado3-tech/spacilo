@@ -21,6 +21,9 @@ export interface NavItem {
 
 export const marketingNav: NavItem[] = [
   { label: "Find Storage", to: "/find-storage" },
+  { label: "Discover", to: "/discover" },
+  { label: "Tools", to: "/tools" },
+  { label: "Guides", to: "/guides" },
   { label: "List Your Space", to: "/list-space" },
   { label: "How It Works", to: "/how-it-works" },
   { label: "Trust & Safety", to: "/trust" },

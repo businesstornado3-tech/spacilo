@@ -11,7 +11,15 @@ const title = `${brand.name} guides`;
 const description = "Practical guidance for organising belongings, planning storage and making useful space work harder.";
 
 export const Route = createFileRoute("/guides")({
-  head: () => ({ ...publicRouteMeta({ title, description, path: "/guides" }), scripts: [jsonLdScript(itemListJsonLd(GUIDE_CLUSTERS.map((cluster) => ({ name: cluster.title, path: cluster.path })))), jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Guides", path: "/guides" }]))] }),
+  head: ({ matches }) => {
+    const base = publicRouteMeta({ title, description, path: "/guides" });
+    const isChildPage = matches.some((match) => match.routeId === "/guides/$slug");
+    return {
+      ...base,
+      links: isChildPage ? [] : base.links,
+      scripts: [jsonLdScript(itemListJsonLd(GUIDE_CLUSTERS.map((cluster) => ({ name: cluster.title, path: cluster.path })))), jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Guides", path: "/guides" }]))],
+    };
+  },
   component: GuidesPage,
 });
 

@@ -11,10 +11,13 @@ import {
   readLocation,
   type LocationReading,
 } from "./locations";
+import { readConcepts, type ConceptReading } from "./concepts";
 import type {
+  AudienceSegment,
   BelongingCategory,
   JourneyStage,
   Objective,
+  ProblemConcept,
   Signal,
   SpaceKind,
   Timeframe,

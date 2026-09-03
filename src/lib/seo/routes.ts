@@ -38,6 +38,9 @@ export const PUBLIC_ROUTES: readonly PublicRouteEntry[] = [
   { path: "/legal/ai-disclaimer", label: "AI disclaimer" },
   { path: "/spacefit/stuff", label: "Scan My Stuff" },
   { path: "/spacefit/space", label: "Scan My Space" },
+  { path: "/discover", label: "Discovery" },
+  { path: "/tools", label: "EarnRoom tools" },
+  { path: "/guides", label: "Storage guides" },
 ] as const;
 
 /**

@@ -145,3 +145,15 @@ export function locationLabel(reading: LocationReading): string | null {
       return null;
   }
 }
+
+/** Matches a published listing using only its approximate public area. */
+export function listingMatchesPlace(
+  listing: { approximate_area?: string | null; postcode_district?: string | null },
+  place: UkPlace | null,
+): boolean {
+  if (!place) return false;
+  const area = listing.approximate_area?.trim().toLowerCase() ?? "";
+  if (!area) return false;
+  const names = [place.name, ...(place.aliases ?? [])].map((value) => value.toLowerCase());
+  return names.some((name) => area === name || area.includes(name) || name.includes(area));
+}

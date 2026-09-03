@@ -134,6 +134,30 @@ export function aggregateRatingJsonLd(averageRating: number | null, reviewCount:
   };
 }
 
+export function webPageJsonLd(input: { name: string; description: string; path: string }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: input.name,
+    description: input.description,
+    url: `${siteOrigin()}${input.path === "/" ? "" : input.path}`,
+    isPartOf: { "@type": "WebSite", name: brand.name, url: siteOrigin() },
+  };
+}
+
+export function itemListJsonLd(entries: readonly { name: string; path: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: entries.map((entry, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: entry.name,
+      url: `${siteOrigin()}${entry.path === "/" ? "" : entry.path}`,
+    })),
+  };
+}
+
 /** Renders a JSON-LD object as a router `scripts` entry. */
 export function jsonLdScript(data: unknown) {
   return {

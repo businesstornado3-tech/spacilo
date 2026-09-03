@@ -13,6 +13,8 @@
  */
 import { PUBLIC_ROUTES, isPrivateRoute } from "@/lib/seo/routes";
 import { canonicalUrl } from "@/lib/seo/meta";
+import { CAPABILITIES } from "@/lib/discovery/capabilities";
+import { GUIDE_CLUSTERS } from "@/lib/discovery/clusters";
 
 export type SitemapListing = {
   id: string;
@@ -74,6 +76,19 @@ export function buildSitemapXml(listings: readonly SitemapListing[] = []): strin
     }),
   );
 
+  const discoveryEntries = [
+    ...CAPABILITIES.map((capability) => urlXml({
+      loc: canonicalUrl(`/tools/${capability.slug}`),
+      changefreq: "weekly",
+      priority: "0.7",
+    })),
+    ...GUIDE_CLUSTERS.map((cluster) => urlXml({
+      loc: canonicalUrl(cluster.path),
+      changefreq: "weekly",
+      priority: "0.6",
+    })),
+  ];
+
   const listingEntries = listings.filter(hasUsableLocation).map((listing) =>
     urlXml({
       loc: canonicalUrl(`/spaces/${listing.id}`),
@@ -87,6 +102,7 @@ export function buildSitemapXml(listings: readonly SitemapListing[] = []): strin
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     ...staticEntries,
+    ...discoveryEntries,
     ...listingEntries,
     "</urlset>",
     "",

@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
+import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as FindStorageRouteImport } from './routes/find-storage'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GetStartedRouteImport } from './routes/get-started'
+import { Route as GuidesRouteImport } from './routes/guides'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ListSpaceRouteImport } from './routes/list-space'
 import { Route as LoginRouteImport } from './routes/login'
@@ -24,6 +26,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StoragePolicyRouteImport } from './routes/storage-policy'
+import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as AuthenticatedHostRouteImport } from './routes/_authenticated.host'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated.notifications'
@@ -33,11 +36,14 @@ import { Route as AuthenticatedRenterRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSpacefitRouteImport } from './routes/_authenticated.spacefit'
 import { Route as ApiSpaceplannerVisualiseRouteImport } from './routes/api/spaceplanner-visualise'
 import { Route as ApiVisionDetectRouteImport } from './routes/api/vision-detect'
+import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as LegalIndexRouteImport } from './routes/legal.index'
 import { Route as LegalDocRouteImport } from './routes/legal.$doc'
 import { Route as SpacefitSpaceRouteImport } from './routes/spacefit.space'
 import { Route as SpacefitStuffRouteImport } from './routes/spacefit.stuff'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
+import { Route as StorageLocationRouteImport } from './routes/storage.$location'
+import { Route as ToolsSlugRouteImport } from './routes/tools.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated.admin.index'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated.admin.dashboard'
 import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated.host.index'
@@ -94,6 +100,11 @@ const DesignSystemRoute = DesignSystemRouteImport.update({
   path: '/design-system',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DiscoverRoute = DiscoverRouteImport.update({
+  id: '/discover',
+  path: '/discover',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FindStorageRoute = FindStorageRouteImport.update({
   id: '/find-storage',
   path: '/find-storage',
@@ -107,6 +118,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const GetStartedRoute = GetStartedRouteImport.update({
   id: '/get-started',
   path: '/get-started',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuidesRoute = GuidesRouteImport.update({
+  id: '/guides',
+  path: '/guides',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HowItWorksRoute = HowItWorksRouteImport.update({
@@ -152,6 +168,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const StoragePolicyRoute = StoragePolicyRouteImport.update({
   id: '/storage-policy',
   path: '/storage-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsRoute = ToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrustRoute = TrustRouteImport.update({
@@ -201,6 +222,11 @@ const ApiVisionDetectRoute = ApiVisionDetectRouteImport.update({
   path: '/api/vision-detect',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuidesSlugRoute = GuidesSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => GuidesRoute,
+} as any)
 const LegalIndexRoute = LegalIndexRouteImport.update({
   id: '/legal/',
   path: '/legal/',
@@ -225,6 +251,16 @@ const SpacesSpaceIdRoute = SpacesSpaceIdRouteImport.update({
   id: '/spaces/$spaceId',
   path: '/spaces/$spaceId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const StorageLocationRoute = StorageLocationRouteImport.update({
+  id: '/storage/$location',
+  path: '/storage/$location',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsSlugRoute = ToolsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ToolsRoute,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/admin/',
@@ -471,9 +507,11 @@ const AuthenticatedRenterRequestsRequestIdBookingRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/design-system': typeof DesignSystemRoute
+  '/discover': typeof DiscoverRoute
   '/find-storage': typeof FindStorageRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/get-started': typeof GetStartedRoute
+  '/guides': typeof GuidesRouteWithChildren
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
@@ -483,6 +521,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/storage-policy': typeof StoragePolicyRoute
+  '/tools': typeof ToolsRouteWithChildren
   '/trust': typeof TrustRoute
   '/host': typeof AuthenticatedHostRouteWithChildren
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -492,10 +531,13 @@ export interface FileRoutesByFullPath {
   '/spacefit': typeof AuthenticatedSpacefitRoute
   '/api/spaceplanner-visualise': typeof ApiSpaceplannerVisualiseRoute
   '/api/vision-detect': typeof ApiVisionDetectRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$doc': typeof LegalDocRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/storage/$location': typeof StorageLocationRoute
+  '/tools/$slug': typeof ToolsSlugRoute
   '/legal/': typeof LegalIndexRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
@@ -542,9 +584,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/design-system': typeof DesignSystemRoute
+  '/discover': typeof DiscoverRoute
   '/find-storage': typeof FindStorageRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/get-started': typeof GetStartedRoute
+  '/guides': typeof GuidesRouteWithChildren
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
@@ -554,6 +598,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/storage-policy': typeof StoragePolicyRoute
+  '/tools': typeof ToolsRouteWithChildren
   '/trust': typeof TrustRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/planner': typeof AuthenticatedPlannerRoute
@@ -561,10 +606,13 @@ export interface FileRoutesByTo {
   '/spacefit': typeof AuthenticatedSpacefitRoute
   '/api/spaceplanner-visualise': typeof ApiSpaceplannerVisualiseRoute
   '/api/vision-detect': typeof ApiVisionDetectRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$doc': typeof LegalDocRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/storage/$location': typeof StorageLocationRoute
+  '/tools/$slug': typeof ToolsSlugRoute
   '/legal': typeof LegalIndexRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
@@ -612,9 +660,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/design-system': typeof DesignSystemRoute
+  '/discover': typeof DiscoverRoute
   '/find-storage': typeof FindStorageRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/get-started': typeof GetStartedRoute
+  '/guides': typeof GuidesRouteWithChildren
   '/how-it-works': typeof HowItWorksRoute
   '/list-space': typeof ListSpaceRoute
   '/login': typeof LoginRoute
@@ -624,6 +674,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/storage-policy': typeof StoragePolicyRoute
+  '/tools': typeof ToolsRouteWithChildren
   '/trust': typeof TrustRoute
   '/_authenticated/host': typeof AuthenticatedHostRouteWithChildren
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -633,10 +684,13 @@ export interface FileRoutesById {
   '/_authenticated/spacefit': typeof AuthenticatedSpacefitRoute
   '/api/spaceplanner-visualise': typeof ApiSpaceplannerVisualiseRoute
   '/api/vision-detect': typeof ApiVisionDetectRoute
+  '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$doc': typeof LegalDocRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/storage/$location': typeof StorageLocationRoute
+  '/tools/$slug': typeof ToolsSlugRoute
   '/legal/': typeof LegalIndexRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/host/bookings': typeof AuthenticatedHostBookingsRoute
@@ -685,9 +739,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/design-system'
+    | '/discover'
     | '/find-storage'
     | '/forgot-password'
     | '/get-started'
+    | '/guides'
     | '/how-it-works'
     | '/list-space'
     | '/login'
@@ -697,6 +753,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/storage-policy'
+    | '/tools'
     | '/trust'
     | '/host'
     | '/notifications'
@@ -706,10 +763,13 @@ export interface FileRouteTypes {
     | '/spacefit'
     | '/api/spaceplanner-visualise'
     | '/api/vision-detect'
+    | '/guides/$slug'
     | '/legal/$doc'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
+    | '/storage/$location'
+    | '/tools/$slug'
     | '/legal/'
     | '/admin/dashboard'
     | '/host/bookings'
@@ -756,9 +816,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/design-system'
+    | '/discover'
     | '/find-storage'
     | '/forgot-password'
     | '/get-started'
+    | '/guides'
     | '/how-it-works'
     | '/list-space'
     | '/login'
@@ -768,6 +830,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/storage-policy'
+    | '/tools'
     | '/trust'
     | '/notifications'
     | '/planner'
@@ -775,10 +838,13 @@ export interface FileRouteTypes {
     | '/spacefit'
     | '/api/spaceplanner-visualise'
     | '/api/vision-detect'
+    | '/guides/$slug'
     | '/legal/$doc'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
+    | '/storage/$location'
+    | '/tools/$slug'
     | '/legal'
     | '/admin/dashboard'
     | '/host/bookings'
@@ -825,9 +891,11 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/design-system'
+    | '/discover'
     | '/find-storage'
     | '/forgot-password'
     | '/get-started'
+    | '/guides'
     | '/how-it-works'
     | '/list-space'
     | '/login'
@@ -837,6 +905,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/storage-policy'
+    | '/tools'
     | '/trust'
     | '/_authenticated/host'
     | '/_authenticated/notifications'
@@ -846,10 +915,13 @@ export interface FileRouteTypes {
     | '/_authenticated/spacefit'
     | '/api/spaceplanner-visualise'
     | '/api/vision-detect'
+    | '/guides/$slug'
     | '/legal/$doc'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
+    | '/storage/$location'
+    | '/tools/$slug'
     | '/legal/'
     | '/_authenticated/admin/dashboard'
     | '/_authenticated/host/bookings'
@@ -898,9 +970,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   DesignSystemRoute: typeof DesignSystemRoute
+  DiscoverRoute: typeof DiscoverRoute
   FindStorageRoute: typeof FindStorageRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GetStartedRoute: typeof GetStartedRoute
+  GuidesRoute: typeof GuidesRouteWithChildren
   HowItWorksRoute: typeof HowItWorksRoute
   ListSpaceRoute: typeof ListSpaceRoute
   LoginRoute: typeof LoginRoute
@@ -910,6 +984,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StoragePolicyRoute: typeof StoragePolicyRoute
+  ToolsRoute: typeof ToolsRouteWithChildren
   TrustRoute: typeof TrustRoute
   ApiSpaceplannerVisualiseRoute: typeof ApiSpaceplannerVisualiseRoute
   ApiVisionDetectRoute: typeof ApiVisionDetectRoute
@@ -917,6 +992,7 @@ export interface RootRouteChildren {
   SpacefitSpaceRoute: typeof SpacefitSpaceRoute
   SpacefitStuffRoute: typeof SpacefitStuffRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
+  StorageLocationRoute: typeof StorageLocationRoute
   LegalIndexRoute: typeof LegalIndexRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPayoutsReleaseRoute: typeof ApiPublicPayoutsReleaseRoute
@@ -946,6 +1022,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DesignSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/discover': {
+      id: '/discover'
+      path: '/discover'
+      fullPath: '/discover'
+      preLoaderRoute: typeof DiscoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/find-storage': {
       id: '/find-storage'
       path: '/find-storage'
@@ -965,6 +1048,13 @@ declare module '@tanstack/react-router' {
       path: '/get-started'
       fullPath: '/get-started'
       preLoaderRoute: typeof GetStartedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guides': {
+      id: '/guides'
+      path: '/guides'
+      fullPath: '/guides'
+      preLoaderRoute: typeof GuidesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/how-it-works': {
@@ -1030,6 +1120,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoragePolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tools': {
+      id: '/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof ToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trust': {
       id: '/trust'
       path: '/trust'
@@ -1093,6 +1190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiVisionDetectRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guides/$slug': {
+      id: '/guides/$slug'
+      path: '/$slug'
+      fullPath: '/guides/$slug'
+      preLoaderRoute: typeof GuidesSlugRouteImport
+      parentRoute: typeof GuidesRoute
+    }
     '/legal/': {
       id: '/legal/'
       path: '/legal'
@@ -1127,6 +1231,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/spaces/$spaceId'
       preLoaderRoute: typeof SpacesSpaceIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/storage/$location': {
+      id: '/storage/$location'
+      path: '/storage/$location'
+      fullPath: '/storage/$location'
+      preLoaderRoute: typeof StorageLocationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/$slug': {
+      id: '/tools/$slug'
+      path: '/$slug'
+      fullPath: '/tools/$slug'
+      preLoaderRoute: typeof ToolsSlugRouteImport
+      parentRoute: typeof ToolsRoute
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
@@ -1560,13 +1678,36 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface GuidesRouteChildren {
+  GuidesSlugRoute: typeof GuidesSlugRoute
+}
+
+const GuidesRouteChildren: GuidesRouteChildren = {
+  GuidesSlugRoute: GuidesSlugRoute,
+}
+
+const GuidesRouteWithChildren =
+  GuidesRoute._addFileChildren(GuidesRouteChildren)
+
+interface ToolsRouteChildren {
+  ToolsSlugRoute: typeof ToolsSlugRoute
+}
+
+const ToolsRouteChildren: ToolsRouteChildren = {
+  ToolsSlugRoute: ToolsSlugRoute,
+}
+
+const ToolsRouteWithChildren = ToolsRoute._addFileChildren(ToolsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   DesignSystemRoute: DesignSystemRoute,
+  DiscoverRoute: DiscoverRoute,
   FindStorageRoute: FindStorageRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   GetStartedRoute: GetStartedRoute,
+  GuidesRoute: GuidesRouteWithChildren,
   HowItWorksRoute: HowItWorksRoute,
   ListSpaceRoute: ListSpaceRoute,
   LoginRoute: LoginRoute,
@@ -1576,6 +1717,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StoragePolicyRoute: StoragePolicyRoute,
+  ToolsRoute: ToolsRouteWithChildren,
   TrustRoute: TrustRoute,
   ApiSpaceplannerVisualiseRoute: ApiSpaceplannerVisualiseRoute,
   ApiVisionDetectRoute: ApiVisionDetectRoute,
@@ -1583,6 +1725,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpacefitSpaceRoute: SpacefitSpaceRoute,
   SpacefitStuffRoute: SpacefitStuffRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,
+  StorageLocationRoute: StorageLocationRoute,
   LegalIndexRoute: LegalIndexRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPayoutsReleaseRoute: ApiPublicPayoutsReleaseRoute,

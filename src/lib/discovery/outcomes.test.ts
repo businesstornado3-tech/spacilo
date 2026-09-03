@@ -54,7 +54,7 @@ describe("outcome-led Discover", () => {
     expect(discover).toContain('to="/search"');
     expect(discover).toContain("GUIDE_CLUSTERS");
     expect(tools).toContain("capabilityIndex");
-    expect(tools).toContain("CAPABILITIES");
+    expect(tools).toContain("Understand your stuff, space and options.");
   });
 
   it("keeps the canonical and unique problem-oriented metadata", async () => {

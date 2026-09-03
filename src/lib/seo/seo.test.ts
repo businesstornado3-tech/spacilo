@@ -205,6 +205,17 @@ describe("sitemap document", () => {
     expect(xml).not.toMatch(/(?:lovable\.app|localhost)/);
   });
 
+  it("emits every canonical URL exactly once, including guide clusters", async () => {
+    const { buildSitemapXml } = await import("@/lib/seo/sitemap");
+    const xml = buildSitemapXml([
+      { id: "with-area", updated_at: null, approximate_area: "Southsea", postcode_district: "PO4" },
+    ]);
+    const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]!);
+    expect(locs.filter((loc) => loc === canonicalUrl("/guides/student-storage"))).toHaveLength(1);
+    expect(new Set(locs).size).toBe(locs.length);
+    expect(locs).toContain(canonicalUrl("/about"));
+  });
+
   it("emits lastmod only from a real page-specific timestamp", async () => {
     const { buildSitemapXml } = await import("@/lib/seo/sitemap");
     const xml = buildSitemapXml([

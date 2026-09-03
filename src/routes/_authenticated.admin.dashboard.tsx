@@ -60,6 +60,12 @@ import {
   type AiStage,
 } from "@/lib/admin/ai-funnels";
 import { buildAttention, isAllClear, SEVERITY_LABEL, type AlertSeverity } from "@/lib/admin/attention";
+import {
+  useGrowthOpportunities,
+  useGrowthInsights,
+  useRefreshGrowthRadar,
+  type GrowthOpportunityRow,
+} from "@/hooks/useGrowthRadar";
 
 const title = "Founder dashboard — " + brand.name;
 const description = "Internal operational overview of traffic, accounts, marketplace activity and finances.";
@@ -162,6 +168,26 @@ const SEVERITY_TONE: Record<AlertSeverity, "error" | "warning" | "info"> = {
   informational: "info",
 };
 
+/** Reads persisted radar JSON defensively — a missing field never renders a guess. */
+function growthText(source: Record<string, unknown> | null, key: string): string | null {
+  const value = source?.[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function growthSummary(row: GrowthOpportunityRow): string {
+  return growthText(row.situation, "summary") ?? "Unclassified need";
+}
+
+function growthRoleLabel(row: GrowthOpportunityRow): string {
+  const primary = growthText(row.audience, "primary");
+  return primary ? primary.replaceAll("_", " ").toLowerCase() : "audience unknown";
+}
+
+function growthScoreLabel(row: GrowthOpportunityRow): string {
+  const score = row.scores?.["opportunity"];
+  return typeof score === "number" && Number.isFinite(score) ? `${Math.round(score)}/100` : "—";
+}
+
 function AdminDashboardRoute() {
   const admin = useIsPlatformAdmin();
   const [rangeKey, setRangeKey] = React.useState<DateRangeKey>("30d");
@@ -172,6 +198,11 @@ function AdminDashboardRoute() {
   const kpis = useAdminKpis(range, enabled);
   const trends = useAdminTrends(range, enabled);
   const breakdowns = useAdminBreakdowns(range, enabled);
+  const opportunities = useGrowthOpportunities(enabled);
+  const insights = useGrowthInsights(enabled);
+  const refreshRadar = useRefreshGrowthRadar();
+  const opportunityRows = opportunities.data ?? [];
+  const insightRows = insights.data ?? [];
 
   if (admin.isLoading) {
     return (
@@ -600,6 +631,73 @@ function AdminDashboardRoute() {
                   </ul>
                 </div>
               </div>
+            </div>
+          )}
+        </AdminSectionBlock>
+
+        {/* ------------------------------------------------------ Growth radar */}
+        <AdminSectionBlock
+          id="growth"
+          title="Growth radar"
+          note="Non-identifying first-party behaviour, grouped into underlying needs. The radar observes and scores only — it never contacts anyone and never claims a space is available."
+          actions={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => refreshRadar.mutate(30)}
+              disabled={refreshRadar.isPending}
+            >
+              {refreshRadar.isPending ? "Refreshing…" : "Refresh radar"}
+            </Button>
+          }
+        >
+          {opportunities.isError || insights.isError ? (
+            <ErrorState
+              title="Growth radar data couldn't be loaded"
+              description="No opportunity or insight figures have been substituted."
+              onRetry={() => void opportunities.refetch()}
+            />
+          ) : opportunities.isLoading ? (
+            <Skeleton className="h-24 w-full" />
+          ) : opportunityRows.length === 0 ? (
+            <EmptyState
+              title="No opportunities detected yet"
+              description="Refresh the radar once EarnRoom has recorded production activity."
+            />
+          ) : (
+            <div className="space-y-4">
+              <ul className="space-y-2">
+                {opportunityRows.slice(0, 10).map((row) => (
+                  <li
+                    key={row.key}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card p-3"
+                  >
+                    <span className="min-w-0">
+                      <span className="block type-body-sm font-medium">{growthSummary(row)}</span>
+                      <span className="block type-body-xs text-muted-foreground">
+                        {growthRoleLabel(row)} · seen {formatCount(row.frequency)}×
+                      </span>
+                    </span>
+                    <Badge variant="neutral">{growthScoreLabel(row)}</Badge>
+                  </li>
+                ))}
+              </ul>
+
+              {insightRows.length > 0 ? (
+                <div>
+                  <h3 className="type-label">Unmet needs to review</h3>
+                  <ul className="mt-2 space-y-1.5">
+                    {insightRows.map((insight) => (
+                      <li key={insight.insight_key} className="flex justify-between gap-3 type-body-sm">
+                        <span className="min-w-0 truncate">{insight.title}</span>
+                        <span className="tabular-nums text-muted-foreground">
+                          {formatCount(insight.evidence_count)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
           )}
         </AdminSectionBlock>

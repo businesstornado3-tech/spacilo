@@ -26,12 +26,12 @@ export function SiteHeader({ className }: { className?: string }) {
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
         <Logo variant="header" />
 
-        <nav aria-label="Main" className="ml-6 hidden items-center gap-1 lg:flex">
+        <nav aria-label="Main" className="ml-6 hidden min-w-0 items-center gap-0.5 xl:flex">
           {marketingNav.map((item) => (
             <Link
               key={item.to}
               to={item.to}
-              className="rounded-lg px-3 py-2 type-nav text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="whitespace-nowrap rounded-lg px-2 py-2 text-[0.9375rem] font-semibold leading-snug text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               activeProps={{ className: "text-foreground bg-secondary" }}
             >
               {item.label}
@@ -39,7 +39,7 @@ export function SiteHeader({ className }: { className?: string }) {
           ))}
         </nav>
 
-        <div className="ml-auto hidden items-center gap-2 lg:flex">
+        <div className="ml-auto hidden items-center gap-2 xl:flex">
           {loading ? null : signedIn ? (
             <>
               <Button variant="secondary" asChild>
@@ -59,7 +59,7 @@ export function SiteHeader({ className }: { className?: string }) {
           )}
         </div>
 
-        <div className="ml-auto flex items-center gap-2 lg:hidden">
+        <div className="ml-auto flex items-center gap-2 xl:hidden">
           {signedIn ? (
             <Button size="sm" variant="secondary" asChild>
               <Link to={dashboardTo}>Dashboard</Link>
@@ -83,7 +83,7 @@ export function SiteHeader({ className }: { className?: string }) {
       </div>
 
       {menuOpen ? (
-        <div id="mobile-menu" className="border-t border-border bg-background lg:hidden">
+        <div id="mobile-menu" className="border-t border-border bg-background xl:hidden">
           <nav aria-label="Mobile" className="mx-auto max-w-6xl space-y-1 px-4 py-3 sm:px-6">
             {marketingNav.map((item) => (
               <Link

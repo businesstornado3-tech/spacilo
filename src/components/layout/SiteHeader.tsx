@@ -26,12 +26,12 @@ export function SiteHeader({ className }: { className?: string }) {
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
         <Logo variant="header" />
 
-        <nav aria-label="Main" className="ml-6 hidden items-center gap-1 lg:flex">
+        <nav aria-label="Main" className="ml-6 hidden min-w-0 items-center gap-0.5 xl:flex">
           {marketingNav.map((item) => (
             <Link
               key={item.to}
               to={item.to}
-              className="rounded-lg px-3 py-2 type-nav text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="whitespace-nowrap rounded-lg px-2 py-2 text-[0.9375rem] font-semibold leading-snug text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               activeProps={{ className: "text-foreground bg-secondary" }}
             >
               {item.label}

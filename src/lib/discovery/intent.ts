@@ -244,7 +244,11 @@ export function normaliseQuery(raw: string): string {
   return raw.toLowerCase().replace(/[^\p{L}\p{N}\s'-]/gu, " ").replace(/\s+/g, " ").trim();
 }
 
-function readRole(text: string, objectives: readonly Signal<Objective>[]): UserRole {
+function readRole(
+  text: string,
+  objectives: readonly Signal<Objective>[],
+  concepts: ConceptReading,
+): UserRole {
   const hostHit = HOST_SIGNALS.some((s) => text.includes(s));
   const renterHit = RENTER_SIGNALS.some((s) => text.includes(s));
   if (hostHit && !renterHit) {
@@ -252,6 +256,9 @@ function readRole(text: string, objectives: readonly Signal<Objective>[]): UserR
   }
   if (renterHit && !hostHit) return "renter";
   if (objectives.some((o) => o.value === "earn" || o.value === "list_space")) return "prospective_host";
+  if (concepts.ownsSpace && concepts.problems.some((problem) =>
+    ["underused_space", "monetisation_unknown", "commercial_space_optimisation"].includes(problem.value),
+  )) return "prospective_host";
   if (objectives.some((o) => o.value === "store" || o.value === "find")) return "renter";
   return "undetermined";
 }
@@ -287,7 +294,7 @@ export function readIntent(rawQuery: string): IntentReading {
   const belongings = collect(query, BELONGINGS_LEXICON);
   const spaces = collect(query, SPACE_LEXICON);
   const location = readLocation(rawQuery);
-  const role = readRole(query, objectives);
+  const role = readRole(query, objectives, concepts);
   const timeframe = readTimeframe(query);
   const stage = readStage(query, location, objectives);
 

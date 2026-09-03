@@ -62,8 +62,22 @@ function scoreCapability(cap: Capability, reading: IntentReading): CapabilityMat
     reasons.push(`location:${reading.location.kind}`);
   }
 
+  // Semantic problems tilt toward the smallest capability that can help.
+  for (const problem of reading.problems) {
+    const supports =
+      (cap.id === "space_estimate" && ["underused_space", "monetisation_unknown"].includes(problem.value)) ||
+      (cap.id === "space_scanner" && ["unknown_capacity", "commercial_space_optimisation", "underused_space"].includes(problem.value)) ||
+      (cap.id === "item_scanner" && ["disorganisation", "excess_inventory"].includes(problem.value)) ||
+      (cap.id === "location_search" && ["capacity_shortfall", "business_overflow", "needs_somewhere_to_store"].includes(problem.value)) ||
+      (cap.id === "spaceplanner" && ["capacity_shortfall", "unknown_capacity"].includes(problem.value));
+    if (supports) {
+      score += 0.1 * problem.weight;
+      reasons.push(`problem:${problem.value}`);
+    }
+  }
+
   // Space types and belongings tilt toward the tool that reads them.
-  if (reading.spaces.length > 0 && (cap.id === "space_scanner" || cap.id === "spaceplanner")) {
+  if (reading.spaces.length > 0 && (cap.id === "space_scanner" || cap.id === "spaceplanner" || cap.id === "space_estimate")) {
     score += 0.08;
     reasons.push("space_mentioned");
   }

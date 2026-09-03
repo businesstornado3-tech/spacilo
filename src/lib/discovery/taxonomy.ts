@@ -69,6 +69,23 @@ export type SpaceKind = Open<
   | "storage_unit"
 >;
 
+/** E. The underlying problem behind the words. Open by design. */
+export type ProblemConcept = Open<
+  | "underused_space"
+  | "unknown_capacity"
+  | "capacity_shortfall"
+  | "business_overflow"
+  | "excess_inventory"
+  | "commercial_space_optimisation"
+  | "monetisation_unknown"
+  | "disorganisation"
+  | "transition"
+  | "needs_somewhere_to_store"
+>;
+
+/** E2. Who the searcher is acting as, when the query supports a conclusion. */
+export type AudienceSegment = Open<"household" | "business" | "student" | "undetermined">;
+
 /** F. Time horizon. */
 export type Timeframe = Open<"short_term" | "long_term" | "temporary" | "moving_period" | "seasonal" | "unknown">;
 
@@ -76,6 +93,7 @@ export type Timeframe = Open<"short_term" | "long_term" | "temporary" | "moving_
 export type JourneyStage = Open<
   "discovery" | "education" | "planning" | "measurement" | "estimation" | "comparison" | "search" | "transaction" | "listing"
 >;
+
 
 /**
  * A single dimension reading with the evidence that produced it. Keeping the
@@ -105,6 +123,9 @@ export const INTENT_DIMENSIONS = [
   "location",
   "timeframe",
   "journey_stage",
+  "problem",
+  "segment",
 ] as const;
+
 
 export type IntentDimension = (typeof INTENT_DIMENSIONS)[number];

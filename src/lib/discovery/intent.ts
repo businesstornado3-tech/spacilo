@@ -11,10 +11,13 @@ import {
   readLocation,
   type LocationReading,
 } from "./locations";
+import { readConcepts, type ConceptReading } from "./concepts";
 import type {
+  AudienceSegment,
   BelongingCategory,
   JourneyStage,
   Objective,
+  ProblemConcept,
   Signal,
   SpaceKind,
   Timeframe,
@@ -201,6 +204,12 @@ export type IntentReading = {
   objectives: readonly Signal<Objective>[];
   belongings: readonly Signal<BelongingCategory>[];
   spaces: readonly Signal<SpaceKind>[];
+  problems: readonly Signal<ProblemConcept>[];
+  segment: AudienceSegment;
+  /** True when the query implies the person controls a physical space. */
+  ownsSpace: boolean;
+  /** Pattern ids that fired in the semantic concept layer. */
+  concepts: readonly string[];
   timeframe: Timeframe;
   location: LocationReading;
   stage: JourneyStage;
@@ -222,11 +231,24 @@ function collect<T extends string>(text: string, lexicon: Lexicon<T>): Signal<T>
   return [...found.values()].sort((a, b) => b.weight - a.weight || a.value.localeCompare(b.value));
 }
 
+function mergeSignals<T extends string>(base: readonly Signal<T>[], additions: readonly Signal<T>[]): Signal<T>[] {
+  const found = new Map<T, Signal<T>>();
+  for (const signal of [...base, ...additions]) {
+    const existing = found.get(signal.value);
+    if (!existing || existing.weight < signal.weight) found.set(signal.value, signal);
+  }
+  return [...found.values()].sort((a, b) => b.weight - a.weight || a.value.localeCompare(b.value));
+}
+
 export function normaliseQuery(raw: string): string {
   return raw.toLowerCase().replace(/[^\p{L}\p{N}\s'-]/gu, " ").replace(/\s+/g, " ").trim();
 }
 
-function readRole(text: string, objectives: readonly Signal<Objective>[]): UserRole {
+function readRole(
+  text: string,
+  objectives: readonly Signal<Objective>[],
+  concepts: ConceptReading,
+): UserRole {
   const hostHit = HOST_SIGNALS.some((s) => text.includes(s));
   const renterHit = RENTER_SIGNALS.some((s) => text.includes(s));
   if (hostHit && !renterHit) {
@@ -234,6 +256,9 @@ function readRole(text: string, objectives: readonly Signal<Objective>[]): UserR
   }
   if (renterHit && !hostHit) return "renter";
   if (objectives.some((o) => o.value === "earn" || o.value === "list_space")) return "prospective_host";
+  if (concepts.ownsSpace && concepts.problems.some((problem) =>
+    ["underused_space", "monetisation_unknown", "commercial_space_optimisation"].includes(problem.value),
+  )) return "prospective_host";
   if (objectives.some((o) => o.value === "store" || o.value === "find")) return "renter";
   return "undetermined";
 }
@@ -264,17 +289,25 @@ function readStage(
  */
 export function readIntent(rawQuery: string): IntentReading {
   const query = normaliseQuery(rawQuery);
-  const objectives = collect(query, OBJECTIVE_LEXICON);
+  const concepts: ConceptReading = readConcepts(query);
+  const objectives = mergeSignals(collect(query, OBJECTIVE_LEXICON), concepts.objectives);
   const belongings = collect(query, BELONGINGS_LEXICON);
   const spaces = collect(query, SPACE_LEXICON);
   const location = readLocation(rawQuery);
-  const role = readRole(query, objectives);
+  const role = readRole(query, objectives, concepts);
+  const segment = concepts.segment !== "undetermined"
+    ? concepts.segment
+    : belongings.some((item) => item.value === "student")
+      ? "student"
+      : belongings.some((item) => item.value === "business_inventory" || item.value === "equipment")
+        ? "business"
+        : "undetermined";
   const timeframe = readTimeframe(query);
   const stage = readStage(query, location, objectives);
 
   const evidenceCount =
-    objectives.length + belongings.length + spaces.length + (location.kind === "none" ? 0 : 1);
-  const strongest = objectives[0]?.weight ?? 0;
+    objectives.length + belongings.length + spaces.length + concepts.problems.length + (location.kind === "none" ? 0 : 1);
+  const strongest = objectives[0]?.weight ?? concepts.problems[0]?.weight ?? 0;
   const confidence = Math.min(1, Math.round((strongest * 0.6 + Math.min(evidenceCount, 4) * 0.1) * 100) / 100);
 
   return {
@@ -283,6 +316,10 @@ export function readIntent(rawQuery: string): IntentReading {
     objectives,
     belongings,
     spaces,
+    problems: concepts.problems,
+    segment,
+    ownsSpace: concepts.ownsSpace,
+    concepts: concepts.matched,
     timeframe,
     location,
     stage,
@@ -290,6 +327,7 @@ export function readIntent(rawQuery: string): IntentReading {
     unknown: evidenceCount === 0,
   };
 }
+
 
 /** Convenience: does this reading carry more than one distinct objective? */
 export function isMultiIntent(reading: IntentReading): boolean {

@@ -47,7 +47,10 @@ export function scoreOpportunity(input: ScoreInput): OpportunityScore {
   const supply = input.supply ?? NO_SUPPLY;
 
   const capabilityRelevance = plan.primary?.relevance ?? 0;
-  const locationRelevant = reading.location.kind !== "none";
+  // Marketplace supply is relevant to renters looking for a place, not hosts
+  // acquiring space listings. Host-location intent must not be penalised by a
+  // zero renter inventory count.
+  const locationRelevant = reading.role === "renter" && reading.location.kind !== "none";
 
   const factors: ScoreFactor[] = [
     {

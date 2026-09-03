@@ -357,6 +357,39 @@ export const CLUSTERS: readonly IntentCluster[] = [
       },
     ],
   },
+  {
+    id: "use_case_student_storage",
+    kind: "use_case",
+    path: "/guides/student-storage",
+    title: "Student storage between terms",
+    description: "Plan practical storage for your belongings when you are away from university between terms.",
+    question: "Where can I keep my things between university terms?",
+    primary: "location_search",
+    secondary: ["item_scanner", "spaceplanner"],
+    objectives: ["store", "find", "move"],
+    phrases: [
+      "student storage",
+      "university storage",
+      "storage between terms",
+      "storage between semesters",
+      "store my things over summer",
+    ],
+    publish: true,
+    sections: [
+      {
+        heading: "Plan for the gap between addresses",
+        body: "Student storage is usually a short transition: the dates between leaving one room and arriving at the next. Start with the belongings you actually need to keep, then check the host's minimum stay and collection arrangements.",
+      },
+      {
+        heading: "Check the space before you request it",
+        body: "Photograph or list your boxes, bags and furniture so you can estimate the volume. SpacePlanner can then help you check the confirmed items against a published space before you send a request.",
+      },
+      {
+        heading: "Availability depends on local hosts",
+        body: "EarnRoom only shows spaces hosts have published. Approximate location and price are shown before a request; exact addresses are shared only after a booking is confirmed.",
+      },
+    ],
+  },
 ];
 
 const BY_ID = new Map(CLUSTERS.map((c) => [c.id, c] as const));
@@ -386,6 +419,13 @@ export function matchCluster(reading: IntentReading): { cluster: IntentCluster; 
 
   for (const cluster of CLUSTERS) {
     let score = 0;
+    for (const problem of reading.problems) {
+      if (cluster.id === "problem_earn_from_unused_space" && ["underused_space", "monetisation_unknown"].includes(problem.value)) score += 0.9 * problem.weight;
+      if (cluster.id === "use_case_business_stock" && ["business_overflow", "excess_inventory", "commercial_space_optimisation"].includes(problem.value)) score += 0.9 * problem.weight;
+      if (cluster.id === "use_case_student_storage" && reading.segment === "student" && problem.value === "transition") score += 0.9 * problem.weight;
+    }
+    if (cluster.id === "use_case_business_stock" && reading.segment === "business") score += 1.8;
+    if (cluster.id === "use_case_student_storage" && reading.segment === "student") score += 1.8;
     for (const phrase of cluster.phrases) {
       if (reading.query.includes(phrase)) score += 1;
       // Partial credit when most words of a cluster phrase appear.

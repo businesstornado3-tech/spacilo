@@ -34,6 +34,9 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<GrowthRadarRefreshResult> => {
     const { supabase } = context;
 
+    // Keep the browser-session client for the admin check, then use the
+    // server-only service client for analytics ingestion. `analytics_events`
+    // intentionally has no browser read policy.
     const { data: isAdmin, error: adminError } = await supabase.rpc("is_platform_admin");
     if (adminError || isAdmin !== true) {
       throw new Error("You don't have access to this area.");

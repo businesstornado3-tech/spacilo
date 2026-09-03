@@ -193,12 +193,14 @@ export function readSemantics(rawText: string, reading: IntentReading): Semantic
   // Nothing recognised: keep the observation as an emergent need rather than
   // discarding a problem the product has simply never seen before.
   if (!primaryRule && reading.problems.length === 0) {
+    const rawEvidence = { quote: rawText.slice(0, 120), field: "raw_signal" } as EvidenceItem;
+    evidence.push(rawEvidence);
     painPoints.push({
       id: "emergent",
       label: "unclassified need",
       description: "An observed need that matches no known EarnRoom pattern.",
       confidence: Math.min(0.3, reading.confidence),
-      evidence: [{ quote: rawText.slice(0, 120), field: "raw_signal" }],
+      evidence: [rawEvidence],
       emergent: true,
     });
   }

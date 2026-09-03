@@ -140,47 +140,73 @@ function evidence(reading: IntentReading): Array<{ quote: string; field: string 
   return items;
 }
 
-function situation(reading: IntentReading, items: ReturnType<typeof evidence>): Situation {
-  const role = growthRole(reading.role, reading);
-  const problem = reading.problems[0]?.value ?? null;
+function situation(
+  reading: IntentReading,
+  semantics: SemanticReading,
+  items: ReturnType<typeof evidence>,
+): Situation {
+  const problem = semantics.problem ?? reading.problems[0]?.value ?? null;
   return {
-    summary: `${role.toLowerCase()} need: ${problem ?? reading.objectives[0]?.value ?? "storage or space help"}`,
+    summary: semantics.summary,
     achieving: reading.objectives[0]?.value ?? null,
     problem,
-    cause: null,
-    need: reading.objectives[0]?.value ?? null,
-    likelyNext: reading.stage,
-    urgency: reading.timeframe === "short_term" || reading.timeframe === "moving_period" ? "weeks" : "unknown",
+    cause: semantics.cause,
+    need: semantics.need ?? reading.objectives[0]?.value ?? null,
+    likelyNext: semantics.likelyNext ?? reading.stage,
+    urgency: semantics.urgency,
     belongings: reading.belongings.map((item) => item.value),
     spaces: reading.spaces.map((item) => item.value),
-    temporary: reading.timeframe === "temporary" || reading.timeframe === "moving_period",
-    residentialOrBusiness: reading.segment === "business" ? "business" : "residential",
+    temporary: semantics.temporary,
+    residentialOrBusiness:
+      semantics.situationType === "BUSINESS_OVERFLOW" || reading.segment === "business" ? "business" : "residential",
     location: {
       label: locationLabel(reading.location),
       slug: reading.location.kind === "place" ? reading.location.place.slug : null,
       kind: reading.location.kind,
     },
-    confidence: reading.confidence,
-    evidence: items,
+    confidence: Math.max(reading.confidence, semantics.confidence),
+    evidence: [...items, ...semantics.evidence].slice(0, 12),
     reading,
   };
 }
 
-function audience(reading: IntentReading, items: ReturnType<typeof evidence>): AudienceReading {
-  const primary = growthRole(reading.role, reading);
-  const roles = new Set<GrowthRole>([primary]);
-  if (reading.timeframe === "moving_period") roles.add("MOVING_TRANSITION");
+/**
+ * Audience is multi-dimensional on purpose: someone can be a moving household
+ * *and* a business, and forcing a single label loses the reason they searched.
+ */
+function audience(
+  reading: IntentReading,
+  semantics: SemanticReading,
+  items: ReturnType<typeof evidence>,
+): AudienceReading {
+  const fallback = growthRole(reading.role, reading);
+  const roles = new Set<GrowthRole>(semantics.roles.filter((role) => role !== "UNKNOWN"));
+  if (roles.size === 0) roles.add(fallback);
   if (reading.segment === "business") roles.add("BUSINESS");
   if (reading.segment === "student") roles.add("STUDENT");
+
+  // The situation the engine actually recognised wins over the generic reader.
+  const bySituation: Partial<Record<SemanticReading["situationType"], GrowthRole>> = {
+    HOST_UNDERUSED_SPACE: "HOST",
+    BUSINESS_OVERFLOW: "BUSINESS",
+    STUDENT_TRANSITION: "STUDENT",
+    MOVING_TRANSITION: "MOVING_TRANSITION",
+    PROPERTY_TRANSITION: "PROPERTY_RELATED",
+    RENTER_CAPACITY: "RENTER",
+  };
+  const primary = bySituation[semantics.situationType] ?? fallback;
+  roles.add(primary);
+
   return {
     roles: [...roles],
     primary,
     segment: reading.segment,
     discoveryRole: reading.role,
-    confidence: reading.confidence,
+    confidence: Math.max(reading.confidence, semantics.confidence),
     evidence: items,
   };
 }
+
 
 function fit(resolution: DiscoveryResolution): FitResult {
   const capabilities = resolution.plan.primary

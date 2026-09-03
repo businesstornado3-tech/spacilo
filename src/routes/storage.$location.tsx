@@ -15,7 +15,21 @@ import { track } from "@/lib/analytics/tracker";
 
 export const Route = createFileRoute("/storage/$location")({
   loader: ({ params }) => { const place = placeBySlug(params.location); if (!place) throw notFound(); return { place }; },
-  head: ({ params, loaderData }) => { const place = loaderData?.place ?? placeBySlug(params.location); if (!place) return { ...publicRouteMeta({ title: `Storage — ${brand.name}`, description: "Find published storage.", path: `/storage/${params.location}` }) }; const path = `/storage/${place.slug}`; const title = `Storage in ${place.name} — ${brand.name}`; const description = `See published storage spaces in ${place.name}, with approximate location, price and fit information.`; return { ...publicRouteMeta({ title, description, path }), scripts: [jsonLdScript(webPageJsonLd({ name: title, description, path })), jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Storage", path: "/search" }, { name: place.name, path }]))] }; },
+  head: ({ params, loaderData }) => {
+    const place = loaderData?.place ?? placeBySlug(params.location);
+    if (!place) return { ...publicRouteMeta({ title: `Storage — ${brand.name}`, description: "Find published storage.", path: `/storage/${params.location}` }) };
+    const path = `/storage/${place.slug}`;
+    const title = `Storage in ${place.name} — ${brand.name}`;
+    const description = `See published storage spaces in ${place.name}, with approximate location, price and fit information.`;
+    const meta = publicRouteMeta({ title, description, path });
+    return {
+      ...meta,
+      // Supply is loaded from real marketplace data in the browser. Until a
+      // server-side supply gate exists, never let a location shell be indexed.
+      meta: meta.meta.map((entry) => entry.name === "robots" ? { ...entry, content: "noindex, follow" } : entry),
+      scripts: [jsonLdScript(webPageJsonLd({ name: title, description, path })), jsonLdScript(breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Storage", path: "/search" }, { name: place.name, path }]))],
+    };
+  },
   component: LocationPage,
 });
 

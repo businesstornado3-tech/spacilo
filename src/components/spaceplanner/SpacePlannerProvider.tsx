@@ -188,11 +188,3 @@ export function SpacePlannerProvider({
 
   return <PlannerContext.Provider value={value}>{children}</PlannerContext.Provider>;
 }
-
-export function useSpacePlanner(): PlannerContextValue {
-  const context = React.useContext(PlannerContext);
-  if (!context) {
-    throw new Error("Planner components must be rendered inside a SpacePlannerProvider.");
-  }
-  return context;
-}

@@ -35,6 +35,16 @@ export type ResolveOptions = {
   duplicateOf?: string | null;
 };
 
+function locationDestination(reading: IntentReading): string | null {
+  if (reading.location.kind === "place" && reading.role === "renter") {
+    return `/storage/${reading.location.place.slug}`;
+  }
+  if (reading.location.kind === "near_me" || reading.location.kind === "postcode_district") {
+    return "/search";
+  }
+  return null;
+}
+
 export function resolveDiscovery(query: string, options: ResolveOptions = {}): DiscoveryResolution {
   const reading = readIntent(query);
   const plan = planCapabilities(reading);
@@ -50,7 +60,9 @@ export function resolveDiscovery(query: string, options: ResolveOptions = {}): D
     contentCompleteness: cluster?.sections?.length ? 1 : cluster ? 0.5 : 0,
   });
 
-  const claimsSupply = reading.location.kind !== "none";
+  // Only a renter's location request claims current marketplace supply. A host
+  // asking about a place is an acquisition need, not a supply result.
+  const claimsSupply = reading.role === "renter" && reading.location.kind !== "none";
   const indexation = decideIndexation({
     hasDedicatedPage: Boolean(cluster?.publish),
     hasReviewedContent: Boolean(cluster?.publish),
@@ -61,11 +73,11 @@ export function resolveDiscovery(query: string, options: ResolveOptions = {}): D
     score,
   });
 
-  const destination = cluster?.publish
+  const destination = locationDestination(reading) ?? (cluster?.publish
     ? cluster.path
     : plan.primary
       ? capabilityPath(plan.primary.id)
-      : null;
+      : null);
 
   const links = cluster
     ? linksForCluster(cluster)
@@ -80,7 +92,8 @@ export function resolveDiscovery(query: string, options: ResolveOptions = {}): D
 
   const explanation = [
     `intent: ${reading.objectives.map((o) => o.value).join(", ") || "undetermined"} (confidence ${reading.confidence})`,
-    `role: ${reading.role}, stage: ${reading.stage}, location: ${reading.location.kind}`,
+    `problem: ${reading.problems.map((problem) => problem.value).join(", ") || "undetermined"}, segment: ${reading.segment}`,
+    `role: ${reading.role}, stage: ${reading.stage}, location: ${reading.location.kind}`, 
     plan.primary
       ? `capability: ${plan.primary.id} (${plan.primary.relevance}) via ${plan.primary.reasons.join(", ")}`
       : "capability: none above the relevance floor",

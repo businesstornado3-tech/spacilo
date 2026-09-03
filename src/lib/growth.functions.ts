@@ -52,15 +52,19 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
       buildGrowthPipeline,
       mergeGrowthOpportunities,
       mergeGrowthInsights,
+      buildInnovationRecommendations,
+      totalsByOpportunity,
       growthConfig,
       isGrowthFlagEnabled,
       persistGrowthOpportunity,
       persistGrowthInsight,
+      persistGrowthCampaign,
+      persistInnovationRecommendation,
       persistGrowthAudit,
     } = await import("@/lib/growth");
 
     if (!isGrowthFlagEnabled("AI_OPPORTUNITY_RADAR_ENABLED")) {
-      return { scanned: 0, opportunities: 0, insights: 0, audited: 0 };
+      return { scanned: 0, opportunities: 0, insights: 0, campaigns: 0, recommendations: 0, audited: 0, rollupsWritten: 0 };
     }
 
     const since = new Date(Date.now() - data.days * 24 * 60 * 60 * 1000).toISOString();
@@ -113,6 +117,9 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
       scanned: results.length,
       opportunities: opportunities.length,
       insights: insights.length,
+      campaigns: campaigns.length,
+      recommendations: recommendations.length,
       audited: auditEvents.length,
+      rollupsWritten,
     };
   });

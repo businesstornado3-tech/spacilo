@@ -211,7 +211,9 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
     // Persist ranked scores as an additive `learnedScore` field inside the
     // existing score contract. The underlying policy score remains unchanged.
     await Promise.all(
-      rankedOpportunities.map((opportunity) => persistGrowthOpportunity(supabaseAdmin, opportunity)),
+      rankedOpportunities.map((opportunity) =>
+        persistGrowthOpportunity(supabaseAdmin, opportunity),
+      ),
     );
     await Promise.all(insights.map((insight) => persistGrowthInsight(supabaseAdmin, insight)));
     await Promise.all(
@@ -287,7 +289,9 @@ export type GrowthCampaignExecutionResult = {
 
 async function executePersistedCampaign(
   row: PersistedCampaignRow,
-  client: import("@supabase/supabase-js").SupabaseClient<import("@/integrations/supabase/types").Database>,
+  client: import("@supabase/supabase-js").SupabaseClient<
+    import("@/integrations/supabase/types").Database
+  >,
 ): Promise<GrowthCampaignExecutionResult> {
   const {
     claimGrowthCampaignLock,
@@ -333,9 +337,7 @@ async function executePersistedCampaign(
       sentAt: result.executed ? now : null,
       lastError: result.outcome.status === "failed" ? result.outcome.detail : null,
     });
-    await Promise.all(
-      result.audit.map((event) => persistGrowthAudit(client, event)),
-    );
+    await Promise.all(result.audit.map((event) => persistGrowthAudit(client, event)));
     await Promise.all(
       result.learning.map((signal) =>
         persistGrowthLearningSignal(
@@ -381,7 +383,12 @@ export const dispatchGrowthCampaigns = createServerFn({ method: "POST" })
 
     await supabaseAdmin
       .from("growth_campaigns")
-      .update({ state: "EXPIRED", send_lock: null, locked_at: null, last_error: "Campaign expired before dispatch." })
+      .update({
+        state: "EXPIRED",
+        send_lock: null,
+        locked_at: null,
+        last_error: "Campaign expired before dispatch.",
+      })
       .eq("state", "QUEUED")
       .lt("expires_at", now)
       .not("expires_at", "is", null);

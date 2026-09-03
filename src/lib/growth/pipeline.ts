@@ -559,9 +559,7 @@ export function mergeGrowthOpportunities(results: readonly PipelineResult[]): Gr
       evidence: [...previous.evidence, ...opportunity.evidence].slice(0, 12),
       // Repeat observations reinforce one dimension at a time rather than
       // overwriting a stronger earlier reading.
-      ...(previous.intelligence && opportunity.intelligence
-        ? { intelligence: mergeIntelligence(previous.intelligence, opportunity.intelligence) }
-        : { intelligence: opportunity.intelligence ?? previous.intelligence }),
+      ...mergedIntelligence(previous, opportunity),
       scores:
         opportunity.scores.opportunity >= previous.scores.opportunity
           ? opportunity.scores

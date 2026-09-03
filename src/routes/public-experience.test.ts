@@ -59,6 +59,13 @@ describe("public marketing routes", () => {
     expect(hostJourney).toHaveLength(8);
   });
 
+  it("registers the Phase 9 public discovery surfaces", () => {
+    const routesDir = path.resolve(process.cwd(), "src/routes");
+    for (const file of ["discover.tsx", "tools.tsx", "tools.$slug.tsx", "guides.tsx", "guides.$slug.tsx", "storage.$location.tsx"]) {
+      expect(fs.existsSync(path.join(routesDir, file)), file).toBe(true);
+    }
+  });
+
   it("has FAQ content and trust sections", () => {
     expect(howItWorksFaq.length).toBeGreaterThan(0);
     expect(trustSections.length).toBeGreaterThan(0);

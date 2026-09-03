@@ -211,4 +211,10 @@ describe("passive cost", () => {
     // measurement is deferred off the render path
     expect(source).toMatch(/requestIdleCallback/);
   });
+
+  it("keeps attribution bounded and excludes query text", async () => {
+    const { readFileSync } = await import("node:fs");
+    const source = readFileSync("src/lib/analytics/attribution.ts", "utf8");
+    expect(source).not.toMatch(/search_term|email|postcode/i);
+  });
 });

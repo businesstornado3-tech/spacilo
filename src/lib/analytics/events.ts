@@ -15,6 +15,10 @@ export const ANALYTICS_EVENTS = [
   // ---- traffic
   "page_view",
   "cta_clicked",
+  "discovery_started",
+  "discovery_resolved",
+  "discovery_location_viewed",
+  "capability_viewed",
 
   // ---- accounts
   "signup_started",
@@ -149,6 +153,7 @@ export const FORBIDDEN_PROP_KEYS = [
   "free_text",
   "query",
   "search_term",
+  "landing_path",
 ] as const;
 
 const FORBIDDEN = new Set<string>(FORBIDDEN_PROP_KEYS);

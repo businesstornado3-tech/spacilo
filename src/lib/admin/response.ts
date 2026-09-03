@@ -17,6 +17,12 @@ export interface PublicPageRow {
   visitors?: number;
 }
 
+export interface SourceBreakdownRow {
+  source: string;
+  visitors: number;
+  sessions: number;
+}
+
 export interface AdminBreakdowns {
   eventCounts: Record<string, number>;
   attentionCounts: Record<string, number>;

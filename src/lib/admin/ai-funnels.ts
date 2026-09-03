@@ -105,6 +105,15 @@ export function guestAiOutcomes(counts: EventCounts | null | undefined): AiRelia
   return rows.map((r) => ({ ...r, value: count(counts, r.event) }));
 }
 
+/** Discovery is intentionally aggregate: no natural-language query is retained. */
+export function discoveryFunnel(counts: EventCounts | null | undefined): AiStage[] {
+  return build(counts, [
+    { label: "Discovery started", event: "discovery_started" },
+    { label: "A capability route resolved", event: "discovery_resolved" },
+    { label: "Location route viewed", event: "discovery_location_viewed" },
+  ]);
+}
+
 /** True when nothing at all was recorded, so the UI can show a calm message. */
 export function aiSectionIsEmpty(stages: AiStage[][], extras: AiReliabilityRow[][]): boolean {
   const stageTotal = stages.flat().reduce((sum, s) => sum + (s.value ?? 0), 0);

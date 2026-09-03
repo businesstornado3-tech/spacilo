@@ -13,6 +13,7 @@ import {
   hostAiFunnel,
   aiReliability,
   guestAiOutcomes,
+  discoveryFunnel,
   aiSectionIsEmpty,
 } from "./ai-funnels";
 import { buildAttention, isAllClear, topSeverity } from "./attention";
@@ -135,7 +136,14 @@ describe("EarnRoom AI funnels", () => {
     const gap = renterAiFunnel(counts).find((s) => s.event === null);
     expect(gap?.value).toBeNull();
     expect(gap?.ofStart).toBeNull();
+});
+
+describe("discovery reporting", () => {
+  it("reports aggregate route progression without retaining query text", () => {
+    const funnel = discoveryFunnel({ discovery_started: 10, discovery_resolved: 7, discovery_location_viewed: 2 });
+    expect(funnel.map((stage) => stage.value)).toEqual([10, 7, 2]);
   });
+});
 
   it("keeps shared Live Scan counts out of either journey", () => {
     const shared = aiReliability(counts);

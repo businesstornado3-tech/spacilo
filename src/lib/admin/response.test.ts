@@ -63,7 +63,7 @@ describe("founder dashboard RPC response integration", () => {
 
   it("handles absent optional fields and malformed rows without throwing", () => {
     expect(() => normalizeAdminBreakdowns(null)).not.toThrow();
-    expect(normalizeAdminBreakdowns({ devices: null, top_pages: [null, {}] })).toEqual({
+    expect(normalizeAdminBreakdowns({ devices: null, top_pages: [null, { path: 1, page_views: "bad" }] })).toEqual({
       eventCounts: {},
       attentionCounts: {},
       devices: [],

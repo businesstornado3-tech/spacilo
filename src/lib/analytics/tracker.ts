@@ -24,6 +24,11 @@ import {
   referrerHost,
   sanitiseProps,
 } from "./events";
+import {
+  ATTRIBUTION_STORAGE_KEY,
+  resolveAttribution,
+  type StoredAttribution,
+} from "./attribution";
 
 export const VISITOR_STORAGE_KEY = "earnroom.va";
 export const SESSION_STORAGE_KEY = "earnroom.sa";
@@ -186,6 +191,9 @@ export interface AnalyticsContext {
   environment: AnalyticsEnvironment;
   device: DeviceKind;
   isBot: boolean;
+  visitorState: "new" | "returning";
+  sessionState: "new" | "returning";
+  attribution: StoredAttribution;
 }
 
 let disabled = false;
@@ -222,11 +230,23 @@ function browserContext(): AnalyticsContext | null {
     }
   })();
 
-  const visitor = resolveVisitorRef(readJson<StoredVisitor>(local, VISITOR_STORAGE_KEY), now);
+  const visitorBefore = readJson<StoredVisitor>(local, VISITOR_STORAGE_KEY);
+  const visitor = resolveVisitorRef(visitorBefore, now);
   writeJson(local, VISITOR_STORAGE_KEY, { id: visitor.id, issued: visitor.issued });
 
-  const session = resolveSessionRef(readJson<StoredSession>(sessionStore, SESSION_STORAGE_KEY), now);
+  const sessionBefore = readJson<StoredSession>(sessionStore, SESSION_STORAGE_KEY);
+  const session = resolveSessionRef(sessionBefore, now);
   writeJson(sessionStore, SESSION_STORAGE_KEY, { id: session.id, seen: session.seen });
+
+  const currentCampaign = readCampaign(window.location.search);
+  const currentAttribution = {
+    landingPath: normalisePath(window.location.pathname),
+    referrerHost: referrerHost(document.referrer ?? "", window.location.hostname),
+    ...currentCampaign,
+  };
+  const storedAttribution = readJson<StoredAttribution>(local, ATTRIBUTION_STORAGE_KEY);
+  const attribution = resolveAttribution(storedAttribution, currentAttribution, now);
+  writeJson(local, ATTRIBUTION_STORAGE_KEY, attribution);
 
   const ua = nav.userAgent ?? "";
   return {
@@ -235,6 +255,9 @@ function browserContext(): AnalyticsContext | null {
     environment: classifyEnvironment(window.location.hostname),
     device: classifyDevice(ua, window.innerWidth),
     isBot: looksLikeBot(ua, nav.webdriver === true),
+    visitorState: visitorBefore ? "returning" : "new",
+    sessionState: session.isNew ? "new" : "returning",
+    attribution,
   };
 }
 
@@ -261,20 +284,25 @@ export function track(event: AnalyticsEvent, options: TrackOptions = {}): void {
   if (!context) return;
 
   const path = normalisePath(options.path ?? window.location.pathname);
-  const campaign = readCampaign(window.location.search);
-
+  const attributionProps: AnalyticsProps = {
+    landing_path: context.attribution.landingPath,
+    visitor_state: context.visitorState,
+    session_state: context.sessionState,
+  };
   const row = {
     event_name: event,
     visitor_ref: context.visitorRef,
     session_ref: context.sessionRef,
     user_id: cachedUserId,
     path,
-    referrer_host: referrerHost(document.referrer ?? "", window.location.hostname),
+    referrer_host: context.attribution.referrerHost,
     device: context.device,
     environment: context.environment,
     is_bot: context.isBot,
-    props: sanitiseProps(options.props),
-    ...campaign,
+    props: sanitiseProps({ ...options.props, ...attributionProps }),
+    utm_source: context.attribution.utm_source,
+    utm_medium: context.attribution.utm_medium,
+    utm_campaign: context.attribution.utm_campaign,
   };
 
   const send = () => {

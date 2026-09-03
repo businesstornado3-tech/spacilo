@@ -42,7 +42,7 @@ describe("growth policy gates", () => {
   });
 
   it("blocks an explicit opt-out even if all other configuration is enabled", () => {
-    setGrowthConfig({ flags: { ...resetFlags(), AI_AUTONOMOUS_SEND_ENABLED: true } });
+    setGrowthConfig({ flags: { ...defaultAutonomyConfig().flags, AI_AUTONOMOUS_SEND_ENABLED: true } });
     registerChannel({ id: "email", label: "Email", enabled: true, requiresConsent: true, acceptsLegitimateInterest: true, perRecipientPerDay: 1, cooldownHours: 168, requiresSenderIdentity: true });
     const result = evaluatePolicy({ opportunity: opportunity(), channel: "email", consent: "withdrawn", hasContact: true, recentSends24h: 0, hoursSinceLastContact: null, suppressed: true, now: 1 });
     expect(result.verdict).toBe("BLOCK");

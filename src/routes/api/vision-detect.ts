@@ -489,7 +489,7 @@ export const Route = createFileRoute("/api/vision-detect")({
               SPACE_MODEL,
             );
             if (!result) return Response.json({ error: "unreadable_reply" }, { status: 502 });
-            return Response.json({ task: "space", model: SPACE_MODEL, space: result });
+            return Response.json({ task: "space", model: "ai-service", space: result });
           }
 
           /*
@@ -589,7 +589,7 @@ export const Route = createFileRoute("/api/vision-detect")({
           if (items.length === 0) {
             return Response.json({
               task: "belongings",
-              model: SCAN_MODEL,
+              model: "ai-service",
               items: [],
               timings: {
                 detectMs,
@@ -681,7 +681,7 @@ export const Route = createFileRoute("/api/vision-detect")({
 
           return Response.json({
             task: "belongings",
-            model: SCAN_MODEL,
+            model: "ai-service",
             items,
             // Real, measured stage timings so the pipeline can be tuned on
             // evidence rather than on how slow it feels.

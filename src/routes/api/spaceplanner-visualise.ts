@@ -528,7 +528,11 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         if (!key) {
           // No silent fallback to another provider: report the misconfiguration.
           return Response.json(
-            { error: "not_configured", provider: PROVIDER, detail: "LOVABLE_API_KEY is not set" },
+            {
+              error: "not_configured",
+              provider: "third-party-ai-service",
+              detail: "AI service is not configured",
+            },
             { status: 503 },
           );
         }
@@ -684,8 +688,8 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           return Response.json(
             {
               error: timedOut ? "render_timeout" : "upstream_unreachable",
-              provider: PROVIDER,
-              model,
+              provider: "third-party-ai-service",
+              model: "ai-service",
               diagnosticId,
               renderMs,
               renderDeadlineMs: RENDER_DEADLINE_MS,
@@ -708,7 +712,12 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           );
           const status = upstream.status === 429 || upstream.status === 402 ? upstream.status : 502;
           return Response.json(
-            { error: `upstream_${upstream.status}`, provider: PROVIDER, model, diagnosticId },
+            {
+              error: `upstream_${upstream.status}`,
+              provider: "third-party-ai-service",
+              model: "ai-service",
+              diagnosticId,
+            },
             { status },
           );
         }
@@ -718,7 +727,12 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           payload = await upstream.json();
         } catch {
           return Response.json(
-            { error: "bad_upstream_payload", provider: PROVIDER, model, diagnosticId },
+            {
+              error: "bad_upstream_payload",
+              provider: "third-party-ai-service",
+              model: "ai-service",
+              diagnosticId,
+            },
             { status: 502 },
           );
         }
@@ -726,7 +740,12 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         const image = extractImage(payload);
         if (!image) {
           return Response.json(
-            { error: "no_image_returned", provider: PROVIDER, model, diagnosticId },
+            {
+              error: "no_image_returned",
+              provider: "third-party-ai-service",
+              model: "ai-service",
+              diagnosticId,
+            },
             { status: 502 },
           );
         }
@@ -784,9 +803,9 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
 
         return Response.json({
           image,
-          provider: PROVIDER,
-          model,
-          verifyModel: verifyModel(),
+          provider: "third-party-ai-service",
+          model: "ai-service",
+          verifyModel: "ai-service",
           coverage,
           verification,
           diagnosticId,

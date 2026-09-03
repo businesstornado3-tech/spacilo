@@ -528,7 +528,11 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         if (!key) {
           // No silent fallback to another provider: report the misconfiguration.
           return Response.json(
-            { error: "not_configured", provider: PROVIDER, detail: "LOVABLE_API_KEY is not set" },
+            {
+              error: "not_configured",
+              provider: "third-party-ai-service",
+              detail: "AI service is not configured",
+            },
             { status: 503 },
           );
         }
@@ -636,6 +640,13 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
 
         const model = imageModel();
         const diagnosticId = `vis_${Date.now().toString(36)}`;
+        // Kept server-side for operational diagnostics; public responses use
+        // provider-neutral labels so implementation details are not exposed.
+        const internalDiagnostics = {
+          provider: PROVIDER,
+          model,
+          planHash: body.planHash ?? null,
+        };
         const prompt = buildRenderPrompt({
           instruction: body.instruction ?? "",
           manifest,
@@ -679,13 +690,13 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
             (cause.name === "TimeoutError" || cause.name === "AbortError");
           const renderMs = Date.now() - startedRender;
           console.error(
-            `[spaceplanner-visualise] ${diagnosticId} provider=${PROVIDER} model=${model} stage=render RENDER=${timedOut ? "TIMEOUT" : "UNREACHABLE"} renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=NOT_RUN PREVIEW=NOT_VERIFIED PLAN=READY`,
+            `[spaceplanner-visualise] ${diagnosticId} provider=${internalDiagnostics.provider} model=${internalDiagnostics.model} stage=render RENDER=${timedOut ? "TIMEOUT" : "UNREACHABLE"} renderMs=${renderMs}/${RENDER_DEADLINE_MS} VERIFICATION=NOT_RUN PREVIEW=NOT_VERIFIED PLAN=READY`,
           );
           return Response.json(
             {
               error: timedOut ? "render_timeout" : "upstream_unreachable",
-              provider: PROVIDER,
-              model,
+              provider: "third-party-ai-service",
+              model: "ai-service",
               diagnosticId,
               renderMs,
               renderDeadlineMs: RENDER_DEADLINE_MS,
@@ -708,7 +719,12 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           );
           const status = upstream.status === 429 || upstream.status === 402 ? upstream.status : 502;
           return Response.json(
-            { error: `upstream_${upstream.status}`, provider: PROVIDER, model, diagnosticId },
+            {
+              error: `upstream_${upstream.status}`,
+              provider: "third-party-ai-service",
+              model: "ai-service",
+              diagnosticId,
+            },
             { status },
           );
         }
@@ -718,7 +734,12 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
           payload = await upstream.json();
         } catch {
           return Response.json(
-            { error: "bad_upstream_payload", provider: PROVIDER, model, diagnosticId },
+            {
+              error: "bad_upstream_payload",
+              provider: "third-party-ai-service",
+              model: "ai-service",
+              diagnosticId,
+            },
             { status: 502 },
           );
         }
@@ -726,7 +747,12 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
         const image = extractImage(payload);
         if (!image) {
           return Response.json(
-            { error: "no_image_returned", provider: PROVIDER, model, diagnosticId },
+            {
+              error: "no_image_returned",
+              provider: "third-party-ai-service",
+              model: "ai-service",
+              diagnosticId,
+            },
             { status: 502 },
           );
         }
@@ -784,9 +810,9 @@ export const Route = createFileRoute("/api/spaceplanner-visualise")({
 
         return Response.json({
           image,
-          provider: PROVIDER,
-          model,
-          verifyModel: verifyModel(),
+          provider: "third-party-ai-service",
+          model: "ai-service",
+          verifyModel: "ai-service",
           coverage,
           verification,
           diagnosticId,

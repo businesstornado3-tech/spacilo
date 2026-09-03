@@ -80,7 +80,7 @@ export function SpacePlannerDiagnostics({
   manifest: PlacementManifest | null;
   visualStatus: VisualisationStatus;
   coverage: CoverageReport | null;
-  /** Which service produced the image, for support and provider verification. */
+  /** Internal render diagnostics retained for support and verification. */
   render?: RenderDiagnostics | null;
   /** Phase 6U — measured stage timings and their budget verdicts. */
   timings?: PipelineTimings;
@@ -145,8 +145,6 @@ export function SpacePlannerDiagnostics({
         <div><dt>Arrangement score</dt><dd className="font-medium text-foreground">{manifest ? `${manifest.qualityScore}/100` : "—"}</dd></div>
         <div><dt>Access corridor</dt><dd className="font-medium text-foreground">{manifest?.corridorSide ?? "—"}</dd></div>
         <div><dt>Hard constraints</dt><dd className="font-medium text-foreground">{manifest ? (manifest.valid ? "all passed" : `${manifest.violations.length} failed`) : "—"}</dd></div>
-        <div><dt>Render provider</dt><dd className="font-medium text-foreground">{render?.provider ?? "—"}</dd></div>
-        <div><dt>Render model</dt><dd className="font-medium text-foreground">{render?.model ?? "—"}</dd></div>
         <div><dt>Render time</dt><dd className="font-medium text-foreground">{render?.renderMs ? `${(render.renderMs / 1000).toFixed(1)}s` : "—"}</dd></div>
         <div><dt>Photo prep time</dt><dd className="font-medium text-foreground">{render?.prepareMs ? `${(render.prepareMs / 1000).toFixed(1)}s` : "—"}</dd></div>
         <div><dt>Verification time</dt><dd className="font-medium text-foreground">{render?.verifyMs ? `${(render.verifyMs / 1000).toFixed(1)}s` : "—"}</dd></div>

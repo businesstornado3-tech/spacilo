@@ -202,7 +202,7 @@ export const LEGAL_DOCUMENTS: readonly LegalDocument[] = [
       },
       {
         heading: "Your data",
-        body: `${brand.name} sends selected photos to its AI processing service when you request a scan or visualisation. The current service uses Google Gemini models through the Lovable AI Gateway. Photos are not used as anonymous site analytics or sold for advertising; storage and retention details are described on the privacy page and still require launch review.`,
+        body: `${brand.name} sends selected photos to a third-party AI service when you request a scan or visualisation. Photos are not used as anonymous site analytics or sold for advertising; storage and retention details are described on the privacy page and still require launch review.`,
       },
     ],
   },

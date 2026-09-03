@@ -43,7 +43,7 @@ export const measurementSections: { heading: string; body: string }[] = [
     heading: "Uploaded photos and AI processing",
     body:
       brand.name +
-      " stores listing photos, inventory photos, host space-scan photos and booking-evidence photos in private storage areas. The product uses short-lived signed links when a permitted user needs to view them. When you ask for an AI scan or visualisation, the selected images are sent to our AI processing service, currently using Google Gemini models through the Lovable AI Gateway, to return an estimate or proposal. AI output is not a confirmed measurement or decision, and photos are not used as analytics data or sold for advertising.",
+      " stores listing photos, inventory photos, host space-scan photos and booking-evidence photos in private storage areas. The product uses short-lived signed links when a permitted user needs to view them. When you ask for an AI scan or visualisation, the selected images are sent to a third-party AI service to return an estimate or proposal. AI output is not a confirmed measurement or decision, and photos are not used as analytics data or sold for advertising.",
   },
   {
     heading: "How long information is kept",

@@ -15,7 +15,13 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
 import { Download } from "lucide-react";
 
@@ -59,16 +65,25 @@ import {
   aiSectionIsEmpty,
   type AiStage,
 } from "@/lib/admin/ai-funnels";
-import { buildAttention, isAllClear, SEVERITY_LABEL, type AlertSeverity } from "@/lib/admin/attention";
+import {
+  buildAttention,
+  isAllClear,
+  SEVERITY_LABEL,
+  type AlertSeverity,
+} from "@/lib/admin/attention";
 import {
   useGrowthOpportunities,
   useGrowthInsights,
+  useGrowthCampaigns,
+  useGrowthRecommendations,
   useRefreshGrowthRadar,
+  useDispatchGrowthCampaigns,
   type GrowthOpportunityRow,
 } from "@/hooks/useGrowthRadar";
 
 const title = "Founder dashboard — " + brand.name;
-const description = "Internal operational overview of traffic, accounts, marketplace activity and finances.";
+const description =
+  "Internal operational overview of traffic, accounts, marketplace activity and finances.";
 
 export const Route = createFileRoute("/_authenticated/admin/dashboard")({
   head: () => ({
@@ -111,7 +126,9 @@ function KpiCard({
     <div className="rounded-2xl border border-border bg-card p-3 sm:p-4">
       <p className="type-body-xs text-muted-foreground">{label}</p>
       <p className="mt-1 type-h3 tabular-nums">{value}</p>
-      {delta ? <p className="mt-1 type-body-xs text-muted-foreground">{deltaLabel(delta)}</p> : null}
+      {delta ? (
+        <p className="mt-1 type-body-xs text-muted-foreground">{deltaLabel(delta)}</p>
+      ) : null}
       {note ? <p className="mt-1 type-body-xs text-muted-foreground">{note}</p> : null}
     </div>
   );
@@ -151,7 +168,9 @@ function AiFunnelList({ stages, caption }: { stages: AiStage[]; caption: string 
               <span className="flex shrink-0 items-center gap-2">
                 <span className="tabular-nums font-medium">{formatCount(stage.value)}</span>
                 {stage.ofStart !== null ? (
-                  <span className="type-body-xs text-muted-foreground">{Math.round(stage.ofStart)}% of starts</span>
+                  <span className="type-body-xs text-muted-foreground">
+                    {Math.round(stage.ofStart)}% of starts
+                  </span>
                 ) : null}
               </span>
             )}
@@ -200,9 +219,14 @@ function AdminDashboardRoute() {
   const breakdowns = useAdminBreakdowns(range, enabled);
   const opportunities = useGrowthOpportunities(enabled);
   const insights = useGrowthInsights(enabled);
+  const campaigns = useGrowthCampaigns(enabled);
+  const recommendations = useGrowthRecommendations(enabled);
   const refreshRadar = useRefreshGrowthRadar();
+  const dispatchCampaigns = useDispatchGrowthCampaigns();
   const opportunityRows = opportunities.data ?? [];
   const insightRows = insights.data ?? [];
+  const campaignRows = campaigns.data ?? [];
+  const recommendationRows = recommendations.data ?? [];
 
   if (admin.isLoading) {
     return (
@@ -257,23 +281,57 @@ function AdminDashboardRoute() {
 
   /** Marketplace funnel — every edge below the first is unattributable. */
   const funnel = buildFunnel([
-    { key: "visitor", label: "Unique visitors (public pages)", value: metric(current, "unique_visitors") ?? 0, attributable: true },
-    { key: "account", label: "New accounts", value: metric(current, "new_accounts") ?? 0, attributable: false },
-    { key: "storage_request", label: "Storage requests", value: metric(current, "storage_requests") ?? 0, attributable: false },
-    { key: "booking", label: "Bookings", value: metric(current, "bookings") ?? 0, attributable: false },
-    { key: "paid", label: "Paid bookings", value: metric(current, "paid_bookings") ?? 0, attributable: false },
+    {
+      key: "visitor",
+      label: "Unique visitors (public pages)",
+      value: metric(current, "unique_visitors") ?? 0,
+      attributable: true,
+    },
+    {
+      key: "account",
+      label: "New accounts",
+      value: metric(current, "new_accounts") ?? 0,
+      attributable: false,
+    },
+    {
+      key: "storage_request",
+      label: "Storage requests",
+      value: metric(current, "storage_requests") ?? 0,
+      attributable: false,
+    },
+    {
+      key: "booking",
+      label: "Bookings",
+      value: metric(current, "bookings") ?? 0,
+      attributable: false,
+    },
+    {
+      key: "paid",
+      label: "Paid bookings",
+      value: metric(current, "paid_bookings") ?? 0,
+      attributable: false,
+    },
   ]);
 
   const financial: Array<{ label: string; value: string }> = [
-    { label: "Gross booking value — booked", value: formatPence(metric(current, "gbv_booked_pence")) },
+    {
+      label: "Gross booking value — booked",
+      value: formatPence(metric(current, "gbv_booked_pence")),
+    },
     { label: "Gross booking value — paid", value: formatPence(metric(current, "gbv_paid_pence")) },
     { label: "EarnRoom fees — booked", value: formatPence(metric(current, "fees_booked_pence")) },
     { label: "EarnRoom fees — paid", value: formatPence(metric(current, "fees_paid_pence")) },
-    { label: "Host amount — booked", value: formatPence(metric(current, "host_amount_booked_pence")) },
+    {
+      label: "Host amount — booked",
+      value: formatPence(metric(current, "host_amount_booked_pence")),
+    },
     { label: "Host amount — paid", value: formatPence(metric(current, "host_amount_paid_pence")) },
     { label: "Refunds", value: formatPence(metric(current, "refunds_pence")) },
     { label: "Refunded fees", value: formatPence(metric(current, "refunded_fees_pence")) },
-    { label: "Net EarnRoom fees after refunds", value: formatPence(metric(current, "net_fees_pence")) },
+    {
+      label: "Net EarnRoom fees after refunds",
+      value: formatPence(metric(current, "net_fees_pence")),
+    },
     { label: "Refund count", value: formatCount(metric(current, "refund_count")) },
     { label: "Disputed payments", value: formatCount(metric(current, "disputed_count")) },
     { label: "Failed payments", value: formatCount(metric(current, "failed_payment_count")) },
@@ -358,10 +416,22 @@ function AdminDashboardRoute() {
             {countCard("new_accounts", "New accounts (period)")}
             {countCard("new_renter_accounts", "New renter-first accounts")}
             {countCard("new_host_accounts", "New host-first accounts")}
-            <KpiCard label="Total accounts (live)" value={optionalCount(metric(live, "total_accounts_now"))} />
-            <KpiCard label="Renter-enabled (live)" value={optionalCount(metric(live, "renter_accounts_now"))} />
-            <KpiCard label="Host-enabled (live)" value={optionalCount(metric(live, "host_accounts_now"))} />
-            <KpiCard label="Both renter and host (live)" value={optionalCount(metric(live, "both_accounts_now"))} />
+            <KpiCard
+              label="Total accounts (live)"
+              value={optionalCount(metric(live, "total_accounts_now"))}
+            />
+            <KpiCard
+              label="Renter-enabled (live)"
+              value={optionalCount(metric(live, "renter_accounts_now"))}
+            />
+            <KpiCard
+              label="Host-enabled (live)"
+              value={optionalCount(metric(live, "host_accounts_now"))}
+            />
+            <KpiCard
+              label="Both renter and host (live)"
+              value={optionalCount(metric(live, "both_accounts_now"))}
+            />
             <KpiCard
               label="Hosts with a published space"
               value={optionalCount(metric(live, "hosts_with_published_space_now"))}
@@ -406,13 +476,16 @@ function AdminDashboardRoute() {
             {countCard("lapsed_requests", "Requests lapsed or withdrawn")}
             {countCard("paid_bookings", "Paid bookings")}
             {countCard("completed_bookings", "Completed bookings")}
-            <KpiCard label="Published spaces (live)" value={optionalCount(metric(live, "published_spaces_now"))} />
+            <KpiCard
+              label="Published spaces (live)"
+              value={optionalCount(metric(live, "published_spaces_now"))}
+            />
           </div>
 
           <h3 className="mt-6 type-label">Marketplace funnel</h3>
           <p className="mt-1 max-w-prose type-body-xs text-muted-foreground">
-            Each stage is a separate population. Anonymous browsing cannot be linked to the account that is
-            eventually created, so no conversion rate is shown across that boundary.
+            Each stage is a separate population. Anonymous browsing cannot be linked to the account
+            that is eventually created, so no conversion rate is shown across that boundary.
           </p>
           <ol className="mt-2 space-y-2">
             {funnel.map((step) => (
@@ -442,7 +515,13 @@ function AdminDashboardRoute() {
           actions={
             <ExportButton
               label="Export"
-              onClick={() => exportRows("Finance", ["Metric", "Value"], financial.map((f) => [f.label, f.value]))}
+              onClick={() =>
+                exportRows(
+                  "Finance",
+                  ["Metric", "Value"],
+                  financial.map((f) => [f.label, f.value]),
+                )
+              }
             />
           }
         >
@@ -472,7 +551,9 @@ function AdminDashboardRoute() {
                     ["Unique visitors", metric(current, "unique_visitors")],
                     ["Sessions", metric(current, "sessions")],
                     ["Page views", metric(current, "page_views")],
-                    ...topPages.map((p) => [`Page ${p.path}`, p.page_views] as (string | number | null)[]),
+                    ...topPages.map(
+                      (p) => [`Page ${p.path}`, p.page_views] as (string | number | null)[],
+                    ),
                   ],
                 )
               }
@@ -507,7 +588,11 @@ function AdminDashboardRoute() {
           ) : trends.isLoading ? (
             <Skeleton className="mt-2 h-56 w-full" />
           ) : trendRows.length === 0 ? (
-            <EmptyState className="mt-2" title="No activity yet" description="No public traffic recorded for this period." />
+            <EmptyState
+              className="mt-2"
+              title="No activity yet"
+              description="No public traffic recorded for this period."
+            />
           ) : (
             <>
               <div
@@ -521,7 +606,13 @@ function AdminDashboardRoute() {
                     <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                     <Tooltip />
-                    <Line type="monotone" dataKey="visitors" stroke="var(--color-primary)" strokeWidth={2} dot={false} />
+                    <Line
+                      type="monotone"
+                      dataKey="visitors"
+                      stroke="var(--color-primary)"
+                      strokeWidth={2}
+                      dot={false}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -529,7 +620,9 @@ function AdminDashboardRoute() {
                 <summary className="type-body-xs text-muted-foreground">Table equivalent</summary>
                 <div className="overflow-x-auto">
                   <table className="mt-2 w-full type-body-xs">
-                    <caption className="sr-only">Unique visitors by day, {DATE_RANGE_LABEL[rangeKey]}</caption>
+                    <caption className="sr-only">
+                      Unique visitors by day, {DATE_RANGE_LABEL[rangeKey]}
+                    </caption>
                     <thead>
                       <tr>
                         <th className="text-left">Date</th>
@@ -552,7 +645,8 @@ function AdminDashboardRoute() {
 
           <h3 className="mt-6 type-label">Top public pages</h3>
           <p className="mt-1 type-body-xs text-muted-foreground">
-            Customer-facing pages only — the founder console, sign-in and account areas are excluded.
+            Customer-facing pages only — the founder console, sign-in and account areas are
+            excluded.
           </p>
           {breakdowns.isError ? (
             <ErrorState
@@ -568,14 +662,18 @@ function AdminDashboardRoute() {
               {topPages.map((p) => (
                 <li key={p.path} className="flex justify-between gap-3 type-body-sm">
                   <span className="min-w-0 truncate">{p.path}</span>
-                  <span className="tabular-nums text-muted-foreground">{formatCount(p.page_views)}</span>
+                  <span className="tabular-nums text-muted-foreground">
+                    {formatCount(p.page_views)}
+                  </span>
                 </li>
               ))}
             </ul>
           )}
 
           <details className="mt-4 rounded-xl border border-border bg-card p-3">
-            <summary className="type-body-sm font-medium">What these traffic numbers cannot tell you</summary>
+            <summary className="type-body-sm font-medium">
+              What these traffic numbers cannot tell you
+            </summary>
             <ul className="mt-2 list-disc space-y-1 pl-5 type-body-xs text-muted-foreground">
               {TRAFFIC_LIMITATIONS.map((line) => (
                 <li key={line}>{line}</li>
@@ -597,7 +695,10 @@ function AdminDashboardRoute() {
               onRetry={() => void breakdowns.refetch()}
             />
           ) : aiEmpty ? (
-            <EmptyState title="No EarnRoom AI activity yet" description="Nothing was scanned in this period." />
+            <EmptyState
+              title="No EarnRoom AI activity yet"
+              description="Nothing was scanned in this period."
+            />
           ) : (
             <div className="space-y-3">
               <div className="grid gap-3 lg:grid-cols-2">
@@ -608,7 +709,8 @@ function AdminDashboardRoute() {
                 <div className="rounded-2xl border border-border bg-card p-3 sm:p-4">
                   <h3 className="type-label">Capture reliability (shared)</h3>
                   <p className="mt-1 type-body-xs text-muted-foreground">
-                    Live Scan is used by both journeys, so these counts are deliberately not split between them.
+                    Live Scan is used by both journeys, so these counts are deliberately not split
+                    between them.
                   </p>
                   <ul className="mt-2 space-y-1.5">
                     {reliability.map((row) => (
@@ -641,20 +743,33 @@ function AdminDashboardRoute() {
           title="Growth radar"
           note="Non-identifying first-party behaviour, grouped into underlying needs. The radar observes and scores only — it never contacts anyone and never claims a space is available."
           actions={
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => refreshRadar.mutate(30)}
-              disabled={refreshRadar.isPending}
-            >
-              {refreshRadar.isPending ? "Refreshing…" : "Refresh radar"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => refreshRadar.mutate(30)}
+                disabled={refreshRadar.isPending || dispatchCampaigns.isPending}
+              >
+                {refreshRadar.isPending ? "Refreshing…" : "Refresh radar"}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => dispatchCampaigns.mutate(10)}
+                disabled={refreshRadar.isPending || dispatchCampaigns.isPending}
+              >
+                {dispatchCampaigns.isPending ? "Processing queue…" : "Process mock queue"}
+              </Button>
+            </div>
           }
         >
-          {opportunities.isError || insights.isError ? (
+          {opportunities.isError ||
+          insights.isError ||
+          campaigns.isError ||
+          recommendations.isError ? (
             <ErrorState
               title="Growth radar data couldn't be loaded"
-              description="No opportunity or insight figures have been substituted."
+              description="No opportunity, campaign or recommendation figures have been substituted."
               onRetry={() => void opportunities.refetch()}
             />
           ) : opportunities.isLoading ? (
@@ -688,10 +803,48 @@ function AdminDashboardRoute() {
                   <h3 className="type-label">Unmet needs to review</h3>
                   <ul className="mt-2 space-y-1.5">
                     {insightRows.map((insight) => (
-                      <li key={insight.insight_key} className="flex justify-between gap-3 type-body-sm">
+                      <li
+                        key={insight.insight_key}
+                        className="flex justify-between gap-3 type-body-sm"
+                      >
                         <span className="min-w-0 truncate">{insight.title}</span>
                         <span className="tabular-nums text-muted-foreground">
                           {formatCount(insight.evidence_count)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {recommendationRows.length > 0 ? (
+                <div>
+                  <h3 className="type-label">Product and marketplace opportunities</h3>
+                  <ul className="mt-2 space-y-1.5">
+                    {recommendationRows.slice(0, 5).map((recommendation) => (
+                      <li
+                        key={`${recommendation.opportunity_key}:${recommendation.kind}`}
+                        className="flex justify-between gap-3 type-body-sm"
+                      >
+                        <span className="min-w-0 truncate">{recommendation.title}</span>
+                        <span className="shrink-0 tabular-nums text-muted-foreground">
+                          {Math.round(recommendation.priority_score)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {campaignRows.length > 0 ? (
+                <div>
+                  <h3 className="type-label">Campaign execution queue</h3>
+                  <ul className="mt-2 space-y-1.5">
+                    {campaignRows.slice(0, 5).map((campaign) => (
+                      <li key={campaign.id} className="flex justify-between gap-3 type-body-sm">
+                        <span className="min-w-0 truncate">{campaign.channel ?? "No channel"}</span>
+                        <span className="shrink-0 text-muted-foreground">
+                          {campaign.state.toLowerCase().replaceAll("_", " ")}
                         </span>
                       </li>
                     ))}
@@ -718,14 +871,17 @@ function AdminDashboardRoute() {
             <Skeleton className="h-24 w-full" />
           ) : isAllClear(attention) ? (
             <Alert tone="success" title="Nothing needs attention">
-              No disputes, failed payments, pending refunds, open support cases, reported reviews or expiring
-              requests in this period.
+              No disputes, failed payments, pending refunds, open support cases, reported reviews or
+              expiring requests in this period.
             </Alert>
           ) : (
             <ul className="space-y-2">
               {attention.map((item) => (
                 <li key={item.key}>
-                  <Alert tone={SEVERITY_TONE[item.severity]} title={`${item.label}: ${formatCount(item.value)}`}>
+                  <Alert
+                    tone={SEVERITY_TONE[item.severity]}
+                    title={`${item.label}: ${formatCount(item.value)}`}
+                  >
                     <span className="type-body-xs">
                       {SEVERITY_LABEL[item.severity]} · {item.hint}
                     </span>

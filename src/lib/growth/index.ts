@@ -8,3 +8,5 @@ export * from "./channels";
 export * from "./policy";
 export * from "./campaign";
 export * from "./learning";
+export * from "./delivery";
+export * from "./attribution";

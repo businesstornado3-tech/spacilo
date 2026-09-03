@@ -160,6 +160,7 @@ export function buildCampaign(input: CampaignInput): Campaign {
     id: fingerprint,
     opportunityKey: opportunity.key,
     idempotencyKey: fingerprint,
+    recipientIdentityHash: recipient,
     channel,
     message: policy.verdict === "BLOCK" ? null : buildMessage(opportunity, input.supply),
     state,

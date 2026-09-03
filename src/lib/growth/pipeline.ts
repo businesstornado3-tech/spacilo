@@ -273,7 +273,13 @@ function insights(opportunity: GrowthOpportunity): GrowthInsight[] {
   ];
 }
 
-function audit(signal: SourceSignal, opportunity: GrowthOpportunity, action: AuditEvent["action"], reason: string): AuditEvent {
+function audit(
+  signal: SourceSignal,
+  opportunity: GrowthOpportunity,
+  action: AuditEvent["action"],
+  reason: string,
+  detail?: AuditEvent["detail"],
+): AuditEvent {
   return {
     id: `${signal.id}:${action}`,
     at: signal.observedAt,
@@ -282,6 +288,7 @@ function audit(signal: SourceSignal, opportunity: GrowthOpportunity, action: Aud
     reason,
     source: signal.connectorId,
     referenceId: opportunity.key,
+    ...(detail ? { detail } : {}),
   };
 }
 

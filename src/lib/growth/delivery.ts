@@ -12,7 +12,7 @@
  * behaves exactly as if the channel does not exist.
  */
 import { campaignExpired, mayRetry } from "./campaign";
-import { channelUsable } from "./channels";
+import { channelMayTransmit, channelUsable } from "./channels";
 import { outboundHalted } from "./config";
 import type { AuditEvent, Campaign, ChannelId, GrowthLearningSignal } from "./types";
 
@@ -86,7 +86,7 @@ export function resetAdapters(): void {
 /** True only when a genuinely transmitting adapter is configured and allowed. */
 export function realOutboundAvailable(channel: ChannelId): boolean {
   const adapter = adapters.get(channel);
-  return Boolean(adapter?.transmits) && channelUsable(channel) && !outboundHalted();
+  return Boolean(adapter?.transmits) && channelMayTransmit(channel) && !outboundHalted();
 }
 
 export type ExecutionContext = {
@@ -200,6 +200,18 @@ export async function executeCampaign(
   // transmitting adapter must pass the global switch before it is called.
   if (adapter.transmits && outboundHalted()) {
     return refuse(campaign, "Autonomous sending is disabled or emergency-stopped.", now, campaign.state, "skipped", attempts);
+  }
+  // A transmitting adapter may only run on a channel that is genuinely
+  // authorised to reach people. Anything else is blocked automatically.
+  if (adapter.transmits && !channelMayTransmit(campaign.channel)) {
+    return refuse(
+      campaign,
+      "Channel is not authorised to transmit; the send was blocked automatically.",
+      now,
+      "BLOCKED",
+      "blocked",
+      attempts,
+    );
   }
 
   let outcome: DeliveryOutcome;

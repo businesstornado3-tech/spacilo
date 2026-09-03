@@ -11,7 +11,7 @@
  */
 import { growthConfig, isGrowthFlagEnabled, outboundHalted } from "./config";
 import { mayCampaign } from "./connectors";
-import { channelUsable, consentSatisfied, getChannel } from "./channels";
+import { channelBlockReason, channelMayAct, channelUsable, consentSatisfied, getChannel } from "./channels";
 import type {
   CampaignDecision,
   ChannelId,
@@ -112,8 +112,27 @@ export function evaluatePolicy(context: PolicyContext): PolicyDecision {
     ),
   );
 
+  // The decisive outbound gate: may this channel lawfully transmit at all?
+  // A person is never asked to approve this lead — only to authorise the
+  // channel once, which is a configuration act, not a per-message review.
+  checks.push(
+    check(
+      "channel_authorised_to_transmit",
+      context.channel !== null && channelMayAct(context.channel),
+      context.channel === null
+        ? "No channel is attached to this opportunity."
+        : (channelBlockReason(context.channel) ??
+          "Channel is authorised to transmit."),
+    ),
+  );
+
   const failed = checks.filter((item) => !item.passed);
-  const configurationGates = new Set(["channel_usable", "connector_may_campaign", "outbound_enabled"]);
+  const configurationGates = new Set([
+    "channel_usable",
+    "connector_may_campaign",
+    "outbound_enabled",
+    "channel_authorised_to_transmit",
+  ]);
   const requiresConfiguration = failed.some((item) => configurationGates.has(item.id));
 
   // An explicit opt-out, emergency stop or disabled master phase can never be
@@ -122,7 +141,21 @@ export function evaluatePolicy(context: PolicyContext): PolicyDecision {
     ["not_opted_out", "emergency_stop_clear", "phase11_enabled"].includes(item.id),
   );
 
-  const verdict = failed.length === 0 ? "ALLOW" : absolute ? "BLOCK" : requiresConfiguration ? "DEFER" : "DEFER";
+  // ESCALATE is a *policy* signal to the founder ("a strong, repeatable need
+  // is stuck behind an unauthorised channel"), never a request to approve an
+  // individual person or message.
+  const escalate =
+    !absolute &&
+    requiresConfiguration &&
+    opportunity.scores.opportunity >= config.thresholds.bandHigh;
+
+  const verdict: PolicyDecision["verdict"] = failed.length === 0
+    ? "ALLOW"
+    : absolute
+      ? "BLOCK"
+      : escalate
+        ? "ESCALATE"
+        : "DEFER";
 
   return {
     verdict,
@@ -144,6 +177,12 @@ export function decideCampaign(
   const config = growthConfig();
   if (policy.verdict === "BLOCK") {
     return { value: "DO_NOT_CAMPAIGN", reasons: policy.reasons };
+  }
+  if (policy.verdict === "ESCALATE") {
+    return {
+      value: "CAPTURE_ONLY",
+      reasons: ["A strong need is blocked only by channel authorisation.", ...policy.reasons],
+    };
   }
   if (opportunity.scores.opportunity < config.thresholds.campaignFloor) {
     return { value: "RETAIN_FOR_INSIGHT", reasons: ["Below the campaign floor; kept as evidence only."] };

@@ -49,6 +49,9 @@ function enableInternalAutonomy() {
     perRecipientPerDay: 1,
     cooldownHours: 24,
     requiresSenderIdentity: false,
+    deliveryMode: "mock",
+    credentialState: "not_required",
+    termsStatus: "authorised",
   });
 }
 

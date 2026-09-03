@@ -4,6 +4,7 @@ export * from "./connectors";
 export * from "./pipeline";
 export * from "./persistence";
 export * from "./semantics";
+export * from "./intelligence";
 export * from "./channels";
 export * from "./policy";
 export * from "./campaign";

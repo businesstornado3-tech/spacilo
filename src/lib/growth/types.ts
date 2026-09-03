@@ -212,6 +212,14 @@ export type ChannelState = {
   cooldownHours: number;
   /** Identity/source disclosure the channel demands in every message. */
   requiresSenderIdentity: boolean;
+  /**
+   * "none" = no adapter at all, "mock" = execution path only (contacts nobody),
+   * "live" = a genuinely transmitting, authorised adapter.
+   */
+  deliveryMode: Open<"none" | "mock" | "live">;
+  credentialState: Open<"missing" | "configured" | "verified" | "not_required">;
+  /** Terms and lawful-basis position for outbound on this channel. */
+  termsStatus: Open<"authorised" | "not_authorised" | "pending_review" | "unknown">;
 };
 
 export type PolicyCheck = { id: string; passed: boolean; detail: string };
@@ -301,6 +309,11 @@ export type GrowthOpportunity = {
   latestSeen: number;
   frequency: number;
   evidence: readonly EvidenceItem[];
+  /**
+   * Deep, multi-dimensional reading of the same opportunity. Additive: every
+   * existing consumer of this record keeps working without it.
+   */
+  intelligence?: import("./intelligence").DeepIntelligence;
 };
 
 export type InsightKind = "PRODUCT" | "CONTENT" | "MARKETPLACE" | "HOST_SUPPLY" | "RENTER_DEMAND";

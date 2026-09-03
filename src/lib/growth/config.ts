@@ -72,8 +72,11 @@ export function defaultAutonomyConfig(): AutonomyConfig {
       PHASE11_ENABLED: true,
       AI_OPPORTUNITY_RADAR_ENABLED: true,
       AI_CAMPAIGN_ENGINE_ENABLED: true,
-      // Outbound sending is OFF until a connector and channel are authorised.
-      AI_AUTONOMOUS_SEND_ENABLED: false,
+      // Autonomy is ON: the engine decides and sends for itself. What stops a
+      // send is never a founder approving a lead — it is the policy gate and
+      // the per-channel authorisation state (credentials, terms, lawful
+      // basis). With no authorised channel configured, nothing transmits.
+      AI_AUTONOMOUS_SEND_ENABLED: true,
       AI_LEARNING_ENGINE_ENABLED: true,
       AI_PRODUCT_DISCOVERY_ENABLED: true,
     },

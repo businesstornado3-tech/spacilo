@@ -198,6 +198,11 @@ function AdminDashboardRoute() {
   const kpis = useAdminKpis(range, enabled);
   const trends = useAdminTrends(range, enabled);
   const breakdowns = useAdminBreakdowns(range, enabled);
+  const opportunities = useGrowthOpportunities(enabled);
+  const insights = useGrowthInsights(enabled);
+  const refreshRadar = useRefreshGrowthRadar();
+  const opportunityRows = opportunities.data ?? [];
+  const insightRows = insights.data ?? [];
 
   if (admin.isLoading) {
     return (

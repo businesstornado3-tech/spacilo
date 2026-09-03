@@ -20,7 +20,7 @@ import {
   payoutEligibleAt,
   transferDecision,
 } from "@/lib/payments/payout-policy";
-import type { HostPayoutAccount } from "@/lib/payments/payout-policy";
+import type { HostPayoutAccount, TransferContext } from "@/lib/payments/payout-policy";
 
 describe("platform fee — max(£5, 12%)", () => {
   it("charges the £5 minimum below the crossover", () => {
@@ -62,7 +62,7 @@ describe("host payout hold — 7 calendar days", () => {
   } as unknown as HostPayoutAccount;
 
   const earning = {
-    status: "pending",
+    status: "pending" as const,
     eligible_at: eligibleAt,
     stripe_transfer_id: null,
     host_entitlement_pence: 5000,
@@ -73,7 +73,7 @@ describe("host payout hold — 7 calendar days", () => {
 
   const decide = (now: string, overrides: Record<string, unknown> = {}, acc = account) =>
     transferDecision({
-      earning: { ...earning, ...overrides } as typeof earning,
+      earning: { ...earning, ...overrides } as TransferContext["earning"],
       bookingStatus: "confirmed",
       paymentStatus: "succeeded",
       account: acc,

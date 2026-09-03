@@ -71,7 +71,7 @@ const RULES: readonly Rule[] = [
   },
   {
     type: "PROPERTY_TRANSITION",
-    test: /\b(selling|sell my (house|home|flat)|viewings?|renovat|building work|refurb|decorating|clear (my|the|parents'?|mum'?s|dad'?s) (house|home|flat)|probate|downsiz)\b/,
+    test: /\b(selling|sell my (house|home|flat)|viewings?|renovat|building work|refurb|decorating|clear(?:ing)? (?:my )?(?:parents'? |mum'?s |dad'?s )?(?:house|home|flat)|probate|downsiz)\b/,
     role: "PROPERTY_RELATED",
     problem: "A property has to be cleared or emptied for a period.",
     cause: "A sale, renovation or clearance makes the property unusable for storage.",

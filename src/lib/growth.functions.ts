@@ -60,7 +60,7 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
     }
 
     const since = new Date(Date.now() - data.days * 24 * 60 * 60 * 1000).toISOString();
-    const { data: rows, error } = await supabase
+    const { data: rows, error } = await supabaseAdmin
       .from("analytics_events")
       .select("id,event_name,path,props,occurred_at,environment,is_bot")
       .eq("environment", "production")

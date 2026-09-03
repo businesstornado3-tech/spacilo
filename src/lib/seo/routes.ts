@@ -21,6 +21,7 @@ export type PublicRouteEntry = {
 /** Every public, indexable, static route in the app. */
 export const PUBLIC_ROUTES: readonly PublicRouteEntry[] = [
   { path: "/", label: "Homepage" },
+  { path: "/about", label: "About EarnRoom" },
   { path: "/how-it-works", label: "How It Works" },
   { path: "/trust", label: "Trust & Safety" },
   { path: "/search", label: "Search Results" },

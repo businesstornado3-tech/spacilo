@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { brand } from "@/config/brand";
 import { siteOrigin } from "@/lib/seo/meta";
+import { jsonLdScript, organizationJsonLd, websiteJsonLd } from "@/lib/seo/structured-data";
 import { AuthProvider } from "@/hooks/useAuth";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 
@@ -106,6 +107,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "mobile-web-app-capable", content: "yes" },
     ],
+    scripts: [jsonLdScript(organizationJsonLd()), jsonLdScript(websiteJsonLd())],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

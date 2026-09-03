@@ -273,7 +273,8 @@ function readStage(
  */
 export function readIntent(rawQuery: string): IntentReading {
   const query = normaliseQuery(rawQuery);
-  const objectives = collect(query, OBJECTIVE_LEXICON);
+  const concepts: ConceptReading = readConcepts(query);
+  const objectives = mergeSignals(collect(query, OBJECTIVE_LEXICON), concepts.objectives);
   const belongings = collect(query, BELONGINGS_LEXICON);
   const spaces = collect(query, SPACE_LEXICON);
   const location = readLocation(rawQuery);
@@ -282,8 +283,8 @@ export function readIntent(rawQuery: string): IntentReading {
   const stage = readStage(query, location, objectives);
 
   const evidenceCount =
-    objectives.length + belongings.length + spaces.length + (location.kind === "none" ? 0 : 1);
-  const strongest = objectives[0]?.weight ?? 0;
+    objectives.length + belongings.length + spaces.length + concepts.problems.length + (location.kind === "none" ? 0 : 1);
+  const strongest = objectives[0]?.weight ?? concepts.problems[0]?.weight ?? 0;
   const confidence = Math.min(1, Math.round((strongest * 0.6 + Math.min(evidenceCount, 4) * 0.1) * 100) / 100);
 
   return {
@@ -292,6 +293,10 @@ export function readIntent(rawQuery: string): IntentReading {
     objectives,
     belongings,
     spaces,
+    problems: concepts.problems,
+    segment: concepts.segment,
+    ownsSpace: concepts.ownsSpace,
+    concepts: concepts.matched,
     timeframe,
     location,
     stage,
@@ -299,6 +304,7 @@ export function readIntent(rawQuery: string): IntentReading {
     unknown: evidenceCount === 0,
   };
 }
+
 
 /** Convenience: does this reading carry more than one distinct objective? */
 export function isMultiIntent(reading: IntentReading): boolean {

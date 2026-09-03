@@ -30,9 +30,11 @@ export const ADMIN_SECTIONS: AdminSection[] = [
   { id: "marketplace", label: "Marketplace" },
   { id: "finance", label: "Finance" },
   { id: "traffic", label: "Traffic" },
+  { id: "geography", label: "Demand geography" },
   { id: "earnroom-ai", label: "EarnRoom AI" },
   { id: "growth", label: "Growth radar" },
   { id: "operations", label: "Operations" },
+  { id: "data-health", label: "Data health" },
 ];
 
 export function AdminShell({

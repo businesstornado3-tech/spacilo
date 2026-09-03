@@ -56,6 +56,11 @@ import {
   toCsv,
 } from "@/lib/admin/dashboard";
 import { filterTopPublicPages, TRAFFIC_LIMITATIONS } from "@/lib/admin/traffic";
+import { buildGeography } from "@/lib/admin/geography";
+import { buildDataHealth } from "@/lib/admin/provenance";
+import { DemandGeography } from "@/components/admin/DemandGeography";
+import { DataHealth } from "@/components/admin/DataHealth";
+import { useAdminGeography, useAdminDataHealth } from "@/hooks/useAdminGeography";
 import { normalizeAdminBreakdowns } from "@/lib/admin/response";
 import {
   renterAiFunnel,
@@ -217,6 +222,22 @@ function AdminDashboardRoute() {
   const kpis = useAdminKpis(range, enabled);
   const trends = useAdminTrends(range, enabled);
   const breakdowns = useAdminBreakdowns(range, enabled);
+  const geography = useAdminGeography(range, enabled);
+  const dataHealth = useAdminDataHealth(enabled);
+
+  // Pure, memoised derivations: the console never computes a figure the
+  // database did not supply, it only shapes what came back.
+  const geographyPlaces = React.useMemo(
+    () => buildGeography(geography.data?.rows ?? []),
+    [geography.data],
+  );
+  const healthChecks = React.useMemo(
+    () =>
+      dataHealth.data
+        ? buildDataHealth({ ...dataHealth.data, now: Date.now() })
+        : [],
+    [dataHealth.data],
+  );
   const opportunities = useGrowthOpportunities(enabled);
   const insights = useGrowthInsights(enabled);
   const campaigns = useGrowthCampaigns(enabled);
@@ -682,6 +703,25 @@ function AdminDashboardRoute() {
           </details>
         </AdminSectionBlock>
 
+        {/* --------------------------------------------- Visitor & demand geography */}
+        <AdminSectionBlock
+          id="geography"
+          title="Visitor & demand geography"
+          note="Declared location intent — the places people actually named in search, discovery and location pages — set against real published supply. EarnRoom collects no IP geolocation, so no visitor location is inferred."
+        >
+          {geography.isError ? (
+            <ErrorState
+              title="Demand geography couldn't be loaded"
+              description="No locations, scores or trends have been substituted."
+              onRetry={() => void geography.refetch()}
+            />
+          ) : geography.isLoading ? (
+            <Skeleton className="h-24 w-full" />
+          ) : (
+            <DemandGeography places={geographyPlaces} />
+          )}
+        </AdminSectionBlock>
+
         {/* -------------------------------------------------------- EarnRoom AI */}
         <AdminSectionBlock
           id="earnroom-ai"
@@ -889,6 +929,25 @@ function AdminDashboardRoute() {
                 </li>
               ))}
             </ul>
+          )}
+        </AdminSectionBlock>
+
+        {/* ------------------------------------------ Data health & provenance */}
+        <AdminSectionBlock
+          id="data-health"
+          title="Data health & provenance"
+          note="Where every number above comes from, how it is calculated and how fresh it is. A figure that cannot be loaded reads unavailable — it is never shown as zero."
+        >
+          {dataHealth.isError ? (
+            <ErrorState
+              title="Data health couldn't be loaded"
+              description="Freshness and provenance checks are unavailable."
+              onRetry={() => void dataHealth.refetch()}
+            />
+          ) : dataHealth.isLoading ? (
+            <Skeleton className="h-24 w-full" />
+          ) : (
+            <DataHealth checks={healthChecks} />
           )}
         </AdminSectionBlock>
       </div>

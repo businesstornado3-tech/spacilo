@@ -26,6 +26,7 @@ import type {
   GrowthInsight,
   GrowthOpportunity,
   GrowthRole,
+  PainPoint,
   PipelineResult,
   Situation,
   SourceSignal,

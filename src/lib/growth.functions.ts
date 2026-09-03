@@ -120,7 +120,24 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
     const opportunities = mergeGrowthOpportunities(results);
     const insights = mergeGrowthInsights(results);
     const campaigns = results.flatMap((result) => (result.campaign ? [result.campaign] : []));
-    const recommendations = buildInnovationRecommendations(opportunities, new Map(), growthConfig().thresholds.insightValidationCount);
+    const { data: learningRows, error: learningError } = await supabaseAdmin
+      .from("growth_learning_signals")
+      .select("opportunity_key,channel,outcome,value_pence,occurred_at")
+      .order("occurred_at", { ascending: false })
+      .limit(5000);
+    if (learningError) throw new Error(learningError.message);
+    const learningSignals: GrowthLearningSignal[] = (learningRows ?? []).map((row) => ({
+      opportunityKey: row.opportunity_key,
+      channel: row.channel,
+      outcome: row.outcome,
+      ...(row.value_pence === null ? {} : { valuePence: row.value_pence }),
+      at: Date.parse(row.occurred_at),
+    }));
+    const recommendations = buildInnovationRecommendations(
+      opportunities,
+      totalsByOpportunity(learningSignals),
+      growthConfig().thresholds.insightValidationCount,
+    );
     const auditEvents = results.flatMap((result) => result.audit);
 
     for (const opportunity of opportunities) await persistGrowthOpportunity(supabaseAdmin, opportunity);

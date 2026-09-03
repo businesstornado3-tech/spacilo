@@ -416,7 +416,7 @@ export function buildGrowthPipeline(signal: SourceSignal, now = Date.now()): Pip
     campaign,
     insights: opportunityInsights,
     audit: [
-      audit(signal, finalOpportunity, "signal_ingested", "Accepted from the first-party production production analytics stream.", { signalId: signal.id }),
+      audit(signal, finalOpportunity, "signal_ingested", "Accepted from the first-party production analytics stream.", { signalId: signal.id }),
       audit(signal, finalOpportunity, "classified", `Role ${finalOpportunity.audience.primary}; segment ${finalOpportunity.audience.segment}.`),
       audit(signal, finalOpportunity, "opportunity_created", `Scored ${finalOpportunity.scores.opportunity}/100 (${finalOpportunity.scores.band}).`),
       audit(signal, finalOpportunity, "policy_evaluated", policy.reasons.join(" ")),

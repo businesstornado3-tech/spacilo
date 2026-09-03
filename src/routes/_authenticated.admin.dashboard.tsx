@@ -222,6 +222,22 @@ function AdminDashboardRoute() {
   const kpis = useAdminKpis(range, enabled);
   const trends = useAdminTrends(range, enabled);
   const breakdowns = useAdminBreakdowns(range, enabled);
+  const geography = useAdminGeography(range, enabled);
+  const dataHealth = useAdminDataHealth(enabled);
+
+  // Pure, memoised derivations: the console never computes a figure the
+  // database did not supply, it only shapes what came back.
+  const geographyPlaces = React.useMemo(
+    () => buildGeography(geography.data?.rows ?? []),
+    [geography.data],
+  );
+  const healthChecks = React.useMemo(
+    () =>
+      dataHealth.data
+        ? buildDataHealth({ ...dataHealth.data, now: Date.now() })
+        : [],
+    [dataHealth.data],
+  );
   const opportunities = useGrowthOpportunities(enabled);
   const insights = useGrowthInsights(enabled);
   const campaigns = useGrowthCampaigns(enabled);

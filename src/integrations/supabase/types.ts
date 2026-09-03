@@ -1219,6 +1219,342 @@ export type Database = {
           },
         ]
       }
+      growth_audit_events: {
+        Row: {
+          action: string
+          actor: string
+          created_at: string
+          detail: Json
+          event_key: string
+          id: string
+          occurred_at: string
+          reason: string
+          reference_id: string
+          source: string
+        }
+        Insert: {
+          action: string
+          actor?: string
+          created_at?: string
+          detail?: Json
+          event_key: string
+          id?: string
+          occurred_at?: string
+          reason: string
+          reference_id: string
+          source: string
+        }
+        Update: {
+          action?: string
+          actor?: string
+          created_at?: string
+          detail?: Json
+          event_key?: string
+          id?: string
+          occurred_at?: string
+          reason?: string
+          reference_id?: string
+          source?: string
+        }
+        Relationships: []
+      }
+      growth_autonomy_config: {
+        Row: {
+          budgets: Json
+          created_at: string
+          default_retention_days: number
+          emergency_stop: boolean
+          flags: Json
+          id: boolean
+          limits: Json
+          paused_channels: Json
+          paused_connectors: Json
+          suppressed_categories: Json
+          thresholds: Json
+          updated_at: string
+        }
+        Insert: {
+          budgets?: Json
+          created_at?: string
+          default_retention_days?: number
+          emergency_stop?: boolean
+          flags?: Json
+          id?: boolean
+          limits?: Json
+          paused_channels?: Json
+          paused_connectors?: Json
+          suppressed_categories?: Json
+          thresholds?: Json
+          updated_at?: string
+        }
+        Update: {
+          budgets?: Json
+          created_at?: string
+          default_retention_days?: number
+          emergency_stop?: boolean
+          flags?: Json
+          id?: boolean
+          limits?: Json
+          paused_channels?: Json
+          paused_connectors?: Json
+          suppressed_categories?: Json
+          thresholds?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      growth_campaigns: {
+        Row: {
+          attempt_count: number
+          channel: string | null
+          created_at: string
+          decision: Json
+          expires_at: string | null
+          id: string
+          idempotency_key: string
+          last_error: string | null
+          message: Json | null
+          opportunity_key: string
+          policy: Json
+          sent_at: string | null
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          channel?: string | null
+          created_at?: string
+          decision?: Json
+          expires_at?: string | null
+          id?: string
+          idempotency_key: string
+          last_error?: string | null
+          message?: Json | null
+          opportunity_key: string
+          policy?: Json
+          sent_at?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          channel?: string | null
+          created_at?: string
+          decision?: Json
+          expires_at?: string | null
+          id?: string
+          idempotency_key?: string
+          last_error?: string | null
+          message?: Json | null
+          opportunity_key?: string
+          policy?: Json
+          sent_at?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      growth_connectors: {
+        Row: {
+          connected: boolean
+          created_at: string
+          enabled: boolean
+          flag: string
+          id: string
+          kind: string
+          last_error: string | null
+          last_sync_at: string | null
+          level: string
+          name: string
+          notes: string
+          permissions: Json
+          rate_limit: Json
+          retention_days: number
+          updated_at: string
+        }
+        Insert: {
+          connected?: boolean
+          created_at?: string
+          enabled?: boolean
+          flag: string
+          id: string
+          kind: string
+          last_error?: string | null
+          last_sync_at?: string | null
+          level?: string
+          name: string
+          notes?: string
+          permissions?: Json
+          rate_limit?: Json
+          retention_days?: number
+          updated_at?: string
+        }
+        Update: {
+          connected?: boolean
+          created_at?: string
+          enabled?: boolean
+          flag?: string
+          id?: string
+          kind?: string
+          last_error?: string | null
+          last_sync_at?: string | null
+          level?: string
+          name?: string
+          notes?: string
+          permissions?: Json
+          rate_limit?: Json
+          retention_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      growth_insights: {
+        Row: {
+          audience: string
+          components: Json
+          confidence: number
+          created_at: string
+          evidence_count: number
+          geography: string | null
+          id: string
+          insight_key: string
+          kind: string
+          problem: string
+          recommendation: string
+          status: string
+          supporting_keys: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience: string
+          components?: Json
+          confidence?: number
+          created_at?: string
+          evidence_count?: number
+          geography?: string | null
+          id?: string
+          insight_key: string
+          kind: string
+          problem: string
+          recommendation: string
+          status?: string
+          supporting_keys?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          components?: Json
+          confidence?: number
+          created_at?: string
+          evidence_count?: number
+          geography?: string | null
+          id?: string
+          insight_key?: string
+          kind?: string
+          problem?: string
+          recommendation?: string
+          status?: string
+          supporting_keys?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      growth_learning_signals: {
+        Row: {
+          channel: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          occurred_at: string
+          opportunity_key: string
+          outcome: string
+          value_pence: number | null
+        }
+        Insert: {
+          channel?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          opportunity_key: string
+          outcome: string
+          value_pence?: number | null
+        }
+        Update: {
+          channel?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          opportunity_key?: string
+          outcome?: string
+          value_pence?: number | null
+        }
+        Relationships: []
+      }
+      growth_opportunities: {
+        Row: {
+          audience: Json
+          campaign_decision: Json
+          connector_id: string
+          created_at: string
+          evidence: Json
+          first_seen_at: string
+          fit: Json
+          frequency: number
+          key: string
+          latest_seen_at: string
+          pain_points: Json
+          scores: Json
+          signal_id: string
+          situation: Json
+          status: string
+          supply: Json
+          updated_at: string
+        }
+        Insert: {
+          audience?: Json
+          campaign_decision?: Json
+          connector_id: string
+          created_at?: string
+          evidence?: Json
+          first_seen_at?: string
+          fit?: Json
+          frequency?: number
+          key: string
+          latest_seen_at?: string
+          pain_points?: Json
+          scores?: Json
+          signal_id: string
+          situation?: Json
+          status?: string
+          supply?: Json
+          updated_at?: string
+        }
+        Update: {
+          audience?: Json
+          campaign_decision?: Json
+          connector_id?: string
+          created_at?: string
+          evidence?: Json
+          first_seen_at?: string
+          fit?: Json
+          frequency?: number
+          key?: string
+          latest_seen_at?: string
+          pain_points?: Json
+          scores?: Json
+          signal_id?: string
+          situation?: Json
+          status?: string
+          supply?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       guest_spacefit_runs: {
         Row: {
           client_request_id: string | null

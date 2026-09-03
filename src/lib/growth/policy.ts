@@ -11,7 +11,7 @@
  */
 import { growthConfig, isGrowthFlagEnabled, outboundHalted } from "./config";
 import { mayCampaign } from "./connectors";
-import { channelBlockReason, channelMayTransmit, channelUsable, consentSatisfied, getChannel } from "./channels";
+import { channelBlockReason, channelMayAct, channelUsable, consentSatisfied, getChannel } from "./channels";
 import type {
   CampaignDecision,
   ChannelId,
@@ -118,7 +118,7 @@ export function evaluatePolicy(context: PolicyContext): PolicyDecision {
   checks.push(
     check(
       "channel_authorised_to_transmit",
-      context.channel !== null && channelMayTransmit(context.channel),
+      context.channel !== null && channelMayAct(context.channel),
       context.channel === null
         ? "No channel is attached to this opportunity."
         : (channelBlockReason(context.channel) ??

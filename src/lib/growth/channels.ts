@@ -33,6 +33,21 @@ export function channelMayTransmit(id: ChannelId): boolean {
   );
 }
 
+/**
+ * Whether a channel may be *acted on* at all. A mock/in-product surface may
+ * act (it contacts nobody); a live channel may act only once it is fully
+ * authorised. This is the policy-gate question; transmission is stricter.
+ */
+export function channelMayAct(id: ChannelId): boolean {
+  const state = registry.get(id);
+  if (!state) return false;
+  if (!channelUsable(id)) return false;
+  if (state.termsStatus !== "authorised") return false;
+  if (state.deliveryMode === "none") return false;
+  if (state.deliveryMode === "live") return state.credentialState === "verified";
+  return true;
+}
+
 /** Why a channel cannot transmit, in the founder's language. */
 export function channelBlockReason(id: ChannelId): string | null {
   const state = registry.get(id);
@@ -40,7 +55,8 @@ export function channelBlockReason(id: ChannelId): string | null {
   if (!state.enabled) return "Channel is disabled.";
   if (growthConfig().emergencyStop) return "Emergency stop is engaged.";
   if (growthConfig().pausedChannels.includes(id)) return "Channel is paused by the founder.";
-  if (state.deliveryMode !== "live") return "No live delivery adapter is configured for this channel.";
+  if (state.deliveryMode === "none") return "No delivery adapter is configured for this channel.";
+  if (state.deliveryMode !== "live") return "Channel is in-product/mock only; it transmits to nobody.";
   if (state.credentialState !== "verified") return "Channel credentials are not verified.";
   if (state.termsStatus !== "authorised") return "Channel terms and lawful basis are not authorised.";
   return null;

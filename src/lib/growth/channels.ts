@@ -93,7 +93,8 @@ export function channelUsable(id: ChannelId): boolean {
 export function consentSatisfied(id: ChannelId, consent: ConsentState): boolean {
   const state = registry.get(id);
   if (!state) return false;
-  if (consent === "withdrawn" || consent === "none") return false;
+  if (consent === "withdrawn") return false;
+  if (consent === "none") return !state.requiresConsent;
   if (consent === "granted") return true;
   if (consent === "legitimate_interest") return state.acceptsLegitimateInterest;
   return !state.requiresConsent;

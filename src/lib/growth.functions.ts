@@ -15,6 +15,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { rebuildChunks, refreshWindow } from "@/lib/analytics/rollups";
 
 const refreshInput = z.object({
   /** How far back to look, in days. Bounded so a run can never be unbounded. */
@@ -25,7 +26,10 @@ export interface GrowthRadarRefreshResult {
   scanned: number;
   opportunities: number;
   insights: number;
+  campaigns: number;
+  recommendations: number;
   audited: number;
+  rollupsWritten: number;
 }
 
 export const refreshGrowthRadar = createServerFn({ method: "POST" })

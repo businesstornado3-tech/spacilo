@@ -57,8 +57,8 @@ describe("outcome-led Discover", () => {
     expect(tools).toContain("CAPABILITIES");
   });
 
-  it("keeps the canonical and unique problem-oriented metadata", () => {
-    const head = DiscoverRoute.options.head?.({} as never);
+  it("keeps the canonical and unique problem-oriented metadata", async () => {
+    const head = await DiscoverRoute.options.head?.({} as never);
     expect(head?.links?.[0]?.href).toMatch(/\/discover$/);
     expect(head?.meta).toContainEqual({ name: "description", content: expect.stringContaining("organise belongings") });
     expect(JSON.stringify(head?.scripts)).toContain("Organise my belongings");

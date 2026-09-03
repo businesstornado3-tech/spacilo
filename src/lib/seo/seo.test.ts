@@ -102,6 +102,31 @@ describe("structured data", () => {
   });
 });
 
+describe("discovery navigation and route metadata", () => {
+  it("exposes Discover, Tools and Guides in the global marketing navigation", () => {
+    expect(marketingNav.map((item) => item.to)).toEqual(expect.arrayContaining(["/discover", "/tools", "/guides"]));
+  });
+
+  it("keeps every tool and guide linked from its hub", () => {
+    expect(capabilityIndex().map((link) => link.to)).toEqual(CAPABILITIES.map((capability) => `/tools/${capability.slug}`));
+    expect(GUIDE_CLUSTERS.map((cluster) => cluster.path)).toEqual(expect.arrayContaining(["/guides/student-storage"]));
+  });
+
+  it("removes the hub canonical when a nested tool or guide route is active", () => {
+    const toolHead = ToolsRoute.options.head?.({ matches: [{ routeId: "/tools/$slug" }] } as never);
+    const guideHead = GuidesRoute.options.head?.({ matches: [{ routeId: "/guides/$slug" }] } as never);
+    expect(toolHead?.links).toEqual([]);
+    expect(guideHead?.links).toEqual([]);
+  });
+
+  it("gives About a self-referencing canonical and social metadata", () => {
+    const aboutHead = AboutRoute.options.head?.({} as never);
+    expect(aboutHead?.links?.[0]?.href).toBe(canonicalUrl("/about"));
+    expect(aboutHead?.meta).toContainEqual({ property: "og:url", content: canonicalUrl("/about") });
+    expect(aboutHead?.meta).toContainEqual({ name: "twitter:card", content: "summary_large_image" });
+  });
+});
+
 describe("robots.txt and sitemap wiring", () => {
   const robots = read("public/robots.txt");
 

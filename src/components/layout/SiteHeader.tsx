@@ -83,7 +83,7 @@ export function SiteHeader({ className }: { className?: string }) {
       </div>
 
       {menuOpen ? (
-        <div id="mobile-menu" className="border-t border-border bg-background lg:hidden">
+        <div id="mobile-menu" className="border-t border-border bg-background xl:hidden">
           <nav aria-label="Mobile" className="mx-auto max-w-6xl space-y-1 px-4 py-3 sm:px-6">
             {marketingNav.map((item) => (
               <Link

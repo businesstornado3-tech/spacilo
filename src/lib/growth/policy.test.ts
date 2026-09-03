@@ -43,7 +43,7 @@ describe("growth policy gates", () => {
 
   it("blocks an explicit opt-out even if all other configuration is enabled", () => {
     setGrowthConfig({ flags: { ...defaultAutonomyConfig().flags, AI_AUTONOMOUS_SEND_ENABLED: true } });
-    registerChannel({ id: "email", label: "Email", enabled: true, requiresConsent: true, acceptsLegitimateInterest: true, perRecipientPerDay: 1, cooldownHours: 168, requiresSenderIdentity: true });
+    registerChannel({ id: "email", label: "Email", enabled: true, requiresConsent: true, acceptsLegitimateInterest: true, perRecipientPerDay: 1, cooldownHours: 168, requiresSenderIdentity: true, deliveryMode: "live", credentialState: "verified", termsStatus: "authorised" });
     const result = evaluatePolicy({ opportunity: opportunity(), channel: "email", consent: "withdrawn", hasContact: true, recentSends24h: 0, hoursSinceLastContact: null, suppressed: true, now: 1 });
     expect(result.verdict).toBe("BLOCK");
     expect(decideCampaign(opportunity(), result, 1).value).toBe("DO_NOT_CAMPAIGN");
@@ -51,7 +51,7 @@ describe("growth policy gates", () => {
 
   it("keeps frequency and cooldown as independent gates", () => {
     setGrowthConfig({ flags: { ...defaultAutonomyConfig().flags, AI_AUTONOMOUS_SEND_ENABLED: true } });
-    registerChannel({ id: "email", label: "Email", enabled: true, requiresConsent: true, acceptsLegitimateInterest: true, perRecipientPerDay: 1, cooldownHours: 168, requiresSenderIdentity: true });
+    registerChannel({ id: "email", label: "Email", enabled: true, requiresConsent: true, acceptsLegitimateInterest: true, perRecipientPerDay: 1, cooldownHours: 168, requiresSenderIdentity: true, deliveryMode: "live", credentialState: "verified", termsStatus: "authorised" });
     const result = evaluatePolicy({ opportunity: opportunity(), channel: "email", consent: "granted", hasContact: true, recentSends24h: 1, hoursSinceLastContact: 2, suppressed: false, now: 1 });
     expect(result.checks.find((check) => check.id === "frequency_cap")?.passed).toBe(false);
     expect(result.checks.find((check) => check.id === "cooldown")?.passed).toBe(false);

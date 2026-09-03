@@ -13,7 +13,7 @@ const description = "Explore EarnRoom tools for belongings, spaces, storage fit 
 export const Route = createFileRoute("/tools")({
   head: ({ matches }) => {
     const base = publicRouteMeta({ title, description, path: "/tools" });
-    const isChildPage = matches.some((match) => match.routeId === "/tools/$slug");
+    const isChildPage = matches.some((match) => String(match.routeId) === "/tools/$slug");
     return {
       ...base,
       links: isChildPage ? [] : base.links,

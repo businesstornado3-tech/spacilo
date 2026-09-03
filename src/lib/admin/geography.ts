@@ -115,6 +115,7 @@ export function buildGeography(rows: readonly GeographyRow[]): GeographyPlace[] 
         trend,
         trendPercent: percent,
         plot: point ? projectPoint(point) : null,
+        point,
         priority: priorityFor(score, supplyState, trend),
       } satisfies GeographyPlace;
     })

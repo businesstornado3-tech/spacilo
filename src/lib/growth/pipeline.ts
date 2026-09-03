@@ -541,6 +541,18 @@ export function buildGrowthPipeline(signal: SourceSignal, now = Date.now()): Pip
   };
 }
 
+/** Intelligence patch for a repeat observation, omitted when neither has one. */
+function mergedIntelligence(
+  previous: GrowthOpportunity,
+  next: GrowthOpportunity,
+): Pick<GrowthOpportunity, "intelligence"> | Record<string, never> {
+  if (previous.intelligence && next.intelligence) {
+    return { intelligence: mergeIntelligence(previous.intelligence, next.intelligence) };
+  }
+  const only = next.intelligence ?? previous.intelligence;
+  return only ? { intelligence: only } : {};
+}
+
 export function mergeGrowthOpportunities(results: readonly PipelineResult[]): GrowthOpportunity[] {
   const byKey = new Map<string, GrowthOpportunity>();
   for (const result of results) {

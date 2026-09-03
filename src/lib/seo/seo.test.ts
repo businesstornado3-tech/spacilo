@@ -112,15 +112,15 @@ describe("discovery navigation and route metadata", () => {
     expect(GUIDE_CLUSTERS.map((cluster) => cluster.path)).toEqual(expect.arrayContaining(["/guides/student-storage"]));
   });
 
-  it("removes the hub canonical when a nested tool or guide route is active", () => {
-    const toolHead = ToolsRoute.options.head?.({ matches: [{ routeId: "/tools/$slug" }] } as never);
-    const guideHead = GuidesRoute.options.head?.({ matches: [{ routeId: "/guides/$slug" }] } as never);
+  it("removes the hub canonical when a nested tool or guide route is active", async () => {
+    const toolHead = await ToolsRoute.options.head?.({ matches: [{ routeId: "/tools/$slug" }] } as never);
+    const guideHead = await GuidesRoute.options.head?.({ matches: [{ routeId: "/guides/$slug" }] } as never);
     expect(toolHead?.links).toEqual([]);
     expect(guideHead?.links).toEqual([]);
   });
 
-  it("gives About a self-referencing canonical and social metadata", () => {
-    const aboutHead = AboutRoute.options.head?.({} as never);
+  it("gives About a self-referencing canonical and social metadata", async () => {
+    const aboutHead = await AboutRoute.options.head?.({} as never);
     expect(aboutHead?.links?.[0]?.href).toBe(canonicalUrl("/about"));
     expect(aboutHead?.meta).toContainEqual({ property: "og:url", content: canonicalUrl("/about") });
     expect(aboutHead?.meta).toContainEqual({ name: "twitter:card", content: "summary_large_image" });

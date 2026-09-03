@@ -118,10 +118,14 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
 
     const opportunities = mergeGrowthOpportunities(results);
     const insights = mergeGrowthInsights(results);
+    const campaigns = results.flatMap((result) => (result.campaign ? [result.campaign] : []));
+    const recommendations = buildInnovationRecommendations(opportunities, new Map(), growthConfig().thresholds.insightValidationCount);
     const auditEvents = results.flatMap((result) => result.audit);
 
     for (const opportunity of opportunities) await persistGrowthOpportunity(supabaseAdmin, opportunity);
     for (const insight of insights) await persistGrowthInsight(supabaseAdmin, insight);
+    for (const campaign of campaigns) await persistGrowthCampaign(supabaseAdmin, campaign, campaign.opportunityKey);
+    for (const recommendation of recommendations) await persistInnovationRecommendation(supabaseAdmin, recommendation);
     for (const event of auditEvents) await persistGrowthAudit(supabaseAdmin, event);
 
     return {

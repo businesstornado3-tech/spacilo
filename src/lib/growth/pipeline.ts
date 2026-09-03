@@ -12,20 +12,26 @@ import type { IntentReading } from "@/lib/discovery/intent";
 import type { UserRole } from "@/lib/discovery/taxonomy";
 import { growthConfig, scoreBand } from "./config";
 import { getConnector } from "./connectors";
+import { clusterKey, readSemantics, type SemanticReading } from "./semantics";
+import { decideCampaign, evaluatePolicy, type PolicyContext } from "./policy";
+import { buildCampaign, recipientHash } from "./campaign";
 import type {
   AudienceReading,
   AuditEvent,
+  Campaign,
   CampaignDecision,
+  ChannelId,
+  ConsentState,
   FitResult,
   GrowthInsight,
   GrowthOpportunity,
   GrowthRole,
-  PainPoint,
   PipelineResult,
   Situation,
   SourceSignal,
   SupplyContext,
 } from "./types";
+
 
 export type GrowthAnalyticsRow = {
   id: number;

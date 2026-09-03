@@ -123,3 +123,62 @@ export async function persistGrowthAudit(
   );
   if (error) throw new Error(error.message);
 }
+
+/**
+ * Persists a generated campaign without reopening an already-created campaign.
+ * The idempotency key is the durable send boundary; retries must never reset its
+ * state, attempt count or delivery timestamps.
+ */
+export async function persistGrowthCampaign(
+  client: GrowthPersistenceClient,
+  campaign: import("./types").Campaign,
+  sourceIdentity: string,
+): Promise<void> {
+  const { data: existing, error: lookupError } = await client
+    .from("growth_campaigns")
+    .select("id")
+    .eq("idempotency_key", campaign.idempotencyKey)
+    .maybeSingle();
+  if (lookupError) throw new Error(lookupError.message);
+  if (existing) return;
+
+  const { error } = await client.from("growth_campaigns").insert({
+    opportunity_key: campaign.opportunityKey,
+    idempotency_key: campaign.idempotencyKey,
+    campaign_fingerprint: campaign.idempotencyKey,
+    source_identity: sourceIdentity,
+    channel: campaign.channel,
+    message: json(campaign.message),
+    state: campaign.state,
+    decision: json(campaign.decision),
+    policy: json(campaign.policy),
+    sent_at: campaign.sentAt ? new Date(campaign.sentAt).toISOString() : null,
+    expires_at: campaign.expiresAt ? new Date(campaign.expiresAt).toISOString() : null,
+  });
+  if (error && error.code !== "23505") throw new Error(error.message);
+}
+
+/** Persists a human-review innovation recommendation idempotently. */
+export async function persistInnovationRecommendation(
+  client: GrowthPersistenceClient,
+  recommendation: import("./learning").InnovationRecommendation,
+): Promise<void> {
+  const { error } = await client.from("growth_innovation_opportunities").upsert(
+    {
+      opportunity_key: recommendation.opportunityKey,
+      kind: recommendation.kind,
+      title: recommendation.title,
+      problem: recommendation.problem,
+      audience: recommendation.audience,
+      geography: recommendation.geography,
+      evidence_count: recommendation.evidenceCount,
+      conversion_count: recommendation.conversionCount,
+      priority_score: recommendation.priorityScore,
+      recommendation: recommendation.recommendation,
+      components: json(recommendation.components),
+      status: "RECOMMENDED",
+    },
+    { onConflict: "opportunity_key,kind" },
+  );
+  if (error) throw new Error(error.message);
+}

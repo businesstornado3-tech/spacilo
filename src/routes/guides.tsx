@@ -13,7 +13,7 @@ const description = "Practical guidance for organising belongings, planning stor
 export const Route = createFileRoute("/guides")({
   head: ({ matches }) => {
     const base = publicRouteMeta({ title, description, path: "/guides" });
-    const isChildPage = matches.some((match) => match.routeId === "/guides/$slug");
+    const isChildPage = matches.some((match) => String(match.routeId) === "/guides/$slug");
     return {
       ...base,
       links: isChildPage ? [] : base.links,

@@ -167,7 +167,7 @@ describe("Phase 11 end-to-end mock scenario", () => {
 
     const event = {
       eventId: "evt_1",
-      eventName: "booking_confirmed" as const,
+      eventName: "booking_completed" as const,
       occurredAt: NOW,
       path: "/renter/bookings",
       opportunityKey: opportunity.key,

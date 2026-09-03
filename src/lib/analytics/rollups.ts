@@ -57,12 +57,18 @@ export function refreshWindow(days: number, now = new Date()): RollupWindow {
 
 /** Totals for one event name across a set of rollup rows. */
 export function totalFor(rows: readonly RollupRow[], eventName: string): number {
-  return rows.reduce((sum, row) => (row.event_name === eventName ? sum + row.total_events : sum), 0);
+  return rows.reduce(
+    (sum, row) => (row.event_name === eventName ? sum + row.total_events : sum),
+    0,
+  );
 }
 
 /** Public page views across a set of rollup rows. */
 export function publicPageViews(rows: readonly RollupRow[]): number {
-  return rows.reduce((sum, row) => (row.event_name === "page_view" ? sum + row.public_events : sum), 0);
+  return rows.reduce(
+    (sum, row) => (row.event_name === "page_view" ? sum + row.public_events : sum),
+    0,
+  );
 }
 
 /**

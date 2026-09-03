@@ -67,16 +67,27 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
     const rollupWindow = refreshWindow(data.days);
     let rollupsWritten = 0;
     for (const chunk of rebuildChunks(rollupWindow)) {
-      const { data: written, error: rollupError } = await supabaseAdmin.rpc("analytics_rebuild_daily_rollups", {
-        p_from: chunk.from.toISOString(),
-        p_to: chunk.to.toISOString(),
-      });
+      const { data: written, error: rollupError } = await supabaseAdmin.rpc(
+        "analytics_rebuild_daily_rollups",
+        {
+          p_from: chunk.from.toISOString(),
+          p_to: chunk.to.toISOString(),
+        },
+      );
       if (rollupError) throw new Error(rollupError.message);
       rollupsWritten += written ?? 0;
     }
 
     if (!isGrowthFlagEnabled("AI_OPPORTUNITY_RADAR_ENABLED")) {
-      return { scanned: 0, opportunities: 0, insights: 0, campaigns: 0, recommendations: 0, audited: 0, rollupsWritten };
+      return {
+        scanned: 0,
+        opportunities: 0,
+        insights: 0,
+        campaigns: 0,
+        recommendations: 0,
+        audited: 0,
+        rollupsWritten,
+      };
     }
 
     const { data: rows, error } = await supabaseAdmin
@@ -120,7 +131,9 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
     const opportunities = mergeGrowthOpportunities(results);
     const insights = mergeGrowthInsights(results);
     const campaigns = results.flatMap((result) =>
-      result.campaign ? [{ campaign: result.campaign, sourceIdentity: result.signal.connectorId }] : [],
+      result.campaign
+        ? [{ campaign: result.campaign, sourceIdentity: result.signal.connectorId }]
+        : [],
     );
     const { data: learningRows, error: learningError } = await supabaseAdmin
       .from("growth_learning_signals")
@@ -142,12 +155,14 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
     );
     const auditEvents = results.flatMap((result) => result.audit);
 
-    for (const opportunity of opportunities) await persistGrowthOpportunity(supabaseAdmin, opportunity);
+    for (const opportunity of opportunities)
+      await persistGrowthOpportunity(supabaseAdmin, opportunity);
     for (const insight of insights) await persistGrowthInsight(supabaseAdmin, insight);
     for (const { campaign, sourceIdentity } of campaigns) {
       await persistGrowthCampaign(supabaseAdmin, campaign, sourceIdentity);
     }
-    for (const recommendation of recommendations) await persistInnovationRecommendation(supabaseAdmin, recommendation);
+    for (const recommendation of recommendations)
+      await persistInnovationRecommendation(supabaseAdmin, recommendation);
     for (const event of auditEvents) await persistGrowthAudit(supabaseAdmin, event);
 
     return {

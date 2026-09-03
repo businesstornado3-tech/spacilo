@@ -122,9 +122,21 @@ const RULES: readonly Rule[] = [
 ];
 
 const URGENCY_RULES: readonly (readonly [RegExp, Urgency, string])[] = [
-  [/\b(today|tomorrow|asap|urgent|right now|immediately|this week|by friday)\b/, "immediate", "immediate timing"],
-  [/\b(next week|in (a|two|three|2|3) weeks?|this month|next month|end of the month)\b/, "weeks", "weeks away"],
-  [/\b(in (a few|several) months|next (year|term|summer)|later this year)\b/, "months", "months away"],
+  [
+    /\b(today|tomorrow|asap|urgent|right now|immediately|this week|by friday)\b/,
+    "immediate",
+    "immediate timing",
+  ],
+  [
+    /\b(next week|in (a|two|three|2|3) weeks?|this month|next month|end of the month)\b/,
+    "weeks",
+    "weeks away",
+  ],
+  [
+    /\b(in (a few|several) months|next (year|term|summer)|later this year)\b/,
+    "months",
+    "months away",
+  ],
 ];
 
 const DURATION_RE =
@@ -231,7 +243,9 @@ export function readSemantics(rawText: string, reading: IntentReading): Semantic
     likelyNext: primaryRule?.likelyNext ?? null,
     urgency,
     duration,
-    temporary: duration ? true : reading.timeframe === "temporary" || reading.timeframe === "moving_period",
+    temporary: duration
+      ? true
+      : reading.timeframe === "temporary" || reading.timeframe === "moving_period",
     uncertain,
     confidence,
     roles: [...roles],
@@ -251,5 +265,7 @@ export function clusterKey(parts: {
   segment: string;
   locationSlug: string | null;
 }): string {
-  return [parts.situationType, parts.role, parts.segment, parts.locationSlug ?? "uk_wide"].join("|");
+  return [parts.situationType, parts.role, parts.segment, parts.locationSlug ?? "uk_wide"].join(
+    "|",
+  );
 }

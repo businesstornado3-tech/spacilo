@@ -77,8 +77,9 @@ export async function persistGrowthInsight(
     .maybeSingle();
   if (lookupError) throw new Error(lookupError.message);
 
-  const previousKeys = jsonArray(previous?.supporting_keys)
-    .filter((value): value is string => typeof value === "string");
+  const previousKeys = jsonArray(previous?.supporting_keys).filter(
+    (value): value is string => typeof value === "string",
+  );
   const supportingKeys = [...new Set([...previousKeys, ...insight.supportingKeys])];
   const evidenceCount = previous
     ? previous.evidence_count + insight.evidenceCount

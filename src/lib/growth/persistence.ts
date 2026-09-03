@@ -9,10 +9,39 @@ function json(value: unknown): Json {
   return value as Json;
 }
 
+function jsonArray(value: unknown): Json[] {
+  return Array.isArray(value) ? (value as Json[]) : [];
+}
+
+/**
+ * Upserts a need while preserving the durable aggregate already found by an
+ * earlier refresh. The audit event for each source signal is the idempotency
+ * boundary; this merge protects the aggregate if a later run sees new events
+ * for the same underlying need.
+ */
 export async function persistGrowthOpportunity(
   client: GrowthPersistenceClient,
   opportunity: GrowthOpportunity,
 ): Promise<void> {
+  const { data: previous, error: lookupError } = await client
+    .from("growth_opportunities")
+    .select("first_seen_at,latest_seen_at,frequency,evidence")
+    .eq("key", opportunity.key)
+    .maybeSingle();
+  if (lookupError) throw new Error(lookupError.message);
+
+  const firstSeen = previous
+    ? Math.min(Date.parse(previous.first_seen_at), opportunity.firstSeen)
+    : opportunity.firstSeen;
+  const latestSeen = previous
+    ? Math.max(Date.parse(previous.latest_seen_at), opportunity.latestSeen)
+    : opportunity.latestSeen;
+  const frequency = previous ? previous.frequency + opportunity.frequency : opportunity.frequency;
+  const evidence = [
+    ...jsonArray(previous?.evidence),
+    ...opportunity.evidence.map((item) => json(item)),
+  ].slice(-12);
+
   const { error } = await client.from("growth_opportunities").upsert(
     {
       key: opportunity.key,
@@ -26,20 +55,35 @@ export async function persistGrowthOpportunity(
       scores: json(opportunity.scores),
       campaign_decision: json(opportunity.decision),
       status: opportunity.status,
-      first_seen_at: new Date(opportunity.firstSeen).toISOString(),
-      latest_seen_at: new Date(opportunity.latestSeen).toISOString(),
-      frequency: opportunity.frequency,
-      evidence: json(opportunity.evidence),
+      first_seen_at: new Date(firstSeen).toISOString(),
+      latest_seen_at: new Date(latestSeen).toISOString(),
+      frequency,
+      evidence: json(evidence),
     },
     { onConflict: "key" },
   );
   if (error) throw new Error(error.message);
 }
 
+/** Preserves insight evidence counts/supporting keys across refreshes. */
 export async function persistGrowthInsight(
   client: GrowthPersistenceClient,
   insight: GrowthInsight,
 ): Promise<void> {
+  const { data: previous, error: lookupError } = await client
+    .from("growth_insights")
+    .select("evidence_count,supporting_keys")
+    .eq("insight_key", insight.id)
+    .maybeSingle();
+  if (lookupError) throw new Error(lookupError.message);
+
+  const previousKeys = jsonArray(previous?.supporting_keys)
+    .filter((value): value is string => typeof value === "string");
+  const supportingKeys = [...new Set([...previousKeys, ...insight.supportingKeys])];
+  const evidenceCount = previous
+    ? previous.evidence_count + insight.evidenceCount
+    : insight.evidenceCount;
+
   const { error } = await client.from("growth_insights").upsert(
     {
       insight_key: insight.id,
@@ -48,8 +92,8 @@ export async function persistGrowthInsight(
       problem: insight.problem,
       audience: insight.audience,
       geography: insight.geography,
-      evidence_count: insight.evidenceCount,
-      supporting_keys: json(insight.supportingKeys),
+      evidence_count: evidenceCount,
+      supporting_keys: json(supportingKeys),
       recommendation: insight.recommendation,
       components: json(insight.components),
       confidence: insight.confidence,

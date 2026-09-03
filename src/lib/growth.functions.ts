@@ -66,10 +66,23 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
       .limit(growthConfig().budgets.maxSignalsPerRun);
     if (error) throw new Error(error.message);
 
-    const results = (rows ?? []).flatMap((row) => {
+    const candidateSignals = (rows ?? []).flatMap((row) => {
       const signal = analyticsRowToSignal(row);
-      return signal ? [buildGrowthPipeline(signal)] : [];
+      return signal ? [signal] : [];
     });
+    const signalIds = candidateSignals.map((signal) => `${signal.id}:signal_ingested`);
+    const { data: ingested, error: ingestedError } = signalIds.length
+      ? await supabase
+          .from("growth_audit_events")
+          .select("event_key")
+          .in("event_key", signalIds)
+      : { data: [], error: null };
+    if (ingestedError) throw new Error(ingestedError.message);
+
+    const alreadyIngested = new Set((ingested ?? []).map((event) => event.event_key));
+    const results = candidateSignals
+      .filter((signal) => !alreadyIngested.has(`${signal.id}:signal_ingested`))
+      .map((signal) => buildGrowthPipeline(signal));
 
     const opportunities = mergeGrowthOpportunities(results);
     const insights = mergeGrowthInsights(results);

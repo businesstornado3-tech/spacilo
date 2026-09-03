@@ -6,6 +6,21 @@ import { scoreOpportunity } from "./scoring";
 import { readIntent } from "./intent";
 import { planCapabilities } from "./matching";
 
+const HARDENING_CASES = [
+  ["what can I do with my empty room?", "underused_space", "prospective_host", "space_estimate"],
+  ["make better use of my warehouse", "commercial_space_optimisation", "prospective_host", "space_scanner"],
+  ["too much stock for my shop", "business_overflow", "renter", "location_search"],
+  ["student storage Bristol", "transition", "renter", "location_search"],
+  ["earn side income", "monetisation_unknown", "prospective_host", "space_estimate"],
+  ["earn passive income", "monetisation_unknown", "prospective_host", "space_estimate"],
+  ["make money from unused space", "underused_space", "prospective_host", "space_estimate"],
+  ["make money from my garage", "underused_space", "prospective_host", "space_estimate"],
+  ["storage Oxford", "none", "renter", "location_search"],
+  ["storage near me", "none", "renter", "location_search"],
+  ["make money from my garage in Leeds", "underused_space", "prospective_host", "space_estimate"],
+  ["store business equipment", "none", "renter", "location_search"],
+] as const;
+
 describe("discovery safety", () => {
   it("routes a multi-dimensional query to a factual destination", () => {
     const result = resolveDiscovery("storage near Manchester for furniture while moving");

@@ -47,7 +47,7 @@ type Pattern = {
 const PATTERNS: readonly Pattern[] = [
   {
     id: "what_can_i_do_with_space",
-    test: new RegExp(`\\b(what|anything)\\s+(can|could|should)\\s+(i|we)\\s+(do|use)\\b[\\s\\S]{0,40}\\b(${SPACE_NOUNS})\\b`),
+    test: new RegExp(`\\b(what|anything)\\s+(can|could|should)\\s+(i|we)\\s+(do|use)\\b[\\s\\S]{0,40}\\b(${SPACE_NOUNS})\\b|\\b(make|earn)\\s+(money|income)\\s+(from|with)\\b[\\s\\S]{0,30}\\b(${SPACE_NOUNS})\\b`),
     problems: [
       ["underused_space", 0.85],
       ["monetisation_unknown", 0.7],

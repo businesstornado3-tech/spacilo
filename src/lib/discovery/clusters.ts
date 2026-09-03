@@ -419,6 +419,13 @@ export function matchCluster(reading: IntentReading): { cluster: IntentCluster; 
 
   for (const cluster of CLUSTERS) {
     let score = 0;
+    for (const problem of reading.problems) {
+      if (cluster.id === "problem_earn_from_unused_space" && ["underused_space", "monetisation_unknown"].includes(problem.value)) score += 0.9 * problem.weight;
+      if (cluster.id === "use_case_business_stock" && ["business_overflow", "excess_inventory", "commercial_space_optimisation"].includes(problem.value)) score += 0.9 * problem.weight;
+      if (cluster.id === "use_case_student_storage" && reading.segment === "student" && problem.value === "transition") score += 0.9 * problem.weight;
+    }
+    if (cluster.id === "use_case_business_stock" && reading.segment === "business") score += 0.8;
+    if (cluster.id === "use_case_student_storage" && reading.segment === "student") score += 0.8;
     for (const phrase of cluster.phrases) {
       if (reading.query.includes(phrase)) score += 1;
       // Partial credit when most words of a cluster phrase appear.

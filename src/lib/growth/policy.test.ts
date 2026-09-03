@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { resetGrowthConfig, setGrowthConfig } from "./config";
+import { defaultAutonomyConfig, resetGrowthConfig, setGrowthConfig } from "./config";
 import { resetChannels, registerChannel } from "./channels";
 import { resetConnectors } from "./connectors";
 import { decideCampaign, evaluatePolicy } from "./policy";

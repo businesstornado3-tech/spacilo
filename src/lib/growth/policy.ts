@@ -116,10 +116,10 @@ export function evaluatePolicy(context: PolicyContext): PolicyDecision {
   const configurationGates = new Set(["channel_usable", "connector_may_campaign", "outbound_enabled"]);
   const requiresConfiguration = failed.some((item) => configurationGates.has(item.id));
 
-  // An absolute block (opt-out, emergency stop) can never be deferred into a
-  // later send; everything else that fails simply waits.
+  // An explicit opt-out, emergency stop or disabled master phase can never be
+  // deferred into a later send; missing contact/consent is safely captured.
   const absolute = failed.some((item) =>
-    ["not_opted_out", "emergency_stop_clear", "phase11_enabled", "consent_basis"].includes(item.id),
+    ["not_opted_out", "emergency_stop_clear", "phase11_enabled"].includes(item.id),
   );
 
   const verdict = failed.length === 0 ? "ALLOW" : absolute ? "BLOCK" : requiresConfiguration ? "DEFER" : "DEFER";

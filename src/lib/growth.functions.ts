@@ -63,17 +63,28 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
       persistGrowthAudit,
     } = await import("@/lib/growth");
 
-    if (!isGrowthFlagEnabled("AI_OPPORTUNITY_RADAR_ENABLED")) {
-      return { scanned: 0, opportunities: 0, insights: 0, campaigns: 0, recommendations: 0, audited: 0, rollupsWritten: 0 };
+    const rollupWindow = refreshWindow(data.days);
+    let rollupsWritten = 0;
+    for (const chunk of rebuildChunks(rollupWindow)) {
+      const { data: written, error: rollupError } = await supabaseAdmin.rpc("analytics_rebuild_daily_rollups", {
+        p_from: chunk.from.toISOString(),
+        p_to: chunk.to.toISOString(),
+      });
+      if (rollupError) throw new Error(rollupError.message);
+      rollupsWritten += written ?? 0;
     }
 
-    const since = new Date(Date.now() - data.days * 24 * 60 * 60 * 1000).toISOString();
+    if (!isGrowthFlagEnabled("AI_OPPORTUNITY_RADAR_ENABLED")) {
+      return { scanned: 0, opportunities: 0, insights: 0, campaigns: 0, recommendations: 0, audited: 0, rollupsWritten };
+    }
+
     const { data: rows, error } = await supabaseAdmin
       .from("analytics_events")
       .select("id,event_name,path,props,occurred_at,environment,is_bot")
       .eq("environment", "production")
       .eq("is_bot", false)
-      .gte("occurred_at", since)
+      .gte("occurred_at", rollupWindow.from.toISOString())
+      .lt("occurred_at", rollupWindow.to.toISOString())
       .order("occurred_at", { ascending: false })
       .limit(growthConfig().budgets.maxSignalsPerRun);
     if (error) throw new Error(error.message);

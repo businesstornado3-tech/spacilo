@@ -51,6 +51,8 @@ export type GeographyPlace = {
   trendPercent: number | null;
   /** Plot position, or null when the place has no catalogue coordinate. */
   plot: { x: number; y: number } | null;
+  /** Approximate town/city centre coordinate, or null when unknown. */
+  point: { lat: number; lng: number } | null;
   /** Campaign priority derived from demand, scarcity and momentum. */
   priority: "HIGH" | "MEDIUM" | "LOW";
 };

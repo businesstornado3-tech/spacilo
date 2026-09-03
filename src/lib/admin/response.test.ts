@@ -68,7 +68,6 @@ describe("founder dashboard RPC response integration", () => {
       attentionCounts: {},
       devices: [],
       topPages: [],
-      sources: [],
     });
   });
 

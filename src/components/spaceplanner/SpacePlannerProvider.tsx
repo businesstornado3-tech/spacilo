@@ -19,7 +19,6 @@ import {
   simulationEngine,
   earnroomScore,
   type InventoryLine,
-  type PlannerCapabilities,
   type PlannerMode,
   type EarnRoomScore,
   type SpacePlan,
@@ -27,34 +26,16 @@ import {
   type StorageSpace,
 } from "@/lib/spaceplanner";
 
-export type PlannerPhase = "build" | "thinking" | "plan";
+import {
+  PlannerContext,
+  useSpacePlanner,
+  type PlannerContextValue,
+  type PlannerPhase,
+} from "@/components/spaceplanner/planner-context";
 
-export interface PlannerContextValue {
-  capabilities: PlannerCapabilities;
-  quantities: Record<string, number>;
-  lines: InventoryLine[];
-  itemCount: number;
-  itemTypeCount: number;
-  rawVolume: number;
-  /** True when a visitor has reached their catalogue-line allowance. */
-  atItemLimit: boolean;
-  space: StorageSpace;
-  plan: SpacePlan | null;
-  score: EarnRoomScore | null;
-  phase: PlannerPhase;
-  /** Set once a run has completed in this session — drives the unlock card. */
-  hasCompletedRun: boolean;
-  setQuantity: (itemId: string, quantity: number) => void;
-  addOne: (itemId: string) => void;
-  loadPreset: (lines: Array<{ itemId: string; quantity: number }>) => void;
-  clear: () => void;
-  setSpace: (space: StorageSpace) => void;
-  setPhase: (phase: PlannerPhase) => void;
-  run: () => void;
-  completeRun: () => void;
-}
+export { useSpacePlanner };
+export type { PlannerContextValue, PlannerPhase };
 
-const PlannerContext = React.createContext<PlannerContextValue | null>(null);
 
 export interface SpacePlannerProviderProps {
   mode: PlannerMode;

@@ -52,7 +52,7 @@ export function AdminShell({
     <div className="min-h-dvh overflow-x-hidden bg-background">
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:px-6">
-          <Logo to="/admin/dashboard" />
+          <Logo to="/admin/dashboard" variant="header" />
           <span className="hidden rounded-full border border-primary/30 bg-primary-soft px-2.5 py-1 type-body-xs font-semibold text-primary-soft-foreground sm:inline">
             Founder console
           </span>

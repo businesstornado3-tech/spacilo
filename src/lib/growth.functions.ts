@@ -142,7 +142,9 @@ export const refreshGrowthRadar = createServerFn({ method: "POST" })
 
     for (const opportunity of opportunities) await persistGrowthOpportunity(supabaseAdmin, opportunity);
     for (const insight of insights) await persistGrowthInsight(supabaseAdmin, insight);
-    for (const campaign of campaigns) await persistGrowthCampaign(supabaseAdmin, campaign, campaign.opportunityKey);
+    for (const { campaign, sourceIdentity } of campaigns) {
+      await persistGrowthCampaign(supabaseAdmin, campaign, sourceIdentity);
+    }
     for (const recommendation of recommendations) await persistInnovationRecommendation(supabaseAdmin, recommendation);
     for (const event of auditEvents) await persistGrowthAudit(supabaseAdmin, event);
 

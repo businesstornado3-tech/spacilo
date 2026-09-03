@@ -41,51 +41,87 @@ function trendText(place: GeographyPlace): string {
   return `${TREND_LABEL[place.trend]} ${sign}${Math.round(place.trendPercent)}%`;
 }
 
-/**
- * A plain SVG outline-free scatter of UK places. No tiles, no third-party map
- * library and no coordinates for anything except the canonical place list, so
- * nothing about an individual can be inferred from it.
- */
-function UkScatter({ places }: { places: GeographyPlace[] }) {
-  const plotted = places.filter((place) => place.plot !== null);
-  if (plotted.length === 0) return null;
-  const maxDemand = Math.max(...plotted.map((place) => place.demandEvents), 1);
+const DemandMap = React.lazy(() => import("@/components/admin/DemandMap"));
+
+export type GeographyFilterId =
+  | "ALL"
+  | "NO_SUPPLY"
+  | "THIN_SUPPLY"
+  | "SUPPLY_AVAILABLE"
+  | "SUPPLY_AHEAD"
+  | "REQUESTED"
+  | "BOOKED";
+
+export const GEOGRAPHY_FILTERS: ReadonlyArray<{ id: GeographyFilterId; label: string }> = [
+  { id: "ALL", label: "All demand" },
+  { id: "NO_SUPPLY", label: "No supply" },
+  { id: "THIN_SUPPLY", label: "Thin supply" },
+  { id: "SUPPLY_AVAILABLE", label: "Supply available" },
+  { id: "SUPPLY_AHEAD", label: "Supply ahead of demand" },
+  { id: "REQUESTED", label: "Reached a storage request" },
+  { id: "BOOKED", label: "Reached a booking" },
+];
+
+/** Filters operate only on figures that genuinely exist in production rows. */
+export function applyGeographyFilter(
+  places: readonly GeographyPlace[],
+  filter: GeographyFilterId,
+): GeographyPlace[] {
+  switch (filter) {
+    case "NO_SUPPLY":
+      return places.filter((p) => p.supplyState === "NO_SUPPLY");
+    case "THIN_SUPPLY":
+      return places.filter((p) => p.supplyState === "THIN_SUPPLY");
+    case "SUPPLY_AVAILABLE":
+      return places.filter((p) => p.publishedSpaces > 0);
+    case "SUPPLY_AHEAD":
+      return places.filter((p) => p.supplyState === "SURPLUS_SUPPLY");
+    case "REQUESTED":
+      return places.filter((p) => p.storageRequests > 0);
+    case "BOOKED":
+      return places.filter((p) => p.bookings > 0);
+    default:
+      return [...places];
+  }
+}
+
+function MapPanel({
+  places,
+  selected,
+  onSelect,
+}: {
+  places: GeographyPlace[];
+  selected: string | null;
+  onSelect: (slug: string) => void;
+}) {
+  const plotted = places.filter((place) => place.point !== null);
 
   return (
     <div className="rounded-2xl border border-border bg-card p-3 sm:p-4">
       <h3 className="type-label">Where demand is being expressed</h3>
       <p className="mt-1 type-body-xs text-muted-foreground">
-        Positions are the approximate centre of each named town or city, sized by how much location
-        intent it attracted. It is not a map of visitor locations.
+        Showing locations people explicitly named in searches, discovery or location intent — not
+        inferred visitor GPS/IP locations. Bubbles sit on the approximate centre of each named town
+        or city and are sized by how much location intent it attracted.
       </p>
-      <svg
-        viewBox="0 0 100 130"
-        className="mx-auto mt-3 h-72 w-full max-w-xs"
-        role="img"
-        aria-label={`Scatter plot of ${plotted.length} UK places by declared location intent`}
-      >
-        <rect x="0" y="0" width="100" height="130" rx="4" className="fill-secondary" />
-        {plotted.map((place) => {
-          const radius = 1.6 + (place.demandEvents / maxDemand) * 4.4;
-          return (
-            <circle
-              key={place.slug}
-              cx={place.plot!.x}
-              cy={place.plot!.y}
-              r={radius}
-              className={
-                place.supplyState === "NO_SUPPLY" || place.supplyState === "THIN_SUPPLY"
-                  ? "fill-warning/70"
-                  : "fill-primary/70"
-              }
-            >
-              <title>{`${place.name}: ${formatCount(place.demandEvents)} location-intent events, ${formatCount(place.publishedSpaces)} published spaces`}</title>
-            </circle>
-          );
-        })}
-      </svg>
+      <div className="mt-3 h-[360px] w-full overflow-hidden rounded-2xl">
+        {plotted.length === 0 ? (
+          <div className="flex size-full items-center justify-center rounded-2xl border border-dashed border-border p-6 text-center type-body-sm text-muted-foreground">
+            No sufficient geographic demand data yet for this view.
+          </div>
+        ) : (
+          <React.Suspense
+            fallback={<div className="size-full animate-pulse rounded-2xl bg-muted" />}
+          >
+            <DemandMap places={plotted} selectedSlug={selected} onSelectPlace={onSelect} />
+          </React.Suspense>
+        )}
+      </div>
       <p className="mt-2 type-body-xs text-muted-foreground">
         Amber marks places with no or thin supply — real demand EarnRoom currently cannot serve.
+        {places.length > plotted.length
+          ? ` ${places.length - plotted.length} named place(s) have no catalogue coordinate and appear in the table only.`
+          : ""}
       </p>
     </div>
   );

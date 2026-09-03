@@ -128,11 +128,13 @@ describe("discovery navigation and route metadata", () => {
   });
 
   it("gives each tool and guide child its own canonical and a single H1", async () => {
-    const toolHead = await ToolRoute.options.head?.({ params: { slug: CAPABILITIES[0].slug }, loaderData: { capability: CAPABILITIES[0] } } as never);
-    const guide = GUIDE_CLUSTERS[0];
-    const guideHead = await GuideRoute.options.head?.({ params: { slug: guide.path.split("/").pop() }, loaderData: { guide } } as never);
-    expect(toolHead?.links?.[0]?.href).toBe(canonicalUrl(`/tools/${CAPABILITIES[0].slug}`));
-    expect(guideHead?.links?.[0]?.href).toBe(canonicalUrl(guide.path));
+    const firstCapability = CAPABILITIES[0];
+    const firstGuide = GUIDE_CLUSTERS[0];
+    if (!firstCapability || !firstGuide) throw new Error("SEO fixtures are empty");
+    const toolHead = await ToolRoute.options.head?.({ params: { slug: firstCapability.slug }, loaderData: { capability: firstCapability } } as never);
+    const guideHead = await GuideRoute.options.head?.({ params: { slug: firstGuide.path.split("/").pop() ?? "" }, loaderData: { guide: firstGuide } } as never);
+    expect(toolHead?.links?.[0]?.href).toBe(canonicalUrl(`/tools/${firstCapability.slug}`));
+    expect(guideHead?.links?.[0]?.href).toBe(canonicalUrl(firstGuide.path));
     expect(read("src/routes/tools.$slug.tsx").match(/<h1\b/g)).toHaveLength(1);
     expect(read("src/routes/guides.$slug.tsx").match(/<h1\b/g)).toHaveLength(1);
   });

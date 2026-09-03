@@ -130,7 +130,7 @@ export type OutcomeCard = {
   id: string;
   title: string;
   summary: string;
-  label?: string;
+  label?: string | undefined;
   /** Where the outcome sends the person next. */
   to: string;
   /** Capability names behind the outcome, derived from the intent engine. */

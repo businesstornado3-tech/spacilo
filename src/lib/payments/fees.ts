@@ -14,11 +14,12 @@
 
 /** 12% expressed in basis points. */
 import { brand } from "@/config/brand";
+import { PLATFORM_FEE_MINIMUM_PENCE, PLATFORM_FEE_PERCENT } from "@/config/commercial";
 
-export const SERVICE_FEE_RATE_BPS = 1200;
+export const SERVICE_FEE_RATE_BPS = PLATFORM_FEE_PERCENT * 100;
 
 /** £5.00 floor, in pence. */
-export const SERVICE_FEE_MINIMUM_PENCE = 500;
+export const SERVICE_FEE_MINIMUM_PENCE = PLATFORM_FEE_MINIMUM_PENCE;
 
 export const PAYMENT_CURRENCY = "GBP";
 

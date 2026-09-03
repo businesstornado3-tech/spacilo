@@ -48,9 +48,9 @@ const ctx = (patch: Record<string, unknown> = {}) => ({
 });
 
 describe("payout release timing", () => {
-  it("releases 24 hours after the storage start date", () => {
-    expect(PAYOUT_RELEASE_DELAY_HOURS).toBe(24);
-    expect(payoutEligibleAt("2026-03-10").toISOString()).toBe("2026-03-11T00:00:00.000Z");
+  it("releases 7 calendar days after the storage start date", () => {
+    expect(PAYOUT_RELEASE_DELAY_HOURS).toBe(168);
+    expect(payoutEligibleAt("2026-03-10").toISOString()).toBe("2026-03-17T00:00:00.000Z");
   });
 
   it("rejects an unparseable start date rather than paying early", () => {

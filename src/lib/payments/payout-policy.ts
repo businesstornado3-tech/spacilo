@@ -12,6 +12,7 @@
  *
  * Everything here is integer pence. Nothing here decides money on its own.
  */
+import { HOST_PAYOUT_HOLD_HOURS } from "@/config/commercial";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type HostEarning = Tables<"host_earnings">;
@@ -19,8 +20,8 @@ export type HostPayoutAccount = Tables<"host_payout_accounts">;
 export type HostEarningStatus = HostEarning["status"];
 export type HostPayoutStatus = HostPayoutAccount["status"];
 
-/** Safety delay after the storage start date before funds may be released. */
-export const PAYOUT_RELEASE_DELAY_HOURS = 24;
+/** Safety delay after the storage start date before funds may be released (7 days). */
+export const PAYOUT_RELEASE_DELAY_HOURS = HOST_PAYOUT_HOLD_HOURS;
 
 export const PAYOUT_CURRENCY = "GBP";
 

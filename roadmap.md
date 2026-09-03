@@ -22,3 +22,15 @@ Open items for the owner (not code work):
 - [x] Preserve platform refund/chargeback loss bearer and existing payment safety flows
 - [x] Add zero/unknown VAT snapshots for future readiness without changing checkout totals
 - [ ] Confirm UK VAT treatment with a qualified adviser before any VAT activation
+
+## Phase 11 — autonomous opportunity, campaign and growth engine
+
+- [x] Define open-ended opportunity, audience, intent, supply, campaign, policy and learning contracts
+- [x] Register connector permissions with first-party-only analysis and blocked unauthorised marketplace automation
+- [x] Persist opportunities, insights, learning signals, campaigns, autonomy configuration and append-only audit events
+- [x] Build deterministic, evidence-backed opportunity scoring with zero-supply-safe recommendations
+- [x] Add idempotent first-party analytics ingestion with bounded server-side refresh
+- [x] Add Founder Dashboard growth radar with admin-only refresh and honest empty/error states
+- [x] Keep outbound sending disabled and all campaign decisions capture-only
+- [x] Verify privacy filtering, blocked connectors, supply claims, emergency stop and repeat aggregation with regression tests
+- [ ] Add separately authorised connectors only after legal, terms and consent review

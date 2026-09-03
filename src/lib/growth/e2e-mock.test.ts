@@ -111,7 +111,7 @@ describe("Phase 11 end-to-end mock scenario", () => {
     const landing = landingAttribution({ path: "/search", params: { utm_campaign: "growth" }, now: NOW });
     const record = attributionRecord({
       eventId: "evt_1",
-      eventName: "booking_confirmed",
+      eventName: "booking_completed",
       occurredAt: NOW + 3600_000,
       path: "/renter/bookings",
       opportunityKey: opportunity!.key,

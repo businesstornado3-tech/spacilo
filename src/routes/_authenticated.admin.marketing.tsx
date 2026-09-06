@@ -60,7 +60,9 @@ function Pill({
 
 function MarketingStudioRoute() {
   const studio = useMarketingStudio(true);
+  const connections = usePublishingConnections(true);
   const snapshot = studio.query.data;
+  const providerConfigured = connections.query.data?.provider.state === "CONFIGURED";
 
   const toolbar = (
     <button

@@ -59,13 +59,32 @@ const ELEMENTS: Record<string, Shape[]> = {
   person: person(0.16),
   "person-boxes": [...person(0.14), ...box(0.6, 0.42, 0.34, 0.3)],
   family: [
-    ...person(0.2).map((shape) =>
-      shape.kind === "circle" ? { ...shape, x: 0.34 } : { ...shape, points: shape.kind === "path" ? shape.points.map((p) => ({ x: p.x - 0.16, y: p.y })) : [] },
-    ),
-    ...person(0.3).map((shape) =>
-      shape.kind === "circle" ? { ...shape, x: 0.7, r: 0.075 } : { ...shape, points: shape.kind === "path" ? shape.points.map((p) => ({ x: p.x + 0.2, y: p.y })) : [] },
-    ),
-  ].filter((shape) => shape.kind !== "path" || shape.points.length > 0) as Shape[],
+    { kind: "circle", x: 0.34, y: 0.24, r: 0.1, fill: "ink" },
+    {
+      kind: "path",
+      points: [
+        { x: 0.16, y: 1 },
+        { x: 0.2, y: 0.38 },
+        { x: 0.48, y: 0.38 },
+        { x: 0.52, y: 1 },
+      ],
+      closed: true,
+      fill: "primary",
+    },
+    { kind: "circle", x: 0.74, y: 0.44, r: 0.07, fill: "ink" },
+    {
+      kind: "path",
+      points: [
+        { x: 0.62, y: 1 },
+        { x: 0.65, y: 0.54 },
+        { x: 0.83, y: 0.54 },
+        { x: 0.86, y: 1 },
+      ],
+      closed: true,
+      fill: "primarySoft",
+    },
+  ],
+
   student: [...person(0.18), ...box(0.06, 0.5, 0.24, 0.24)],
   host: [...person(0.16, "success")],
 

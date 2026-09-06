@@ -57,15 +57,19 @@ export async function workerHealth(fetchImpl?: typeof fetch): Promise<WorkerHeal
     const response = await doFetch(`${config.url}/health`, { headers: authHeaders() });
     if (!response.ok) {
       return {
-        ...offline(`The video worker answered with HTTP ${response.status}.`),
-        status: response.status === 401 || response.status === 403 ? "ERROR" : "OFFLINE",
+        ...offline(
+          response.status === 401 || response.status === 403
+            ? "The video worker rejected EarnRoom's access token."
+            : `The video worker answered with HTTP ${response.status}.`,
+        ),
+        status: response.status === 401 || response.status === 403 ? "AUTH_FAILED" : "OFFLINE",
       };
     }
     const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
     const reported =
       typeof body["status"] === "string" ? body["status"].toUpperCase() : "AVAILABLE";
     const status: WorkerStatus = (
-      ["AVAILABLE", "BUSY", "OFFLINE", "MODEL_LOADING", "ERROR"] as const
+      ["AVAILABLE", "BUSY", "OFFLINE", "MODEL_LOADING", "AUTH_FAILED", "ERROR"] as const
     ).includes(reported as WorkerStatus)
       ? (reported as WorkerStatus)
       : "ERROR";

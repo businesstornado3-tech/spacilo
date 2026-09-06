@@ -82,12 +82,17 @@ def build_filtergraph(overlay: dict, width: int, height: int, font: str) -> tupl
             step += 1
         elif layer.get("kind") == "text":
             role = layer.get("role", "caption")
-            size = max(12, int(TEXT_SIZE.get(role, 0.035) * height))
+            value = str(layer.get("value", ""))
+            usable = width * (1 - float(safe.get("left", 0.05)) - float(safe.get("right", 0.05)))
+            # Shrink to fit the safe width rather than run off the frame.
+            fitted = int(usable / max(1, len(value)) * 1.9)
+            size = max(12, min(int(TEXT_SIZE.get(role, 0.035) * height), fitted))
             if layer.get("position") == "lower-third":
                 y = f"H-{int(height * (bottom + 0.06))}"
             else:
-                y = f"(H/2)+{int(height * 0.06) + text_slot * int(size * 1.5)}"
+                y = f"(H/2)+{int(height * 0.06) + text_slot * int(size * 1.6)}"
                 text_slot += 1
+
             chain += (
                 f";[v{step}]drawtext=fontfile='{_escape(font)}':text='{_escape(str(layer.get('value', '')))}'"
                 f":fontcolor=white:fontsize={size}:x=(w-text_w)/2:y={y}"

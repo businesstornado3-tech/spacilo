@@ -33,6 +33,7 @@ export function useCampaignVideos(campaignId: string | null) {
   const fetchVideos = useServerFn(getCampaignVideos);
   const generate = useServerFn(generateCampaignVideo);
   const poll = useServerFn(pollCampaignVideo);
+  const cancel = useServerFn(cancelCampaignVideo);
 
   const query = useQuery<{ videos: MarketingVideoRow[] }>({
     queryKey: marketingVideoKeys.videos(campaignId ?? "none"),
@@ -66,8 +67,18 @@ export function useCampaignVideos(campaignId: string | null) {
     query,
     generating,
     generate: useMutation({
-      mutationFn: (input: { assetId: string; tier: "draft" | "final" }) =>
-        generate({ data: { campaignId: campaignId!, ...input } }),
+      mutationFn: (input: {
+        assetId: string;
+        tier: "draft" | "final";
+        confirmPaid?: boolean;
+      }) =>
+        generate({
+          data: { campaignId: campaignId!, confirmPaid: false, ...input },
+        }),
+      onSuccess: invalidate,
+    }),
+    cancel: useMutation({
+      mutationFn: (videoId: string) => cancel({ data: { videoId } }),
       onSuccess: invalidate,
     }),
     poll: pollMutation,
@@ -81,6 +92,7 @@ export function usePublishingConnections(enabled: boolean) {
   const disconnect = useServerFn(disconnectPlatform);
   const test = useServerFn(testPlatformConnection);
   const update = useServerFn(updatePlatformPublishing);
+  const setVideoProvider = useServerFn(updateVideoProviderSettings);
 
   const query = useQuery<PublishingConnectionsSnapshot>({
     queryKey: marketingVideoKeys.connections(),
@@ -97,6 +109,13 @@ export function usePublishingConnections(enabled: boolean) {
     test: useMutation({ mutationFn: (platform: string) => test({ data: { platform } }) }),
     disconnect: useMutation({
       mutationFn: (platform: string) => disconnect({ data: { platform } }),
+      onSuccess: invalidate,
+    }),
+    videoProvider: useMutation({
+      mutationFn: (input: {
+        provider?: "SELF_HOSTED" | "PAID_HOSTED";
+        paidProviderEnabled?: boolean;
+      }) => setVideoProvider({ data: input }),
       onSuccess: invalidate,
     }),
     update: useMutation({

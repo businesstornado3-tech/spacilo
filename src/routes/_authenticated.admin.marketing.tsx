@@ -9,9 +9,12 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AdminShell, AdminSectionBlock } from "@/components/admin/AdminShell";
+import { MarketingConnections } from "@/components/admin/MarketingConnections";
+import { MarketingVideoPanel } from "@/components/admin/MarketingVideoPanel";
 import { EmptyState, LoadingState } from "@/components/common/States";
 import { Alert } from "@/components/common/Alert";
 import { useMarketingStudio } from "@/hooks/useMarketingStudio";
+import { usePublishingConnections } from "@/hooks/useMarketingVideos";
 import { definition } from "@/lib/marketing/platforms";
 import { cn } from "@/lib/utils";
 
@@ -57,7 +60,9 @@ function Pill({
 
 function MarketingStudioRoute() {
   const studio = useMarketingStudio(true);
+  const connections = usePublishingConnections(true);
   const snapshot = studio.query.data;
+  const providerConfigured = connections.query.data?.provider.state === "CONFIGURED";
 
   const toolbar = (
     <button
@@ -227,11 +232,24 @@ function MarketingStudioRoute() {
                       <p className="mt-2 type-body-xs text-primary">{asset.hashtags.join(" ")}</p>
                       {asset.videoUrl === null ? (
                         <p className="mt-2 type-body-xs text-warning-soft-foreground">
-                          No video rendered — a video provider is not configured.
+                          No video rendered yet.
                         </p>
                       ) : null}
                     </div>
                   ))}
+                </div>
+
+                <div className="rounded-xl border border-border p-4">
+                  <h4 className="type-h5">Video preview</h4>
+                  <p className="mt-1 mb-3 type-body-sm text-muted-foreground">
+                    Each clip is produced for that platform's shape and length, with the EarnRoom
+                    lock-up, tagline and web address added on the end card.
+                  </p>
+                  <MarketingVideoPanel
+                    campaignId={snapshot.today.id}
+                    assets={snapshot.today.assets}
+                    providerConfigured={providerConfigured}
+                  />
                 </div>
 
                 <div className="flex flex-wrap gap-2">
@@ -299,6 +317,14 @@ function MarketingStudioRoute() {
                 </li>
               ))}
             </ul>
+          </AdminSectionBlock>
+
+          <AdminSectionBlock
+            id="connections"
+            title="Accounts and publishing"
+            note="Connect each account on that platform's own sign-in screen. EarnRoom never asks for or stores a platform password."
+          >
+            <MarketingConnections />
           </AdminSectionBlock>
 
           <AdminSectionBlock

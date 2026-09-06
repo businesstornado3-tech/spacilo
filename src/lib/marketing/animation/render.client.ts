@@ -223,7 +223,7 @@ async function pickCodec(width: number, height: number, fps: number): Promise<st
         width,
         height,
         framerate: fps,
-        bitrate: 6_000_000,
+        bitrate: 3_200_000,
       });
       if (support.supported) return codec;
     } catch {
@@ -275,7 +275,7 @@ export async function renderAnimatedPlan(
       encodeError = error instanceof Error ? error : new Error(String(error));
     },
   });
-  encoder.configure({ codec, width, height, framerate: fps, bitrate: 6_000_000 });
+  encoder.configure({ codec, width, height, framerate: fps, bitrate: 3_200_000 });
 
   const totalFrames = Math.max(1, Math.round(plan.seconds * fps));
   let frameIndex = 0;

@@ -117,7 +117,9 @@ export type AnimatedPlan = {
 };
 
 export const FRAME_SIZES: Record<AspectRatio, { width: number; height: number }> = {
-  "9:16": { width: 1080, height: 1920 },
-  "1:1": { width: 1080, height: 1080 },
-  "16:9": { width: 1920, height: 1080 },
+  // 720p-class frames: sharp on every platform, and small enough to send back
+  // to the server in one request without a paid upload path.
+  "9:16": { width: 720, height: 1280 },
+  "1:1": { width: 720, height: 720 },
+  "16:9": { width: 1280, height: 720 },
 };

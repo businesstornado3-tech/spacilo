@@ -20,7 +20,7 @@ const asset = (over: Partial<PlatformAsset> = {}): PlatformAsset => ({
   state: "GENERATED",
   videoUrl: "https://storage.example/clip.mp4",
   thumbnailUrl: null,
-  videoStatus: "READY",
+  videoStatus: "GENERATED",
   ...over,
 });
 

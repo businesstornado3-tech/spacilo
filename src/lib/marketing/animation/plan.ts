@@ -8,7 +8,8 @@
  *
  * Pure module: no canvas, no network, no clock.
  */
-import { BRAND } from "@/config/brand";
+import { brand } from "@/config/brand";
+import { siteOrigin } from "@/lib/seo/meta";
 
 import type { CampaignStory, PlatformAsset, StoryScene } from "../types";
 import { elementsForText } from "./library";
@@ -69,8 +70,8 @@ export function buildAnimatedPlan(input: {
 
   const branding = applyBranding({
     platform: asset.platform,
-    tagline: BRAND.tagline,
-    website: BRAND.domain,
+    tagline: brand.tagline,
+    website: siteOrigin().replace(/^https?:\/\//, ""),
     cta: asset.cta,
   });
 
@@ -102,7 +103,7 @@ export function buildAnimatedPlan(input: {
       seconds: Number(endCardSeconds.toFixed(2)),
       background: "primary",
       items: [],
-      caption: { text: BRAND.name, motion: "zoom", emphasis: "brand" },
+      caption: { text: brand.name, motion: "zoom", emphasis: "brand" },
       subCaption: {
         text: branding.showWebsite && branding.website ? branding.website : (branding.tagline ?? asset.cta),
         motion: "fade",

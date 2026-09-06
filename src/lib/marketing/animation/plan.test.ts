@@ -50,11 +50,11 @@ function asset(platform: PlatformId, seconds = 12): PlatformAsset {
     hashtags: ["#storage"],
     cta: "Find storage near you",
     seconds,
-    state: "DRAFT",
+    state: "GENERATED",
     videoUrl: null,
     thumbnailUrl: null,
-    videoStatus: "NOT_GENERATED",
-  } as PlatformAsset;
+    videoStatus: "NOT_REQUESTED",
+  };
 }
 
 describe("animated scene planning", () => {

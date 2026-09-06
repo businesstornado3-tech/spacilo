@@ -19,6 +19,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { MarketingCampaign, PlatformAsset, PlatformId } from "@/lib/marketing/types";
 import type { BrandValidationReport } from "@/lib/marketing/branding";
+import type { MediaProbe } from "@/lib/marketing/media-probe";
 import type { OAuthConfigState } from "@/lib/marketing/oauth";
 
 const BUCKET = "marketing-videos";
@@ -55,7 +56,7 @@ export type MarketingVideoRow = {
   storagePath: string | null;
   playbackUrl: string | null;
   brandValidation: BrandValidationReport | null;
-  mediaProbe: Record<string, unknown> | null;
+  mediaProbe: MediaProbe | null;
   failureReason: string | null;
   apiCostPence: number;
   infrastructureCostPence: number | null;
@@ -87,7 +88,7 @@ async function rowToVideo(supabase: any, row: any): Promise<MarketingVideoRow> {
     storagePath: row.storage_path ?? null,
     playbackUrl,
     brandValidation: (row.brand_validation ?? null) as BrandValidationReport | null,
-    mediaProbe: (row.media_probe ?? null) as Record<string, unknown> | null,
+    mediaProbe: (row.media_probe ?? null) as MediaProbe | null,
     failureReason: row.failure_reason ?? null,
     apiCostPence: row.api_cost_pence ?? 0,
     infrastructureCostPence: row.infrastructure_cost_pence ?? null,

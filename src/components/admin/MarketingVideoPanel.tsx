@@ -151,8 +151,8 @@ export function MarketingVideoPanel({
       {!providerConfigured ? (
         <Alert tone="info" title="AI video service not connected">
           The animated route below still works and costs nothing. Generated film footage needs a
-          generation route to be set up first, and no clip will ever be shown as finished when it
-          is not.
+          generation route to be set up first, and no clip will ever be shown as finished when it is
+          not.
         </Alert>
       ) : null}
       {notice ? (

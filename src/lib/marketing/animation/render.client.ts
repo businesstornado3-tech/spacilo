@@ -36,7 +36,8 @@ export type RenderSupport = { supported: boolean; reason: string };
 
 /** Says plainly whether this browser can make the video. Never guesses. */
 export function animationSupport(): RenderSupport {
-  if (typeof window === "undefined") return { supported: false, reason: "Not running in a browser." };
+  if (typeof window === "undefined")
+    return { supported: false, reason: "Not running in a browser." };
   if (typeof VideoEncoder === "undefined") {
     return {
       supported: false,
@@ -179,7 +180,8 @@ function drawScene(
   ctx.font = FONT_DISPLAY.replace("1px", `${captionSize}px`);
   ctx.fillStyle = brandDark ? PALETTE.white : PALETTE.ink;
   const lines = wrap(ctx, scene.caption.text, width * 0.84);
-  const baseY = height * (scene.caption.emphasis === "brand" ? 0.46 : 0.76) + captionMotion.dy * height;
+  const baseY =
+    height * (scene.caption.emphasis === "brand" ? 0.46 : 0.76) + captionMotion.dy * height;
   lines.forEach((line, index) => {
     ctx.fillText(line, width / 2, baseY + index * captionSize * 1.25);
   });
@@ -334,7 +336,8 @@ export async function renderAnimatedPlan(
   muxer.finalize();
 
   const buffer = (muxer.target as ArrayBufferTarget).buffer;
-  if (!buffer || buffer.byteLength === 0) throw new Error("The recording finished empty — nothing was saved.");
+  if (!buffer || buffer.byteLength === 0)
+    throw new Error("The recording finished empty — nothing was saved.");
 
   options.onProgress?.(1);
   return {

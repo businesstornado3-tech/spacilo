@@ -34,7 +34,15 @@ export type Shape =
       stroke?: Paint;
       lineWidth?: number;
     }
-  | { kind: "circle"; x: number; y: number; r: number; fill?: Paint; stroke?: Paint; lineWidth?: number }
+  | {
+      kind: "circle";
+      x: number;
+      y: number;
+      r: number;
+      fill?: Paint;
+      stroke?: Paint;
+      lineWidth?: number;
+    }
   | {
       kind: "path";
       points: readonly { x: number; y: number }[];

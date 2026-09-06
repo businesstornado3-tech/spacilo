@@ -14,7 +14,13 @@ import { siteOrigin } from "@/lib/seo/meta";
 import type { CampaignStory, PlatformAsset, StoryScene } from "../types";
 import { elementsForText } from "./library";
 import { applyBranding, brandRules } from "./platform-branding";
-import { FRAME_SIZES, type AnimatedPlan, type AnimatedScene, type Motion, type SceneItem } from "./types";
+import {
+  FRAME_SIZES,
+  type AnimatedPlan,
+  type AnimatedScene,
+  type Motion,
+  type SceneItem,
+} from "./types";
 
 const ENTRANCES: Motion[] = ["rise", "slide-left", "pop", "zoom", "slide-right", "bounce"];
 
@@ -105,7 +111,10 @@ export function buildAnimatedPlan(input: {
       items: [],
       caption: { text: brand.name, motion: "zoom", emphasis: "brand" },
       subCaption: {
-        text: branding.showWebsite && branding.website ? branding.website : (branding.tagline ?? asset.cta),
+        text:
+          branding.showWebsite && branding.website
+            ? branding.website
+            : (branding.tagline ?? asset.cta),
         motion: "fade",
         emphasis: "cta",
       },

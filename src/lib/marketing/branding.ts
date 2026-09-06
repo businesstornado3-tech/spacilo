@@ -213,7 +213,8 @@ export function validateBranding(input: {
   });
 
   const body = `${input.copy.title} ${input.copy.description} ${input.copy.caption}`;
-  const misspelled = /\b(earn room|Earnroom|EARNROOM|earnRoom)\b/.test(body);
+  // Any way of writing the name other than exactly "EarnRoom" is a misspelling.
+  const misspelled = (body.match(/earn[\s-]?room/gi) ?? []).some((match) => match !== "EarnRoom");
   checks.push({
     id: "brand_spelling",
     passed: !misspelled,

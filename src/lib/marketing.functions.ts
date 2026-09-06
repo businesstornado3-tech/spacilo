@@ -28,12 +28,17 @@ import type { GrowthOpportunitySummary } from "@/lib/marketing/market-intelligen
 const DAY = 86_400_000;
 
 /** A readable sentence for the audit trail and the console. */
-function attemptDetail(attempt: { record: { state: string; error: string | null; platformUrl: string | null } }): string {
-  if (attempt.record.state === "PUBLISHED") return `Published${attempt.record.platformUrl ? ` at ${attempt.record.platformUrl}` : ""}.`;
+function attemptDetail(attempt: {
+  record: { state: string; error: string | null; platformUrl: string | null };
+}): string {
+  if (attempt.record.state === "PUBLISHED")
+    return `Published${attempt.record.platformUrl ? ` at ${attempt.record.platformUrl}` : ""}.`;
   return attempt.record.error ?? `Publication stopped at state ${attempt.record.state}.`;
 }
 
-async function assertAdmin(supabase: { rpc: (name: string) => Promise<{ data: unknown; error: unknown }> }) {
+async function assertAdmin(supabase: {
+  rpc: (name: string) => Promise<{ data: unknown; error: unknown }>;
+}) {
   const { data, error } = await supabase.rpc("is_platform_admin");
   if (error || data !== true) throw new Error("You don't have access to this area.");
 }
@@ -42,18 +47,41 @@ export interface MarketingStudioSnapshot {
   settings: MarketingSettings;
   capabilities: PlatformCapability[];
   today: MarketingCampaign | null;
-  recent: { id: string; planDate: string; status: string; source: string; topic: string; priority: number }[];
+  recent: {
+    id: string;
+    planDate: string;
+    status: string;
+    source: string;
+    topic: string;
+    priority: number;
+  }[];
   publications: PublicationRecord[];
-  coverage: { slug: string; name: string; campaigns: number; daysSinceLast: number | null; state: string }[];
+  coverage: {
+    slug: string;
+    name: string;
+    campaigns: number;
+    daysSinceLast: number | null;
+    state: string;
+  }[];
   insights: { dimension: string; value: string; index: number; samples: number; note: string }[];
   /** Places with real demand, so the console can show what the engine saw. */
-  demandPlaces: { slug: string; name: string; demandEvents: number; publishedSpaces: number; priority: string }[];
+  demandPlaces: {
+    slug: string;
+    name: string;
+    demandEvents: number;
+    publishedSpaces: number;
+    priority: string;
+  }[];
 }
 
 /** Reads settings, falling back to the safe defaults on first run. */
 async function readSettings(supabase: any): Promise<MarketingSettings> {
   const { defaultMarketingSettings } = await import("@/lib/marketing");
-  const { data } = await supabase.from("marketing_settings").select("settings").eq("id", true).maybeSingle();
+  const { data } = await supabase
+    .from("marketing_settings")
+    .select("settings")
+    .eq("id", true)
+    .maybeSingle();
   const stored = (data?.settings ?? null) as Partial<MarketingSettings> | null;
   return { ...defaultMarketingSettings(), ...(stored ?? {}) };
 }
@@ -74,7 +102,9 @@ async function readConnections(supabase: any): Promise<PlatformConnectionRecord[
 async function readHistory(supabase: any, now: number): Promise<ContentHistoryEntry[]> {
   const { data } = await supabase
     .from("marketing_campaigns")
-    .select("id, plan_date, opportunity_key, topic, audience, location_slug, hook, published_at, campaign")
+    .select(
+      "id, plan_date, opportunity_key, topic, audience, location_slug, hook, published_at, campaign",
+    )
     .gte("plan_date", new Date(now - 120 * DAY).toISOString().slice(0, 10))
     .order("plan_date", { ascending: false })
     .limit(200);
@@ -122,7 +152,9 @@ async function readPerformanceInsights(supabase: any, history: ContentHistoryEnt
   const { learningInsights } = await import("@/lib/marketing");
   const { data } = await supabase
     .from("marketing_performance")
-    .select("campaign_id, asset_id, platform, collected_at, metrics, conversions, platform_specific")
+    .select(
+      "campaign_id, asset_id, platform, collected_at, metrics, conversions, platform_specific",
+    )
     .limit(500);
   const records = ((data ?? []) as any[]).map((row) => ({
     campaignId: row.campaign_id,
@@ -169,7 +201,9 @@ export const getMarketingStudio = createServerFn({ method: "GET" })
 
     const { data: pubRows } = await supabase
       .from("marketing_publications")
-      .select("campaign_id, asset_id, platform, state, platform_post_id, platform_url, error, retry_count, updated_at")
+      .select(
+        "campaign_id, asset_id, platform, state, platform_post_id, platform_url, error, retry_count, updated_at",
+      )
       .order("updated_at", { ascending: false })
       .limit(60);
 
@@ -250,7 +284,9 @@ export const planMarketingCampaign = createServerFn({ method: "POST" })
       history,
       insights,
       existingIds,
-      publishedToday: history.filter((entry) => entry.planDate === new Date(now).toISOString().slice(0, 10)).length,
+      publishedToday: history.filter(
+        (entry) => entry.planDate === new Date(now).toISOString().slice(0, 10),
+      ).length,
       ...(data.forceOpportunityKey ? { forceOpportunityKey: data.forceOpportunityKey } : {}),
     });
 
@@ -339,88 +375,105 @@ export const decideMarketingCampaign = createServerFn({ method: "POST" })
  */
 export const publishMarketingCampaign = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ campaignId: z.string().min(3).max(64) }).parse(data))
-  .handler(async ({ data, context }): Promise<{ results: { platform: string; state: string; detail: string }[] }> => {
-    const supabase = context.supabase as any;
-    await assertAdmin(supabase);
-    const now = Date.now();
-    const { attemptPublish, unconfiguredAdapter } = await import("@/lib/marketing");
+  .inputValidator((data: unknown) =>
+    z.object({ campaignId: z.string().min(3).max(64) }).parse(data),
+  )
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{ results: { platform: string; state: string; detail: string }[] }> => {
+      const supabase = context.supabase as any;
+      await assertAdmin(supabase);
+      const now = Date.now();
+      const { attemptPublish, unconfiguredAdapter } = await import("@/lib/marketing");
 
-    const [settings, connections] = await Promise.all([readSettings(supabase), readConnections(supabase)]);
-    const { data: row } = await supabase
-      .from("marketing_campaigns")
-      .select("campaign, status")
-      .eq("id", data.campaignId)
-      .maybeSingle();
-    if (!row?.campaign) throw new Error("That campaign no longer exists.");
-    const campaign = row.campaign as MarketingCampaign;
-    if (row.status !== "APPROVED") throw new Error("Approve the campaign before publishing it.");
-
-    const { data: pubRows } = await supabase
-      .from("marketing_publications")
-      .select("campaign_id, asset_id, platform, state, platform_post_id, platform_url, error, retry_count, updated_at")
-      .eq("campaign_id", data.campaignId);
-
-    const results: { platform: string; state: string; detail: string }[] = [];
-    for (const asset of campaign.assets) {
-      const existing = ((pubRows ?? []) as any[]).find((entry) => entry.asset_id === asset.id);
-      const record: PublicationRecord = {
-        campaignId: campaign.id,
-        assetId: asset.id,
-        platform: asset.platform,
-        state: existing?.state ?? "QUEUED",
-        platformPostId: existing?.platform_post_id ?? null,
-        platformUrl: existing?.platform_url ?? null,
-        error: existing?.error ?? null,
-        retryCount: existing?.retry_count ?? 0,
-        updatedAt: now,
-      };
-      if (record.state === "PUBLISHED") continue;
-
-      const attempt = await attemptPublish({
-        adapter: unconfiguredAdapter(asset.platform, settings),
-        asset,
-        campaign,
-        connections,
-        settings,
-        record,
-        now,
-      });
-
-      await supabase
-        .from("marketing_publications")
-        .update({
-          state: attempt.record.state,
-          platform_post_id: attempt.record.platformPostId,
-          platform_url: attempt.record.platformUrl,
-          error: attempt.record.error,
-          retry_count: attempt.record.retryCount,
-          published_at: attempt.record.state === "PUBLISHED" ? new Date(now).toISOString() : null,
-        })
-        .eq("campaign_id", campaign.id)
-        .eq("asset_id", asset.id);
-
-      await supabase.from("marketing_audit").insert({
-        campaign_id: campaign.id,
-        action: attempt.record.state === "PUBLISHED" ? "published" : "publication_blocked",
-        detail: attemptDetail(attempt),
-        actor: "engine",
-        actor_id: context.userId,
-      });
-
-      results.push({ platform: asset.platform, state: attempt.record.state, detail: attemptDetail(attempt) });
-    }
-
-    const published = results.every((result) => result.state === "PUBLISHED") && results.length > 0;
-    if (published) {
-      await supabase
+      const [settings, connections] = await Promise.all([
+        readSettings(supabase),
+        readConnections(supabase),
+      ]);
+      const { data: row } = await supabase
         .from("marketing_campaigns")
-        .update({ status: "PUBLISHED", published_at: new Date(now).toISOString() })
-        .eq("id", campaign.id);
-    }
+        .select("campaign, status")
+        .eq("id", data.campaignId)
+        .maybeSingle();
+      if (!row?.campaign) throw new Error("That campaign no longer exists.");
+      const campaign = row.campaign as MarketingCampaign;
+      if (row.status !== "APPROVED") throw new Error("Approve the campaign before publishing it.");
 
-    return { results };
-  });
+      const { data: pubRows } = await supabase
+        .from("marketing_publications")
+        .select(
+          "campaign_id, asset_id, platform, state, platform_post_id, platform_url, error, retry_count, updated_at",
+        )
+        .eq("campaign_id", data.campaignId);
+
+      const results: { platform: string; state: string; detail: string }[] = [];
+      for (const asset of campaign.assets) {
+        const existing = ((pubRows ?? []) as any[]).find((entry) => entry.asset_id === asset.id);
+        const record: PublicationRecord = {
+          campaignId: campaign.id,
+          assetId: asset.id,
+          platform: asset.platform,
+          state: existing?.state ?? "QUEUED",
+          platformPostId: existing?.platform_post_id ?? null,
+          platformUrl: existing?.platform_url ?? null,
+          error: existing?.error ?? null,
+          retryCount: existing?.retry_count ?? 0,
+          updatedAt: now,
+        };
+        if (record.state === "PUBLISHED") continue;
+
+        const attempt = await attemptPublish({
+          adapter: unconfiguredAdapter(asset.platform, settings),
+          asset,
+          campaign,
+          connections,
+          settings,
+          record,
+          now,
+        });
+
+        await supabase
+          .from("marketing_publications")
+          .update({
+            state: attempt.record.state,
+            platform_post_id: attempt.record.platformPostId,
+            platform_url: attempt.record.platformUrl,
+            error: attempt.record.error,
+            retry_count: attempt.record.retryCount,
+            published_at: attempt.record.state === "PUBLISHED" ? new Date(now).toISOString() : null,
+          })
+          .eq("campaign_id", campaign.id)
+          .eq("asset_id", asset.id);
+
+        await supabase.from("marketing_audit").insert({
+          campaign_id: campaign.id,
+          action: attempt.record.state === "PUBLISHED" ? "published" : "publication_blocked",
+          detail: attemptDetail(attempt),
+          actor: "engine",
+          actor_id: context.userId,
+        });
+
+        results.push({
+          platform: asset.platform,
+          state: attempt.record.state,
+          detail: attemptDetail(attempt),
+        });
+      }
+
+      const published =
+        results.every((result) => result.state === "PUBLISHED") && results.length > 0;
+      if (published) {
+        await supabase
+          .from("marketing_campaigns")
+          .update({ status: "PUBLISHED", published_at: new Date(now).toISOString() })
+          .eq("id", campaign.id);
+      }
+
+      return { results };
+    },
+  );
 
 const settingsSchema = z.object({
   globalMode: z.enum(["DRAFT", "APPROVAL_REQUIRED", "AUTONOMOUS"]).optional(),

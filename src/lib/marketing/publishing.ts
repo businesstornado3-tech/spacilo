@@ -39,11 +39,21 @@ export function canTransition(from: PublicationState, to: PublicationState): boo
   return ALLOWED[from]?.includes(to) ?? false;
 }
 
-export function transition(record: PublicationRecord, to: PublicationState, at: number, detail?: string): PublicationRecord {
+export function transition(
+  record: PublicationRecord,
+  to: PublicationState,
+  at: number,
+  detail?: string,
+): PublicationRecord {
   if (!canTransition(record.state, to)) {
     throw new Error(`Illegal publication transition ${record.state} → ${to}`);
   }
-  return { ...record, state: to, updatedAt: at, error: to === "PUBLISHED" ? null : (detail ?? record.error) };
+  return {
+    ...record,
+    state: to,
+    updatedAt: at,
+    error: to === "PUBLISHED" ? null : (detail ?? record.error),
+  };
 }
 
 /** The state an asset should land in after validation, given the mode. */
@@ -136,7 +146,12 @@ export async function attemptPublish(options: {
   }
 
   const failure = result.ok
-    ? { ok: false as const, state: "UPLOAD_FAILED" as const, error: "Platform did not return a post id.", retryable: true }
+    ? {
+        ok: false as const,
+        state: "UPLOAD_FAILED" as const,
+        error: "Platform did not return a post id.",
+        retryable: true,
+      }
     : result;
   return {
     record: {
@@ -165,7 +180,10 @@ export function shouldRetry(record: PublicationRecord, maxRetries = 3): boolean 
  * The only adapter shipped by default: it refuses honestly. Real adapters are
  * registered once official API credentials are configured server-side.
  */
-export function unconfiguredAdapter(platform: PlatformId, settings: MarketingSettings): PublishingAdapter {
+export function unconfiguredAdapter(
+  platform: PlatformId,
+  settings: MarketingSettings,
+): PublishingAdapter {
   return {
     platform,
     capability: () => capabilityFor(platform, [], settings, Date.now()),

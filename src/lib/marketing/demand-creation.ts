@@ -32,7 +32,8 @@ export const DEMAND_CREATION_SEEDS: readonly DemandCreationSeed[] = [
     audience: "movers",
     secondaryAudience: "hosts",
     objective: "BOTH_SIDES",
-    stake: "Furniture, boxes and children's belongings end up in a van, a garage favour, or an expensive last-minute unit.",
+    stake:
+      "Furniture, boxes and children's belongings end up in a van, a garage favour, or an expensive last-minute unit.",
     weight: 0.95,
   },
   {
@@ -76,7 +77,8 @@ export const DEMAND_CREATION_SEEDS: readonly DemandCreationSeed[] = [
     audience: "students",
     secondaryAudience: "hosts",
     objective: "RENTER_ACQUISITION",
-    stake: "A car boot cannot hold a year of university, and driving it home twice costs more than storing it.",
+    stake:
+      "A car boot cannot hold a year of university, and driving it home twice costs more than storing it.",
     weight: 0.74,
   },
   {
@@ -108,7 +110,9 @@ export type DemandCreationInput = {
   recentSeedIds?: readonly string[];
 };
 
-export function demandCreationOpportunities(input: DemandCreationInput = {}): MarketingOpportunity[] {
+export function demandCreationOpportunities(
+  input: DemandCreationInput = {},
+): MarketingOpportunity[] {
   const recent = new Set(input.recentSeedIds ?? []);
   const place = input.location ?? null;
 

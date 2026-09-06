@@ -67,7 +67,11 @@ export function brandProfile(): BrandProfile {
     colours: { primary: "harbour-teal", canvas: "warm-neutral", accentWarning: "amber" },
     typography: { display: "Sora", body: "Manrope" },
     logoAsset: "src/assets/brand/earnroom-lockup.png",
-    watermark: { position: "bottom-right", asset: "src/assets/brand/earnroom-wordmark-transparent.png", opacity: 0.85 },
+    watermark: {
+      position: "bottom-right",
+      asset: "src/assets/brand/earnroom-wordmark-transparent.png",
+      opacity: 0.85,
+    },
     endCard: { tagline: brand.tagline, website: BRAND_WEBSITE, showLogo: true },
     visualStyle:
       "Premium, restrained, real UK homes and everyday spaces. Natural light, no neon, minimal gradients, no stock-advert gloss.",
@@ -77,7 +81,8 @@ export function brandProfile(): BrandProfile {
 /** Deterministically picks an approved tagline for a campaign key. */
 export function taglineFor(key: string): string {
   let hash = 0;
-  for (let index = 0; index < key.length; index += 1) hash = (hash * 31 + key.charCodeAt(index)) >>> 0;
+  for (let index = 0; index < key.length; index += 1)
+    hash = (hash * 31 + key.charCodeAt(index)) >>> 0;
   return APPROVED_TAGLINES[hash % APPROVED_TAGLINES.length]!;
 }
 

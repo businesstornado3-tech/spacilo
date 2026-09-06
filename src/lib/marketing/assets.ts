@@ -6,7 +6,13 @@
  */
 import { brandProfile, taglineFor } from "./brand";
 import { definition } from "./platforms";
-import type { AspectRatio, CampaignStory, MarketingOpportunity, PlatformAsset, PlatformId } from "./types";
+import type {
+  AspectRatio,
+  CampaignStory,
+  MarketingOpportunity,
+  PlatformAsset,
+  PlatformId,
+} from "./types";
 
 const BASE_TAGS = ["earnroom", "storage", "uk"] as const;
 
@@ -26,11 +32,16 @@ function hashtags(opportunity: MarketingOpportunity, platform: PlatformId): stri
   const audience = AUDIENCE_TAGS[opportunity.audience] ?? [];
   const place = opportunity.location ? [opportunity.location.slug.replace(/-/g, "")] : [];
   const all = [...BASE_TAGS, ...audience, ...place].map((tag) => `#${tag}`);
-  const limit = platform === "instagram" ? 8 : platform === "tiktok" ? 6 : platform === "pinterest" ? 5 : 4;
+  const limit =
+    platform === "instagram" ? 8 : platform === "tiktok" ? 6 : platform === "pinterest" ? 5 : 4;
   return all.slice(0, limit);
 }
 
-function platformHook(platform: PlatformId, story: CampaignStory, opportunity: MarketingOpportunity): string {
+function platformHook(
+  platform: PlatformId,
+  story: CampaignStory,
+  opportunity: MarketingOpportunity,
+): string {
   const place = opportunity.location?.name;
   switch (platform) {
     case "tiktok":
@@ -62,7 +73,11 @@ function aspect(platform: PlatformId): AspectRatio {
   return definition(platform).aspects[0]!;
 }
 
-function title(platform: PlatformId, opportunity: MarketingOpportunity, story: CampaignStory): string {
+function title(
+  platform: PlatformId,
+  opportunity: MarketingOpportunity,
+  story: CampaignStory,
+): string {
   const place = opportunity.location?.name;
   if (platform === "youtube") {
     return `${opportunity.topic}${place ? ` in ${place}` : " in the UK"} — what are the options?`;
@@ -71,7 +86,11 @@ function title(platform: PlatformId, opportunity: MarketingOpportunity, story: C
   return story.hook.length <= 90 ? story.hook : `${story.hook.slice(0, 87)}...`;
 }
 
-function description(platform: PlatformId, opportunity: MarketingOpportunity, story: CampaignStory): string {
+function description(
+  platform: PlatformId,
+  opportunity: MarketingOpportunity,
+  story: CampaignStory,
+): string {
   const profile = brandProfile();
   const lines = [
     story.hook,
@@ -81,7 +100,11 @@ function description(platform: PlatformId, opportunity: MarketingOpportunity, st
     profile.url,
   ];
   if (platform === "linkedin") {
-    lines.splice(2, 0, "Unused domestic space is an underused asset; matching it to nearby demand is the opportunity.");
+    lines.splice(
+      2,
+      0,
+      "Unused domestic space is an underused asset; matching it to nearby demand is the opportunity.",
+    );
   }
   return lines.join("\n\n");
 }
@@ -113,7 +136,8 @@ export function buildAssets(
 /** Platforms suited to a campaign, given its story format and audience. */
 export function suggestedPlatforms(opportunity: MarketingOpportunity): PlatformId[] {
   const base: PlatformId[] = ["youtube_shorts", "instagram", "tiktok", "facebook"];
-  if (opportunity.audience === "businesses" || opportunity.objective === "HOST_ACQUISITION") base.push("linkedin");
+  if (opportunity.audience === "businesses" || opportunity.objective === "HOST_ACQUISITION")
+    base.push("linkedin");
   if (opportunity.evidenceClass === "SEO_OPPORTUNITY") base.push("pinterest", "youtube");
   return [...new Set(base)];
 }

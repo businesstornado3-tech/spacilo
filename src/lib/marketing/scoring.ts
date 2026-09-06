@@ -50,17 +50,21 @@ function mixWeight(settings: MarketingSettings, opportunity: MarketingOpportunit
   const objectiveWeight = mix[objectiveKey] ?? average;
   const sourceWeight = mix[sourceKey] ?? average;
   if (average <= 0) return 1;
-  return Math.min(1.6, ((objectiveWeight + sourceWeight) / 2) / average);
+  return Math.min(1.6, (objectiveWeight + sourceWeight) / 2 / average);
 }
 
-function learningWeight(insights: readonly LearningInsight[], opportunity: MarketingOpportunity): { value: number; note: string } {
+function learningWeight(
+  insights: readonly LearningInsight[],
+  opportunity: MarketingOpportunity,
+): { value: number; note: string } {
   const relevant = insights.filter(
     (insight) =>
       (insight.dimension === "topic" && insight.value === opportunity.topic) ||
       (insight.dimension === "audience" && insight.value === opportunity.audience) ||
       (insight.dimension === "location" && insight.value === (opportunity.location?.slug ?? "")),
   );
-  if (relevant.length === 0) return { value: 1, note: "No performance history for this angle yet." };
+  if (relevant.length === 0)
+    return { value: 1, note: "No performance history for this angle yet." };
   const index = relevant.reduce((sum, insight) => sum + insight.index, 0) / relevant.length;
   return {
     value: 0.7 + index * 0.6,
@@ -81,22 +85,45 @@ export function scoreOpportunity(input: ScoringInput): CampaignScore {
   });
 
   const balance = geographicBalance(opportunity, input.coverage, settings.geographicCooldownDays);
-  factors.push({ name: "Geographic balance", value: Number((balance.multiplier * 100).toFixed(1)), weight: 0.2, note: balance.note });
+  factors.push({
+    name: "Geographic balance",
+    value: Number((balance.multiplier * 100).toFixed(1)),
+    weight: 0.2,
+    note: balance.note,
+  });
 
   const mix = mixWeight(settings, opportunity);
-  factors.push({ name: "Content mix", value: Number((mix * 100).toFixed(1)), weight: 0.15, note: `Objective ${opportunity.objective.replace(/_/g, " ").toLowerCase()}` });
+  factors.push({
+    name: "Content mix",
+    value: Number((mix * 100).toFixed(1)),
+    weight: 0.15,
+    note: `Objective ${opportunity.objective.replace(/_/g, " ").toLowerCase()}`,
+  });
 
   const learning = learningWeight(input.insights, opportunity);
-  factors.push({ name: "Learning", value: Number((learning.value * 100).toFixed(1)), weight: 0.15, note: learning.note });
+  factors.push({
+    name: "Learning",
+    value: Number((learning.value * 100).toFixed(1)),
+    weight: 0.15,
+    note: learning.note,
+  });
 
   const duplication = duplicationRisk(opportunity, input.history, { now: input.now });
   const duplicationPenalty = Number((duplication.risk * 45).toFixed(1));
-  factors.push({ name: "Duplication risk", value: duplication.risk * 100, weight: -0.45, note: duplication.reasons[0] ?? "No close match in recent content." });
+  factors.push({
+    name: "Duplication risk",
+    value: duplication.risk * 100,
+    weight: -0.45,
+    note: duplication.reasons[0] ?? "No close match in recent content.",
+  });
 
   const base = opportunity.strength * 100 * evidenceWeight;
   const priority = Math.max(
     0,
-    Math.min(100, Math.round(base * balance.multiplier * mix * learning.value - duplicationPenalty)),
+    Math.min(
+      100,
+      Math.round(base * balance.multiplier * mix * learning.value - duplicationPenalty),
+    ),
   );
 
   const reason = duplication.blocked

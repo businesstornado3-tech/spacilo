@@ -13,7 +13,11 @@
 import { buildAssets, suggestedPlatforms } from "./assets";
 import { coverageRows, type ContentHistoryEntry } from "./coverage";
 import { demandCreationOpportunities } from "./demand-creation";
-import { geographyOpportunities, growthOpportunityMarketing, type GrowthOpportunitySummary } from "./market-intelligence";
+import {
+  geographyOpportunities,
+  growthOpportunityMarketing,
+  type GrowthOpportunitySummary,
+} from "./market-intelligence";
 import { londonDate, londonMonth, nextSequence, registryId } from "./registry";
 import { rankOpportunities } from "./scoring";
 import { seoOpportunities } from "./seo-intelligence";
@@ -61,7 +65,10 @@ export type DailyPlan = {
 export function candidateOpportunities(input: PlanInput): MarketingOpportunity[] {
   const month = londonMonth(input.now);
   const recentTopics = input.history.map((entry) => entry.opportunityKey.split(":")[1] ?? "");
-  const market = [...geographyOpportunities(input.places), ...growthOpportunityMarketing(input.growth)];
+  const market = [
+    ...geographyOpportunities(input.places),
+    ...growthOpportunityMarketing(input.growth),
+  ];
 
   // Localise a share of the search/creation candidates to places with real
   // signal, and keep UK-wide variants so coverage is never demand-locked.
@@ -72,12 +79,16 @@ export function candidateOpportunities(input: PlanInput): MarketingOpportunity[]
 
   const seo = [
     ...seoOpportunities({ month, recentTopicIds: recentTopics }),
-    ...localiseTo.flatMap((location) => seoOpportunities({ month, location, recentTopicIds: recentTopics }).slice(0, 3)),
+    ...localiseTo.flatMap((location) =>
+      seoOpportunities({ month, location, recentTopicIds: recentTopics }).slice(0, 3),
+    ),
   ];
 
   const creation = [
     ...demandCreationOpportunities({ recentSeedIds: recentTopics }),
-    ...localiseTo.flatMap((location) => demandCreationOpportunities({ location, recentSeedIds: recentTopics }).slice(0, 2)),
+    ...localiseTo.flatMap((location) =>
+      demandCreationOpportunities({ location, recentSeedIds: recentTopics }).slice(0, 2),
+    ),
   ];
 
   const seen = new Set<string>();
@@ -114,8 +125,7 @@ export function planDailyCampaign(input: PlanInput): DailyPlan {
     ? ranked.find((entry) => entry.opportunity.key === input.forceOpportunityKey)
     : undefined;
 
-  const chosen =
-    forced ??
+  const chosen = forced ??
     ranked.find((entry) => entry.score.priority > 0) ??
     ranked[0] ?? {
       opportunity: demandCreationOpportunities()[0]!,
@@ -123,7 +133,8 @@ export function planDailyCampaign(input: PlanInput): DailyPlan {
         priority: 40,
         factors: [],
         duplicationPenalty: 0,
-        reason: "No ranked candidate today, so the strongest recognised UK storage problem was used for awareness.",
+        reason:
+          "No ranked candidate today, so the strongest recognised UK storage problem was used for awareness.",
       } satisfies CampaignScore,
     };
 
@@ -185,5 +196,10 @@ export function planDailyCampaign(input: PlanInput): DailyPlan {
     audit,
   };
 
-  return { planDate, campaign, considered: ranked.slice(0, 12), source: sourceOf(chosen.opportunity) };
+  return {
+    planDate,
+    campaign,
+    considered: ranked.slice(0, 12),
+    source: sourceOf(chosen.opportunity),
+  };
 }

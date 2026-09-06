@@ -31,7 +31,10 @@ export type CoverageRow = {
 };
 
 function normalise(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
 /** Token overlap 0..1 — cheap, deterministic near-duplicate detection. */
@@ -56,10 +59,12 @@ export type DuplicationVerdict = {
 export function duplicationRisk(
   opportunity: MarketingOpportunity,
   history: readonly ContentHistoryEntry[],
-  options: { now: number; windowDays?: number } ,
+  options: { now: number; windowDays?: number },
 ): DuplicationVerdict {
   const windowMs = (options.windowDays ?? 30) * 86_400_000;
-  const recent = history.filter((entry) => options.now - Date.parse(`${entry.planDate}T00:00:00Z`) <= windowMs);
+  const recent = history.filter(
+    (entry) => options.now - Date.parse(`${entry.planDate}T00:00:00Z`) <= windowMs,
+  );
   const reasons: string[] = [];
   let risk = 0;
 
@@ -69,7 +74,8 @@ export function duplicationRisk(
       reasons.push(`Same opportunity already ran on ${entry.planDate}.`);
       continue;
     }
-    const sameLocation = entry.locationSlug && entry.locationSlug === (opportunity.location?.slug ?? null);
+    const sameLocation =
+      entry.locationSlug && entry.locationSlug === (opportunity.location?.slug ?? null);
     const topicMatch = similarity(entry.topic, opportunity.topic);
     const audienceMatch = entry.audience === opportunity.audience;
     let pairRisk = topicMatch * 0.6;
@@ -90,7 +96,8 @@ export function duplicationRisk(
     risk: Number(risk.toFixed(2)),
     blocked,
     reasons,
-    suggestion: risk >= 0.6 ? "Change the angle, audience, location or format before publishing." : null,
+    suggestion:
+      risk >= 0.6 ? "Change the angle, audience, location or format before publishing." : null,
   };
 }
 
@@ -112,16 +119,28 @@ export function coverageRows(
     });
   }
 
-  return UK_PLACES.filter((place) => place.kind === "city" || place.kind === "town").map((place) => {
-    const record = byPlace.get(place.slug);
-    const daysSinceLast = record?.latest ? Math.floor((options.now - record.latest) / 86_400_000) : null;
-    const state: CoverageRow["state"] =
-      !record ? "UNCOVERED"
-      : record.count >= 4 && (daysSinceLast ?? 999) <= recentDays ? "OVERREPRESENTED"
-      : (daysSinceLast ?? 999) <= 7 ? "RECENT"
-      : "FRESH";
-    return { slug: place.slug, name: place.name, campaigns: record?.count ?? 0, daysSinceLast, state };
-  });
+  return UK_PLACES.filter((place) => place.kind === "city" || place.kind === "town").map(
+    (place) => {
+      const record = byPlace.get(place.slug);
+      const daysSinceLast = record?.latest
+        ? Math.floor((options.now - record.latest) / 86_400_000)
+        : null;
+      const state: CoverageRow["state"] = !record
+        ? "UNCOVERED"
+        : record.count >= 4 && (daysSinceLast ?? 999) <= recentDays
+          ? "OVERREPRESENTED"
+          : (daysSinceLast ?? 999) <= 7
+            ? "RECENT"
+            : "FRESH";
+      return {
+        slug: place.slug,
+        name: place.name,
+        campaigns: record?.count ?? 0,
+        daysSinceLast,
+        state,
+      };
+    },
+  );
 }
 
 /**
@@ -136,10 +155,15 @@ export function geographicBalance(
   const slug = opportunity.location?.slug;
   if (!slug) return { multiplier: 1, note: "UK-wide campaign — no local balancing applied." };
   const row = rows.find((candidate) => candidate.slug === slug);
-  if (!row || row.state === "UNCOVERED") return { multiplier: 1.1, note: "No marketing coverage here yet." };
-  if (row.state === "OVERREPRESENTED") return { multiplier: 0.55, note: "This location is already heavily covered." };
+  if (!row || row.state === "UNCOVERED")
+    return { multiplier: 1.1, note: "No marketing coverage here yet." };
+  if (row.state === "OVERREPRESENTED")
+    return { multiplier: 0.55, note: "This location is already heavily covered." };
   if (row.daysSinceLast !== null && row.daysSinceLast < cooldownDays) {
-    return { multiplier: 0.7, note: `Covered ${row.daysSinceLast} day(s) ago — inside the cooldown window.` };
+    return {
+      multiplier: 0.7,
+      note: `Covered ${row.daysSinceLast} day(s) ago — inside the cooldown window.`,
+    };
   }
   return { multiplier: 1, note: "Coverage is balanced for this location." };
 }

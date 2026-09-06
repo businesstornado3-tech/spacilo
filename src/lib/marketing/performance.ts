@@ -43,7 +43,11 @@ export function normalisePerformance(input: {
   };
 
   const views = num("views", "video_views", "plays", "impressions_video");
-  const watchSeconds = num("watch_seconds", "estimatedMinutesWatched_seconds", "total_time_watched");
+  const watchSeconds = num(
+    "watch_seconds",
+    "estimatedMinutesWatched_seconds",
+    "total_time_watched",
+  );
   const completion = num("completion_rate", "average_view_percentage");
 
   const platformSpecific: Record<string, number> = {};
@@ -86,10 +90,16 @@ export function performanceIndex(record: PerformanceRecord): number | null {
   const views = metrics.views ?? metrics.impressions;
   if (!views || views <= 0) return null;
   const engagement =
-    ((metrics.likes ?? 0) + (metrics.comments ?? 0) * 2 + (metrics.shares ?? 0) * 3 + (metrics.saves ?? 0) * 2) / views;
+    ((metrics.likes ?? 0) +
+      (metrics.comments ?? 0) * 2 +
+      (metrics.shares ?? 0) * 3 +
+      (metrics.saves ?? 0) * 2) /
+    views;
   const clickRate = (metrics.clicks ?? 0) / views;
   const conversionCount =
-    (conversions.registrations ?? 0) + (conversions.listings ?? 0) * 2 + (conversions.bookings ?? 0) * 3;
+    (conversions.registrations ?? 0) +
+    (conversions.listings ?? 0) * 2 +
+    (conversions.bookings ?? 0) * 3;
   const conversionRate = conversionCount / views;
   const completion = metrics.completionRate ?? 0;
   const raw = engagement * 4 + clickRate * 10 + conversionRate * 40 + completion * 0.5;
@@ -112,7 +122,10 @@ export function learningInsights(input: LearningInput): LearningInsight[] {
   const byCampaign = new Map<string, ContentHistoryEntry>();
   for (const entry of input.history) byCampaign.set(entry.campaignId, entry);
 
-  const buckets = new Map<string, { dimension: LearningInsight["dimension"]; value: string; total: number; samples: number }>();
+  const buckets = new Map<
+    string,
+    { dimension: LearningInsight["dimension"]; value: string; total: number; samples: number }
+  >();
   const push = (dimension: LearningInsight["dimension"], value: string, index: number) => {
     if (!value) return;
     const key = `${dimension}:${value}`;

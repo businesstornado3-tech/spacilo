@@ -9,9 +9,19 @@ import {
   transition,
   unconfiguredAdapter,
 } from "./publishing";
-import { allCapabilities, capabilityFor, defaultMarketingSettings, type PlatformConnectionRecord } from "./platforms";
+import {
+  allCapabilities,
+  capabilityFor,
+  defaultMarketingSettings,
+  type PlatformConnectionRecord,
+} from "./platforms";
 import { planDailyCampaign } from "./orchestrator";
-import { generateVideo, registerVideoProvider, resetVideoProviders, videoProviderState } from "./video";
+import {
+  generateVideo,
+  registerVideoProvider,
+  resetVideoProviders,
+  videoProviderState,
+} from "./video";
 import type { PlatformAsset, PublicationRecord, PublishingAdapter } from "./types";
 
 const NOW = Date.parse("2026-06-15T09:00:00Z");
@@ -48,7 +58,13 @@ const asset = (over: Partial<PlatformAsset> = {}): PlatformAsset => ({
 });
 
 const connected: PlatformConnectionRecord[] = [
-  { platform: "youtube_shorts", connection: "CONNECTED", scopes: ["upload"], expiresAt: null, lastError: null },
+  {
+    platform: "youtube_shorts",
+    connection: "CONNECTED",
+    scopes: ["upload"],
+    expiresAt: null,
+    lastError: null,
+  },
 ];
 
 describe("platform capability detection", () => {
@@ -62,7 +78,15 @@ describe("platform capability detection", () => {
   it("detects expired authorisation", () => {
     const capability = capabilityFor(
       "instagram",
-      [{ platform: "instagram", connection: "CONNECTED", scopes: [], expiresAt: NOW - 1, lastError: null }],
+      [
+        {
+          platform: "instagram",
+          connection: "CONNECTED",
+          scopes: [],
+          expiresAt: NOW - 1,
+          lastError: null,
+        },
+      ],
       settings,
       NOW,
     );
@@ -73,7 +97,15 @@ describe("platform capability detection", () => {
   it("never claims autonomous publishing where the official API cannot do it", () => {
     const capability = capabilityFor(
       "tiktok",
-      [{ platform: "tiktok", connection: "CONNECTED", scopes: [], expiresAt: null, lastError: null }],
+      [
+        {
+          platform: "tiktok",
+          connection: "CONNECTED",
+          scopes: [],
+          expiresAt: null,
+          lastError: null,
+        },
+      ],
       { ...settings, globalMode: "AUTONOMOUS" },
       NOW,
     );
@@ -91,9 +123,19 @@ describe("publication state machine", () => {
 
   it("routes validated assets by publishing mode and pause state", () => {
     expect(stateAfterValidation(false, "youtube", settings)).toBe("VALIDATION_FAILED");
-    expect(stateAfterValidation(true, "youtube", { ...settings, globalMode: "DRAFT" })).toBe("VALIDATED");
-    expect(stateAfterValidation(true, "youtube", { ...settings, globalMode: "AUTONOMOUS" })).toBe("QUEUED");
-    expect(stateAfterValidation(true, "youtube", { ...settings, globalMode: "AUTONOMOUS", pausedPlatforms: ["youtube"] })).toBe("PAUSED");
+    expect(stateAfterValidation(true, "youtube", { ...settings, globalMode: "DRAFT" })).toBe(
+      "VALIDATED",
+    );
+    expect(stateAfterValidation(true, "youtube", { ...settings, globalMode: "AUTONOMOUS" })).toBe(
+      "QUEUED",
+    );
+    expect(
+      stateAfterValidation(true, "youtube", {
+        ...settings,
+        globalMode: "AUTONOMOUS",
+        pausedPlatforms: ["youtube"],
+      }),
+    ).toBe("PAUSED");
   });
 
   it("backs off exponentially and stops retrying a platform rejection", () => {
@@ -163,7 +205,12 @@ describe("publishing attempts", () => {
     const adapter: PublishingAdapter = {
       platform: "youtube_shorts",
       capability: () => capabilityFor("youtube_shorts", connected, settings, NOW),
-      publish: async () => ({ ok: true, platformPostId: "vid_123", platformUrl: "https://youtu.be/vid_123", publishedAt: NOW + 5 }),
+      publish: async () => ({
+        ok: true,
+        platformPostId: "vid_123",
+        platformUrl: "https://youtu.be/vid_123",
+        publishedAt: NOW + 5,
+      }),
     };
     const attempt = await attemptPublish({
       adapter,
@@ -225,7 +272,13 @@ describe("video provider abstraction", () => {
       name: "Test",
       state: "CONNECTED",
       capabilities: { video: true, voiceover: true, captions: true, thumbnail: true },
-      generate: async () => ({ ok: true, videoUrl: "https://x/v.mp4", thumbnailUrl: null, providerId: "test-provider", seconds: 30 }),
+      generate: async () => ({
+        ok: true,
+        videoUrl: "https://x/v.mp4",
+        thumbnailUrl: null,
+        providerId: "test-provider",
+        seconds: 30,
+      }),
     });
     expect(videoProviderState().state).toBe("CONNECTED");
     const result = await generateVideo({

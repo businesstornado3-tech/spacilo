@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { demandCreationOutcome, learningInsights, normalisePerformance, performanceIndex } from "./performance";
+import {
+  demandCreationOutcome,
+  learningInsights,
+  normalisePerformance,
+  performanceIndex,
+} from "./performance";
 import type { ContentHistoryEntry } from "./coverage";
 import type { PerformanceRecord } from "./types";
 
@@ -53,7 +58,11 @@ describe("performance normalisation", () => {
   });
 
   it("returns no index when the platform reported no reach", () => {
-    expect(performanceIndex(record({ metrics: { ...record().metrics, views: null, impressions: null } }))).toBeNull();
+    expect(
+      performanceIndex(
+        record({ metrics: { ...record().metrics, views: null, impressions: null } }),
+      ),
+    ).toBeNull();
   });
 });
 
@@ -65,13 +74,27 @@ describe("learning loop", () => {
       records: [record(), record({ assetId: "asset-2" })],
       history,
     });
-    expect(repeated.some((insight) => insight.dimension === "topic" && insight.value === "Student storage")).toBe(true);
+    expect(
+      repeated.some(
+        (insight) => insight.dimension === "topic" && insight.value === "Student storage",
+      ),
+    ).toBe(true);
     expect(repeated.every((insight) => insight.note.includes("recommendations only"))).toBe(true);
   });
 
   it("reports measured demand creation and stays silent when nothing was measured", () => {
     expect(demandCreationOutcome([record()]).measured).toBe(true);
-    const blank = record({ conversions: { siteVisits: null, registrations: null, hostRegistrations: null, renterRegistrations: null, enquiries: null, listings: null, bookings: null } });
+    const blank = record({
+      conversions: {
+        siteVisits: null,
+        registrations: null,
+        hostRegistrations: null,
+        renterRegistrations: null,
+        enquiries: null,
+        listings: null,
+        bookings: null,
+      },
+    });
     expect(demandCreationOutcome([blank]).measured).toBe(false);
     expect(demandCreationOutcome([blank]).bookings).toBeNull();
   });

@@ -28,13 +28,69 @@ export type PlatformDefinition = {
 };
 
 export const PLATFORMS: readonly PlatformDefinition[] = [
-  { id: "youtube", label: "YouTube", aspects: ["16:9"], maxSeconds: 900, apiPublishingSupported: true, apiAutonomousSupported: true, note: "YouTube Data API upload." },
-  { id: "youtube_shorts", label: "YouTube Shorts", aspects: ["9:16"], maxSeconds: 60, apiPublishingSupported: true, apiAutonomousSupported: true, note: "Shorts via YouTube Data API." },
-  { id: "instagram", label: "Instagram", aspects: ["9:16", "1:1"], maxSeconds: 90, apiPublishingSupported: true, apiAutonomousSupported: true, note: "Instagram Graph API content publishing (business account required)." },
-  { id: "tiktok", label: "TikTok", aspects: ["9:16"], maxSeconds: 180, apiPublishingSupported: true, apiAutonomousSupported: false, note: "TikTok Content Posting API — unaudited apps can only send drafts to the account inbox." },
-  { id: "facebook", label: "Facebook", aspects: ["9:16", "16:9"], maxSeconds: 240, apiPublishingSupported: true, apiAutonomousSupported: true, note: "Facebook Pages video publishing." },
-  { id: "linkedin", label: "LinkedIn", aspects: ["16:9", "1:1"], maxSeconds: 600, apiPublishingSupported: true, apiAutonomousSupported: true, note: "LinkedIn organisation posts." },
-  { id: "pinterest", label: "Pinterest", aspects: ["9:16", "1:1"], maxSeconds: 300, apiPublishingSupported: true, apiAutonomousSupported: true, note: "Pinterest video pins." },
+  {
+    id: "youtube",
+    label: "YouTube",
+    aspects: ["16:9"],
+    maxSeconds: 900,
+    apiPublishingSupported: true,
+    apiAutonomousSupported: true,
+    note: "YouTube Data API upload.",
+  },
+  {
+    id: "youtube_shorts",
+    label: "YouTube Shorts",
+    aspects: ["9:16"],
+    maxSeconds: 60,
+    apiPublishingSupported: true,
+    apiAutonomousSupported: true,
+    note: "Shorts via YouTube Data API.",
+  },
+  {
+    id: "instagram",
+    label: "Instagram",
+    aspects: ["9:16", "1:1"],
+    maxSeconds: 90,
+    apiPublishingSupported: true,
+    apiAutonomousSupported: true,
+    note: "Instagram Graph API content publishing (business account required).",
+  },
+  {
+    id: "tiktok",
+    label: "TikTok",
+    aspects: ["9:16"],
+    maxSeconds: 180,
+    apiPublishingSupported: true,
+    apiAutonomousSupported: false,
+    note: "TikTok Content Posting API — unaudited apps can only send drafts to the account inbox.",
+  },
+  {
+    id: "facebook",
+    label: "Facebook",
+    aspects: ["9:16", "16:9"],
+    maxSeconds: 240,
+    apiPublishingSupported: true,
+    apiAutonomousSupported: true,
+    note: "Facebook Pages video publishing.",
+  },
+  {
+    id: "linkedin",
+    label: "LinkedIn",
+    aspects: ["16:9", "1:1"],
+    maxSeconds: 600,
+    apiPublishingSupported: true,
+    apiAutonomousSupported: true,
+    note: "LinkedIn organisation posts.",
+  },
+  {
+    id: "pinterest",
+    label: "Pinterest",
+    aspects: ["9:16", "1:1"],
+    maxSeconds: 300,
+    apiPublishingSupported: true,
+    apiAutonomousSupported: true,
+    note: "Pinterest video pins.",
+  },
 ];
 
 /** What the server knows about a platform connection. Never holds a token. */
@@ -72,7 +128,8 @@ function statusLabel(capability: Omit<PlatformCapability, "statusLabel">): strin
       break;
   }
   if (!capability.publishingSupported) return "Connected — publishing unsupported";
-  if (capability.mode === "AUTONOMOUS" && capability.autonomousAvailable) return "Connected — autonomous publishing available";
+  if (capability.mode === "AUTONOMOUS" && capability.autonomousAvailable)
+    return "Connected — autonomous publishing available";
   if (capability.mode === "AUTONOMOUS") return "Connected — autonomous publishing unavailable";
   if (capability.mode === "DRAFT") return "Connected — drafts only";
   return "Connected — approval required";
@@ -97,7 +154,8 @@ export function capabilityFor(
   const mode = effectiveMode(platform, settings);
   const connected = connection === "CONNECTED";
   const publishingSupported = connected && def.apiPublishingSupported;
-  const autonomousAvailable = publishingSupported && def.apiAutonomousSupported && mode === "AUTONOMOUS" && !paused;
+  const autonomousAvailable =
+    publishingSupported && def.apiAutonomousSupported && mode === "AUTONOMOUS" && !paused;
 
   const base: Omit<PlatformCapability, "statusLabel"> = {
     platform,

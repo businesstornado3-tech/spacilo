@@ -68,7 +68,9 @@ describe("daily marketing orchestrator", () => {
         publishedAt: NOW - 86_400_000,
       },
     ];
-    const plan = planDailyCampaign(base({ places: [portsmouth], history, existingIds: ["ER-CAMP-2026-000001"] }));
+    const plan = planDailyCampaign(
+      base({ places: [portsmouth], history, existingIds: ["ER-CAMP-2026-000001"] }),
+    );
     expect(plan.campaign.opportunity.key).not.toBe("market:supply-gap:portsmouth");
     expect(plan.campaign.id).toBe("ER-CAMP-2026-000002");
   });
@@ -81,7 +83,11 @@ describe("daily marketing orchestrator", () => {
   });
 
   it("pauses assets instead of queueing them when publishing is paused", () => {
-    const settings = { ...defaultMarketingSettings(), globalMode: "AUTONOMOUS" as const, pauseAllPublishing: true };
+    const settings = {
+      ...defaultMarketingSettings(),
+      globalMode: "AUTONOMOUS" as const,
+      pauseAllPublishing: true,
+    };
     const plan = planDailyCampaign(base({ places: [portsmouth], settings }));
     expect(plan.campaign.assets.every((asset) => asset.state === "PAUSED")).toBe(true);
   });

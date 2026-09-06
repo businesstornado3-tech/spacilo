@@ -25,7 +25,9 @@ function hookFor(opportunity: MarketingOpportunity): string {
     case "HOST_OPPORTUNITY":
       return place ? `Got a spare garage in ${place}?` : opportunity.problem;
     case "LOCAL_STORY":
-      return place ? `People in ${place} are looking for storage. There isn't much.` : opportunity.problem;
+      return place
+        ? `People in ${place} are looking for storage. There isn't much.`
+        : opportunity.problem;
     case "TWO_SIDED":
       return "One person needs space. Another has space they never use.";
     case "EDUCATIONAL":
@@ -41,7 +43,10 @@ function hookFor(opportunity: MarketingOpportunity): string {
  * Builds a scene plan. Deterministic, so a founder regenerating the same
  * campaign sees the same structure unless they change something.
  */
-export function buildStory(opportunity: MarketingOpportunity, options: { seconds?: number } = {}): CampaignStory {
+export function buildStory(
+  opportunity: MarketingOpportunity,
+  options: { seconds?: number } = {},
+): CampaignStory {
   const profile = brandProfile();
   const place = opportunity.location?.name ?? "your area";
   const hostSide = opportunity.audience === "hosts";
@@ -63,7 +68,8 @@ export function buildStory(opportunity: MarketingOpportunity, options: { seconds
     },
     {
       index: 2,
-      visual: "Close, unhurried shots of the everyday things involved — boxes, furniture, a cot, seasonal crates.",
+      visual:
+        "Close, unhurried shots of the everyday things involved — boxes, furniture, a cot, seasonal crates.",
       voiceover: opportunity.evidence[1]?.statement.startsWith("If unresolved")
         ? opportunity.evidence[1].statement.replace("If unresolved: ", "")
         : `${opportunity.problem} It is more common than people think.`,
@@ -90,7 +96,8 @@ export function buildStory(opportunity: MarketingOpportunity, options: { seconds
     },
     {
       index: 5,
-      visual: "End card: EarnRoom lock-up, approved tagline and website on a warm neutral background.",
+      visual:
+        "End card: EarnRoom lock-up, approved tagline and website on a warm neutral background.",
       voiceover: hostSide ? hostCta : renterCta,
       caption: `${tagline} ${profile.website}`,
       seconds: Math.max(4, total - 23),

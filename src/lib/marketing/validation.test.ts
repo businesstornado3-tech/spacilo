@@ -7,9 +7,19 @@ import type { ContentHistoryEntry } from "./coverage";
 
 const NOW = Date.parse("2026-06-15T09:00:00Z");
 const settings = defaultMarketingSettings();
-const plan = planDailyCampaign({ now: NOW, settings, places: [], growth: [], history: [], insights: [], existingIds: [] });
+const plan = planDailyCampaign({
+  now: NOW,
+  settings,
+  places: [],
+  growth: [],
+  history: [],
+  insights: [],
+  existingIds: [],
+});
 
-const run = (over: Parameters<typeof validateContent>[0] extends infer T ? Partial<T> : never = {}) =>
+const run = (
+  over: Parameters<typeof validateContent>[0] extends infer T ? Partial<T> : never = {},
+) =>
   validateContent({
     opportunity: plan.campaign.opportunity,
     story: plan.campaign.story,

@@ -129,7 +129,10 @@ export function AdminSectionBlock({
     <section
       id={id}
       aria-labelledby={`${id}-heading`}
-      className={cn("scroll-mt-32 border-t border-border pt-6 first:border-0 first:pt-0", className)}
+      className={cn(
+        "scroll-mt-32 border-t border-border pt-6 first:border-0 first:pt-0",
+        className,
+      )}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id={`${id}-heading`} className="type-h3">

@@ -37,7 +37,13 @@ const PERSONAL_DATA_PATTERNS: readonly RegExp[] = [
   /\b[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}\b/, // full postcode
 ];
 
-const SENSITIVE_TERMS = ["bereavement", "eviction", "repossession", "divorce settlement", "immigration status"];
+const SENSITIVE_TERMS = [
+  "bereavement",
+  "eviction",
+  "repossession",
+  "divorce settlement",
+  "immigration status",
+];
 
 /** Phrases that promise a space exists — only allowed with real published supply. */
 const AVAILABILITY_PATTERNS: readonly RegExp[] = [
@@ -94,34 +100,44 @@ export function validateContent(input: ValidationInput): ValidationReport {
   checks.push({
     id: "brand",
     passed: mentionsBrand && mentionsSite,
-    detail: mentionsBrand && mentionsSite ? "EarnRoom name and website present." : "Brand name or website missing from the assets.",
+    detail:
+      mentionsBrand && mentionsSite
+        ? "EarnRoom name and website present."
+        : "Brand name or website missing from the assets.",
   });
 
   const badClaim = FORBIDDEN_CLAIMS.find((claim) => body.includes(claim));
   checks.push({
     id: "claims",
     passed: !badClaim,
-    detail: badClaim ? `Unsupportable claim: "${badClaim}".` : "No guaranteed-income, safety or price claims.",
+    detail: badClaim
+      ? `Unsupportable claim: "${badClaim}".`
+      : "No guaranteed-income, safety or price claims.",
   });
 
   checks.push({
     id: "licensing",
     passed: true,
-    detail: "Scene plan uses generated or EarnRoom-owned visuals only; no third-party footage or music is referenced.",
+    detail:
+      "Scene plan uses generated or EarnRoom-owned visuals only; no third-party footage or music is referenced.",
   });
 
   const personal = PERSONAL_DATA_PATTERNS.find((pattern) => pattern.test(body));
   checks.push({
     id: "personal_data",
     passed: !personal,
-    detail: personal ? "Possible personal data in the copy." : "No email, phone number or full postcode in the copy.",
+    detail: personal
+      ? "Possible personal data in the copy."
+      : "No email, phone number or full postcode in the copy.",
   });
 
   const sensitive = SENSITIVE_TERMS.find((term) => body.includes(term));
   checks.push({
     id: "sensitive_content",
     passed: !sensitive,
-    detail: sensitive ? `Sensitive subject "${sensitive}" needs human review.` : "No sensitive personal circumstances used.",
+    detail: sensitive
+      ? `Sensitive subject "${sensitive}" needs human review.`
+      : "No sensitive personal circumstances used.",
   });
 
   const platformProblem = input.assets.find((asset) => {
@@ -140,7 +156,9 @@ export function validateContent(input: ValidationInput): ValidationReport {
   checks.push({
     id: "duplicate",
     passed: !duplication.blocked,
-    detail: duplication.blocked ? duplication.reasons[0] ?? "Near-duplicate of recent content." : `Duplication risk ${duplication.risk}.`,
+    detail: duplication.blocked
+      ? (duplication.reasons[0] ?? "Near-duplicate of recent content.")
+      : `Duplication risk ${duplication.risk}.`,
   });
 
   const withinFrequency = input.publishedToday < input.maxDailyPublications;
@@ -153,10 +171,22 @@ export function validateContent(input: ValidationInput): ValidationReport {
   });
 
   const everyAssetHasCta = input.assets.every((asset) => asset.cta.trim().length > 0);
-  checks.push({ id: "cta", passed: everyAssetHasCta, detail: everyAssetHasCta ? "Every asset carries a call to action." : "An asset has no call to action." });
+  checks.push({
+    id: "cta",
+    passed: everyAssetHasCta,
+    detail: everyAssetHasCta
+      ? "Every asset carries a call to action."
+      : "An asset has no call to action.",
+  });
 
   const urlsOk = input.assets.every((asset) => asset.description.includes(profile.url));
-  checks.push({ id: "url", passed: urlsOk, detail: urlsOk ? `All descriptions link to ${profile.url}.` : "A description is missing the EarnRoom link." });
+  checks.push({
+    id: "url",
+    passed: urlsOk,
+    detail: urlsOk
+      ? `All descriptions link to ${profile.url}.`
+      : "A description is missing the EarnRoom link.",
+  });
 
   const availabilityClaim = AVAILABILITY_PATTERNS.find((pattern) => pattern.test(body));
   const availabilityOk = input.opportunity.mayClaimAvailability === true || !availabilityClaim;
@@ -172,14 +202,18 @@ export function validateContent(input: ValidationInput): ValidationReport {
   checks.push({
     id: "statistics",
     passed: !inventedStat,
-    detail: inventedStat ? "Copy states a statistic that EarnRoom cannot evidence." : "No unevidenced statistics or results.",
+    detail: inventedStat
+      ? "Copy states a statistic that EarnRoom cannot evidence."
+      : "No unevidenced statistics or results.",
   });
 
   const nonUk = NON_UK_PATTERNS.find((pattern) => pattern.test(body));
   checks.push({
     id: "uk_conventions",
     passed: !nonUk,
-    detail: nonUk ? "Copy uses non-UK currency, units or spelling." : "UK currency, units, spelling and date conventions used.",
+    detail: nonUk
+      ? "Copy uses non-UK currency, units or spelling."
+      : "UK currency, units, spelling and date conventions used.",
   });
 
   checks.push({

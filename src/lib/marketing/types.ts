@@ -61,7 +61,14 @@ export type MarketingEvidence = {
   /** Human sentence a founder can read and check. */
   statement: string;
   /** Where it came from: geography rpc, growth opportunity, topic catalogue… */
-  source: Open<"demand_geography" | "growth_opportunity" | "seo_catalogue" | "seasonal_calendar" | "coverage_gap" | "performance_history">;
+  source: Open<
+    | "demand_geography"
+    | "growth_opportunity"
+    | "seo_catalogue"
+    | "seasonal_calendar"
+    | "coverage_gap"
+    | "performance_history"
+  >;
   /** Raw supporting value where one exists (event counts, spaces…). */
   value?: number | null;
 };
@@ -147,13 +154,7 @@ export type CampaignStory = {
 /* ------------------------------------------------------------------ assets */
 
 export type PlatformId =
-  | "youtube"
-  | "youtube_shorts"
-  | "instagram"
-  | "tiktok"
-  | "facebook"
-  | "linkedin"
-  | "pinterest";
+  "youtube" | "youtube_shorts" | "instagram" | "tiktok" | "facebook" | "linkedin" | "pinterest";
 
 export type AspectRatio = "9:16" | "16:9" | "1:1";
 
@@ -182,11 +183,7 @@ export type PlatformAsset = {
 export type ProviderState = "NOT_CONFIGURED" | "CONFIGURED" | "CONNECTED" | "ERROR" | "UNAVAILABLE";
 
 export type VideoStatus =
-  | "NOT_REQUESTED"
-  | "PROVIDER_NOT_CONFIGURED"
-  | "GENERATING"
-  | "GENERATED"
-  | "FAILED";
+  "NOT_REQUESTED" | "PROVIDER_NOT_CONFIGURED" | "GENERATING" | "GENERATED" | "FAILED";
 
 export type VideoRequest = {
   campaignId: string;
@@ -326,7 +323,9 @@ export type MarketingCampaign = {
   validation: ValidationReport;
   /** Effective publishing mode for the campaign as a whole. */
   mode: PublishingMode;
-  status: Open<"DRAFT" | "AWAITING_APPROVAL" | "APPROVED" | "REJECTED" | "SCHEDULED" | "PUBLISHED" | "FAILED">;
+  status: Open<
+    "DRAFT" | "AWAITING_APPROVAL" | "APPROVED" | "REJECTED" | "SCHEDULED" | "PUBLISHED" | "FAILED"
+  >;
   scheduledFor: number | null;
   audit: readonly AuditEvent[];
 };
@@ -389,7 +388,17 @@ export type PerformanceRecord = {
 };
 
 export type LearningInsight = {
-  dimension: Open<"hook" | "topic" | "location" | "audience" | "format" | "length" | "cta" | "platform" | "objective">;
+  dimension: Open<
+    | "hook"
+    | "topic"
+    | "location"
+    | "audience"
+    | "format"
+    | "length"
+    | "cta"
+    | "platform"
+    | "objective"
+  >;
   value: string;
   /** Observations behind the insight — never a single data point. */
   samples: number;
@@ -401,7 +410,12 @@ export type LearningInsight = {
 /* --------------------------------------------------------------- settings */
 
 export type ContentMixKey = Open<
-  "market_intelligence" | "seo" | "demand_creation" | "host_acquisition" | "renter_acquisition" | "brand_awareness"
+  | "market_intelligence"
+  | "seo"
+  | "demand_creation"
+  | "host_acquisition"
+  | "renter_acquisition"
+  | "brand_awareness"
 >;
 
 export type MarketingSettings = {

@@ -110,7 +110,10 @@ export function growthOpportunityMarketing(
     .filter((row) => Boolean(row.problem) && row.frequency > 0)
     .map((row) => {
       const audience = audienceFromRole(row.audience);
-      const location = row.locationSlug && row.locationName ? { slug: row.locationSlug, name: row.locationName } : null;
+      const location =
+        row.locationSlug && row.locationName
+          ? { slug: row.locationSlug, name: row.locationName }
+          : null;
       return {
         key: `market:pain:${row.key}`,
         trigger: "USER_PAIN_POINT" as const,
@@ -120,7 +123,8 @@ export function growthOpportunityMarketing(
         topic: "Observed storage problem",
         audience,
         secondaryAudience: audience === "hosts" ? "renters" : "hosts",
-        objective: audience === "hosts" ? ("HOST_ACQUISITION" as const) : ("RENTER_ACQUISITION" as const),
+        objective:
+          audience === "hosts" ? ("HOST_ACQUISITION" as const) : ("RENTER_ACQUISITION" as const),
         location,
         rationale: `The growth engine recorded this problem ${row.frequency} time(s) with an opportunity score of ${row.score}/100.`,
         evidence: [

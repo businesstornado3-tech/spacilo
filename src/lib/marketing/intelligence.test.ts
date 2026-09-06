@@ -34,7 +34,9 @@ describe("SEO intelligence", () => {
   it("lifts in-season topics and damps recently covered ones", () => {
     const topic = SEO_TOPICS.find((item) => item.id === "student-storage")!;
     expect(seasonalWeight(topic, 6)).toBeGreaterThan(seasonalWeight(topic, 12));
-    const fresh = seoOpportunities({ month: 6 }).find((item) => item.key === "seo:student-storage")!;
+    const fresh = seoOpportunities({ month: 6 }).find(
+      (item) => item.key === "seo:student-storage",
+    )!;
     const tired = seoOpportunities({ month: 6, recentTopicIds: ["student-storage"] }).find(
       (item) => item.key === "seo:student-storage",
     )!;
@@ -46,8 +48,12 @@ describe("demand creation intelligence", () => {
   it("never labels a created opportunity as observed market demand", () => {
     const results = demandCreationOpportunities();
     expect(results.length).toBeGreaterThan(0);
-    expect(results.every((item) => item.evidenceClass === "DEMAND_CREATION_OPPORTUNITY")).toBe(true);
-    expect(results.every((item) => item.rationale.includes("No EarnRoom demand signal is claimed"))).toBe(true);
+    expect(results.every((item) => item.evidenceClass === "DEMAND_CREATION_OPPORTUNITY")).toBe(
+      true,
+    );
+    expect(
+      results.every((item) => item.rationale.includes("No EarnRoom demand signal is claimed")),
+    ).toBe(true);
   });
 });
 
@@ -66,7 +72,15 @@ describe("market intelligence adapter", () => {
 
   it("carries growth-engine evidence through unchanged", () => {
     const [opportunity] = growthOpportunityMarketing([
-      { key: "opp_1", problem: "No room for boxes", audience: "HOST", locationSlug: "bath", locationName: "Bath", frequency: 3, score: 70 },
+      {
+        key: "opp_1",
+        problem: "No room for boxes",
+        audience: "HOST",
+        locationSlug: "bath",
+        locationName: "Bath",
+        frequency: 3,
+        score: 70,
+      },
     ]);
     expect(opportunity?.trigger).toBe("USER_PAIN_POINT");
     expect(opportunity?.audience).toBe("hosts");

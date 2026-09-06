@@ -52,4 +52,8 @@ Open items for the owner (not code work):
 - [x] Founder-only storage (campaigns, publications, connections, performance, audit) with admin-only access
 - [x] Marketing studio in the founder console: generate, review, approve, reject, attempt publication
 - [x] Performance ingestion and a learning loop that changes recommendations only
+- [x] Real video generation: prompt builder, generation service, private storage, brand overlay and validation
+- [x] Cost and usage limits on generation (per day, per campaign, per asset)
+- [x] Official OAuth connection architecture, per-platform publishing modes, connection testing
+- [x] Video preview and Accounts & publishing sections in the marketing studio
 - [ ] Connect real social platform accounts and a video provider before anything can actually publish

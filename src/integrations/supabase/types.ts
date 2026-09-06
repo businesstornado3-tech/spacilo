@@ -2649,24 +2649,33 @@ export type Database = {
       }
       marketing_platform_connections: {
         Row: {
+          account_id: string | null
+          account_label: string | null
           connection: string
           expires_at: string | null
+          last_checked_at: string | null
           last_error: string | null
           platform: string
           scopes: string[]
           updated_at: string
         }
         Insert: {
+          account_id?: string | null
+          account_label?: string | null
           connection?: string
           expires_at?: string | null
+          last_checked_at?: string | null
           last_error?: string | null
           platform: string
           scopes?: string[]
           updated_at?: string
         }
         Update: {
+          account_id?: string | null
+          account_label?: string | null
           connection?: string
           expires_at?: string | null
+          last_checked_at?: string | null
           last_error?: string | null
           platform?: string
           scopes?: string[]
@@ -2747,6 +2756,83 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      marketing_videos: {
+        Row: {
+          aspect: string
+          asset_id: string
+          attempt: number
+          brand_validation: Json
+          campaign_id: string
+          created_at: string
+          duration_seconds: number | null
+          estimated_cost_pence: number | null
+          failure_reason: string | null
+          id: string
+          platform: string
+          prompt: string
+          provider_id: string
+          provider_job_id: string | null
+          provider_model: string | null
+          resolution: string
+          seconds: number
+          status: string
+          storage_path: string | null
+          updated_at: string
+        }
+        Insert: {
+          aspect: string
+          asset_id: string
+          attempt?: number
+          brand_validation?: Json
+          campaign_id: string
+          created_at?: string
+          duration_seconds?: number | null
+          estimated_cost_pence?: number | null
+          failure_reason?: string | null
+          id?: string
+          platform: string
+          prompt: string
+          provider_id: string
+          provider_job_id?: string | null
+          provider_model?: string | null
+          resolution: string
+          seconds: number
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aspect?: string
+          asset_id?: string
+          attempt?: number
+          brand_validation?: Json
+          campaign_id?: string
+          created_at?: string
+          duration_seconds?: number | null
+          estimated_cost_pence?: number | null
+          failure_reason?: string | null
+          id?: string
+          platform?: string
+          prompt?: string
+          provider_id?: string
+          provider_job_id?: string | null
+          provider_model?: string | null
+          resolution?: string
+          seconds?: number
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_videos_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {

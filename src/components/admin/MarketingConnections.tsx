@@ -134,6 +134,8 @@ export function MarketingConnections() {
                 ? "unknown — the GPU cost per minute has not been entered."
                 : `about ${(snapshot.video.selfHosted.infrastructurePencePerGpuMinute / 100).toFixed(2)} pounds per GPU hour-equivalent, billed by your GPU host.`}
             </dd>
+          </div>
+
 
           <div className="sm:col-span-2">
             <dt className="font-semibold">Paid service</dt>

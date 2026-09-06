@@ -27,6 +27,12 @@ import type { GrowthOpportunitySummary } from "@/lib/marketing/market-intelligen
 
 const DAY = 86_400_000;
 
+/** A readable sentence for the audit trail and the console. */
+function attemptDetail(attempt: { record: { state: string; error: string | null; platformUrl: string | null } }): string {
+  if (attempt.record.state === "PUBLISHED") return `Published${attempt.record.platformUrl ? ` at ${attempt.record.platformUrl}` : ""}.`;
+  return attempt.record.error ?? `Publication stopped at state ${attempt.record.state}.`;
+}
+
 async function assertAdmin(supabase: { rpc: (name: string) => Promise<{ data: unknown; error: unknown }> }) {
   const { data, error } = await supabase.rpc("is_platform_admin");
   if (error || data !== true) throw new Error("You don't have access to this area.");
@@ -38,7 +44,7 @@ export interface MarketingStudioSnapshot {
   today: MarketingCampaign | null;
   recent: { id: string; planDate: string; status: string; source: string; topic: string; priority: number }[];
   publications: PublicationRecord[];
-  coverage: { dimension: string; value: string; lastCoveredAt: number | null; timesCovered: number }[];
+  coverage: { slug: string; name: string; campaigns: number; daysSinceLast: number | null; state: string }[];
   insights: { dimension: string; value: string; index: number; samples: number; note: string }[];
   /** Places with real demand, so the console can show what the engine saw. */
   demandPlaces: { slug: string; name: string; demandEvents: number; publishedSpaces: number; priority: string }[];
@@ -191,10 +197,11 @@ export const getMarketingStudio = createServerFn({ method: "GET" })
         updatedAt: Date.parse(row.updated_at),
       })),
       coverage: coverageRows(history, { now }).map((row) => ({
-        dimension: row.dimension,
-        value: row.value,
-        lastCoveredAt: row.lastCoveredAt,
-        timesCovered: row.timesCovered,
+        slug: row.slug,
+        name: row.name,
+        campaigns: row.campaigns,
+        daysSinceLast: row.daysSinceLast,
+        state: row.state,
       })),
       insights: insights.map((insight) => ({
         dimension: insight.dimension,
@@ -396,12 +403,12 @@ export const publishMarketingCampaign = createServerFn({ method: "POST" })
       await supabase.from("marketing_audit").insert({
         campaign_id: campaign.id,
         action: attempt.record.state === "PUBLISHED" ? "published" : "publication_blocked",
-        detail: attempt.detail,
+        detail: attemptDetail(attempt),
         actor: "engine",
         actor_id: context.userId,
       });
 
-      results.push({ platform: asset.platform, state: attempt.record.state, detail: attempt.detail });
+      results.push({ platform: asset.platform, state: attempt.record.state, detail: attemptDetail(attempt) });
     }
 
     const published = results.every((result) => result.state === "PUBLISHED") && results.length > 0;

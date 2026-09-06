@@ -52,6 +52,7 @@ class Job:
     probe: dict | None = None
     cancelled: bool = False
     core_of: str | None = None
+    core_path: str | None = None
 
 
 JOBS: dict[str, Job] = {}
@@ -163,8 +164,6 @@ def run_job(job_id: str) -> None:
                 if job_id in QUEUE:
                     QUEUE.remove(job_id)
 
-
-Job.core_path = None  # type: ignore[attr-defined]
 
 app = FastAPI(title="EarnRoom Wan 2.2 worker")
 

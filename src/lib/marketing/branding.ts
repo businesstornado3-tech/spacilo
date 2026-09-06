@@ -119,7 +119,12 @@ export function buildBrandOverlay(input: {
     },
   );
 
-  return { aspect: input.aspect, seconds: input.seconds, safeArea: safeAreaFor(input.platform), layers };
+  return {
+    aspect: input.aspect,
+    seconds: input.seconds,
+    safeArea: safeAreaFor(input.platform),
+    layers,
+  };
 }
 
 export type BrandCheckId =
@@ -168,7 +173,9 @@ export function validateBranding(input: {
   checks.push({
     id: "logo_asset",
     passed: Boolean(logo),
-    detail: logo ? "End card carries the EarnRoom lock-up." : "No EarnRoom lock-up on the end card.",
+    detail: logo
+      ? "End card carries the EarnRoom lock-up."
+      : "No EarnRoom lock-up on the end card.",
   });
   checks.push({
     id: "logo_source",
@@ -210,7 +217,9 @@ export function validateBranding(input: {
   checks.push({
     id: "brand_spelling",
     passed: !misspelled,
-    detail: misspelled ? "The brand name is misspelled in the copy." : "Brand name spelled EarnRoom.",
+    detail: misspelled
+      ? "The brand name is misspelled in the copy."
+      : "Brand name spelled EarnRoom.",
   });
 
   const renderedAspect = input.rendered?.aspect ?? null;

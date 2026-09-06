@@ -86,7 +86,9 @@ export const getCampaignVideos = createServerFn({ method: "GET" })
       .select("*")
       .eq("campaign_id", data.campaignId)
       .order("created_at", { ascending: false });
-    const videos = await Promise.all(((rows ?? []) as any[]).map((row) => rowToVideo(supabase, row)));
+    const videos = await Promise.all(
+      ((rows ?? []) as any[]).map((row) => rowToVideo(supabase, row)),
+    );
     return { videos };
   });
 
@@ -178,7 +180,10 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
           seconds: Math.min(10, spec.seconds),
           resolution,
           provider_id: config.id,
-          status: job.status === "PROVIDER_NOT_CONFIGURED" ? "PROVIDER_NOT_CONFIGURED" : "VIDEO_GENERATION_FAILED",
+          status:
+            job.status === "PROVIDER_NOT_CONFIGURED"
+              ? "PROVIDER_NOT_CONFIGURED"
+              : "VIDEO_GENERATION_FAILED",
           prompt: spec.prompt,
           failure_reason: job.reason,
           attempt: (attemptsForAsset ?? 0) + 1,
@@ -371,19 +376,25 @@ export const getPublishingConnections = createServerFn({ method: "GET" })
     const supabase = context.supabase as any;
     await assertAdmin(supabase);
 
-    const [{ allCapabilities, defaultMarketingSettings }, { oauthConfigState, OAUTH_DEFINITIONS }, provider] =
-      await Promise.all([
-        import("@/lib/marketing/platforms"),
-        import("@/lib/marketing/oauth"),
-        import("@/lib/marketing/video.server"),
-      ]);
+    const [
+      { allCapabilities, defaultMarketingSettings },
+      { oauthConfigState, OAUTH_DEFINITIONS },
+      provider,
+    ] = await Promise.all([
+      import("@/lib/marketing/platforms"),
+      import("@/lib/marketing/oauth"),
+      import("@/lib/marketing/video.server"),
+    ]);
 
     const { data: settingsRow } = await supabase
       .from("marketing_settings")
       .select("settings")
       .eq("id", true)
       .maybeSingle();
-    const settings = { ...defaultMarketingSettings(), ...((settingsRow?.settings ?? {}) as object) };
+    const settings = {
+      ...defaultMarketingSettings(),
+      ...((settingsRow?.settings ?? {}) as object),
+    };
 
     const { data: connectionRows } = await supabase
       .from("marketing_platform_connections")
@@ -442,33 +453,36 @@ export const getPublishingConnections = createServerFn({ method: "GET" })
 export const startPlatformConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ platform: z.string().min(3).max(40) }).parse(data))
-  .handler(async ({ data, context }): Promise<{ ok: boolean; url: string | null; detail: string }> => {
-    const supabase = context.supabase as any;
-    await assertAdmin(supabase);
-    const { oauthConfigState, oauthDefinition, authorizeUrl } = await import("@/lib/marketing/oauth");
-    const platform = data.platform as PlatformId;
-    const def = oauthDefinition(platform);
+  .handler(
+    async ({ data, context }): Promise<{ ok: boolean; url: string | null; detail: string }> => {
+      const supabase = context.supabase as any;
+      await assertAdmin(supabase);
+      const { oauthConfigState, oauthDefinition, authorizeUrl } =
+        await import("@/lib/marketing/oauth");
+      const platform = data.platform as PlatformId;
+      const def = oauthDefinition(platform);
 
-    const clientId = process.env[def.clientIdSecret];
-    const state = oauthConfigState(
-      platform,
-      [def.clientIdSecret, def.clientSecretSecret].filter((name) => Boolean(process.env[name])),
-    );
-    if (!state.configured || !clientId) {
+      const clientId = process.env[def.clientIdSecret];
+      const state = oauthConfigState(
+        platform,
+        [def.clientIdSecret, def.clientSecretSecret].filter((name) => Boolean(process.env[name])),
+      );
+      if (!state.configured || !clientId) {
+        return {
+          ok: false,
+          url: null,
+          detail: `Requires configuration: ${state.missingSecrets.join(" and ")} must be set up before ${def.label} can be connected. Register the app at ${def.developerConsole}.`,
+        };
+      }
+
+      const redirectUri = `${process.env["PUBLIC_SITE_URL"] ?? "https://earnroom.co.uk"}/api/public/marketing/oauth/${platform}`;
       return {
-        ok: false,
-        url: null,
-        detail: `Requires configuration: ${state.missingSecrets.join(" and ")} must be set up before ${def.label} can be connected. Register the app at ${def.developerConsole}.`,
+        ok: true,
+        url: authorizeUrl({ platform, clientId, redirectUri, state: context.userId }),
+        detail: `Complete sign-in, two-factor authentication and permissions on ${def.label} itself.`,
       };
-    }
-
-    const redirectUri = `${process.env["PUBLIC_SITE_URL"] ?? "https://earnroom.co.uk"}/api/public/marketing/oauth/${platform}`;
-    return {
-      ok: true,
-      url: authorizeUrl({ platform, clientId, redirectUri, state: context.userId }),
-      detail: `Complete sign-in, two-factor authentication and permissions on ${def.label} itself.`,
-    };
-  });
+    },
+  );
 
 export const disconnectPlatform = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -546,7 +560,8 @@ export const updatePlatformPublishing = createServerFn({ method: "POST" })
       .maybeSingle();
     const settings: any = { ...defaultMarketingSettings(), ...((row?.settings ?? {}) as object) };
 
-    if (data.mode) settings.platformModes = { ...settings.platformModes, [data.platform]: data.mode };
+    if (data.mode)
+      settings.platformModes = { ...settings.platformModes, [data.platform]: data.mode };
     if (data.paused !== undefined) {
       const paused = new Set<string>(settings.pausedPlatforms ?? []);
       if (data.paused) paused.add(data.platform);
@@ -556,7 +571,8 @@ export const updatePlatformPublishing = createServerFn({ method: "POST" })
 
     await supabase.from("marketing_settings").upsert({ id: true, settings });
     await supabase.from("marketing_audit").insert({
-      action: data.paused === undefined ? "publishing_mode_changed" : data.paused ? "paused" : "resumed",
+      action:
+        data.paused === undefined ? "publishing_mode_changed" : data.paused ? "paused" : "resumed",
       detail: `${data.platform}: ${data.mode ?? (data.paused ? "publishing paused" : "publishing resumed")}.`,
       actor: "human",
       actor_id: context.userId,

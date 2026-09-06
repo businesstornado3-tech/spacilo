@@ -52,11 +52,15 @@ export function MarketingVideoPanel({
     <div className="space-y-3">
       {!providerConfigured ? (
         <Alert tone="warning" title="No video service configured">
-          Videos cannot be produced yet. Everything else — the idea, the words and the platform
-          plan — is ready, and no clip will ever be shown as finished when it is not.
+          Videos cannot be produced yet. Everything else — the idea, the words and the platform plan
+          — is ready, and no clip will ever be shown as finished when it is not.
         </Alert>
       ) : null}
-      {notice ? <Alert tone="info" title="Video generation">{notice}</Alert> : null}
+      {notice ? (
+        <Alert tone="info" title="Video generation">
+          {notice}
+        </Alert>
+      ) : null}
 
       <ul className="grid gap-3 sm:grid-cols-2">
         {assets.map((asset) => {

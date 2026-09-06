@@ -252,7 +252,6 @@ function MarketingStudioRoute() {
                   />
                 </div>
 
-
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"

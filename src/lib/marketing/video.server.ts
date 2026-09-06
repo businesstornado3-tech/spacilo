@@ -116,10 +116,7 @@ export async function createVideoJob(input: {
   return { ok: true, jobId, model: MODEL };
 }
 
-export async function pollVideoJob(
-  jobId: string,
-  fetchImpl?: typeof fetch,
-): Promise<VideoJobPoll> {
+export async function pollVideoJob(jobId: string, fetchImpl?: typeof fetch): Promise<VideoJobPoll> {
   const key = apiKey();
   if (!key) return { ok: false, reason: "Video generation provider requires configuration." };
   const doFetch = fetchImpl ?? fetch;
@@ -139,7 +136,9 @@ export async function pollVideoJob(
   if (status === "failed") {
     const error = job["error"];
     const reason =
-      error && typeof error === "object" && typeof (error as Record<string, unknown>)["message"] === "string"
+      error &&
+      typeof error === "object" &&
+      typeof (error as Record<string, unknown>)["message"] === "string"
         ? String((error as Record<string, unknown>)["message"])
         : "The video service reported a failed generation.";
     return { ok: false, reason };
@@ -153,7 +152,10 @@ export async function pollVideoJob(
     headers: { Authorization: `Bearer ${key}` },
   });
   if (!contentResponse.ok) {
-    return { ok: false, reason: `The finished video could not be downloaded (HTTP ${contentResponse.status}).` };
+    return {
+      ok: false,
+      reason: `The finished video could not be downloaded (HTTP ${contentResponse.status}).`,
+    };
   }
   const bytes = await contentResponse.arrayBuffer();
   if (bytes.byteLength < 1024) {

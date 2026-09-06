@@ -34,7 +34,10 @@ export const OAUTH_DEFINITIONS: readonly OAuthDefinition[] = [
     label: "YouTube",
     authorizeUrl: "https://accounts.google.com/o/oauth2/v2/auth",
     tokenUrl: "https://oauth2.googleapis.com/token",
-    scopes: ["https://www.googleapis.com/auth/youtube.upload", "https://www.googleapis.com/auth/youtube.readonly"],
+    scopes: [
+      "https://www.googleapis.com/auth/youtube.upload",
+      "https://www.googleapis.com/auth/youtube.readonly",
+    ],
     clientIdSecret: "YOUTUBE_CLIENT_ID",
     clientSecretSecret: "YOUTUBE_CLIENT_SECRET",
     approvalNote:
@@ -49,7 +52,8 @@ export const OAUTH_DEFINITIONS: readonly OAuthDefinition[] = [
     scopes: ["https://www.googleapis.com/auth/youtube.upload"],
     clientIdSecret: "YOUTUBE_CLIENT_ID",
     clientSecretSecret: "YOUTUBE_CLIENT_SECRET",
-    approvalNote: "Shorts use the same YouTube connection; a vertical upload under 60s becomes a Short.",
+    approvalNote:
+      "Shorts use the same YouTube connection; a vertical upload under 60s becomes a Short.",
     developerConsole: "https://console.cloud.google.com/apis/credentials",
   },
   {
@@ -57,7 +61,12 @@ export const OAUTH_DEFINITIONS: readonly OAuthDefinition[] = [
     label: "Instagram",
     authorizeUrl: "https://www.facebook.com/v21.0/dialog/oauth",
     tokenUrl: "https://graph.facebook.com/v21.0/oauth/access_token",
-    scopes: ["instagram_basic", "instagram_content_publish", "pages_show_list", "business_management"],
+    scopes: [
+      "instagram_basic",
+      "instagram_content_publish",
+      "pages_show_list",
+      "business_management",
+    ],
     clientIdSecret: "META_APP_ID",
     clientSecretSecret: "META_APP_SECRET",
     approvalNote:
@@ -72,7 +81,8 @@ export const OAUTH_DEFINITIONS: readonly OAuthDefinition[] = [
     scopes: ["pages_show_list", "pages_manage_posts", "pages_read_engagement"],
     clientIdSecret: "META_APP_ID",
     clientSecretSecret: "META_APP_SECRET",
-    approvalNote: "Publishing targets a Facebook Page you administer; Meta App Review is required for live use.",
+    approvalNote:
+      "Publishing targets a Facebook Page you administer; Meta App Review is required for live use.",
     developerConsole: "https://developers.facebook.com/apps",
   },
   {
@@ -95,7 +105,8 @@ export const OAUTH_DEFINITIONS: readonly OAuthDefinition[] = [
     scopes: ["w_organization_social", "r_organization_social", "rw_organization_admin"],
     clientIdSecret: "LINKEDIN_CLIENT_ID",
     clientSecretSecret: "LINKEDIN_CLIENT_SECRET",
-    approvalNote: "Company Page posting needs the Community Management API to be granted to the app.",
+    approvalNote:
+      "Company Page posting needs the Community Management API to be granted to the app.",
     developerConsole: "https://www.linkedin.com/developers/apps",
   },
   {

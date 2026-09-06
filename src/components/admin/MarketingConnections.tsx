@@ -99,7 +99,10 @@ export function MarketingConnections() {
               <button
                 type="button"
                 onClick={() =>
-                  connections.update.mutate({ platform: platform.platform, paused: !platform.paused })
+                  connections.update.mutate({
+                    platform: platform.platform,
+                    paused: !platform.paused,
+                  })
                 }
                 className="min-h-11 rounded-lg border border-border px-3 type-nav text-muted-foreground hover:bg-secondary"
               >

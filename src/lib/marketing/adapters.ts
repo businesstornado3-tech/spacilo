@@ -99,8 +99,7 @@ export function unavailableAdapter(
   });
   return {
     platform,
-    capability: () =>
-      capabilityFor(platform, context.connections, context.settings, context.now),
+    capability: () => capabilityFor(platform, context.connections, context.settings, context.now),
     validateAsset: validateAssetForPlatform,
     upload: blocked,
     publish: blocked,
@@ -194,7 +193,10 @@ const ENDPOINTS: Partial<Record<PlatformId, Endpoint>> = {
  * Builds the adapter for a platform. Returns an honest refusing adapter unless
  * a real connection, access token and account are present.
  */
-export function adapterFor(platform: PlatformId, context: AdapterContext): PublishingChannelAdapter {
+export function adapterFor(
+  platform: PlatformId,
+  context: AdapterContext,
+): PublishingChannelAdapter {
   const def = definition(platform);
   const capability = capabilityFor(platform, context.connections, context.settings, context.now);
 
@@ -233,7 +235,12 @@ export function adapterFor(platform: PlatformId, context: AdapterContext): Publi
   ): Promise<PublishResult> => {
     const check = validateAssetForPlatform(asset);
     if (!check.ok) {
-      return { ok: false, state: "VALIDATION_FAILED", error: check.problems.join(" "), retryable: false };
+      return {
+        ok: false,
+        state: "VALIDATION_FAILED",
+        error: check.problems.join(" "),
+        retryable: false,
+      };
     }
     let response: Response;
     try {

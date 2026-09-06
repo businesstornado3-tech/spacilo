@@ -26,8 +26,7 @@ export type UsageCounts = {
 };
 
 export type UsageDecision =
-  | { allowed: true }
-  | { allowed: false; reason: string; state: "LIMIT_REACHED" };
+  { allowed: true } | { allowed: false; reason: string; state: "LIMIT_REACHED" };
 
 export function checkUsage(counts: UsageCounts, limits: UsageLimits): UsageDecision {
   if (counts.videosToday >= limits.maxVideosPerDay) {

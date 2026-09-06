@@ -1,7 +1,7 @@
 /**
  * Free animated marketing engine — public entry point.
  *
- * Server-safe: the browser renderer lives in `render.client.ts` and is imported
+ * Server-safe: the browser renderer lives in `render.browser.ts` and is imported
  * only from client components.
  */
 export * from "./types";

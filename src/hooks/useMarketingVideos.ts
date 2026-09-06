@@ -9,6 +9,7 @@ import { useServerFn } from "@tanstack/react-start";
 import * as React from "react";
 
 import {
+  cancelCampaignVideo,
   disconnectPlatform,
   generateCampaignVideo,
   getCampaignVideos,
@@ -17,6 +18,7 @@ import {
   startPlatformConnection,
   testPlatformConnection,
   updatePlatformPublishing,
+  updateVideoProviderSettings,
   type MarketingVideoRow,
   type PublishingConnectionsSnapshot,
 } from "@/lib/marketing-video.functions";

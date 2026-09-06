@@ -12,10 +12,7 @@ import { usePublishingConnections } from "@/hooks/useMarketingVideos";
 import { cn } from "@/lib/utils";
 
 /** Plain-English state of the self-hosted Wan 2.2 worker. */
-export function workerStatusLabel(worker: {
-  configured: boolean;
-  status: string;
-}): string {
+export function workerStatusLabel(worker: { configured: boolean; status: string }): string {
   if (!worker.configured) return "Not configured";
   switch (worker.status) {
     case "AVAILABLE":
@@ -34,7 +31,6 @@ export function workerStatusLabel(worker: {
 }
 
 export function MarketingConnections() {
-
   const connections = usePublishingConnections(true);
   const snapshot = connections.query.data;
   const [notice, setNotice] = React.useState<string | null>(null);
@@ -133,10 +129,8 @@ export function MarketingConnections() {
               {snapshot.video.selfHosted.infrastructurePencePerGpuMinute === null
                 ? "unknown — the GPU cost per minute has not been entered."
                 : `about £${((snapshot.video.selfHosted.infrastructurePencePerGpuMinute * 60) / 100).toFixed(2)} per GPU hour, billed by your GPU host.`}
-
             </dd>
           </div>
-
 
           <div className="sm:col-span-2">
             <dt className="font-semibold">Paid service</dt>

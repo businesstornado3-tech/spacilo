@@ -10,12 +10,7 @@
 import { SELECTED_VIDEO_MODEL_ID, selectedVideoModel, videoModel } from "./video-model";
 
 export type WorkerStatus =
-  | "AVAILABLE"
-  | "BUSY"
-  | "OFFLINE"
-  | "MODEL_LOADING"
-  | "AUTH_FAILED"
-  | "ERROR";
+  "AVAILABLE" | "BUSY" | "OFFLINE" | "MODEL_LOADING" | "AUTH_FAILED" | "ERROR";
 
 export type WorkerLimits = {
   maxConcurrentJobs: number;

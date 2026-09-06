@@ -250,8 +250,6 @@ export function licenceRecord(id: string): {
     licenceUrl: model.licence.url,
     verifiedOn: model.licence.verifiedOn,
     commercialUse: model.licence.commercialUse,
-    checkpoint: model.checkpoint
-      ? `${model.checkpoint.repo}@${model.checkpoint.revision}`
-      : null,
+    checkpoint: model.checkpoint ? `${model.checkpoint.repo}@${model.checkpoint.revision}` : null,
   };
 }

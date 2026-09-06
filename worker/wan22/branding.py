@@ -89,7 +89,7 @@ def build_filtergraph(overlay: dict, width: int, height: int, font: str) -> tupl
                 y = f"(H/2)+{int(height * 0.06) + text_slot * int(size * 1.5)}"
                 text_slot += 1
             chain += (
-                f";[v{step}]drawtext=fontfile={font}:text='{_escape(str(layer.get('value', '')))}'"
+                f";[v{step}]drawtext=fontfile='{_escape(font)}':text='{_escape(str(layer.get('value', '')))}'"
                 f":fontcolor=white:fontsize={size}:x=(w-text_w)/2:y={y}"
                 f":box=1:boxcolor=black@0.45:boxborderw={max(6, size // 4)}"
                 f":enable='{_between(layer)}'[v{step + 1}]"

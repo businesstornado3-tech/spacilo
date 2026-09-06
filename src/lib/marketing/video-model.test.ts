@@ -15,7 +15,7 @@ describe("open-weight video model selection", () => {
     expect(model.id).toBe(SELECTED_VIDEO_MODEL_ID);
     expect(model.licence.commercialUse).toBe("PERMITTED");
     expect(model.licence.productionDefaultEligible).toBe(true);
-    expect(model.licence.geographicRestrictions).toBe("NONE");
+    expect(model.licence.geographicRestrictions).toBeNull();
   });
 
   it("keeps restricted licences out of the production default", () => {

@@ -47,6 +47,7 @@ import { Route as StorageLocationRouteImport } from './routes/storage.$location'
 import { Route as ToolsSlugRouteImport } from './routes/tools.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated.admin.index'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated.admin.dashboard'
+import { Route as AuthenticatedAdminMarketingRouteImport } from './routes/_authenticated.admin.marketing'
 import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated.host.index'
 import { Route as AuthenticatedHostBookingsRouteImport } from './routes/_authenticated.host.bookings'
 import { Route as AuthenticatedHostEarningsRouteImport } from './routes/_authenticated.host.earnings'
@@ -277,6 +278,12 @@ const AuthenticatedAdminDashboardRoute =
   AuthenticatedAdminDashboardRouteImport.update({
     id: '/admin/dashboard',
     path: '/admin/dashboard',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminMarketingRoute =
+  AuthenticatedAdminMarketingRouteImport.update({
+    id: '/admin/marketing',
+    path: '/admin/marketing',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedHostIndexRoute = AuthenticatedHostIndexRouteImport.update({
@@ -547,6 +554,7 @@ export interface FileRoutesByFullPath {
   '/tools/$slug': typeof ToolsSlugRoute
   '/legal/': typeof LegalIndexRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
@@ -623,6 +631,7 @@ export interface FileRoutesByTo {
   '/tools/$slug': typeof ToolsSlugRoute
   '/legal': typeof LegalIndexRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
@@ -702,6 +711,7 @@ export interface FileRoutesById {
   '/tools/$slug': typeof ToolsSlugRoute
   '/legal/': typeof LegalIndexRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
+  '/_authenticated/admin/marketing': typeof AuthenticatedAdminMarketingRoute
   '/_authenticated/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/_authenticated/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/_authenticated/renter/matches': typeof AuthenticatedRenterMatchesRoute
@@ -782,6 +792,7 @@ export interface FileRouteTypes {
     | '/tools/$slug'
     | '/legal/'
     | '/admin/dashboard'
+    | '/admin/marketing'
     | '/host/bookings'
     | '/host/earnings'
     | '/renter/matches'
@@ -858,6 +869,7 @@ export interface FileRouteTypes {
     | '/tools/$slug'
     | '/legal'
     | '/admin/dashboard'
+    | '/admin/marketing'
     | '/host/bookings'
     | '/host/earnings'
     | '/renter/matches'
@@ -936,6 +948,7 @@ export interface FileRouteTypes {
     | '/tools/$slug'
     | '/legal/'
     | '/_authenticated/admin/dashboard'
+    | '/_authenticated/admin/marketing'
     | '/_authenticated/host/bookings'
     | '/_authenticated/host/earnings'
     | '/_authenticated/renter/matches'
@@ -1278,6 +1291,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/dashboard'
       fullPath: '/admin/dashboard'
       preLoaderRoute: typeof AuthenticatedAdminDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/marketing': {
+      id: '/_authenticated/admin/marketing'
+      path: '/admin/marketing'
+      fullPath: '/admin/marketing'
+      preLoaderRoute: typeof AuthenticatedAdminMarketingRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/host/': {
@@ -1670,6 +1690,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRenterRoute: typeof AuthenticatedRenterRouteWithChildren
   AuthenticatedSpacefitRoute: typeof AuthenticatedSpacefitRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
+  AuthenticatedAdminMarketingRoute: typeof AuthenticatedAdminMarketingRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminSupportCaseIdRoute: typeof AuthenticatedAdminSupportCaseIdRoute
   AuthenticatedSupportCasesCaseIdRoute: typeof AuthenticatedSupportCasesCaseIdRoute
@@ -1686,6 +1707,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRenterRoute: AuthenticatedRenterRouteWithChildren,
   AuthenticatedSpacefitRoute: AuthenticatedSpacefitRoute,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
+  AuthenticatedAdminMarketingRoute: AuthenticatedAdminMarketingRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminSupportCaseIdRoute: AuthenticatedAdminSupportCaseIdRoute,
   AuthenticatedSupportCasesCaseIdRoute: AuthenticatedSupportCasesCaseIdRoute,

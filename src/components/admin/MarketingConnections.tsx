@@ -127,6 +127,15 @@ export function MarketingConnections() {
             </dd>
           </div>
           <div className="sm:col-span-2">
+            <dt className="font-semibold">Cost</dt>
+            <dd>
+              Video service fee: £0 per video on the own worker. Infrastructure/compute:{" "}
+              {snapshot.video.selfHosted.infrastructurePencePerGpuMinute === null
+                ? "unknown — the GPU cost per minute has not been entered."
+                : `about ${(snapshot.video.selfHosted.infrastructurePencePerGpuMinute / 100).toFixed(2)} pounds per GPU hour-equivalent, billed by your GPU host.`}
+            </dd>
+
+          <div className="sm:col-span-2">
             <dt className="font-semibold">Paid service</dt>
             <dd>{snapshot.video.paid.detail}</dd>
           </div>

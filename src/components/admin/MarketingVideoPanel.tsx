@@ -144,12 +144,38 @@ export function MarketingVideoPanel({
                 </button>
               </div>
 
-              {video?.estimatedCostPence ? (
+              {video && !["RENDERED", "BRAND_VALIDATION_FAILED"].includes(video.status) &&
+              video.queueState !== "CANCELLED" &&
+              video.queueState !== "FAILED" ? (
+                <button
+                  type="button"
+                  disabled={videos.cancel.isPending}
+                  onClick={() =>
+                    videos.cancel
+                      .mutateAsync(video.id)
+                      .then((result) => setNotice(result.detail))
+                      .catch((error: Error) => setNotice(error.message))
+                  }
+                  className="mt-2 min-h-11 rounded-lg border border-border px-3 type-nav text-destructive hover:bg-secondary disabled:opacity-60"
+                >
+                  Cancel generation
+                </button>
+              ) : null}
+
+              {video ? (
                 <p className="mt-2 type-body-xs text-muted-foreground">
-                  Estimated generation cost £{(video.estimatedCostPence / 100).toFixed(2)} · attempt{" "}
-                  {video.attempt}
+                  {video.providerKind === "SELF_HOSTED"
+                    ? `Made on EarnRoom's own worker — video cost £0${
+                        video.infrastructureCostPence !== null
+                          ? ` (about £${(video.infrastructureCostPence / 100).toFixed(2)} of computing time)`
+                          : ""
+                      }`
+                    : `Paid service — about £${(video.apiCostPence / 100).toFixed(2)}`}{" "}
+                  · attempt {video.attempt}
+                  {video.coreAssetId ? " · reuses this campaign's core film" : ""}
                 </p>
               ) : null}
+
             </li>
           );
         })}

@@ -74,7 +74,7 @@ export function MarketingVideoPanel({
   // The renderer is browser-only, so it is loaded after the page is interactive.
   React.useEffect(() => {
     let cancelled = false;
-    import("@/lib/marketing/animation/render.client")
+    import("@/lib/marketing/animation/render.browser")
       .then((module) => {
         if (!cancelled) setSupport(module.animationSupport());
       })
@@ -92,7 +92,7 @@ export function MarketingVideoPanel({
     setProgress(0);
     setNotice(null);
     try {
-      const { renderAnimatedPlan } = await import("@/lib/marketing/animation/render.client");
+      const { renderAnimatedPlan } = await import("@/lib/marketing/animation/render.browser");
       const plan = buildAnimatedPlan({ campaignId, asset, story });
       const result = await renderAnimatedPlan(plan, { onProgress: setProgress });
       const stored = await videos.storeAnimated.mutateAsync({

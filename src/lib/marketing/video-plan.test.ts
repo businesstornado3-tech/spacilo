@@ -25,7 +25,7 @@ const asset = (
 const assets = [
   asset("a-tiktok", "tiktok", "9:16", 15),
   asset("a-reels", "instagram", "9:16", 12),
-  asset("a-shorts", "youtube_shorts", "9:16", 20),
+  asset("a-shorts", "youtube_shorts", "9:16", 16),
   asset("a-youtube", "youtube", "16:9", 30),
 ];
 

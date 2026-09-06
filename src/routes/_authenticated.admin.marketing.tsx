@@ -232,12 +232,26 @@ function MarketingStudioRoute() {
                       <p className="mt-2 type-body-xs text-primary">{asset.hashtags.join(" ")}</p>
                       {asset.videoUrl === null ? (
                         <p className="mt-2 type-body-xs text-warning-soft-foreground">
-                          No video rendered — a video provider is not configured.
+                          No video rendered yet.
                         </p>
                       ) : null}
                     </div>
                   ))}
                 </div>
+
+                <div className="rounded-xl border border-border p-4">
+                  <h4 className="type-h5">Video preview</h4>
+                  <p className="mt-1 mb-3 type-body-sm text-muted-foreground">
+                    Each clip is produced for that platform's shape and length, with the EarnRoom
+                    lock-up, tagline and web address added on the end card.
+                  </p>
+                  <MarketingVideoPanel
+                    campaignId={snapshot.today.id}
+                    assets={snapshot.today.assets}
+                    providerConfigured={providerConfigured}
+                  />
+                </div>
+
 
                 <div className="flex flex-wrap gap-2">
                   <button

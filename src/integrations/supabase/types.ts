@@ -2511,6 +2511,243 @@ export type Database = {
           },
         ]
       }
+      marketing_audit: {
+        Row: {
+          action: string
+          actor: string
+          actor_id: string | null
+          campaign_id: string | null
+          created_at: string
+          detail: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor?: string
+          actor_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          detail: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor?: string
+          actor_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          detail?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_audit_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_campaigns: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          audience: string
+          campaign: Json
+          created_at: string
+          hook: string
+          id: string
+          location_slug: string | null
+          opportunity_key: string
+          plan_date: string
+          priority: number
+          published_at: string | null
+          source: string
+          status: string
+          topic: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audience: string
+          campaign: Json
+          created_at?: string
+          hook: string
+          id: string
+          location_slug?: string | null
+          opportunity_key: string
+          plan_date: string
+          priority?: number
+          published_at?: string | null
+          source: string
+          status: string
+          topic: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audience?: string
+          campaign?: Json
+          created_at?: string
+          hook?: string
+          id?: string
+          location_slug?: string | null
+          opportunity_key?: string
+          plan_date?: string
+          priority?: number
+          published_at?: string | null
+          source?: string
+          status?: string
+          topic?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketing_performance: {
+        Row: {
+          asset_id: string
+          campaign_id: string
+          collected_at: string
+          conversions: Json
+          id: string
+          metrics: Json
+          platform: string
+          platform_specific: Json
+        }
+        Insert: {
+          asset_id: string
+          campaign_id: string
+          collected_at?: string
+          conversions?: Json
+          id?: string
+          metrics?: Json
+          platform: string
+          platform_specific?: Json
+        }
+        Update: {
+          asset_id?: string
+          campaign_id?: string
+          collected_at?: string
+          conversions?: Json
+          id?: string
+          metrics?: Json
+          platform?: string
+          platform_specific?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_performance_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_platform_connections: {
+        Row: {
+          connection: string
+          expires_at: string | null
+          last_error: string | null
+          platform: string
+          scopes: string[]
+          updated_at: string
+        }
+        Insert: {
+          connection?: string
+          expires_at?: string | null
+          last_error?: string | null
+          platform: string
+          scopes?: string[]
+          updated_at?: string
+        }
+        Update: {
+          connection?: string
+          expires_at?: string | null
+          last_error?: string | null
+          platform?: string
+          scopes?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketing_publications: {
+        Row: {
+          asset_id: string
+          campaign_id: string
+          created_at: string
+          error: string | null
+          id: string
+          platform: string
+          platform_post_id: string | null
+          platform_url: string | null
+          published_at: string | null
+          retry_count: number
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          asset_id: string
+          campaign_id: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          platform: string
+          platform_post_id?: string | null
+          platform_url?: string | null
+          published_at?: string | null
+          retry_count?: number
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          asset_id?: string
+          campaign_id?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          platform?: string
+          platform_post_id?: string | null
+          platform_url?: string | null
+          published_at?: string | null
+          retry_count?: number
+          state?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_publications_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_settings: {
+        Row: {
+          id: boolean
+          settings: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: boolean
+          settings?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: boolean
+          settings?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           body: string

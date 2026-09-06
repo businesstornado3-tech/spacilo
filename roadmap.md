@@ -62,3 +62,10 @@ Open items for the owner (not code work):
 - [x] Cost shown split: video API fee vs infrastructure time, never guessed
 - [ ] Stand up the video worker (address + access token) so self-hosted generation can actually run
 - [ ] Connect real social platform accounts before anything can actually publish
+
+## Phase 12c — self-hosted Wan 2.2 worker
+- [x] Deployable worker service (`worker/wan22/`): FastAPI, bearer auth, queue, cancel, ffprobe validation, ffmpeg brand compositing, shared core film reuse
+- [x] Pinned checkpoint + licence record (Wan-AI/Wan2.2-TI2V-5B-Diffusers @ b8fff73…, Apache-2.0, verified 2026-09-06)
+- [x] Worker status in the Founder Console: Connected / Not configured / Offline / Authentication failed / Worker error, with video fee and infrastructure cost shown separately
+- [x] Branding burn-in proven on a real MP4 (worker/wan22/test_worker.py)
+- [ ] Rent/stand up the GPU host, set VIDEO_WORKER_URL + VIDEO_WORKER_TOKEN, run the first real Wan 2.2 generation end to end

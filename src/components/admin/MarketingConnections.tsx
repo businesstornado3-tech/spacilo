@@ -9,6 +9,7 @@ import * as React from "react";
 
 import { Alert } from "@/components/common/Alert";
 import { usePublishingConnections } from "@/hooks/useMarketingVideos";
+import { workerStatusLabel } from "@/lib/marketing/worker-status";
 import { cn } from "@/lib/utils";
 
 export function MarketingConnections() {
@@ -75,9 +76,12 @@ export function MarketingConnections() {
 
         <dl className="mt-3 grid gap-1 type-body-xs text-muted-foreground sm:grid-cols-2">
           <div>
-            <dt className="font-semibold">Own worker</dt>
-            <dd>{snapshot.video.selfHosted.detail}</dd>
+            <dt className="font-semibold">Own worker (Wan 2.2)</dt>
+            <dd>
+              {workerStatusLabel(snapshot.video.selfHosted)} — {snapshot.video.selfHosted.detail}
+            </dd>
           </div>
+
           <div>
             <dt className="font-semibold">Model</dt>
             <dd>
@@ -100,6 +104,16 @@ export function MarketingConnections() {
               {snapshot.video.selfHosted.maxJobsPerDay} a day.
             </dd>
           </div>
+          <div className="sm:col-span-2">
+            <dt className="font-semibold">Cost</dt>
+            <dd>
+              Video service fee: £0 per video on the own worker. Infrastructure/compute:{" "}
+              {snapshot.video.selfHosted.infrastructurePencePerGpuMinute === null
+                ? "unknown — the GPU cost per minute has not been entered."
+                : `about £${((snapshot.video.selfHosted.infrastructurePencePerGpuMinute * 60) / 100).toFixed(2)} per GPU hour, billed by your GPU host.`}
+            </dd>
+          </div>
+
           <div className="sm:col-span-2">
             <dt className="font-semibold">Paid service</dt>
             <dd>{snapshot.video.paid.detail}</dd>

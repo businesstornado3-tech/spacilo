@@ -1,0 +1,17 @@
+# Self-hosted Wan 2.2 video worker.
+# Pinned deliberately: the checkpoint, the runtime and the licence position are
+# all part of the production record.
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+torch==2.6.0
+torchvision==0.21.0
+diffusers==0.33.1
+transformers==4.49.0
+accelerate==1.4.0
+safetensors==0.5.2
+ftfy==6.3.1
+imageio==2.36.1
+imageio-ffmpeg==0.5.1
+huggingface-hub==0.29.1
+Pillow==11.1.0

@@ -164,3 +164,50 @@ describe("finished media is checked, not assumed", () => {
     expect(validateMedia(junk, { aspect: "9:16", seconds: 8 }).passed).toBe(false);
   });
 });
+
+describe("worker failure states", () => {
+  it("reports a rejected token as an authentication failure, not merely offline", async () => {
+    configure();
+    const health = await workerHealth(async () => new Response("nope", { status: 401 }));
+    expect(health.status).toBe("AUTH_FAILED");
+    expect(health.detail).toMatch(/access token/i);
+  });
+
+  it("treats an unreachable worker as offline and never reaches for the paid provider", async () => {
+    configure();
+    const health = await workerHealth(async () => {
+      throw new Error("connect ECONNREFUSED");
+    });
+    expect(health.status).toBe("OFFLINE");
+    const job = await createSelfHostedJob(request, async () => {
+      throw new Error("connect ECONNREFUSED");
+    });
+    expect(job).toMatchObject({ ok: false, status: "SELF_HOSTED_UNAVAILABLE" });
+    expect(JSON.stringify(job)).not.toMatch(/paid|gateway/i);
+  });
+
+  it("surfaces a cancelled job as a failure with the worker's own reason", async () => {
+    configure();
+    const poll = await pollSelfHostedJob(
+      "wan-1",
+      async () =>
+        new Response(JSON.stringify({ state: "CANCELLED" }), {
+          headers: { "content-type": "application/json" },
+        }),
+    );
+    expect(poll).toMatchObject({ ok: false });
+    expect((poll as { reason: string }).reason).toMatch(/cancelled/i);
+  });
+
+  it("does not offer a video when the finished file cannot be downloaded", async () => {
+    configure();
+    const poll = await pollSelfHostedJob("wan-2", async (url) =>
+      String(url).endsWith("/output")
+        ? new Response("", { status: 500 })
+        : new Response(JSON.stringify({ state: "READY" }), {
+            headers: { "content-type": "application/json" },
+          }),
+    );
+    expect(poll).toMatchObject({ ok: false });
+  });
+});

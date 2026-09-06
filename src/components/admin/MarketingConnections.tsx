@@ -9,26 +9,8 @@ import * as React from "react";
 
 import { Alert } from "@/components/common/Alert";
 import { usePublishingConnections } from "@/hooks/useMarketingVideos";
+import { workerStatusLabel } from "@/lib/marketing/worker-status";
 import { cn } from "@/lib/utils";
-
-/** Plain-English state of the self-hosted Wan 2.2 worker. */
-export function workerStatusLabel(worker: { configured: boolean; status: string }): string {
-  if (!worker.configured) return "Not configured";
-  switch (worker.status) {
-    case "AVAILABLE":
-      return "Connected";
-    case "BUSY":
-      return "Connected (busy)";
-    case "MODEL_LOADING":
-      return "Connected (loading the model)";
-    case "AUTH_FAILED":
-      return "Authentication failed";
-    case "OFFLINE":
-      return "Offline";
-    default:
-      return "Worker error";
-  }
-}
 
 export function MarketingConnections() {
   const connections = usePublishingConnections(true);

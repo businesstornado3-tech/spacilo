@@ -69,7 +69,7 @@ function MarketingStudioRoute() {
     >
       {studio.query.isLoading ? <LoadingState label="Loading the marketing studio…" /> : null}
       {studio.query.isError ? (
-        <Alert tone="danger" title="Could not load the studio">
+        <Alert tone="error" title="Could not load the studio">
           {(studio.query.error as Error).message}
         </Alert>
       ) : null}
@@ -162,7 +162,7 @@ function MarketingStudioRoute() {
                 </div>
 
                 {!snapshot.today.validation.passed ? (
-                  <Alert tone="danger" title="Blocked before publication">
+                  <Alert tone="error" title="Blocked before publication">
                     <ul className="space-y-1">
                       {snapshot.today.validation.failures.map((failure) => (
                         <li key={failure}>{failure}</li>
@@ -252,7 +252,7 @@ function MarketingStudioRoute() {
                     <span className="type-body-sm font-semibold">{capability.label}</span>
                     <Pill tone={capability.connection === "CONNECTED" ? "good" : "warn"}>{capability.statusLabel}</Pill>
                   </div>
-                  <p className="mt-1 type-body-xs text-muted-foreground">{capability.note}</p>
+                  <p className="mt-1 type-body-xs text-muted-foreground">{capability.reason}</p>
                 </li>
               ))}
             </ul>

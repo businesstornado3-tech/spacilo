@@ -62,7 +62,13 @@ function MarketingStudioRoute() {
   const studio = useMarketingStudio(true);
   const connections = usePublishingConnections(true);
   const snapshot = studio.query.data;
-  const providerConfigured = connections.query.data?.provider.state === "CONFIGURED";
+  // A campaign can be filmed when whichever route the founder has chosen is
+  // actually usable — the own worker by default, the paid service only if picked.
+  const video = connections.query.data?.video;
+  const providerConfigured =
+    video?.mode.provider === "PAID_HOSTED"
+      ? video.paid.configured
+      : Boolean(video?.selfHosted.configured);
 
   const toolbar = (
     <button

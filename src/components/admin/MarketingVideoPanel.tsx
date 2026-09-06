@@ -51,9 +51,10 @@ export function MarketingVideoPanel({
   return (
     <div className="space-y-3">
       {!providerConfigured ? (
-        <Alert tone="warning" title="No video service configured">
-          Videos cannot be produced yet. Everything else — the idea, the words and the platform plan
-          — is ready, and no clip will ever be shown as finished when it is not.
+        <Alert tone="warning" title="Video generation not ready">
+          Videos cannot be produced until a generation route is available. Everything else — the
+          idea, the words and the platform plan — is ready, and no clip will ever be shown as
+          finished when it is not.
         </Alert>
       ) : null}
       {notice ? (

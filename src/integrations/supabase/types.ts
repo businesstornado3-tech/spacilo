@@ -2759,67 +2759,97 @@ export type Database = {
       }
       marketing_videos: {
         Row: {
+          api_cost_pence: number
           aspect: string
           asset_id: string
           attempt: number
           brand_validation: Json
           campaign_id: string
+          core_asset_id: string | null
           created_at: string
           duration_seconds: number | null
           estimated_cost_pence: number | null
           failure_reason: string | null
+          generation_settings: Json
           id: string
+          infrastructure_cost_pence: number | null
+          licence_record: Json | null
+          media_probe: Json | null
+          model_version: string | null
           platform: string
           prompt: string
           provider_id: string
           provider_job_id: string | null
+          provider_kind: string
           provider_model: string | null
+          queue_state: string
           resolution: string
           seconds: number
+          seed: number | null
           status: string
           storage_path: string | null
           updated_at: string
         }
         Insert: {
+          api_cost_pence?: number
           aspect: string
           asset_id: string
           attempt?: number
           brand_validation?: Json
           campaign_id: string
+          core_asset_id?: string | null
           created_at?: string
           duration_seconds?: number | null
           estimated_cost_pence?: number | null
           failure_reason?: string | null
+          generation_settings?: Json
           id?: string
+          infrastructure_cost_pence?: number | null
+          licence_record?: Json | null
+          media_probe?: Json | null
+          model_version?: string | null
           platform: string
           prompt: string
           provider_id: string
           provider_job_id?: string | null
+          provider_kind?: string
           provider_model?: string | null
+          queue_state?: string
           resolution: string
           seconds: number
+          seed?: number | null
           status?: string
           storage_path?: string | null
           updated_at?: string
         }
         Update: {
+          api_cost_pence?: number
           aspect?: string
           asset_id?: string
           attempt?: number
           brand_validation?: Json
           campaign_id?: string
+          core_asset_id?: string | null
           created_at?: string
           duration_seconds?: number | null
           estimated_cost_pence?: number | null
           failure_reason?: string | null
+          generation_settings?: Json
           id?: string
+          infrastructure_cost_pence?: number | null
+          licence_record?: Json | null
+          media_probe?: Json | null
+          model_version?: string | null
           platform?: string
           prompt?: string
           provider_id?: string
           provider_job_id?: string | null
+          provider_kind?: string
           provider_model?: string | null
+          queue_state?: string
           resolution?: string
           seconds?: number
+          seed?: number | null
           status?: string
           storage_path?: string | null
           updated_at?: string

@@ -56,4 +56,9 @@ Open items for the owner (not code work):
 - [x] Cost and usage limits on generation (per day, per campaign, per asset)
 - [x] Official OAuth connection architecture, per-platform publishing modes, connection testing
 - [x] Video preview and Accounts & publishing sections in the marketing studio
-- [ ] Connect real social platform accounts and a video provider before anything can actually publish
+- [x] Zero-fee generation: open-weight model selection with a recorded licence check (Wan 2.2, Apache-2.0)
+- [x] Provider-neutral routing — own worker by default, paid service only when chosen and confirmed per video
+- [x] GPU queue admission, cancellation, media probing of the finished file, shared core film per frame shape
+- [x] Cost shown split: video API fee vs infrastructure time, never guessed
+- [ ] Stand up the video worker (address + access token) so self-hosted generation can actually run
+- [ ] Connect real social platform accounts before anything can actually publish

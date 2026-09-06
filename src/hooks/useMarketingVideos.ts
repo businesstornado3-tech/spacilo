@@ -83,7 +83,7 @@ export function useCampaignVideos(campaignId: string | null) {
     // The free animated route: the browser makes the file, the server only
     // checks and stores it.
     storeAnimated: useMutation({
-      mutationFn: (input: Parameters<typeof storeAnimatedVideo>[0] extends never ? never : {
+      mutationFn: (input: {
         assetId: string;
         platform: string;
         aspect: "9:16" | "16:9" | "1:1";

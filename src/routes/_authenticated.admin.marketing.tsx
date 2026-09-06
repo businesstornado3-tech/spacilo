@@ -321,6 +321,14 @@ function MarketingStudioRoute() {
           </AdminSectionBlock>
 
           <AdminSectionBlock
+            id="connections"
+            title="Accounts and publishing"
+            note="Connect each account on that platform's own sign-in screen. EarnRoom never asks for or stores a platform password."
+          >
+            <MarketingConnections />
+          </AdminSectionBlock>
+
+          <AdminSectionBlock
             id="demand"
             title="What the engine saw"
             note="Real location intent from the last 30 days. Nothing here is invented."

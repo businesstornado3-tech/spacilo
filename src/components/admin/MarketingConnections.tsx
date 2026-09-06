@@ -132,7 +132,8 @@ export function MarketingConnections() {
               Video service fee: £0 per video on the own worker. Infrastructure/compute:{" "}
               {snapshot.video.selfHosted.infrastructurePencePerGpuMinute === null
                 ? "unknown — the GPU cost per minute has not been entered."
-                : `about ${(snapshot.video.selfHosted.infrastructurePencePerGpuMinute / 100).toFixed(2)} pounds per GPU hour-equivalent, billed by your GPU host.`}
+                : `about £${((snapshot.video.selfHosted.infrastructurePencePerGpuMinute * 60) / 100).toFixed(2)} per GPU hour, billed by your GPU host.`}
+
             </dd>
           </div>
 

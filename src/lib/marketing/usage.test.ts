@@ -19,7 +19,9 @@ describe("generation cost and usage control", () => {
     expect(checkUsage({ ...counts, videosForCampaign: 4 }, DEFAULT_USAGE_LIMITS).allowed).toBe(
       false,
     );
-    expect(checkUsage({ ...counts, attemptsForAsset: 3 }, DEFAULT_USAGE_LIMITS).allowed).toBe(false);
+    expect(checkUsage({ ...counts, attemptsForAsset: 3 }, DEFAULT_USAGE_LIMITS).allowed).toBe(
+      false,
+    );
   });
 
   it("prices a draft below a final render and reports nothing for an unknown tier", () => {

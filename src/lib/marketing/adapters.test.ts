@@ -90,7 +90,8 @@ describe("platform publishing adapters", () => {
 
   it("treats a platform refusal as a failure, not a publication", async () => {
     const fetchImpl = vi.fn(
-      async () => new Response(JSON.stringify({ error: { message: "Not allowed" } }), { status: 403 }),
+      async () =>
+        new Response(JSON.stringify({ error: { message: "Not allowed" } }), { status: 403 }),
     ) as unknown as typeof fetch;
     const adapter = adapterFor("instagram", context({ fetchImpl }));
     const result = await adapter.publish(asset(), campaign);

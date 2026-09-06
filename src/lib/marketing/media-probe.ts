@@ -121,7 +121,9 @@ export function probeMp4(buffer: ArrayBuffer): MediaProbe {
     if (handler === "soun") hasAudio = true;
     if (handler === "vide" && tkhd) {
       const version = view.getUint8(tkhd.start);
-      const dimensionOffset = tkhd.start + (version === 1 ? 96 : 84);
+      // tkhd payload: the fixed-point width/height sit right after the 36-byte
+      // display matrix — 88 bytes in for the 64-bit variant, 76 for the 32-bit one.
+      const dimensionOffset = tkhd.start + (version === 1 ? 88 : 76);
       if (dimensionOffset + 8 <= tkhd.end) {
         width = view.getUint32(dimensionOffset) / 65536;
         height = view.getUint32(dimensionOffset + 4) / 65536;

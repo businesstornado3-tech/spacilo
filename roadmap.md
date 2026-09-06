@@ -69,3 +69,13 @@ Open items for the owner (not code work):
 - [x] Worker status in the Founder Console: Connected / Not configured / Offline / Authentication failed / Worker error, with video fee and infrastructure cost shown separately
 - [x] Branding burn-in proven on a real MP4 (worker/wan22/test_worker.py)
 - [ ] Rent/stand up the GPU host, set VIDEO_WORKER_URL + VIDEO_WORKER_TOKEN, run the first real Wan 2.2 generation end to end
+
+## Phase 12d — free animated marketing engine (no GPU, no video service)
+- [x] Reusable illustration library (people, homes, garages, boxes, UK map, pins, calendars, earnings) — plain geometry, no stock artwork, no licence
+- [x] Deterministic scene planner: campaign story → animated scenes, entrances, captions, closing card
+- [x] Per-platform branding profiles, incl. a compliant TikTok variant (no watermark, no burned-in web address) with every removal stated
+- [x] Browser renderer: canvas + WebCodecs + MP4 muxing, H.264 first with AV1/VP9 fallback, honest capability message
+- [x] Server storage path: probes and brand-checks the finished file before it is ever shown as ready; £0 recorded per video
+- [x] Proven end to end in a real browser: 720×1280 MP4, 8.0s, 30fps, 249 KB, passes the media checks
+- [x] Fixed the MP4 dimension read (tkhd offset) so finished files report their real size
+- [ ] Optional: voiceover/music track (currently silent), and richer UK map artwork

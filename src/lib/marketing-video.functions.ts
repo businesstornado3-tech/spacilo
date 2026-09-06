@@ -1015,3 +1015,165 @@ export const updatePlatformPublishing = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+/* ------------------------------------------------- free animated engine */
+
+/**
+ * Stores a video the founder's own browser drew and encoded.
+ *
+ * There is no video API and no GPU behind this: the file arrives already made,
+ * at no per-video cost. It is still probed and brand-checked exactly like a
+ * provider-generated file — a video is only ever marked ready when a real,
+ * playable MP4 has been stored.
+ */
+export const storeAnimatedVideo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        campaignId: z.string().min(3).max(64),
+        assetId: z.string().min(1).max(120),
+        platform: z.string().min(2).max(40),
+        aspect: z.enum(["9:16", "16:9", "1:1"]),
+        seconds: z.number().min(1).max(200),
+        width: z.number().int().min(160).max(4096),
+        height: z.number().int().min(160).max(4096),
+        fps: z.number().int().min(8).max(60),
+        digest: z.string().min(4).max(64),
+        scenes: z.number().int().min(1).max(40),
+        brandingNotes: z.array(z.string().max(400)).max(10).default([]),
+        /** Base64 MP4 produced locally. Capped so a request cannot be abused. */
+        mp4Base64: z.string().min(100).max(40_000_000),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }): Promise<{ video: MarketingVideoRow }> => {
+    const supabase = context.supabase as any;
+    await assertAdmin(supabase);
+
+    const [{ validateMedia }, { buildBrandOverlay, validateBranding }, { taglineFor }] =
+      await Promise.all([
+        import("@/lib/marketing/media-probe"),
+        import("@/lib/marketing/branding"),
+        import("@/lib/marketing/brand"),
+      ]);
+
+    const binary = Buffer.from(data.mp4Base64, "base64");
+    const bytes = binary.buffer.slice(
+      binary.byteOffset,
+      binary.byteOffset + binary.byteLength,
+    ) as ArrayBuffer;
+
+    const media = validateMedia(bytes, {
+      aspect: data.aspect,
+      seconds: data.seconds,
+      toleranceSeconds: 1.5,
+    });
+
+    const { data: campaignRow } = await supabase
+      .from("marketing_campaigns")
+      .select("campaign")
+      .eq("id", data.campaignId)
+      .maybeSingle();
+    const campaign = campaignRow?.campaign as MarketingCampaign | undefined;
+    const asset = campaign?.assets.find((entry: PlatformAsset) => entry.id === data.assetId);
+
+    const baseRow = {
+      campaign_id: data.campaignId,
+      asset_id: data.assetId,
+      platform: data.platform,
+      aspect: data.aspect,
+      seconds: Math.round(data.seconds),
+      resolution: `${data.width}x${data.height}`,
+      provider_kind: "FREE_ANIMATION",
+      provider_id: "earnroom-animation",
+      provider_model: "earnroom-vector-animation",
+      model_version: `plan-${data.digest}`,
+      queue_state: "READY",
+      api_cost_pence: 0,
+      infrastructure_cost_pence: 0,
+      attempt: 1,
+      generation_settings: {
+        engine: "FREE_ANIMATION",
+        renderedIn: "founder-browser",
+        fps: data.fps,
+        scenes: data.scenes,
+        planDigest: data.digest,
+        brandingNotes: data.brandingNotes,
+      },
+      media_probe: media.probe,
+      prompt: asset?.hook ?? null,
+    };
+
+    if (!media.passed) {
+      const { data: failed } = await supabase
+        .from("marketing_videos")
+        .insert({
+          ...baseRow,
+          status: "MEDIA_VALIDATION_FAILED",
+          queue_state: "FAILED",
+          failure_reason: media.failures.join(" "),
+        })
+        .select("*")
+        .single();
+      await supabase.from("marketing_audit").insert({
+        campaign_id: data.campaignId,
+        action: "video_generation_failed",
+        detail: `Animated video rejected before storing: ${media.failures.join(" ")}`,
+        actor: "engine",
+        actor_id: context.userId,
+      });
+      return { video: await rowToVideo(supabase, failed) };
+    }
+
+    const path = `${data.campaignId}/${data.assetId}-animated-${data.digest}.mp4`;
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, binary, { contentType: "video/mp4", upsert: true });
+    if (uploadError) throw new Error(`The video could not be saved: ${uploadError.message}`);
+
+    const overlay = buildBrandOverlay({
+      platform: data.platform as PlatformId,
+      aspect: data.aspect,
+      seconds: Math.round(data.seconds),
+      tagline: taglineFor(campaign?.opportunity.key ?? data.campaignId),
+      cta: asset?.cta ?? "",
+    });
+    const brand = validateBranding({
+      overlay,
+      expectedAspect: data.aspect,
+      rendered: { aspect: data.aspect, seconds: media.probe.durationSeconds ?? data.seconds },
+      copy: {
+        title: asset?.title ?? "",
+        description: asset?.description ?? "",
+        caption: asset?.caption ?? "",
+        cta: asset?.cta ?? "",
+      },
+    });
+
+    const { data: stored } = await supabase
+      .from("marketing_videos")
+      .insert({
+        ...baseRow,
+        status: brand.passed ? "RENDERED" : "BRAND_VALIDATION_FAILED",
+        queue_state: brand.passed ? "READY" : "FAILED",
+        storage_path: path,
+        duration_seconds: media.probe.durationSeconds ?? data.seconds,
+        brand_validation: brand,
+        failure_reason: brand.passed ? null : brand.failures.join(" "),
+      })
+      .select("*")
+      .single();
+
+    await supabase.from("marketing_audit").insert({
+      campaign_id: data.campaignId,
+      action: brand.passed ? "video_rendered" : "brand_validation_failed",
+      detail: brand.passed
+        ? `Animated video made locally at no cost (${media.probe.width}×${media.probe.height}, ${media.probe.durationSeconds?.toFixed(1)}s) and stored for ${data.platform}.`
+        : brand.failures.join(" "),
+      actor: "human",
+      actor_id: context.userId,
+    });
+
+    return { video: await rowToVideo(supabase, stored) };
+  });

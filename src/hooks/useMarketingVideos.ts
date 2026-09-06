@@ -16,6 +16,7 @@ import {
   getPublishingConnections,
   pollCampaignVideo,
   startPlatformConnection,
+  storeAnimatedVideo,
   testPlatformConnection,
   updatePlatformPublishing,
   updateVideoProviderSettings,
@@ -34,6 +35,7 @@ export function useCampaignVideos(campaignId: string | null) {
   const generate = useServerFn(generateCampaignVideo);
   const poll = useServerFn(pollCampaignVideo);
   const cancel = useServerFn(cancelCampaignVideo);
+  const storeAnimated = useServerFn(storeAnimatedVideo);
 
   const query = useQuery<{ videos: MarketingVideoRow[] }>({
     queryKey: marketingVideoKeys.videos(campaignId ?? "none"),
@@ -78,6 +80,24 @@ export function useCampaignVideos(campaignId: string | null) {
       onSuccess: invalidate,
     }),
     poll: pollMutation,
+    // The free animated route: the browser makes the file, the server only
+    // checks and stores it.
+    storeAnimated: useMutation({
+      mutationFn: (input: {
+        assetId: string;
+        platform: string;
+        aspect: "9:16" | "16:9" | "1:1";
+        seconds: number;
+        width: number;
+        height: number;
+        fps: number;
+        digest: string;
+        scenes: number;
+        brandingNotes: string[];
+        mp4Base64: string;
+      }) => storeAnimated({ data: { campaignId: campaignId!, ...input } }),
+      onSuccess: invalidate,
+    }),
   };
 }
 

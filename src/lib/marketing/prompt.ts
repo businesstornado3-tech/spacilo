@@ -1,0 +1,118 @@
+/**
+ * Campaign → video generation prompt.
+ *
+ * The prompt is derived ENTIRELY from the campaign the marketing intelligence
+ * already produced: its objective, audience, location, evidence class, story
+ * and scene plan. Nothing here invents a new creative brief.
+ *
+ * Branding is instructed explicitly, but the approved EarnRoom lock-up is never
+ * left to the model: the model is told to leave a clean end-card area, and the
+ * real logo asset is composited over the rendered clip (see `branding.ts`).
+ *
+ * Pure module: no clock, no network, no vendor SDK.
+ */
+import { brandProfile, taglineFor } from "./brand";
+import { definition } from "./platforms";
+import type { AspectRatio, MarketingCampaign, PlatformAsset, PlatformId } from "./types";
+
+/** How each platform wants the same story treated. */
+const TREATMENT: Record<PlatformId, string> = {
+  tiktok:
+    "Fast, handheld, unpolished realism. The first second must land the hook. Burned-in captions throughout.",
+  instagram:
+    "Warm, considered, visually clean. Strong opening frame. Burned-in captions. Calm pacing.",
+  youtube_shorts:
+    "Vertical short with a direct opening line, captions throughout and a clear closing end card.",
+  youtube:
+    "Longer-form, structured and calm: set up the situation, explain it, resolve it, then the end card.",
+  facebook: "Plain, everyday and local in feel. Captions throughout, since sound is often off.",
+  linkedin:
+    "Measured and professional. Treat unused domestic space as an underused asset and matching it to nearby demand as the opportunity. No slang, no hype.",
+  pinterest:
+    "Quiet, instructional and visual. Clear on-screen wording, minimal motion, strong final frame.",
+};
+
+export type VideoPromptSpec = {
+  campaignId: string;
+  assetId: string;
+  platform: PlatformId;
+  aspect: AspectRatio;
+  seconds: number;
+  /** The single prompt string sent to the video provider. */
+  prompt: string;
+  /** Exact wording the end card must carry, composited after generation. */
+  endCard: { tagline: string; website: string; cta: string };
+  /** Recorded so a founder can see what the model was actually asked for. */
+  sceneCount: number;
+};
+
+function timedScenes(asset: PlatformAsset, campaign: MarketingCampaign): string[] {
+  const total = campaign.story.scenes.reduce((sum, scene) => sum + scene.seconds, 0) || 1;
+  const scale = asset.seconds / total;
+  let cursor = 0;
+  return campaign.story.scenes.map((scene) => {
+    const length = Math.max(1, Math.round(scene.seconds * scale));
+    const from = cursor;
+    cursor += length;
+    return `[${from}-${Math.min(asset.seconds, cursor)}s] ${scene.visual} Voiceover: ${scene.voiceover} On-screen caption: "${scene.caption}"`;
+  });
+}
+
+/** Why this campaign exists, in words the model can film. */
+function situation(campaign: MarketingCampaign): string {
+  const place = campaign.opportunity.location?.name ?? "the UK";
+  switch (campaign.opportunity.evidenceClass) {
+    case "REAL_MARKET_DEMAND":
+      return `People in ${place} are looking for storage and local options are limited.`;
+    case "SEO_OPPORTUNITY":
+      return `A common UK question about ${campaign.opportunity.topic.toLowerCase()}, answered plainly.`;
+    case "DEMAND_CREATION_OPPORTUNITY":
+      return `An ordinary UK storage pain point: ${campaign.opportunity.problem}`;
+    case "STRATEGIC_COVERAGE":
+      return `General awareness of how EarnRoom works in ${place}.`;
+    default:
+      return campaign.opportunity.problem;
+  }
+}
+
+export function buildVideoPrompt(
+  campaign: MarketingCampaign,
+  asset: PlatformAsset,
+): VideoPromptSpec {
+  const profile = brandProfile();
+  const def = definition(asset.platform);
+  const tagline = taglineFor(campaign.opportunity.key);
+  const seconds = Math.min(asset.seconds, def.maxSeconds);
+
+  const prompt = [
+    `A ${seconds}-second ${asset.aspect} marketing film for EarnRoom, a UK peer-to-peer storage marketplace.`,
+    `Situation: ${situation(campaign)}`,
+    `Audience: ${campaign.opportunity.audience.replace(/_/g, " ")}. Objective: ${campaign.opportunity.objective.replace(/_/g, " ").toLowerCase()}.`,
+    `Platform treatment: ${TREATMENT[asset.platform]}`,
+    `Visual style: ${profile.visualStyle} Real UK homes, garages, lofts and spare rooms. British people, British streets, British weather. No American signage, no dollar signs, no imperial units.`,
+    "Scenes:",
+    ...timedScenes(asset, campaign),
+    `Final 3 seconds: hold a clean, uncluttered end card area on a warm neutral background with space at the centre for a logo and two lines of text. Do not draw any logo, wordmark, emblem or brand symbol yourself — leave that area empty.`,
+    `Spoken closing line — ${asset.cta}`,
+    "Every person shown is a general illustration, not a named or real customer. No testimonials, no on-screen statistics, no prices, no earnings figures.",
+    "No dialogue beyond the voiceover lines above. No extra sound effects beyond quiet room tone and soft, unobtrusive music.",
+    "Consider micro-detail, expression and timing. Single continuous coherent look across scenes; no scene cuts to unrelated locations.",
+  ].join("\n");
+
+  return {
+    campaignId: campaign.id,
+    assetId: asset.id,
+    platform: asset.platform,
+    aspect: asset.aspect,
+    seconds,
+    prompt,
+    endCard: { tagline, website: profile.website, cta: asset.cta },
+    sceneCount: campaign.story.scenes.length,
+  };
+}
+
+/** Provider-facing resolution for an aspect ratio. */
+export function resolutionFor(aspect: AspectRatio, tier: "draft" | "final"): "360p" | "720p" {
+  void aspect;
+  return tier === "draft" ? "360p" : "720p";
+}

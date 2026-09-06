@@ -239,6 +239,7 @@ export function licenceRecord(id: string): {
   licenceUrl: string;
   verifiedOn: string;
   commercialUse: string;
+  checkpoint: string | null;
 } | null {
   const model = videoModel(id);
   if (!model) return null;
@@ -249,5 +250,8 @@ export function licenceRecord(id: string): {
     licenceUrl: model.licence.url,
     verifiedOn: model.licence.verifiedOn,
     commercialUse: model.licence.commercialUse,
+    checkpoint: model.checkpoint
+      ? `${model.checkpoint.repo}@${model.checkpoint.revision}`
+      : null,
   };
 }

@@ -213,19 +213,35 @@ function drawScene(
 
 /* --------------------------------------------------------------- rendering */
 
-const CODECS = ["avc1.640028", "avc1.4d0032", "avc1.42003c", "avc1.42001f"];
+/**
+ * Preference order. H.264 is what every platform wants, so it is tried first;
+ * the others exist only so a browser without an H.264 encoder can still make a
+ * usable file rather than failing outright.
+ */
+const CODECS: readonly { codec: string; container: "avc" | "av1" | "vp9" }[] = [
+  { codec: "avc1.640028", container: "avc" },
+  { codec: "avc1.4d0032", container: "avc" },
+  { codec: "avc1.42003c", container: "avc" },
+  { codec: "avc1.42001f", container: "avc" },
+  { codec: "av01.0.08M.08", container: "av1" },
+  { codec: "vp09.00.51.08", container: "vp9" },
+];
 
-async function pickCodec(width: number, height: number, fps: number): Promise<string | null> {
-  for (const codec of CODECS) {
+async function pickCodec(
+  width: number,
+  height: number,
+  fps: number,
+): Promise<{ codec: string; container: "avc" | "av1" | "vp9" } | null> {
+  for (const candidate of CODECS) {
     try {
       const support = await VideoEncoder.isConfigSupported({
-        codec,
+        codec: candidate.codec,
         width,
         height,
         framerate: fps,
         bitrate: 3_200_000,
       });
-      if (support.supported) return codec;
+      if (support.supported) return candidate;
     } catch {
       // Try the next one — an unsupported codec is not an error worth surfacing.
     }
@@ -253,8 +269,8 @@ export async function renderAnimatedPlan(
   if (!support.supported) throw new Error(support.reason);
 
   const { width, height, fps } = plan;
-  const codec = await pickCodec(width, height, fps);
-  if (!codec) throw new Error("This browser cannot encode MP4 video at this size.");
+  const chosen = await pickCodec(width, height, fps);
+  if (!chosen) throw new Error("This browser cannot record video at this size.");
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -264,7 +280,7 @@ export async function renderAnimatedPlan(
 
   const muxer = new Muxer({
     target: new ArrayBufferTarget(),
-    video: { codec: "avc", width, height, frameRate: fps },
+    video: { codec: chosen.container, width, height, frameRate: fps },
     fastStart: "in-memory",
   });
 
@@ -275,7 +291,7 @@ export async function renderAnimatedPlan(
       encodeError = error instanceof Error ? error : new Error(String(error));
     },
   });
-  encoder.configure({ codec, width, height, framerate: fps, bitrate: 3_200_000 });
+  encoder.configure({ codec: chosen.codec, width, height, framerate: fps, bitrate: 3_200_000 });
 
   const totalFrames = Math.max(1, Math.round(plan.seconds * fps));
   let frameIndex = 0;
@@ -326,6 +342,6 @@ export async function renderAnimatedPlan(
     bytes: buffer.byteLength,
     seconds: frameIndex / fps,
     frames: frameIndex,
-    codec,
+    codec: chosen.codec,
   };
 }

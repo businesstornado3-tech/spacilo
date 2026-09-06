@@ -9,9 +9,12 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AdminShell, AdminSectionBlock } from "@/components/admin/AdminShell";
+import { MarketingConnections } from "@/components/admin/MarketingConnections";
+import { MarketingVideoPanel } from "@/components/admin/MarketingVideoPanel";
 import { EmptyState, LoadingState } from "@/components/common/States";
 import { Alert } from "@/components/common/Alert";
 import { useMarketingStudio } from "@/hooks/useMarketingStudio";
+import { usePublishingConnections } from "@/hooks/useMarketingVideos";
 import { definition } from "@/lib/marketing/platforms";
 import { cn } from "@/lib/utils";
 

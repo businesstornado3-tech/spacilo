@@ -40,3 +40,16 @@ Open items for the owner (not code work):
 - [ ] Replace unnecessary provider/platform names in public privacy and AI-disclaimer copy with accurate provider-neutral disclosure
 - [ ] Verify public routes and UI expose no other provider/platform names without changing AI, admin, geography, analytics or marketplace behaviour
 - [ ] Run the full test suite, typecheck, build and public runtime/console checks
+
+## Phase 12 — autonomous marketing & growth intelligence
+
+- [x] Brand profile, SEO topic catalogue, demand-creation seeds and market-intelligence adapters
+- [x] Daily orchestrator that always produces a campaign, with reasons and evidence for every choice
+- [x] Story engine, per-platform assets, coverage and duplication protection
+- [x] Pre-publication validation: claims, availability, statistics, UK conventions, personal data, licensing
+- [x] Platform capability detection, publication state machine, retries and honest "requires configuration" states
+- [x] Video provider abstraction with an honest not-configured failure
+- [x] Founder-only storage (campaigns, publications, connections, performance, audit) with admin-only access
+- [x] Marketing studio in the founder console: generate, review, approve, reject, attempt publication
+- [x] Performance ingestion and a learning loop that changes recommendations only
+- [ ] Connect real social platform accounts and a video provider before anything can actually publish

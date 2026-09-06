@@ -56,12 +56,15 @@ export function MarketingVideoPanel({
       .then((result) => {
         if (result.status === "CONFIRMATION_REQUIRED") {
           setNotice(result.detail);
-          if (!window.confirm(`${result.detail}\n\nGo ahead with the paid generation?`)) return;
+          if (!window.confirm(`${result.detail}\n\nGo ahead with the paid generation?`)) {
+            return undefined;
+          }
           return videos.generate
             .mutateAsync({ assetId, tier, confirmPaid: true })
             .then((confirmed) => setNotice(confirmed.detail));
         }
         setNotice(result.detail);
+        return undefined;
       })
       .catch((error: Error) => setNotice(error.message));
 

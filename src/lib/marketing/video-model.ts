@@ -34,6 +34,8 @@ export type VideoModelRecord = {
   name: string;
   family: string;
   version: string;
+  /** Exact deployed checkpoint repository and pinned revision, where known. */
+  checkpoint?: { repo: string; revision: string };
   parameters: string;
   licence: ModelLicence;
   capabilities: {
@@ -80,6 +82,10 @@ export const EVALUATED_VIDEO_MODELS: readonly VideoModelRecord[] = [
     name: "Wan 2.2 (T2V-A14B / TI2V-5B)",
     family: "Wan",
     version: "2.2",
+    checkpoint: {
+      repo: "Wan-AI/Wan2.2-TI2V-5B-Diffusers",
+      revision: "b8fff7315c768468a5333511427288870b2e9635",
+    },
     parameters: "14B mixture-of-experts (A14B) or 5B hybrid (TI2V-5B)",
     licence: APACHE_2("https://github.com/Wan-Video/Wan2.2/blob/main/LICENSE.txt", "2026-09-06"),
     capabilities: {

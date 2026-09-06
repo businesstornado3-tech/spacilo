@@ -48,6 +48,23 @@ export function MarketingVideoPanel({
   const rows = videos.query.data?.videos ?? [];
   const [notice, setNotice] = React.useState<string | null>(null);
 
+  // A paid generation is never started from a single click: the founder is told
+  // it may be charged and has to say yes before the request is repeated.
+  const run = (assetId: string, tier: "draft" | "final") =>
+    videos.generate
+      .mutateAsync({ assetId, tier })
+      .then((result) => {
+        if (result.status === "CONFIRMATION_REQUIRED") {
+          setNotice(result.detail);
+          if (!window.confirm(`${result.detail}\n\nGo ahead with the paid generation?`)) return;
+          return videos.generate
+            .mutateAsync({ assetId, tier, confirmPaid: true })
+            .then((confirmed) => setNotice(confirmed.detail));
+        }
+        setNotice(result.detail);
+      })
+      .catch((error: Error) => setNotice(error.message));
+
   return (
     <div className="space-y-3">
       {!providerConfigured ? (
@@ -120,12 +137,7 @@ export function MarketingVideoPanel({
                 <button
                   type="button"
                   disabled={!providerConfigured || videos.generate.isPending}
-                  onClick={() =>
-                    videos.generate
-                      .mutateAsync({ assetId: asset.id, tier: "draft" })
-                      .then((result) => setNotice(result.detail))
-                      .catch((error: Error) => setNotice(error.message))
-                  }
+                  onClick={() => run(asset.id, "draft")}
                   className="min-h-11 rounded-lg border border-border px-3 type-nav text-muted-foreground hover:bg-secondary disabled:opacity-60"
                 >
                   {video ? "Regenerate draft" : "Generate draft video"}
@@ -133,12 +145,7 @@ export function MarketingVideoPanel({
                 <button
                   type="button"
                   disabled={!providerConfigured || videos.generate.isPending}
-                  onClick={() =>
-                    videos.generate
-                      .mutateAsync({ assetId: asset.id, tier: "final" })
-                      .then((result) => setNotice(result.detail))
-                      .catch((error: Error) => setNotice(error.message))
-                  }
+                  onClick={() => run(asset.id, "final")}
                   className="min-h-11 rounded-lg border border-border px-3 type-nav text-muted-foreground hover:bg-secondary disabled:opacity-60"
                 >
                   Generate final quality

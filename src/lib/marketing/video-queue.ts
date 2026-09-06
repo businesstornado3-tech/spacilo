@@ -7,13 +7,7 @@
 import type { WorkerLimits } from "./worker-config";
 
 export type VideoJobState =
-  | "QUEUED"
-  | "GENERATING"
-  | "RENDERING"
-  | "VALIDATING"
-  | "READY"
-  | "FAILED"
-  | "CANCELLED";
+  "QUEUED" | "GENERATING" | "RENDERING" | "VALIDATING" | "READY" | "FAILED" | "CANCELLED";
 
 export const ACTIVE_JOB_STATES: readonly VideoJobState[] = [
   "QUEUED",

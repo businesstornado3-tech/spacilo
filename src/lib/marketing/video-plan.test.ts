@@ -40,7 +40,9 @@ describe("shared-core generation planning", () => {
 
   it("keeps a different frame shape as its own generation", () => {
     const groups = planGenerations(assets);
-    expect(groups.some((group) => group.aspect === "16:9" && group.derived.length === 0)).toBe(true);
+    expect(groups.some((group) => group.aspect === "16:9" && group.derived.length === 0)).toBe(
+      true,
+    );
   });
 
   it("splits runtimes that differ too much to share footage", () => {

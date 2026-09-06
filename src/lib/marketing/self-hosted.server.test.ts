@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
-  createSelfHostedJob,
-  pollSelfHostedJob,
-  workerHealth,
-} from "./self-hosted.server";
+import { createSelfHostedJob, pollSelfHostedJob, workerHealth } from "./self-hosted.server";
 import { buildBrandOverlay } from "./branding";
 import { probeMp4, validateMedia } from "./media-probe";
 import { selfHostedTier, workerConfig } from "./worker-config";
@@ -138,7 +134,11 @@ describe("worker configuration and cost", () => {
       resolution: "720p",
       seconds: 8,
       infrastructurePencePerGpuMinute: 6,
-      gpuMinutes: estimatedGpuMinutes({ seconds: 8, secondsPerOutputSecond: 30, resolution: "720p" }),
+      gpuMinutes: estimatedGpuMinutes({
+        seconds: 8,
+        secondsPerOutputSecond: 30,
+        resolution: "720p",
+      }),
     });
     expect(cost.apiPence).toBe(0);
     expect(cost.apiLabel).toContain("£0");

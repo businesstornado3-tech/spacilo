@@ -155,7 +155,8 @@ export function MarketingVideoPanel({
                 </button>
               </div>
 
-              {video && !["RENDERED", "BRAND_VALIDATION_FAILED"].includes(video.status) &&
+              {video &&
+              !["RENDERED", "BRAND_VALIDATION_FAILED"].includes(video.status) &&
               video.queueState !== "CANCELLED" &&
               video.queueState !== "FAILED" ? (
                 <button
@@ -186,7 +187,6 @@ export function MarketingVideoPanel({
                   {video.coreAssetId ? " · reuses this campaign's core film" : ""}
                 </p>
               ) : null}
-
             </li>
           );
         })}

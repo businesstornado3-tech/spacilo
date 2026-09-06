@@ -100,8 +100,7 @@ export function generationCost(input: {
   }
   const rate = input.infrastructurePencePerGpuMinute ?? null;
   const minutes = input.gpuMinutes ?? null;
-  const infrastructurePence =
-    rate !== null && minutes !== null ? Math.round(rate * minutes) : null;
+  const infrastructurePence = rate !== null && minutes !== null ? Math.round(rate * minutes) : null;
   return {
     provider: "SELF_HOSTED",
     apiPence: 0,
@@ -123,4 +122,3 @@ export function estimatedGpuMinutes(input: {
   const scale = input.resolution === "360p" ? 0.4 : input.resolution === "540p" ? 0.7 : 1;
   return Math.max(0.1, (input.seconds * input.secondsPerOutputSecond * scale) / 60);
 }
-

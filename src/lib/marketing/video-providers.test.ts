@@ -31,14 +31,20 @@ describe("routeGeneration", () => {
   const selfHosted = { provider: "SELF_HOSTED" as const, paidProviderEnabled: false };
 
   it("routes to the self-hosted worker with no charge", () => {
-    const route = routeGeneration({ mode: selfHosted, availability: availability(), confirmedPaid: false });
+    const route = routeGeneration({
+      mode: selfHosted,
+      availability: availability(),
+      confirmedPaid: false,
+    });
     expect(route).toMatchObject({ ok: true, kind: "SELF_HOSTED", chargeable: false });
   });
 
   it("never silently falls back to the paid provider when the worker is down", () => {
     const route = routeGeneration({
       mode: selfHosted,
-      availability: availability({ selfHosted: { configured: true, status: "OFFLINE", detail: "down" } }),
+      availability: availability({
+        selfHosted: { configured: true, status: "OFFLINE", detail: "down" },
+      }),
       confirmedPaid: true,
     });
     expect(route.ok).toBe(false);
@@ -73,7 +79,11 @@ describe("routeGeneration", () => {
 
   it("requires per-generation confirmation before charging", () => {
     const mode = { provider: "PAID_HOSTED" as const, paidProviderEnabled: true };
-    const unconfirmed = routeGeneration({ mode, availability: availability(), confirmedPaid: false });
+    const unconfirmed = routeGeneration({
+      mode,
+      availability: availability(),
+      confirmedPaid: false,
+    });
     expect(unconfirmed.ok).toBe(false);
     if (!unconfirmed.ok) expect(unconfirmed.status).toBe("CONFIRMATION_REQUIRED");
 

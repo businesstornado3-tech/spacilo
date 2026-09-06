@@ -49,7 +49,16 @@ export type ProviderRoute =
       chargeable: boolean;
       detail: string;
     }
-  | { ok: false; status: "SELF_HOSTED_UNAVAILABLE" | "PAID_NOT_SELECTED" | "PROVIDER_NOT_CONFIGURED" | "CONFIRMATION_REQUIRED"; detail: string; offerPaid: boolean };
+  | {
+      ok: false;
+      status:
+        | "SELF_HOSTED_UNAVAILABLE"
+        | "PAID_NOT_SELECTED"
+        | "PROVIDER_NOT_CONFIGURED"
+        | "CONFIRMATION_REQUIRED";
+      detail: string;
+      offerPaid: boolean;
+    };
 
 /**
  * Chooses the route for one generation request.
@@ -77,7 +86,10 @@ export function routeGeneration(input: {
         offerPaid: availability.paid.configured,
       };
     }
-    if (availability.selfHosted.status === "OFFLINE" || availability.selfHosted.status === "ERROR") {
+    if (
+      availability.selfHosted.status === "OFFLINE" ||
+      availability.selfHosted.status === "ERROR"
+    ) {
       return {
         ok: false,
         status: "SELF_HOSTED_UNAVAILABLE",

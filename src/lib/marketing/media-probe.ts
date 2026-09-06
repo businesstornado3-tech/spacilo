@@ -127,12 +127,7 @@ export function probeMp4(buffer: ArrayBuffer): MediaProbe {
         height = view.getUint32(dimensionOffset + 4) / 65536;
       }
       const mdhd = findBox(view, ["mdia", "mdhd"], trak.start, trak.end);
-      const stts = findBox(
-        view,
-        ["mdia", "minf", "stbl", "stts"],
-        trak.start,
-        trak.end,
-      );
+      const stts = findBox(view, ["mdia", "minf", "stbl", "stts"], trak.start, trak.end);
       if (mdhd && stts) {
         const mdhdVersion = view.getUint8(mdhd.start);
         const timescale = view.getUint32(mdhd.start + (mdhdVersion === 1 ? 20 : 12));
@@ -143,7 +138,12 @@ export function probeMp4(buffer: ArrayBuffer): MediaProbe {
   }
 
   if (!width || !height) {
-    return { ...base, container: brand, durationSeconds: duration, reason: "No video track found." };
+    return {
+      ...base,
+      container: brand,
+      durationSeconds: duration,
+      reason: "No video track found.",
+    };
   }
 
   return {

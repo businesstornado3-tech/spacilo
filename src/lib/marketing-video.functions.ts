@@ -292,7 +292,12 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
     const config = worker.selfHostedConfig();
     const health = config.configured
       ? await worker.workerHealth()
-      : { status: "OFFLINE" as const, detail: "Self-hosted worker not configured.", running: 0, queued: 0 };
+      : {
+          status: "OFFLINE" as const,
+          detail: "Self-hosted worker not configured.",
+          running: 0,
+          queued: 0,
+        };
     const paidConfig = paidProvider.videoProviderConfiguration();
 
     const route = providers.routeGeneration({
@@ -345,7 +350,10 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
         .from("marketing_videos")
         .select("id", { count: "exact", head: true })
         .eq("asset_id", data.assetId),
-      supabase.from("marketing_videos").select("queue_state").in("queue_state", ["QUEUED", "GENERATING", "RENDERING", "VALIDATING"]),
+      supabase
+        .from("marketing_videos")
+        .select("queue_state")
+        .in("queue_state", ["QUEUED", "GENERATING", "RENDERING", "VALIDATING"]),
     ]);
 
     const decision = usage.checkUsage(
@@ -372,7 +380,8 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
       route.kind === "SELF_HOSTED" ? tier.secondsCap : 10,
       Math.max(3, spec.seconds),
     );
-    const resolution = route.kind === "SELF_HOSTED" ? tier.resolution : data.tier === "draft" ? "360p" : "720p";
+    const resolution =
+      route.kind === "SELF_HOSTED" ? tier.resolution : data.tier === "draft" ? "360p" : "720p";
 
     if (route.kind === "SELF_HOSTED") {
       const active = ((activeRows ?? []) as any[]).length;
@@ -420,7 +429,10 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
         cta: asset.cta,
       });
       const seed = Math.abs(
-        [...`${campaign.id}:${asset.id}`].reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) >>> 0, 7),
+        [...`${campaign.id}:${asset.id}`].reduce(
+          (acc, ch) => (acc * 31 + ch.charCodeAt(0)) >>> 0,
+          7,
+        ),
       );
 
       const job = await worker.createSelfHostedJob({
@@ -613,14 +625,19 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
     if (!row) throw new Error("That video no longer exists.");
     if (row.status !== "GENERATING") return { video: await rowToVideo(supabase, row) };
 
-    const [paidProvider, worker, { buildBrandOverlay, validateBranding }, { taglineFor }, { validateMedia }] =
-      await Promise.all([
-        import("@/lib/marketing/video.server"),
-        import("@/lib/marketing/self-hosted.server"),
-        import("@/lib/marketing/branding"),
-        import("@/lib/marketing/brand"),
-        import("@/lib/marketing/media-probe"),
-      ]);
+    const [
+      paidProvider,
+      worker,
+      { buildBrandOverlay, validateBranding },
+      { taglineFor },
+      { validateMedia },
+    ] = await Promise.all([
+      import("@/lib/marketing/video.server"),
+      import("@/lib/marketing/self-hosted.server"),
+      import("@/lib/marketing/branding"),
+      import("@/lib/marketing/brand"),
+      import("@/lib/marketing/media-probe"),
+    ]);
 
     const selfHosted = (row.provider_kind ?? "SELF_HOSTED") === "SELF_HOSTED";
     const poll = selfHosted
@@ -764,7 +781,11 @@ export const cancelCampaignVideo = createServerFn({ method: "POST" })
     }
     await supabase
       .from("marketing_videos")
-      .update({ queue_state: "CANCELLED", status: "VIDEO_GENERATION_FAILED", failure_reason: detail })
+      .update({
+        queue_state: "CANCELLED",
+        status: "VIDEO_GENERATION_FAILED",
+        failure_reason: detail,
+      })
       .eq("id", row.id);
     await supabase.from("marketing_audit").insert({
       campaign_id: row.campaign_id,
@@ -806,17 +827,13 @@ export const getPublishingConnections = createServerFn({ method: "GET" })
     const supabase = context.supabase as any;
     await assertAdmin(supabase);
 
-    const [
-      { allCapabilities },
-      { oauthConfigState, OAUTH_DEFINITIONS },
-      provider,
-      video,
-    ] = await Promise.all([
-      import("@/lib/marketing/platforms"),
-      import("@/lib/marketing/oauth"),
-      import("@/lib/marketing/video.server"),
-      providerSnapshot(supabase),
-    ]);
+    const [{ allCapabilities }, { oauthConfigState, OAUTH_DEFINITIONS }, provider, video] =
+      await Promise.all([
+        import("@/lib/marketing/platforms"),
+        import("@/lib/marketing/oauth"),
+        import("@/lib/marketing/video.server"),
+        providerSnapshot(supabase),
+      ]);
 
     const settings = await loadSettings(supabase);
 
@@ -882,9 +899,8 @@ export const startPlatformConnection = createServerFn({ method: "POST" })
     async ({ data, context }): Promise<{ ok: boolean; url: string | null; detail: string }> => {
       const supabase = context.supabase as any;
       await assertAdmin(supabase);
-      const { oauthConfigState, oauthDefinition, authorizeUrl } = await import(
-        "@/lib/marketing/oauth"
-      );
+      const { oauthConfigState, oauthDefinition, authorizeUrl } =
+        await import("@/lib/marketing/oauth");
       const platform = data.platform as PlatformId;
       const def = oauthDefinition(platform);
 

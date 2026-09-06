@@ -32,12 +32,16 @@ describe("video queue admission", () => {
     expect(admitJob({ running: 1, queued: 2, startedToday: 1 }, limits, request).admit).toBe(false);
     expect(admitJob({ running: 0, queued: 0, startedToday: 3 }, limits, request).admit).toBe(false);
     expect(
-      admitJob({ running: 0, queued: 0, startedToday: 0 }, limits, { seconds: 30, resolution: "720p" })
-        .admit,
+      admitJob({ running: 0, queued: 0, startedToday: 0 }, limits, {
+        seconds: 30,
+        resolution: "720p",
+      }).admit,
     ).toBe(false);
     expect(
-      admitJob({ running: 0, queued: 0, startedToday: 0 }, limits, { seconds: 8, resolution: "1080p" })
-        .admit,
+      admitJob({ running: 0, queued: 0, startedToday: 0 }, limits, {
+        seconds: 8,
+        resolution: "1080p",
+      }).admit,
     ).toBe(false);
   });
 });

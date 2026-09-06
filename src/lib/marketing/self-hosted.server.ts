@@ -62,7 +62,8 @@ export async function workerHealth(fetchImpl?: typeof fetch): Promise<WorkerHeal
       };
     }
     const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-    const reported = typeof body["status"] === "string" ? body["status"].toUpperCase() : "AVAILABLE";
+    const reported =
+      typeof body["status"] === "string" ? body["status"].toUpperCase() : "AVAILABLE";
     const status: WorkerStatus = (
       ["AVAILABLE", "BUSY", "OFFLINE", "MODEL_LOADING", "ERROR"] as const
     ).includes(reported as WorkerStatus)
@@ -162,7 +163,11 @@ export async function createSelfHostedJob(
     }
     const jobId = typeof body["jobId"] === "string" ? body["jobId"] : null;
     if (!jobId) {
-      return { ok: false, status: "FAILED", reason: "The video worker returned no job identifier." };
+      return {
+        ok: false,
+        status: "FAILED",
+        reason: "The video worker returned no job identifier.",
+      };
     }
     const state = typeof body["state"] === "string" ? (body["state"] as VideoJobState) : "QUEUED";
     return {
@@ -235,7 +240,10 @@ export async function pollSelfHostedJob(
     headers: { Authorization: authHeaders()["Authorization"]! },
   });
   if (!output.ok) {
-    return { ok: false, reason: `The finished video could not be downloaded (HTTP ${output.status}).` };
+    return {
+      ok: false,
+      reason: `The finished video could not be downloaded (HTTP ${output.status}).`,
+    };
   }
   const bytes = await output.arrayBuffer();
   return {

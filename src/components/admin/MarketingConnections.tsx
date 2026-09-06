@@ -87,7 +87,8 @@ export function MarketingConnections() {
           <div>
             <dt className="font-semibold">Licence</dt>
             <dd>
-              {snapshot.video.selfHosted.licence.licence} — {snapshot.video.selfHosted.licence.commercialUse}. Verified{" "}
+              {snapshot.video.selfHosted.licence.licence} —{" "}
+              {snapshot.video.selfHosted.licence.commercialUse}. Verified{" "}
               {snapshot.video.selfHosted.licence.verifiedOn}.
             </dd>
           </div>
@@ -105,7 +106,6 @@ export function MarketingConnections() {
           </div>
         </dl>
       </div>
-
 
       {notice ? (
         <Alert tone="info" title="Connection">

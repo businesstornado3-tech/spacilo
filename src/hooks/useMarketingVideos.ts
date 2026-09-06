@@ -67,11 +67,7 @@ export function useCampaignVideos(campaignId: string | null) {
     query,
     generating,
     generate: useMutation({
-      mutationFn: (input: {
-        assetId: string;
-        tier: "draft" | "final";
-        confirmPaid?: boolean;
-      }) =>
+      mutationFn: (input: { assetId: string; tier: "draft" | "final"; confirmPaid?: boolean }) =>
         generate({
           data: { campaignId: campaignId!, confirmPaid: false, ...input },
         }),

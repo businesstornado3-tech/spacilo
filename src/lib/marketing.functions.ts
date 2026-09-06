@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any --
+ * The marketing tables were added after the generated Supabase types were
+ * last produced, so the query builder is untyped here. Every row read below is
+ * narrowed explicitly into the typed shapes exported from `@/lib/marketing`.
+ */
 /**
  * Autonomous marketing & growth intelligence — server side only.
  *

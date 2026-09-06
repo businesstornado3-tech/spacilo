@@ -75,9 +75,12 @@ export function MarketingConnections() {
 
         <dl className="mt-3 grid gap-1 type-body-xs text-muted-foreground sm:grid-cols-2">
           <div>
-            <dt className="font-semibold">Own worker</dt>
-            <dd>{snapshot.video.selfHosted.detail}</dd>
+            <dt className="font-semibold">Own worker (Wan 2.2)</dt>
+            <dd>
+              {workerStatusLabel(snapshot.video.selfHosted)} — {snapshot.video.selfHosted.detail}
+            </dd>
           </div>
+
           <div>
             <dt className="font-semibold">Model</dt>
             <dd>

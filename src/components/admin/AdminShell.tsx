@@ -58,6 +58,12 @@ export function AdminShell({
           </span>
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <Link
+              to="/admin/marketing"
+              className="inline-flex min-h-11 items-center rounded-lg px-2 type-nav text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:px-3"
+            >
+              Marketing
+            </Link>
+            <Link
               to="/renter"
               className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 type-nav text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:px-3"
             >

@@ -44,7 +44,7 @@ function worker(overrides: Partial<WorkerDescriptor> & Pick<WorkerDescriptor, "m
 describe("hardware capability", () => {
   it("never counts shared graphics memory as dedicated memory", () => {
     const profile = normaliseHardware({ dedicatedVramGb: 0, sharedGpuMemoryGb: 16, ramGb: 32 });
-    expect(profile.dedicatedVramGb).toBe(0);
+    expect(profile.dedicatedVramGb).toBeNull();
     expect(profile.sharedMemoryOnly).toBe(true);
     expect(profile.capability).toBe("LIMITED");
   });

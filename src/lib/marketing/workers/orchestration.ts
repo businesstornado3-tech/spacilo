@@ -225,7 +225,7 @@ export function planExecution(input: {
         status: "SPEND_LIMIT_REACHED",
         message: decision.reason,
         offerPaid: false,
-        rejections: selection.rejections ?? [],
+        rejections: [],
       };
     }
   }

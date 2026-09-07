@@ -57,6 +57,31 @@ async function toBase64(blob: Blob): Promise<string> {
   return btoa(binary);
 }
 
+/**
+ * A compact, aspect-correct player. A portrait clip is never stretched across
+ * the page: it stays the size it will actually be watched at.
+ */
+function CompactPlayer({
+  aspect,
+  src,
+  className,
+}: {
+  aspect: AspectRatio;
+  src: string;
+  className?: string;
+}) {
+  const box = playerBox(aspect);
+  return (
+    <video
+      controls
+      preload="metadata"
+      src={src}
+      style={{ width: "100%", maxWidth: box.widthPx, aspectRatio: aspect.replace(":", " / ") }}
+      className={cn("rounded-lg bg-secondary", className)}
+    />
+  );
+}
+
 function StatusChip({ card }: { card: FounderCard }) {
   const good = card.status === "READY" || card.status === "CONNECTED" || card.status === "ENABLED";
   const warn = card.status === "BUSY" || card.status === "LIMITED" || card.status === "PAUSED";

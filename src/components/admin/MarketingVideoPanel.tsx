@@ -114,7 +114,7 @@ export function MarketingVideoPanel({
       ? autoReady
         ? null
         : "No free route is ready yet. Set up one of the options above, or enable paid cloud."
-      : chosenCard?.blockedMessage or_null(chosenCard);
+      : (chosenCard?.blockedMessage ?? null);
 
   // The renderer is browser-only, so it is loaded after the page is interactive.
   React.useEffect(() => {

@@ -20,6 +20,7 @@ import {
   readWorkerPreferences,
   selectWorker,
   type BrowserProbe,
+  type WorkerDescriptor,
   type WorkerMode,
   type WorkerPreferences,
 } from "@/lib/marketing/workers";

@@ -333,6 +333,9 @@ export const ACTIVATION_MESSAGE: Record<ActivationRejection, string> = {
   before_start_date: "Storage can only start on or after the booking's start date.",
   financially_blocked:
     "There's an open payment query on this booking. We'll be in touch before storage starts.",
+  agreement_required:
+    "You and the other party both need to accept the Storage Terms before the items can be finalised in this space.",
+
 };
 
 /* -------------------------------------------------------------- completion */

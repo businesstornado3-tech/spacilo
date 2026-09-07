@@ -17,7 +17,7 @@ import { useVideoWorkers } from "@/hooks/useVideoWorkers";
 import { buildAnimatedPlan } from "@/lib/marketing/animation";
 import { founderCards, type FounderCard } from "@/lib/marketing/workers/founder-view";
 import { definition } from "@/lib/marketing/platforms";
-import { playerBox } from "@/lib/marketing/review";
+import { playerBox, versionRow } from "@/lib/marketing/review";
 import type { AspectRatio, CampaignStory, PlatformAsset } from "@/lib/marketing/types";
 import { cn } from "@/lib/utils";
 

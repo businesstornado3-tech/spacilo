@@ -90,6 +90,7 @@ import { Route as AuthenticatedHostSpacesSpaceIdEditRouteImport } from './routes
 import { Route as AuthenticatedRenterMessagesEnquiryConversationIdRouteImport } from './routes/_authenticated.renter.messages.enquiry.$conversationId'
 import { Route as AuthenticatedRenterRequestsRequestIdIndexRouteImport } from './routes/_authenticated.renter.requests.$requestId.index'
 import { Route as AuthenticatedRenterRequestsRequestIdBookingRouteImport } from './routes/_authenticated.renter.requests.$requestId.booking'
+import { Route as ApiPublicVideoWorkerSetupFileRouteImport } from './routes/api/public/video-worker/setup.$file'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -537,6 +538,12 @@ const AuthenticatedRenterRequestsRequestIdBookingRoute =
     path: '/booking',
     getParentRoute: () => AuthenticatedRenterRequestsRequestIdRoute,
   } as any)
+const ApiPublicVideoWorkerSetupFileRoute =
+  ApiPublicVideoWorkerSetupFileRouteImport.update({
+    id: '/api/public/video-worker/setup/$file',
+    path: '/api/public/video-worker/setup/$file',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -618,6 +625,7 @@ export interface FileRoutesByFullPath {
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
   '/renter/messages/enquiry/$conversationId': typeof AuthenticatedRenterMessagesEnquiryConversationIdRoute
   '/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
+  '/api/public/video-worker/setup/$file': typeof ApiPublicVideoWorkerSetupFileRoute
   '/renter/requests/$requestId/': typeof AuthenticatedRenterRequestsRequestIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -697,6 +705,7 @@ export interface FileRoutesByTo {
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
   '/renter/messages/enquiry/$conversationId': typeof AuthenticatedRenterMessagesEnquiryConversationIdRoute
   '/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
+  '/api/public/video-worker/setup/$file': typeof ApiPublicVideoWorkerSetupFileRoute
   '/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdIndexRoute
 }
 export interface FileRoutesById {
@@ -781,6 +790,7 @@ export interface FileRoutesById {
   '/_authenticated/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
   '/_authenticated/renter/messages/enquiry/$conversationId': typeof AuthenticatedRenterMessagesEnquiryConversationIdRoute
   '/_authenticated/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
+  '/api/public/video-worker/setup/$file': typeof ApiPublicVideoWorkerSetupFileRoute
   '/_authenticated/renter/requests/$requestId/': typeof AuthenticatedRenterRequestsRequestIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -865,6 +875,7 @@ export interface FileRouteTypes {
     | '/host/spaces/$spaceId/edit'
     | '/renter/messages/enquiry/$conversationId'
     | '/renter/requests/$requestId/booking'
+    | '/api/public/video-worker/setup/$file'
     | '/renter/requests/$requestId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -944,6 +955,7 @@ export interface FileRouteTypes {
     | '/host/spaces/$spaceId/edit'
     | '/renter/messages/enquiry/$conversationId'
     | '/renter/requests/$requestId/booking'
+    | '/api/public/video-worker/setup/$file'
     | '/renter/requests/$requestId'
   id:
     | '__root__'
@@ -1027,6 +1039,7 @@ export interface FileRouteTypes {
     | '/_authenticated/host/spaces/$spaceId/edit'
     | '/_authenticated/renter/messages/enquiry/$conversationId'
     | '/_authenticated/renter/requests/$requestId/booking'
+    | '/api/public/video-worker/setup/$file'
     | '/_authenticated/renter/requests/$requestId/'
   fileRoutesById: FileRoutesById
 }
@@ -1064,6 +1077,7 @@ export interface RootRouteChildren {
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicVideoWorkerHeartbeatRoute: typeof ApiPublicVideoWorkerHeartbeatRoute
   ApiPublicVideoWorkerPairRoute: typeof ApiPublicVideoWorkerPairRoute
+  ApiPublicVideoWorkerSetupFileRoute: typeof ApiPublicVideoWorkerSetupFileRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1635,6 +1649,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRenterRequestsRequestIdBookingRouteImport
       parentRoute: typeof AuthenticatedRenterRequestsRequestIdRoute
     }
+    '/api/public/video-worker/setup/$file': {
+      id: '/api/public/video-worker/setup/$file'
+      path: '/api/public/video-worker/setup/$file'
+      fullPath: '/api/public/video-worker/setup/$file'
+      preLoaderRoute: typeof ApiPublicVideoWorkerSetupFileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1839,6 +1860,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiPublicVideoWorkerHeartbeatRoute: ApiPublicVideoWorkerHeartbeatRoute,
   ApiPublicVideoWorkerPairRoute: ApiPublicVideoWorkerPairRoute,
+  ApiPublicVideoWorkerSetupFileRoute: ApiPublicVideoWorkerSetupFileRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -342,7 +342,11 @@ export function VideoWorkers() {
                 )}
               </div>
 
-              {setupFor === card.mode && SETUP_STEPS[card.mode] ? (
+              {setupFor === card.mode && card.mode === "LOCAL" ? (
+                <ComputerSetup onConnected={() => setNotice("Your computer is connected.")} />
+              ) : null}
+
+              {setupFor === card.mode && card.mode !== "LOCAL" && SETUP_STEPS[card.mode] ? (
                 <div className="mt-3 rounded-lg border border-border bg-secondary/40 p-3">
                   <p className="type-body-sm font-semibold">{SETUP_STEPS[card.mode]!.title}</p>
                   <ol className="mt-2 list-decimal space-y-1 pl-4 type-body-xs text-muted-foreground">

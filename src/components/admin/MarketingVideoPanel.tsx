@@ -14,9 +14,12 @@ import * as React from "react";
 import { Alert } from "@/components/common/Alert";
 import { useCampaignVideos } from "@/hooks/useMarketingVideos";
 import { buildAnimatedPlan } from "@/lib/marketing/animation";
+import { probeBrowser, WORKER_LABEL, type BrowserProbe } from "@/lib/marketing/workers";
 import { definition } from "@/lib/marketing/platforms";
 import type { CampaignStory, PlatformAsset } from "@/lib/marketing/types";
 import { cn } from "@/lib/utils";
+
+type WorkerChoice = "AUTO" | "BROWSER" | "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD";
 
 function statusTone(status: string): "good" | "warn" | "bad" {
   if (status === "RENDERED") return "good";
@@ -70,6 +73,21 @@ export function MarketingVideoPanel({
   const [support, setSupport] = React.useState<{ supported: boolean; reason: string } | null>(null);
   const [busy, setBusy] = React.useState<string | null>(null);
   const [progress, setProgress] = React.useState(0);
+  // The founder's worker choice for this campaign. "AUTO" is "choose for me",
+  // which never reaches a paid route.
+  const [choice, setChoice] = React.useState<WorkerChoice>("AUTO");
+  const [browser, setBrowser] = React.useState<BrowserProbe | null>(null);
+
+  // Only this page can describe the machine it is running on.
+  React.useEffect(() => {
+    let live = true;
+    void probeBrowser().then((probe) => {
+      if (live) setBrowser(probe);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   // The renderer is browser-only, so it is loaded after the page is interactive.
   React.useEffect(() => {
@@ -121,28 +139,61 @@ export function MarketingVideoPanel({
     }
   };
 
-  // A paid generation is never started from a single click: the founder is told
-  // it may be charged and has to say yes before the request is repeated.
-  const run = (assetId: string, tier: "draft" | "final") =>
-    videos.generate
-      .mutateAsync({ assetId, tier })
-      .then((result) => {
-        if (result.status === "CONFIRMATION_REQUIRED") {
-          setNotice(result.detail);
-          if (!window.confirm(`${result.detail}\n\nGo ahead with the paid generation?`)) {
-            return undefined;
-          }
-          return videos.generate
-            .mutateAsync({ assetId, tier, confirmPaid: true })
-            .then((confirmed) => setNotice(confirmed.detail));
-        }
+  // Everything goes through the orchestrator: the server resolves the worker,
+  // and only tells this page to render when the browser is the chosen route.
+  const run = async (asset: PlatformAsset, tier: "draft" | "final", confirmPaid = false) => {
+    try {
+      const result = await videos.generate.mutateAsync({
+        assetId: asset.id,
+        tier,
+        worker: choice,
+        browser,
+        confirmPaid,
+      });
+
+      if (result.status === "CONFIRMATION_REQUIRED") {
         setNotice(result.detail);
-        return undefined;
-      })
-      .catch((error: Error) => setNotice(error.message));
+        if (window.confirm(`${result.detail}\n\nGo ahead with the paid generation?`)) {
+          await run(asset, tier, true);
+        }
+        return;
+      }
+
+      const route = result.workerLabel ? `Using ${result.workerLabel}. ` : "";
+      if (result.status === "BROWSER_RENDER_REQUIRED") {
+        setNotice(`${route}${result.reason ?? ""}`);
+        await makeAnimation(asset);
+        return;
+      }
+      setNotice(`${route}${result.detail}`);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "The video could not be started.");
+    }
+  };
 
   return (
     <div className="space-y-3">
+      <div className="rounded-xl border border-border p-3">
+        <label htmlFor="video-worker" className="type-body-sm font-semibold">
+          Where the video is made
+        </label>
+        <select
+          id="video-worker"
+          value={choice}
+          onChange={(event) => setChoice(event.target.value as WorkerChoice)}
+          className="mt-2 min-h-11 w-full rounded-lg border border-border bg-background px-3 type-body-sm"
+        >
+          <option value="AUTO">Choose for me (never a paid route)</option>
+          <option value="BROWSER">{WORKER_LABEL.BROWSER} — this browser, £0</option>
+          <option value="LOCAL">{WORKER_LABEL.LOCAL} — your own machine</option>
+          <option value="FREE_CLOUD">{WORKER_LABEL.FREE_CLOUD}</option>
+          <option value="PAID_CLOUD">{WORKER_LABEL.PAID_CLOUD} — may be charged</option>
+        </select>
+        <p className="mt-2 type-body-xs text-muted-foreground">
+          Paid video making stays switched off until you turn it on in Video workers, and every
+          paid video still needs its own confirmation.
+        </p>
+      </div>
       {support && !support.supported ? (
         <Alert tone="warning" title="Animated video cannot be made in this browser">
           {support.reason}
@@ -235,16 +286,16 @@ export function MarketingVideoPanel({
                 </button>
                 <button
                   type="button"
-                  disabled={!providerConfigured || videos.generate.isPending}
-                  onClick={() => run(asset.id, "draft")}
+                  disabled={videos.generate.isPending || busy === asset.id}
+                  onClick={() => void run(asset, "draft")}
                   className="min-h-11 rounded-lg border border-border px-3 type-nav text-muted-foreground hover:bg-secondary disabled:opacity-60"
                 >
-                  {video ? "Regenerate draft" : "Generate draft video"}
+                  {video ? "Generate video again" : "Generate video"}
                 </button>
                 <button
                   type="button"
-                  disabled={!providerConfigured || videos.generate.isPending}
-                  onClick={() => run(asset.id, "final")}
+                  disabled={videos.generate.isPending || busy === asset.id}
+                  onClick={() => void run(asset, "final")}
                   className="min-h-11 rounded-lg border border-border px-3 type-nav text-muted-foreground hover:bg-secondary disabled:opacity-60"
                 >
                   Generate final quality
@@ -286,6 +337,7 @@ export function MarketingVideoPanel({
 
               {video ? (
                 <p className="mt-2 type-body-xs text-muted-foreground">
+                  {video.executionMode ? `Made on: ${WORKER_LABEL[video.executionMode as keyof typeof WORKER_LABEL] ?? video.executionMode} · ` : ""}
                   {video.providerKind === "FREE_ANIMATION"
                     ? "Made in your own browser — £0, no video service used"
                     : video.providerKind === "SELF_HOSTED"

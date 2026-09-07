@@ -2776,25 +2776,96 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_video_workers: {
+        Row: {
+          capability: string
+          created_at: string
+          enabled: boolean
+          endpoint_url: string | null
+          hardware: Json
+          id: string
+          installed_audio: string[]
+          installed_models: string[]
+          installed_voices: string[]
+          label: string
+          last_error: string | null
+          last_heartbeat_at: string | null
+          mode: string
+          provider: string | null
+          queued: number
+          status: string
+          status_detail: string
+          token_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          capability?: string
+          created_at?: string
+          enabled?: boolean
+          endpoint_url?: string | null
+          hardware?: Json
+          id?: string
+          installed_audio?: string[]
+          installed_models?: string[]
+          installed_voices?: string[]
+          label: string
+          last_error?: string | null
+          last_heartbeat_at?: string | null
+          mode: string
+          provider?: string | null
+          queued?: number
+          status?: string
+          status_detail?: string
+          token_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          capability?: string
+          created_at?: string
+          enabled?: boolean
+          endpoint_url?: string | null
+          hardware?: Json
+          id?: string
+          installed_audio?: string[]
+          installed_models?: string[]
+          installed_voices?: string[]
+          label?: string
+          last_error?: string | null
+          last_heartbeat_at?: string | null
+          mode?: string
+          provider?: string | null
+          queued?: number
+          status?: string
+          status_detail?: string
+          token_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketing_videos: {
         Row: {
           api_cost_pence: number
           aspect: string
           asset_id: string
           attempt: number
+          audio_assets: Json
           brand_validation: Json
           campaign_id: string
           core_asset_id: string | null
+          cost_source: string | null
           created_at: string
           duration_seconds: number | null
           estimated_cost_pence: number | null
+          execution_mode: string | null
           failure_reason: string | null
           generation_settings: Json
           id: string
           infrastructure_cost_pence: number | null
+          job_phase: string | null
           licence_record: Json | null
           media_probe: Json | null
           model_version: string | null
+          parent_video_id: string | null
           platform: string
           prompt: string
           provider_id: string
@@ -2802,31 +2873,40 @@ export type Database = {
           provider_kind: string
           provider_model: string | null
           queue_state: string
+          regeneration_number: number
+          regeneration_reason: string | null
           resolution: string
           seconds: number
           seed: number | null
           status: string
           storage_path: string | null
           updated_at: string
+          voice_model: string | null
+          worker_id: string | null
         }
         Insert: {
           api_cost_pence?: number
           aspect: string
           asset_id: string
           attempt?: number
+          audio_assets?: Json
           brand_validation?: Json
           campaign_id: string
           core_asset_id?: string | null
+          cost_source?: string | null
           created_at?: string
           duration_seconds?: number | null
           estimated_cost_pence?: number | null
+          execution_mode?: string | null
           failure_reason?: string | null
           generation_settings?: Json
           id?: string
           infrastructure_cost_pence?: number | null
+          job_phase?: string | null
           licence_record?: Json | null
           media_probe?: Json | null
           model_version?: string | null
+          parent_video_id?: string | null
           platform: string
           prompt: string
           provider_id: string
@@ -2834,31 +2914,40 @@ export type Database = {
           provider_kind?: string
           provider_model?: string | null
           queue_state?: string
+          regeneration_number?: number
+          regeneration_reason?: string | null
           resolution: string
           seconds: number
           seed?: number | null
           status?: string
           storage_path?: string | null
           updated_at?: string
+          voice_model?: string | null
+          worker_id?: string | null
         }
         Update: {
           api_cost_pence?: number
           aspect?: string
           asset_id?: string
           attempt?: number
+          audio_assets?: Json
           brand_validation?: Json
           campaign_id?: string
           core_asset_id?: string | null
+          cost_source?: string | null
           created_at?: string
           duration_seconds?: number | null
           estimated_cost_pence?: number | null
+          execution_mode?: string | null
           failure_reason?: string | null
           generation_settings?: Json
           id?: string
           infrastructure_cost_pence?: number | null
+          job_phase?: string | null
           licence_record?: Json | null
           media_probe?: Json | null
           model_version?: string | null
+          parent_video_id?: string | null
           platform?: string
           prompt?: string
           provider_id?: string
@@ -2866,12 +2955,16 @@ export type Database = {
           provider_kind?: string
           provider_model?: string | null
           queue_state?: string
+          regeneration_number?: number
+          regeneration_reason?: string | null
           resolution?: string
           seconds?: number
           seed?: number | null
           status?: string
           storage_path?: string | null
           updated_at?: string
+          voice_model?: string | null
+          worker_id?: string | null
         }
         Relationships: [
           {
@@ -2879,6 +2972,20 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_videos_parent_video_id_fkey"
+            columns: ["parent_video_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_videos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_videos_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_video_workers"
             referencedColumns: ["id"]
           },
         ]

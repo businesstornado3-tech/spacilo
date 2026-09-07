@@ -17,6 +17,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   applyWorkerPreferences,
   costReport,
+  WORKER_LABEL,
   readWorkerPreferences,
   selectWorker,
   type BrowserProbe,

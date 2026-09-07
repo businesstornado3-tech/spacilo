@@ -876,6 +876,10 @@ export type Database = {
           resolution_summary: string | null
           resolved_at: string | null
           resolved_by: string | null
+          safety_flagged_at: string | null
+          safety_note: string | null
+          safety_severity: Database["public"]["Enums"]["safety_severity"] | null
+          safety_source: Database["public"]["Enums"]["safety_source"] | null
           stage: Database["public"]["Enums"]["support_case_stage"]
           status: Database["public"]["Enums"]["support_case_status"]
           submitted_at: string
@@ -906,6 +910,12 @@ export type Database = {
           resolution_summary?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          safety_flagged_at?: string | null
+          safety_note?: string | null
+          safety_severity?:
+            | Database["public"]["Enums"]["safety_severity"]
+            | null
+          safety_source?: Database["public"]["Enums"]["safety_source"] | null
           stage: Database["public"]["Enums"]["support_case_stage"]
           status?: Database["public"]["Enums"]["support_case_status"]
           submitted_at?: string
@@ -936,6 +946,12 @@ export type Database = {
           resolution_summary?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
+          safety_flagged_at?: string | null
+          safety_note?: string | null
+          safety_severity?:
+            | Database["public"]["Enums"]["safety_severity"]
+            | null
+          safety_source?: Database["public"]["Enums"]["safety_source"] | null
           stage?: Database["public"]["Enums"]["support_case_stage"]
           status?: Database["public"]["Enums"]["support_case_status"]
           submitted_at?: string
@@ -2365,6 +2381,7 @@ export type Database = {
           estimated_total_volume_m3: number | null
           estimated_unit_volume_m3: number | null
           fragile: boolean
+          hazard_signals: Json
           height_cm: number | null
           id: string
           inventory_id: string
@@ -2395,6 +2412,7 @@ export type Database = {
           estimated_total_volume_m3?: number | null
           estimated_unit_volume_m3?: number | null
           fragile?: boolean
+          hazard_signals?: Json
           height_cm?: number | null
           id?: string
           inventory_id: string
@@ -2425,6 +2443,7 @@ export type Database = {
           estimated_total_volume_m3?: number | null
           estimated_unit_volume_m3?: number | null
           fragile?: boolean
+          hazard_signals?: Json
           height_cm?: number | null
           id?: string
           inventory_id?: string
@@ -3259,6 +3278,62 @@ export type Database = {
         }
         Relationships: []
       }
+      safety_suspensions: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          lift_reason: string | null
+          lifted_at: string | null
+          lifted_by: string | null
+          reason: string
+          scope: Database["public"]["Enums"]["safety_scope"]
+          source: Database["public"]["Enums"]["safety_source"]
+          state: Database["public"]["Enums"]["safety_state"]
+          subject_id: string
+          updated_at: string
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          lift_reason?: string | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason: string
+          scope: Database["public"]["Enums"]["safety_scope"]
+          source: Database["public"]["Enums"]["safety_source"]
+          state?: Database["public"]["Enums"]["safety_state"]
+          subject_id: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          lift_reason?: string | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason?: string
+          scope?: Database["public"]["Enums"]["safety_scope"]
+          source?: Database["public"]["Enums"]["safety_source"]
+          state?: Database["public"]["Enums"]["safety_state"]
+          subject_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_suspensions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "booking_support_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       space_ai_observations: {
         Row: {
           confidence: number | null
@@ -3793,6 +3868,165 @@ export type Database = {
         }
         Relationships: []
       }
+      storage_agreement_acceptances: {
+        Row: {
+          accepted_at: string
+          agreement_id: string
+          agreement_version: string
+          agreement_version_id: string
+          context: Json
+          id: string
+          party: Database["public"]["Enums"]["agreement_party"]
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          agreement_id: string
+          agreement_version: string
+          agreement_version_id: string
+          context?: Json
+          id?: string
+          party: Database["public"]["Enums"]["agreement_party"]
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          agreement_id?: string
+          agreement_version?: string
+          agreement_version_id?: string
+          context?: Json
+          id?: string
+          party?: Database["public"]["Enums"]["agreement_party"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storage_agreement_acceptances_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "storage_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storage_agreement_acceptances_agreement_version_id_fkey"
+            columns: ["agreement_version_id"]
+            isOneToOne: false
+            referencedRelation: "storage_agreement_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storage_agreement_versions: {
+        Row: {
+          created_at: string
+          effective_at: string | null
+          id: string
+          published_at: string | null
+          sections: Json
+          status: Database["public"]["Enums"]["policy_version_status"]
+          summary: string
+          title: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          effective_at?: string | null
+          id?: string
+          published_at?: string | null
+          sections?: Json
+          status?: Database["public"]["Enums"]["policy_version_status"]
+          summary?: string
+          title: string
+          updated_at?: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          effective_at?: string | null
+          id?: string
+          published_at?: string | null
+          sections?: Json
+          status?: Database["public"]["Enums"]["policy_version_status"]
+          summary?: string
+          title?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      storage_agreements: {
+        Row: {
+          activated_at: string | null
+          agreement_version: string
+          agreement_version_id: string
+          booking_id: string
+          cancelled_at: string | null
+          created_at: string
+          host_accepted_at: string | null
+          host_id: string
+          id: string
+          renter_accepted_at: string | null
+          renter_id: string
+          request_id: string | null
+          space_id: string
+          status: Database["public"]["Enums"]["storage_agreement_state"]
+          superseded_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          agreement_version: string
+          agreement_version_id: string
+          booking_id: string
+          cancelled_at?: string | null
+          created_at?: string
+          host_accepted_at?: string | null
+          host_id: string
+          id?: string
+          renter_accepted_at?: string | null
+          renter_id: string
+          request_id?: string | null
+          space_id: string
+          status?: Database["public"]["Enums"]["storage_agreement_state"]
+          superseded_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          agreement_version?: string
+          agreement_version_id?: string
+          booking_id?: string
+          cancelled_at?: string | null
+          created_at?: string
+          host_accepted_at?: string | null
+          host_id?: string
+          id?: string
+          renter_accepted_at?: string | null
+          renter_id?: string
+          request_id?: string | null
+          space_id?: string
+          status?: Database["public"]["Enums"]["storage_agreement_state"]
+          superseded_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storage_agreements_agreement_version_id_fkey"
+            columns: ["agreement_version_id"]
+            isOneToOne: false
+            referencedRelation: "storage_agreement_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storage_agreements_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       storage_policy_rules: {
         Row: {
           category: string
@@ -4300,6 +4534,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_storage_agreement: {
+        Args: { p_agreement_version_id: string; p_booking_id: string }
+        Returns: {
+          activated_at: string | null
+          agreement_version: string
+          agreement_version_id: string
+          booking_id: string
+          cancelled_at: string | null
+          created_at: string
+          host_accepted_at: string | null
+          host_id: string
+          id: string
+          renter_accepted_at: string | null
+          renter_id: string
+          request_id: string | null
+          space_id: string
+          status: Database["public"]["Enums"]["storage_agreement_state"]
+          superseded_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "storage_agreements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       acknowledge_request_price: {
         Args: { p_request_id: string }
         Returns: Json
@@ -4411,11 +4672,43 @@ export type Database = {
         Args: { p_from: string; p_to: string }
         Returns: Json
       }
+      admin_safety_queue: { Args: never; Returns: Json }
       analytics_is_public_path: { Args: { p_path: string }; Returns: boolean }
       analytics_prune: { Args: { p_keep_days?: number }; Returns: number }
       analytics_rebuild_daily_rollups: {
         Args: { p_from: string; p_to: string }
         Returns: number
+      }
+      apply_safety_suspension: {
+        Args: {
+          p_case_id?: string
+          p_reason: string
+          p_scope: Database["public"]["Enums"]["safety_scope"]
+          p_source: Database["public"]["Enums"]["safety_source"]
+          p_state: Database["public"]["Enums"]["safety_state"]
+          p_subject_id: string
+        }
+        Returns: {
+          case_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          lift_reason: string | null
+          lifted_at: string | null
+          lifted_by: string | null
+          reason: string
+          scope: Database["public"]["Enums"]["safety_scope"]
+          source: Database["public"]["Enums"]["safety_source"]
+          state: Database["public"]["Enums"]["safety_state"]
+          subject_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "safety_suspensions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       apply_storage_refund_to_earning: {
         Args: {
@@ -5099,6 +5392,33 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_or_create_storage_agreement: {
+        Args: { p_booking_id: string }
+        Returns: {
+          activated_at: string | null
+          agreement_version: string
+          agreement_version_id: string
+          booking_id: string
+          cancelled_at: string | null
+          created_at: string
+          host_accepted_at: string | null
+          host_id: string
+          id: string
+          renter_accepted_at: string | null
+          renter_id: string
+          request_id: string | null
+          space_id: string
+          status: Database["public"]["Enums"]["storage_agreement_state"]
+          superseded_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "storage_agreements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_public_host_profile: { Args: { p_space_id: string }; Returns: Json }
       get_public_policy_rules: {
         Args: { p_version_id: string }
@@ -5235,6 +5555,10 @@ export type Database = {
           start_date: string
         }[]
       }
+      get_storage_agreement_state: {
+        Args: { p_booking_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -5257,6 +5581,30 @@ export type Database = {
       }
       is_platform_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_support_staff: { Args: { _user_id?: string }; Returns: boolean }
+      lift_safety_suspension: {
+        Args: { p_reason: string; p_suspension_id: string }
+        Returns: {
+          case_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          lift_reason: string | null
+          lifted_at: string | null
+          lifted_by: string | null
+          reason: string
+          scope: Database["public"]["Enums"]["safety_scope"]
+          source: Database["public"]["Enums"]["safety_source"]
+          state: Database["public"]["Enums"]["safety_state"]
+          subject_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "safety_suspensions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       list_my_conversations: {
         Args: { p_archived?: boolean }
         Returns: {
@@ -5366,6 +5714,10 @@ export type Database = {
           resolution_summary: string | null
           resolved_at: string | null
           resolved_by: string | null
+          safety_flagged_at: string | null
+          safety_note: string | null
+          safety_severity: Database["public"]["Enums"]["safety_severity"] | null
+          safety_source: Database["public"]["Enums"]["safety_source"] | null
           stage: Database["public"]["Enums"]["support_case_stage"]
           status: Database["public"]["Enums"]["support_case_status"]
           submitted_at: string
@@ -5399,6 +5751,27 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "storage_policy_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      publish_storage_agreement_version: {
+        Args: { p_effective_at?: string; p_version_id: string }
+        Returns: {
+          created_at: string
+          effective_at: string | null
+          id: string
+          published_at: string | null
+          sections: Json
+          status: Database["public"]["Enums"]["policy_version_status"]
+          summary: string
+          title: string
+          updated_at: string
+          version: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "storage_agreement_versions"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -5755,6 +6128,54 @@ export type Database = {
         Args: { p_archived: boolean; p_conversation_id: string }
         Returns: undefined
       }
+      set_support_case_safety: {
+        Args: {
+          p_case_id: string
+          p_note?: string
+          p_severity: Database["public"]["Enums"]["safety_severity"]
+          p_source: Database["public"]["Enums"]["safety_source"]
+        }
+        Returns: {
+          assigned_to_user_id: string | null
+          booking_id: string
+          category: Database["public"]["Enums"]["support_case_category"]
+          closed_at: string | null
+          created_at: string
+          description: string
+          financially_resolved: boolean
+          host_id: string
+          id: string
+          last_activity_at: string
+          linked_handover_issue_id: string | null
+          opened_by_role: string
+          opened_by_user_id: string
+          reference: string
+          refund_currency: string | null
+          refund_total_pence: number
+          renter_id: string
+          resolution_code:
+            | Database["public"]["Enums"]["support_resolution_code"]
+            | null
+          resolution_summary: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          safety_flagged_at: string | null
+          safety_note: string | null
+          safety_severity: Database["public"]["Enums"]["safety_severity"] | null
+          safety_source: Database["public"]["Enums"]["safety_source"] | null
+          stage: Database["public"]["Enums"]["support_case_stage"]
+          status: Database["public"]["Enums"]["support_case_status"]
+          submitted_at: string
+          summary: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_support_cases"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       space_available_volume_m3: {
         Args: {
           p_end: string
@@ -5763,6 +6184,27 @@ export type Database = {
           p_start: string
         }
         Returns: number
+      }
+      stow_active_agreement_version: {
+        Args: never
+        Returns: {
+          created_at: string
+          effective_at: string | null
+          id: string
+          published_at: string | null
+          sections: Json
+          status: Database["public"]["Enums"]["policy_version_status"]
+          summary: string
+          title: string
+          updated_at: string
+          version: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "storage_agreement_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       stow_active_policy_version: {
         Args: never
@@ -5787,6 +6229,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      stow_agreement_audit: {
+        Args: { p_agreement_id: string; p_detail?: Json; p_event: string }
+        Returns: undefined
       }
       stow_assert_within_availability: {
         Args: { p_end: string; p_space_id: string; p_start: string }
@@ -5832,6 +6278,10 @@ export type Database = {
       stow_request_price_state: {
         Args: { p_request_id: string }
         Returns: Json
+      }
+      stow_require_active_agreement: {
+        Args: { p_booking_id: string }
+        Returns: undefined
       }
       stow_review_window_days: { Args: never; Returns: number }
       stow_screen_inventory: {
@@ -5925,6 +6375,10 @@ export type Database = {
           resolution_summary: string | null
           resolved_at: string | null
           resolved_by: string | null
+          safety_flagged_at: string | null
+          safety_note: string | null
+          safety_severity: Database["public"]["Enums"]["safety_severity"] | null
+          safety_source: Database["public"]["Enums"]["safety_source"] | null
           stage: Database["public"]["Enums"]["support_case_stage"]
           status: Database["public"]["Enums"]["support_case_status"]
           submitted_at: string
@@ -5987,6 +6441,10 @@ export type Database = {
           resolution_summary: string | null
           resolved_at: string | null
           resolved_by: string | null
+          safety_flagged_at: string | null
+          safety_note: string | null
+          safety_severity: Database["public"]["Enums"]["safety_severity"] | null
+          safety_source: Database["public"]["Enums"]["safety_source"] | null
           stage: Database["public"]["Enums"]["support_case_stage"]
           status: Database["public"]["Enums"]["support_case_status"]
           submitted_at: string
@@ -6040,6 +6498,10 @@ export type Database = {
           resolution_summary: string | null
           resolved_at: string | null
           resolved_by: string | null
+          safety_flagged_at: string | null
+          safety_note: string | null
+          safety_severity: Database["public"]["Enums"]["safety_severity"] | null
+          safety_source: Database["public"]["Enums"]["safety_source"] | null
           stage: Database["public"]["Enums"]["support_case_stage"]
           status: Database["public"]["Enums"]["support_case_status"]
           submitted_at: string
@@ -6098,6 +6560,7 @@ export type Database = {
       }
     }
     Enums: {
+      agreement_party: "renter" | "host"
       analysis_run_status:
         | "queued"
         | "running"
@@ -6218,6 +6681,18 @@ export type Database = {
         | "spam"
         | "other"
       review_report_status: "open" | "actioned" | "dismissed"
+      safety_scope: "listing" | "booking" | "storage_arrangement" | "account"
+      safety_severity: "low" | "medium" | "high" | "critical"
+      safety_source:
+        | "item_scan"
+        | "renter_report"
+        | "host_report"
+        | "handover_report"
+        | "listing_review"
+        | "support_case"
+        | "policy_screen"
+        | "admin_review"
+      safety_state: "active" | "safety_review" | "suspended"
       space_access_frequency:
         | "occasional"
         | "monthly"
@@ -6240,6 +6715,14 @@ export type Database = {
         | "outbuilding"
         | "commercial"
         | "other"
+      storage_agreement_state:
+        | "pending"
+        | "renter_accepted"
+        | "host_accepted"
+        | "active"
+        | "requires_reacceptance"
+        | "superseded"
+        | "cancelled"
       storage_mode: "whole" | "partial"
       storage_request_status:
         | "pending"
@@ -6426,6 +6909,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      agreement_party: ["renter", "host"],
       analysis_run_status: [
         "queued",
         "running",
@@ -6556,6 +7040,19 @@ export const Constants = {
         "other",
       ],
       review_report_status: ["open", "actioned", "dismissed"],
+      safety_scope: ["listing", "booking", "storage_arrangement", "account"],
+      safety_severity: ["low", "medium", "high", "critical"],
+      safety_source: [
+        "item_scan",
+        "renter_report",
+        "host_report",
+        "handover_report",
+        "listing_review",
+        "support_case",
+        "policy_screen",
+        "admin_review",
+      ],
+      safety_state: ["active", "safety_review", "suspended"],
       space_access_frequency: [
         "occasional",
         "monthly",
@@ -6580,6 +7077,15 @@ export const Constants = {
         "outbuilding",
         "commercial",
         "other",
+      ],
+      storage_agreement_state: [
+        "pending",
+        "renter_accepted",
+        "host_accepted",
+        "active",
+        "requires_reacceptance",
+        "superseded",
+        "cancelled",
       ],
       storage_mode: ["whole", "partial"],
       storage_request_status: [

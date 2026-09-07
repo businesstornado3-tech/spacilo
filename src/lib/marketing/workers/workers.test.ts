@@ -50,10 +50,10 @@ describe("hardware capability", () => {
   });
 
   it("classifies deterministically by dedicated memory", () => {
-    expect(capabilityClass({ dedicatedVramGb: 24, ramGb: 64 }).capability).toBe("VERY_HIGH");
-    expect(capabilityClass({ dedicatedVramGb: 12, ramGb: 32 }).capability).toBe("HIGH");
-    expect(capabilityClass({ dedicatedVramGb: 8, ramGb: 16 }).capability).toBe("MEDIUM");
-    expect(capabilityClass({ dedicatedVramGb: 2, ramGb: 8 }).capability).toBe("LIMITED");
+    expect(capabilityClass({ dedicatedVramGb: 24, ramGb: 64, accelerator: null }).capability).toBe("VERY_HIGH");
+    expect(capabilityClass({ dedicatedVramGb: 12, ramGb: 32, accelerator: null }).capability).toBe("HIGH");
+    expect(capabilityClass({ dedicatedVramGb: 8, ramGb: 16, accelerator: null }).capability).toBe("MEDIUM");
+    expect(capabilityClass({ dedicatedVramGb: 2, ramGb: 8, accelerator: null }).capability).toBe("LIMITED");
   });
 
   it("does not invent values it was not given", () => {

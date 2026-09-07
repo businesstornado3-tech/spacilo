@@ -330,12 +330,7 @@ export function MarketingVideoPanel({
         </div>
 
         {coreVideo?.playbackUrl ? (
-          <video
-            controls
-            preload="metadata"
-            src={coreVideo.playbackUrl}
-            className="mt-3 w-full rounded-lg bg-secondary"
-          />
+          <CompactPlayer aspect={core?.aspect ?? "9:16"} src={coreVideo.playbackUrl} />
         ) : (
           <div className="mt-3 flex h-40 items-center justify-center rounded-lg border border-dashed border-border px-4 text-center type-body-sm text-muted-foreground">
             {working

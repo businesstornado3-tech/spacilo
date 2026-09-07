@@ -885,6 +885,41 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
   });
 
 /**
+ * Polls a job running on a registered worker. Any provider-reported cost is
+ * recorded as a confirmed charge; nothing is assumed when none is reported.
+ */
+async function pollRegisteredWorker(supabase: any, row: any) {
+  const remote = await import("@/lib/marketing/workers/remote.server");
+  const { data: workerRow } = await supabase
+    .from("marketing_video_workers")
+    .select("id, mode, label, endpoint_url, provider")
+    .eq("id", row.worker_id)
+    .maybeSingle();
+  if (!workerRow) {
+    return { ok: false as const, reason: "The worker that started this video is no longer registered." };
+  }
+  const resolved = remote.resolveRemoteEndpoint(
+    {
+      mode: workerRow.mode,
+      id: workerRow.id,
+      label: workerRow.label,
+      endpointUrl: workerRow.endpoint_url ?? null,
+      provider: workerRow.provider ?? null,
+    },
+    process.env as Record<string, string | undefined>,
+  );
+  if (!resolved.ok) return { ok: false as const, reason: resolved.reason };
+  const result = await remote.pollRemoteJob(resolved.endpoint, row.provider_job_id as string);
+  if (result.ok && result.done && result.confirmedCostPence !== null) {
+    await supabase
+      .from("marketing_videos")
+      .update({ api_cost_pence: result.confirmedCostPence, cost_source: "PROVIDER_CONFIRMED" })
+      .eq("id", row.id);
+  }
+  return result;
+}
+
+/**
  * Polls a generation job. On completion the file is downloaded, the real media
  * is probed, the branding is validated and only then is the video marked ready.
  */
@@ -917,10 +952,15 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
       import("@/lib/marketing/media-probe"),
     ]);
 
-    const selfHosted = (row.provider_kind ?? "SELF_HOSTED") === "SELF_HOSTED";
-    const poll = selfHosted
-      ? await worker.pollSelfHostedJob(row.provider_job_id as string)
-      : await paidProvider.pollVideoJob(row.provider_job_id as string);
+    const kind = (row.provider_kind ?? "SELF_HOSTED") as string;
+    // A registered worker is polled at its own address; the environment-configured
+    // self-hosted worker and the paid provider keep their existing clients.
+    const poll =
+      kind === "REMOTE_WORKER"
+        ? await pollRegisteredWorker(supabase, row)
+        : kind === "SELF_HOSTED"
+          ? await worker.pollSelfHostedJob(row.provider_job_id as string)
+          : await paidProvider.pollVideoJob(row.provider_job_id as string);
 
     const fail = async (status: string, reason: string) => {
       const { data: failed } = await supabase
@@ -1053,15 +1093,39 @@ export const cancelCampaignVideo = createServerFn({ method: "POST" })
     }
 
     let detail = "Generation cancelled.";
-    if ((row.provider_kind ?? "SELF_HOSTED") === "SELF_HOSTED" && row.provider_job_id) {
+    const kind = (row.provider_kind ?? "SELF_HOSTED") as string;
+    if (kind === "SELF_HOSTED" && row.provider_job_id) {
       const { cancelSelfHostedJob } = await import("@/lib/marketing/self-hosted.server");
       detail = (await cancelSelfHostedJob(row.provider_job_id)).detail;
+    } else if (kind === "REMOTE_WORKER" && row.provider_job_id) {
+      const remote = await import("@/lib/marketing/workers/remote.server");
+      const { data: workerRow } = await supabase
+        .from("marketing_video_workers")
+        .select("id, mode, label, endpoint_url, provider")
+        .eq("id", row.worker_id)
+        .maybeSingle();
+      const resolved = workerRow
+        ? remote.resolveRemoteEndpoint(
+            {
+              mode: workerRow.mode,
+              id: workerRow.id,
+              label: workerRow.label,
+              endpointUrl: workerRow.endpoint_url ?? null,
+              provider: workerRow.provider ?? null,
+            },
+            process.env as Record<string, string | undefined>,
+          )
+        : { ok: false as const, status: "NOT_CONFIGURED" as const, reason: "That worker is no longer registered." };
+      detail = resolved.ok
+        ? (await remote.cancelRemoteJob(resolved.endpoint, row.provider_job_id)).detail
+        : `${resolved.reason} The cancellation could not be passed on, so it may still finish on the worker.`;
     }
     await supabase
       .from("marketing_videos")
       .update({
         queue_state: "CANCELLED",
         status: "VIDEO_GENERATION_FAILED",
+        job_phase: "CANCELLED",
         failure_reason: detail,
       })
       .eq("id", row.id);
@@ -1365,6 +1429,10 @@ export const storeAnimatedVideo = createServerFn({ method: "POST" })
       resolution: `${data.width}x${data.height}`,
       provider_kind: "FREE_ANIMATION",
       provider_id: "earnroom-animation",
+      // Made in the founder's own browser: no third party ran any compute.
+      execution_mode: "BROWSER",
+      worker_id: null,
+      cost_source: "NO_THIRD_PARTY",
       provider_model: "earnroom-vector-animation",
       model_version: `plan-${data.digest}`,
       queue_state: "READY",

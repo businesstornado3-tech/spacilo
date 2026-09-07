@@ -254,9 +254,9 @@ function MarketingStudioRoute() {
                 <div className="rounded-xl border border-border p-4">
                   <h4 className="type-h5">Video preview</h4>
                   <p className="mt-1 mb-3 type-body-sm text-muted-foreground">
-                    Each clip is produced for that platform's shape and length. The animated
-                    route is made in this browser at no cost, with EarnRoom branding applied as
-                    far as each platform's own rules allow.
+                    Each clip is produced for that platform's shape and length. The animated route
+                    is made in this browser at no cost, with EarnRoom branding applied as far as
+                    each platform's own rules allow.
                   </p>
                   <MarketingVideoPanel
                     campaignId={snapshot.today.id}

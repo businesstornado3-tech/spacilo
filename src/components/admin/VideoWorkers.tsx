@@ -100,7 +100,11 @@ const SETUP_STEPS: Partial<Record<WorkerMode, { title: string; steps: string[]; 
   },
 };
 
-function statusWord(worker: WorkerDescriptor | null, mode: WorkerMode, paidEnabled: boolean): string {
+function statusWord(
+  worker: WorkerDescriptor | null,
+  mode: WorkerMode,
+  paidEnabled: boolean,
+): string {
   if (mode === "PAID_CLOUD" && !paidEnabled) return "DISABLED";
   if (!worker) return "NOT CONNECTED";
   if (!worker.enabled) return "PAUSED";
@@ -157,7 +161,9 @@ export function VideoWorkers() {
   const workerFor = (mode: WorkerMode): WorkerDescriptor | null => {
     const all = snapshot.workers.filter((worker) => worker.mode === mode);
     if (all.length === 0) return null;
-    return all.find((worker) => worker.enabled && READY_STATUSES.includes(worker.status)) ?? all[0]!;
+    return (
+      all.find((worker) => worker.enabled && READY_STATUSES.includes(worker.status)) ?? all[0]!
+    );
   };
 
   const chooseRoute = (value: WorkerPreference, message: string) =>

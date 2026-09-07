@@ -123,7 +123,9 @@ export function MarketingConnections() {
                     <>
                       <button
                         type="button"
-                        onClick={() => setManage(manage === platform.platform ? null : platform.platform)}
+                        onClick={() =>
+                          setManage(manage === platform.platform ? null : platform.platform)
+                        }
                         aria-expanded={manage === platform.platform}
                         className="min-h-11 rounded-lg border border-border px-3 type-nav text-muted-foreground hover:bg-secondary"
                       >
@@ -146,7 +148,8 @@ export function MarketingConnections() {
                       type="button"
                       onClick={() =>
                         connections.start.mutateAsync(platform.platform).then((result) => {
-                          if (result.ok && result.url) window.open(result.url, "_blank", "noopener");
+                          if (result.ok && result.url)
+                            window.open(result.url, "_blank", "noopener");
                           setNotice(result.detail);
                         })
                       }

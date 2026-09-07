@@ -11,6 +11,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AdminShell, AdminSectionBlock } from "@/components/admin/AdminShell";
 import { MarketingConnections } from "@/components/admin/MarketingConnections";
 import { MarketingVideoPanel } from "@/components/admin/MarketingVideoPanel";
+import { VideoWorkers } from "@/components/admin/VideoWorkers";
 import { EmptyState, LoadingState } from "@/components/common/States";
 import { Alert } from "@/components/common/Alert";
 import { useMarketingStudio } from "@/hooks/useMarketingStudio";
@@ -325,6 +326,14 @@ function MarketingStudioRoute() {
                 </li>
               ))}
             </ul>
+          </AdminSectionBlock>
+
+          <AdminSectionBlock
+            id="workers"
+            title="Video workers"
+            note="Where videos are actually made. Paid generation stays off until you switch it on."
+          >
+            <VideoWorkers />
           </AdminSectionBlock>
 
           <AdminSectionBlock

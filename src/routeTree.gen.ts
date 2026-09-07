@@ -83,6 +83,7 @@ import { Route as AuthenticatedRenterRequestsNewRouteImport } from './routes/_au
 import { Route as AuthenticatedSupportCasesCaseIdRouteImport } from './routes/_authenticated.support.cases.$caseId'
 import { Route as ApiPublicPayoutsReleaseRouteImport } from './routes/api/public/payouts/release'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
+import { Route as ApiPublicVideoWorkerHeartbeatRouteImport } from './routes/api/public/video-worker/heartbeat'
 import { Route as AuthenticatedHostMessagesEnquiryConversationIdRouteImport } from './routes/_authenticated.host.messages.enquiry.$conversationId'
 import { Route as AuthenticatedHostSpacesSpaceIdEditRouteImport } from './routes/_authenticated.host.spaces.$spaceId.edit'
 import { Route as AuthenticatedRenterMessagesEnquiryConversationIdRouteImport } from './routes/_authenticated.renter.messages.enquiry.$conversationId'
@@ -493,6 +494,12 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   path: '/api/public/stripe/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicVideoWorkerHeartbeatRoute =
+  ApiPublicVideoWorkerHeartbeatRouteImport.update({
+    id: '/api/public/video-worker/heartbeat',
+    path: '/api/public/video-worker/heartbeat',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedHostMessagesEnquiryConversationIdRoute =
   AuthenticatedHostMessagesEnquiryConversationIdRouteImport.update({
     id: '/messages/enquiry/$conversationId',
@@ -588,6 +595,7 @@ export interface FileRoutesByFullPath {
   '/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/public/video-worker/heartbeat': typeof ApiPublicVideoWorkerHeartbeatRoute
   '/admin/policy/': typeof AuthenticatedAdminPolicyIndexRoute
   '/admin/reviews/': typeof AuthenticatedAdminReviewsIndexRoute
   '/admin/support/': typeof AuthenticatedAdminSupportIndexRoute
@@ -665,6 +673,7 @@ export interface FileRoutesByTo {
   '/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/public/video-worker/heartbeat': typeof ApiPublicVideoWorkerHeartbeatRoute
   '/admin/policy': typeof AuthenticatedAdminPolicyIndexRoute
   '/admin/reviews': typeof AuthenticatedAdminReviewsIndexRoute
   '/admin/support': typeof AuthenticatedAdminSupportIndexRoute
@@ -747,6 +756,7 @@ export interface FileRoutesById {
   '/_authenticated/support/cases/$caseId': typeof AuthenticatedSupportCasesCaseIdRoute
   '/api/public/payouts/release': typeof ApiPublicPayoutsReleaseRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/public/video-worker/heartbeat': typeof ApiPublicVideoWorkerHeartbeatRoute
   '/_authenticated/admin/policy/': typeof AuthenticatedAdminPolicyIndexRoute
   '/_authenticated/admin/reviews/': typeof AuthenticatedAdminReviewsIndexRoute
   '/_authenticated/admin/support/': typeof AuthenticatedAdminSupportIndexRoute
@@ -829,6 +839,7 @@ export interface FileRouteTypes {
     | '/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/api/public/video-worker/heartbeat'
     | '/admin/policy/'
     | '/admin/reviews/'
     | '/admin/support/'
@@ -906,6 +917,7 @@ export interface FileRouteTypes {
     | '/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/api/public/video-worker/heartbeat'
     | '/admin/policy'
     | '/admin/reviews'
     | '/admin/support'
@@ -987,6 +999,7 @@ export interface FileRouteTypes {
     | '/_authenticated/support/cases/$caseId'
     | '/api/public/payouts/release'
     | '/api/public/stripe/webhook'
+    | '/api/public/video-worker/heartbeat'
     | '/_authenticated/admin/policy/'
     | '/_authenticated/admin/reviews/'
     | '/_authenticated/admin/support/'
@@ -1036,6 +1049,7 @@ export interface RootRouteChildren {
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPayoutsReleaseRoute: typeof ApiPublicPayoutsReleaseRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
+  ApiPublicVideoWorkerHeartbeatRoute: typeof ApiPublicVideoWorkerHeartbeatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1558,6 +1572,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/video-worker/heartbeat': {
+      id: '/api/public/video-worker/heartbeat'
+      path: '/api/public/video-worker/heartbeat'
+      fullPath: '/api/public/video-worker/heartbeat'
+      preLoaderRoute: typeof ApiPublicVideoWorkerHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/host/messages/enquiry/$conversationId': {
       id: '/_authenticated/host/messages/enquiry/$conversationId'
       path: '/messages/enquiry/$conversationId'
@@ -1795,6 +1816,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPayoutsReleaseRoute: ApiPublicPayoutsReleaseRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
+  ApiPublicVideoWorkerHeartbeatRoute: ApiPublicVideoWorkerHeartbeatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

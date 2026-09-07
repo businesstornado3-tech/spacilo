@@ -60,6 +60,8 @@ import { buildGeography } from "@/lib/admin/geography";
 import { buildDataHealth } from "@/lib/admin/provenance";
 import { DemandGeography } from "@/components/admin/DemandGeography";
 import { DataHealth } from "@/components/admin/DataHealth";
+import { SafetyQueue } from "@/components/admin/SafetyQueue";
+import { useSafetyQueue } from "@/hooks/useSafetyQueue";
 import { useAdminGeography, useAdminDataHealth } from "@/hooks/useAdminGeography";
 import { normalizeAdminBreakdowns } from "@/lib/admin/response";
 import {
@@ -224,6 +226,7 @@ function AdminDashboardRoute() {
   const breakdowns = useAdminBreakdowns(range, enabled);
   const geography = useAdminGeography(range, enabled);
   const dataHealth = useAdminDataHealth(enabled);
+  const safety = useSafetyQueue(enabled);
 
   // Pure, memoised derivations: the console never computes a figure the
   // database did not supply, it only shapes what came back.
@@ -929,6 +932,28 @@ function AdminDashboardRoute() {
                 </li>
               ))}
             </ul>
+          )}
+        </AdminSectionBlock>
+
+        {/* ------------------------------------------------------------ Safety */}
+        <AdminSectionBlock
+          id="safety"
+          title="Safety"
+          note="Support cases that staff have flagged as a safety concern, and any listing, booking or account currently under a safety control. Nothing is flagged automatically."
+        >
+          {safety.isError ? (
+            <ErrorState
+              title="The safety queue couldn't be loaded"
+              description="Flagged cases and active controls are unavailable."
+              onRetry={() => void safety.refetch()}
+            />
+          ) : safety.isLoading ? (
+            <Skeleton className="h-24 w-full" />
+          ) : (
+            <SafetyQueue
+              cases={safety.data?.cases ?? []}
+              controls={safety.data?.controls ?? []}
+            />
           )}
         </AdminSectionBlock>
 

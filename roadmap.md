@@ -79,3 +79,11 @@ Open items for the owner (not code work):
 - [x] Proven end to end in a real browser: 720×1280 MP4, 8.0s, 30fps, 249 KB, passes the media checks
 - [x] Fixed the MP4 dimension read (tkhd offset) so finished files report their real size
 - [ ] Optional: voiceover/music track (currently silent), and richer UK map artwork
+
+## Phase 16 — bilateral Storage Agreement & safety controls
+- [x] Storage Agreement versions, per-booking agreements, immutable acceptances
+- [x] Both renter and host must accept before items are finalised in the space
+- [x] Safety severity/source on support cases, hazard signals on items, safety suspensions
+- [x] Founder console "Safety" section: flagged cases and active controls
+- [ ] Playwright end-to-end run of both parties accepting, then handover
+- [ ] Tighten SECURITY DEFINER execute grants flagged by the database linter

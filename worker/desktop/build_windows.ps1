@@ -1,22 +1,19 @@
-# Builds the EarnRoom desktop video worker into a single Windows executable and
-# starts it at logon. Run from this folder in PowerShell.
+# Builds the EarnRoom Video Worker app and its installer on a Windows machine.
+# The GitHub Actions workflow .github/workflows/windows-worker.yml runs exactly
+# these steps on a clean Windows runner; this script is for building locally.
 #
-# There is no signed installer yet: this script is the packaging step a person
-# still has to run on the machine.
+# The output is NOT code-signed, so Windows shows an "unknown publisher"
+# warning until a code-signing certificate is added.
 
 $ErrorActionPreference = "Stop"
 
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt pyinstaller
+python -m pip install --upgrade pip pyinstaller
 
-pyinstaller --onefile --name earnroom-worker --console earnroom_worker.py
+pyinstaller --onefile --noconsole --name earnroom-worker `
+  --hidden-import earnroom_core earnroom_app.py
 
-$exe = Join-Path (Resolve-Path ".\dist") "earnroom-worker.exe"
-Write-Host "Built $exe"
+$env:EARNROOM_WORKER_VERSION = if ($env:EARNROOM_WORKER_VERSION) { $env:EARNROOM_WORKER_VERSION } else { "1.0.0" }
+& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer\earnroom-worker.iss"
 
-$task = "EarnRoom video worker"
-$action = New-ScheduledTaskAction -Execute $exe
-$trigger = New-ScheduledTaskTrigger -AtLogOn
-Register-ScheduledTask -TaskName $task -Action $action -Trigger $trigger -Force | Out-Null
-Write-Host "Registered '$task' to start at logon."
-Write-Host "Pair it once with: $exe --pair <setup code> --site https://earnroom.co.uk"
+Write-Host "Installer: $(Resolve-Path '.\dist\EarnRoom-Video-Worker-Setup.exe')"
+Write-Host "Publish it, then set EARNROOM_WORKER_INSTALLER_URL to its address."

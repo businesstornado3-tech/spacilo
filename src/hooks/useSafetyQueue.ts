@@ -41,7 +41,7 @@ export function useSetCaseSafety() {
       note?: string;
     }) => {
       const { error } = await supabase.rpc("set_support_case_safety", {
-        ...(input.caseId === undefined ? {} : { p_case_id: input.caseId }),
+        p_case_id: input.caseId,
         p_severity: input.severity,
         p_source: input.source,
         ...(input.note === undefined ? {} : { p_note: input.note }),

@@ -151,11 +151,7 @@ export type SpendCounts = {
 
 export type SpendDecision = { allowed: true } | { allowed: false; reason: string };
 
-export function checkSpend(
-  cost: CostReport,
-  counts: SpendCounts,
-  caps: SpendCaps,
-): SpendDecision {
+export function checkSpend(cost: CostReport, counts: SpendCounts, caps: SpendCaps): SpendDecision {
   if (!cost.chargeable) return { allowed: true };
   const amount = cost.pence;
   if (amount === null) {

@@ -14,12 +14,7 @@
 import { browserCapability, type BrowserProbe } from "./browser-capability";
 import { normaliseHardware } from "./hardware";
 import { WORKER_LABEL } from "./types";
-import type {
-  CapabilityClass,
-  WorkerDescriptor,
-  WorkerMode,
-  WorkerRuntimeStatus,
-} from "./types";
+import type { CapabilityClass, WorkerDescriptor, WorkerMode, WorkerRuntimeStatus } from "./types";
 
 /** A worker is treated as offline once its heartbeat goes quiet. */
 export const HEARTBEAT_TIMEOUT_MS = 90_000;

@@ -346,7 +346,10 @@ async function paidSpend(supabase: any, campaignId: string) {
     ((rows ?? []) as any[]).reduce((total, row) => total + Number(row.api_cost_pence ?? 0), 0);
 
   const [today, campaign, month] = await Promise.all([
-    supabase.from("marketing_videos").select("api_cost_pence").gte("created_at", dayStart.toISOString()),
+    supabase
+      .from("marketing_videos")
+      .select("api_cost_pence")
+      .gte("created_at", dayStart.toISOString()),
     supabase.from("marketing_videos").select("api_cost_pence").eq("campaign_id", campaignId),
     supabase
       .from("marketing_videos")
@@ -581,7 +584,11 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
     }
 
     const resolution =
-      execution.route === "PAID_CLOUD" ? (data.tier === "draft" ? "360p" : "720p") : tier.resolution;
+      execution.route === "PAID_CLOUD"
+        ? data.tier === "draft"
+          ? "360p"
+          : "720p"
+        : tier.resolution;
     const planned = {
       route: execution.route,
       workerLabel: execution.workerLabel,
@@ -905,7 +912,10 @@ async function pollRegisteredWorker(supabase: any, row: any) {
     .eq("id", row.worker_id)
     .maybeSingle();
   if (!workerRow) {
-    return { ok: false as const, reason: "The worker that started this video is no longer registered." };
+    return {
+      ok: false as const,
+      reason: "The worker that started this video is no longer registered.",
+    };
   }
   const resolved = remote.resolveRemoteEndpoint(
     {
@@ -1124,7 +1134,11 @@ export const cancelCampaignVideo = createServerFn({ method: "POST" })
             },
             process.env as Record<string, string | undefined>,
           )
-        : { ok: false as const, status: "NOT_CONFIGURED" as const, reason: "That worker is no longer registered." };
+        : {
+            ok: false as const,
+            status: "NOT_CONFIGURED" as const,
+            reason: "That worker is no longer registered.",
+          };
       detail = resolved.ok
         ? (await remote.cancelRemoteJob(resolved.endpoint, row.provider_job_id)).detail
         : `${resolved.reason} The cancellation could not be passed on, so it may still finish on the worker.`;

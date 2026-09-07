@@ -19,7 +19,9 @@ const request: GenerationRequest = {
   music: true,
 };
 
-function worker(overrides: Partial<WorkerDescriptor> & Pick<WorkerDescriptor, "mode">): WorkerDescriptor {
+function worker(
+  overrides: Partial<WorkerDescriptor> & Pick<WorkerDescriptor, "mode">,
+): WorkerDescriptor {
   return {
     id: overrides.mode === "BROWSER" ? null : `${overrides.mode.toLowerCase()}-1`,
     label: overrides.mode,

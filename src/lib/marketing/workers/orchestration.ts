@@ -199,8 +199,7 @@ export function planExecution(input: {
       status,
       message:
         status === "WORKER_UNAVAILABLE" && input.preference !== "AUTO"
-          ? (selection.message ??
-            planFailureMessage(status, input.preference as WorkerMode))
+          ? (selection.message ?? planFailureMessage(status, input.preference as WorkerMode))
           : selection.message,
       offerPaid: selection.offerPaid,
       rejections: selection.rejections,

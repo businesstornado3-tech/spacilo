@@ -190,8 +190,8 @@ export function MarketingVideoPanel({
           <option value="PAID_CLOUD">{WORKER_LABEL.PAID_CLOUD} — may be charged</option>
         </select>
         <p className="mt-2 type-body-xs text-muted-foreground">
-          Paid video making stays switched off until you turn it on in Video workers, and every
-          paid video still needs its own confirmation.
+          Paid video making stays switched off until you turn it on in Video workers, and every paid
+          video still needs its own confirmation.
         </p>
       </div>
       {support && !support.supported ? (
@@ -337,7 +337,9 @@ export function MarketingVideoPanel({
 
               {video ? (
                 <p className="mt-2 type-body-xs text-muted-foreground">
-                  {video.executionMode ? `Made on: ${WORKER_LABEL[video.executionMode as keyof typeof WORKER_LABEL] ?? video.executionMode} · ` : ""}
+                  {video.executionMode
+                    ? `Made on: ${WORKER_LABEL[video.executionMode as keyof typeof WORKER_LABEL] ?? video.executionMode} · `
+                    : ""}
                   {video.providerKind === "FREE_ANIMATION"
                     ? "Made in your own browser — £0, no video service used"
                     : video.providerKind === "SELF_HOSTED"

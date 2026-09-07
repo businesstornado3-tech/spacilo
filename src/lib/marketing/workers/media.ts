@@ -8,10 +8,7 @@
  *   - an asset whose licence is unknown is never used.
  */
 export type AssetLicenceClass =
-  | "LOCAL_LICENSED_ASSET"
-  | "OPEN_LICENSED_ASSET"
-  | "GENERATED_ASSET"
-  | "USER_PROVIDED_ASSET";
+  "LOCAL_LICENSED_ASSET" | "OPEN_LICENSED_ASSET" | "GENERATED_ASSET" | "USER_PROVIDED_ASSET";
 
 export const USABLE_LICENCE_CLASSES: readonly AssetLicenceClass[] = [
   "LOCAL_LICENSED_ASSET",
@@ -32,7 +29,10 @@ export type AssetProvenance = {
 /** An asset may only be used when its licensing position is actually known. */
 export function mayUseAsset(asset: AssetProvenance): { allowed: boolean; reason: string } {
   if (!asset.licenceClass || !USABLE_LICENCE_CLASSES.includes(asset.licenceClass)) {
-    return { allowed: false, reason: `Licensing for "${asset.title}" is unknown, so it cannot be used.` };
+    return {
+      allowed: false,
+      reason: `Licensing for "${asset.title}" is unknown, so it cannot be used.`,
+    };
   }
   if (!asset.licence) {
     return { allowed: false, reason: `No licence is recorded for "${asset.title}".` };
@@ -73,10 +73,34 @@ export const VOICE_ADAPTERS: readonly VoiceAdapter[] = [
     local: true,
     chargeable: false,
     voices: [
-      { id: "uk-female-warm", label: "British female, warm", locale: "en-GB", gender: "female", style: "warm" },
-      { id: "uk-male-warm", label: "British male, warm", locale: "en-GB", gender: "male", style: "warm" },
-      { id: "uk-female-professional", label: "British female, professional", locale: "en-GB", gender: "female", style: "professional" },
-      { id: "uk-male-professional", label: "British male, professional", locale: "en-GB", gender: "male", style: "professional" },
+      {
+        id: "uk-female-warm",
+        label: "British female, warm",
+        locale: "en-GB",
+        gender: "female",
+        style: "warm",
+      },
+      {
+        id: "uk-male-warm",
+        label: "British male, warm",
+        locale: "en-GB",
+        gender: "male",
+        style: "warm",
+      },
+      {
+        id: "uk-female-professional",
+        label: "British female, professional",
+        locale: "en-GB",
+        gender: "female",
+        style: "professional",
+      },
+      {
+        id: "uk-male-professional",
+        label: "British male, professional",
+        locale: "en-GB",
+        gender: "male",
+        style: "professional",
+      },
     ],
   },
 ];
@@ -94,7 +118,8 @@ export function selectVoice(input: {
 }): VoiceSelection {
   const adapters = VOICE_ADAPTERS.filter(
     (adapter) =>
-      input.available.includes(adapter.id) && (adapter.chargeable ? input.paidAllowed === true : true),
+      input.available.includes(adapter.id) &&
+      (adapter.chargeable ? input.paidAllowed === true : true),
   );
   const adapter = adapters.find((entry) => entry.local) ?? adapters[0];
   if (!adapter) {
@@ -118,12 +143,7 @@ export function selectVoice(input: {
 /* ------------------------------------------------------------------ music */
 
 export type MusicMood =
-  | "reassuring"
-  | "emotional"
-  | "energetic"
-  | "professional"
-  | "family"
-  | "business";
+  "reassuring" | "emotional" | "energetic" | "professional" | "family" | "business";
 
 export type MusicTrack = AssetProvenance & { mood: MusicMood; seconds: number };
 
@@ -132,12 +152,66 @@ export type MusicTrack = AssetProvenance & { mood: MusicMood; seconds: number };
  * where it came from so provenance survives into the video record.
  */
 export const MUSIC_LIBRARY: readonly MusicTrack[] = [
-  { id: "bed-open-air", title: "Open Air", mood: "reassuring", seconds: 60, licenceClass: "OPEN_LICENSED_ASSET", licence: "CC0 1.0", source: "EarnRoom worker asset pack", attribution: null },
-  { id: "bed-new-chapter", title: "New Chapter", mood: "emotional", seconds: 60, licenceClass: "OPEN_LICENSED_ASSET", licence: "CC0 1.0", source: "EarnRoom worker asset pack", attribution: null },
-  { id: "bed-forward", title: "Forward", mood: "energetic", seconds: 45, licenceClass: "OPEN_LICENSED_ASSET", licence: "CC0 1.0", source: "EarnRoom worker asset pack", attribution: null },
-  { id: "bed-steady", title: "Steady", mood: "professional", seconds: 60, licenceClass: "OPEN_LICENSED_ASSET", licence: "CC0 1.0", source: "EarnRoom worker asset pack", attribution: null },
-  { id: "bed-home", title: "Home", mood: "family", seconds: 60, licenceClass: "OPEN_LICENSED_ASSET", licence: "CC0 1.0", source: "EarnRoom worker asset pack", attribution: null },
-  { id: "bed-ledger", title: "Ledger", mood: "business", seconds: 45, licenceClass: "OPEN_LICENSED_ASSET", licence: "CC0 1.0", source: "EarnRoom worker asset pack", attribution: null },
+  {
+    id: "bed-open-air",
+    title: "Open Air",
+    mood: "reassuring",
+    seconds: 60,
+    licenceClass: "OPEN_LICENSED_ASSET",
+    licence: "CC0 1.0",
+    source: "EarnRoom worker asset pack",
+    attribution: null,
+  },
+  {
+    id: "bed-new-chapter",
+    title: "New Chapter",
+    mood: "emotional",
+    seconds: 60,
+    licenceClass: "OPEN_LICENSED_ASSET",
+    licence: "CC0 1.0",
+    source: "EarnRoom worker asset pack",
+    attribution: null,
+  },
+  {
+    id: "bed-forward",
+    title: "Forward",
+    mood: "energetic",
+    seconds: 45,
+    licenceClass: "OPEN_LICENSED_ASSET",
+    licence: "CC0 1.0",
+    source: "EarnRoom worker asset pack",
+    attribution: null,
+  },
+  {
+    id: "bed-steady",
+    title: "Steady",
+    mood: "professional",
+    seconds: 60,
+    licenceClass: "OPEN_LICENSED_ASSET",
+    licence: "CC0 1.0",
+    source: "EarnRoom worker asset pack",
+    attribution: null,
+  },
+  {
+    id: "bed-home",
+    title: "Home",
+    mood: "family",
+    seconds: 60,
+    licenceClass: "OPEN_LICENSED_ASSET",
+    licence: "CC0 1.0",
+    source: "EarnRoom worker asset pack",
+    attribution: null,
+  },
+  {
+    id: "bed-ledger",
+    title: "Ledger",
+    mood: "business",
+    seconds: 45,
+    licenceClass: "OPEN_LICENSED_ASSET",
+    licence: "CC0 1.0",
+    source: "EarnRoom worker asset pack",
+    attribution: null,
+  },
 ];
 
 export type MusicSelection =
@@ -170,10 +244,12 @@ export function selectMusic(input: {
 /** Campaign objective → music mood. Deterministic, so it can be reviewed. */
 export function moodForObjective(objective: string): MusicMood {
   const value = objective.toLowerCase();
-  if (value.includes("host") || value.includes("income") || value.includes("earn")) return "business";
+  if (value.includes("host") || value.includes("income") || value.includes("earn"))
+    return "business";
   if (value.includes("move") || value.includes("family") || value.includes("home")) return "family";
   if (value.includes("student") || value.includes("launch")) return "energetic";
-  if (value.includes("trust") || value.includes("safe") || value.includes("secure")) return "reassuring";
+  if (value.includes("trust") || value.includes("safe") || value.includes("secure"))
+    return "reassuring";
   if (value.includes("story") || value.includes("downsiz")) return "emotional";
   return "professional";
 }

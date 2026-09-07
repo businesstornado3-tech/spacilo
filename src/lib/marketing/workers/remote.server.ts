@@ -41,7 +41,13 @@ const TOKEN_SECRET: Record<string, string> = {
  * missing. Never guesses an address and never sends an empty credential.
  */
 export function resolveRemoteEndpoint(
-  worker: { mode: WorkerMode; id: string | null; label: string; endpointUrl: string | null; provider: string | null },
+  worker: {
+    mode: WorkerMode;
+    id: string | null;
+    label: string;
+    endpointUrl: string | null;
+    provider: string | null;
+  },
   env: Record<string, string | undefined>,
 ): RemoteEndpointResolution {
   if (worker.mode === "BROWSER") {
@@ -111,7 +117,11 @@ export type RemoteJobRequest = {
 
 export type RemoteCreate =
   | { ok: true; jobId: string; state: VideoJobState; model: string | null }
-  | { ok: false; status: "WORKER_UNAVAILABLE" | "AUTH_REQUIRED" | "GENERATION_FAILED"; reason: string };
+  | {
+      ok: false;
+      status: "WORKER_UNAVAILABLE" | "AUTH_REQUIRED" | "GENERATION_FAILED";
+      reason: string;
+    };
 
 export async function createRemoteJob(
   endpoint: RemoteWorkerEndpoint,
@@ -181,7 +191,13 @@ export async function createRemoteJob(
 
 export type RemotePoll =
   | { ok: true; done: false; state: VideoJobState; progress: number }
-  | { ok: true; done: true; bytes: ArrayBuffer; contentType: string; confirmedCostPence: number | null }
+  | {
+      ok: true;
+      done: true;
+      bytes: ArrayBuffer;
+      contentType: string;
+      confirmedCostPence: number | null;
+    }
   | { ok: false; reason: string };
 
 export async function pollRemoteJob(
@@ -202,7 +218,9 @@ export async function pollRemoteJob(
             : `${endpoint.label} could not report on the job (HTTP ${response.status}).`,
       };
     }
-    const state = (typeof body["state"] === "string" ? body["state"] : "GENERATING") as VideoJobState;
+    const state = (
+      typeof body["state"] === "string" ? body["state"] : "GENERATING"
+    ) as VideoJobState;
     if (state === "FAILED" || state === "CANCELLED") {
       return {
         ok: false,
@@ -238,7 +256,8 @@ export async function pollRemoteJob(
       done: true,
       bytes: await output.arrayBuffer(),
       contentType: output.headers.get("content-type") ?? "video/mp4",
-      confirmedCostPence: typeof reported === "number" && Number.isFinite(reported) ? reported : null,
+      confirmedCostPence:
+        typeof reported === "number" && Number.isFinite(reported) ? reported : null,
     };
   } catch (error) {
     return {

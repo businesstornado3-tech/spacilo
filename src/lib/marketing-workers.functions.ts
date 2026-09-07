@@ -124,7 +124,8 @@ export const registerVideoWorker = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error) throw new Error("That worker could not be added. Check the name is not already used.");
+    if (error)
+      throw new Error("That worker could not be added. Check the name is not already used.");
 
     await supabase.from("marketing_audit").insert({
       action: "video_worker_registered",

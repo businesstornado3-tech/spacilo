@@ -23,7 +23,9 @@ const request: GenerationRequest = {
   music: true,
 };
 
-function worker(overrides: Partial<WorkerDescriptor> & Pick<WorkerDescriptor, "mode">): WorkerDescriptor {
+function worker(
+  overrides: Partial<WorkerDescriptor> & Pick<WorkerDescriptor, "mode">,
+): WorkerDescriptor {
   return {
     id: null,
     label: overrides.mode,
@@ -50,10 +52,18 @@ describe("hardware capability", () => {
   });
 
   it("classifies deterministically by dedicated memory", () => {
-    expect(capabilityClass({ dedicatedVramGb: 24, ramGb: 64, accelerator: null }).capability).toBe("VERY_HIGH");
-    expect(capabilityClass({ dedicatedVramGb: 12, ramGb: 32, accelerator: null }).capability).toBe("HIGH");
-    expect(capabilityClass({ dedicatedVramGb: 8, ramGb: 16, accelerator: null }).capability).toBe("MEDIUM");
-    expect(capabilityClass({ dedicatedVramGb: 2, ramGb: 8, accelerator: null }).capability).toBe("LIMITED");
+    expect(capabilityClass({ dedicatedVramGb: 24, ramGb: 64, accelerator: null }).capability).toBe(
+      "VERY_HIGH",
+    );
+    expect(capabilityClass({ dedicatedVramGb: 12, ramGb: 32, accelerator: null }).capability).toBe(
+      "HIGH",
+    );
+    expect(capabilityClass({ dedicatedVramGb: 8, ramGb: 16, accelerator: null }).capability).toBe(
+      "MEDIUM",
+    );
+    expect(capabilityClass({ dedicatedVramGb: 2, ramGb: 8, accelerator: null }).capability).toBe(
+      "LIMITED",
+    );
   });
 
   it("does not invent values it was not given", () => {
@@ -139,7 +149,10 @@ describe("worker selection", () => {
   it("says the free worker is out of allowance rather than upgrading", () => {
     const result = selectWorker({
       preference: "AUTO",
-      workers: [worker({ mode: "FREE_CLOUD", status: "QUOTA_EXHAUSTED" }), worker({ mode: "PAID_CLOUD" })],
+      workers: [
+        worker({ mode: "FREE_CLOUD", status: "QUOTA_EXHAUSTED" }),
+        worker({ mode: "PAID_CLOUD" }),
+      ],
       request,
       paidComputeEnabled: true,
     });
@@ -206,20 +219,44 @@ describe("cost transparency", () => {
   });
 
   it("blocks a paid generation above the per-video cap", () => {
-    const report = costReport({ mode: "PAID_CLOUD", resolution: "720p", seconds: 8, confirmedPence: 900 });
-    const decision = checkSpend(report, { spentTodayPence: 0, spentThisCampaignPence: 0, spentThisMonthPence: 0 }, DEFAULT_SPEND_CAPS);
+    const report = costReport({
+      mode: "PAID_CLOUD",
+      resolution: "720p",
+      seconds: 8,
+      confirmedPence: 900,
+    });
+    const decision = checkSpend(
+      report,
+      { spentTodayPence: 0, spentThisCampaignPence: 0, spentThisMonthPence: 0 },
+      DEFAULT_SPEND_CAPS,
+    );
     expect(decision.allowed).toBe(false);
   });
 
   it("blocks a paid generation that would break the daily cap", () => {
-    const report = costReport({ mode: "PAID_CLOUD", resolution: "720p", seconds: 8, confirmedPence: 150 });
-    const decision = checkSpend(report, { spentTodayPence: 450, spentThisCampaignPence: 0, spentThisMonthPence: 0 }, DEFAULT_SPEND_CAPS);
+    const report = costReport({
+      mode: "PAID_CLOUD",
+      resolution: "720p",
+      seconds: 8,
+      confirmedPence: 150,
+    });
+    const decision = checkSpend(
+      report,
+      { spentTodayPence: 450, spentThisCampaignPence: 0, spentThisMonthPence: 0 },
+      DEFAULT_SPEND_CAPS,
+    );
     expect(decision.allowed).toBe(false);
   });
 
   it("never blocks a free generation", () => {
     const report = costReport({ mode: "BROWSER", resolution: "720p", seconds: 8 });
-    expect(checkSpend(report, { spentTodayPence: 9999, spentThisCampaignPence: 9999, spentThisMonthPence: 9999 }, DEFAULT_SPEND_CAPS).allowed).toBe(true);
+    expect(
+      checkSpend(
+        report,
+        { spentTodayPence: 9999, spentThisCampaignPence: 9999, spentThisMonthPence: 9999 },
+        DEFAULT_SPEND_CAPS,
+      ).allowed,
+    ).toBe(true);
   });
 });
 
@@ -240,7 +277,16 @@ describe("voice and audio", () => {
   });
 
   it("only uses music with a known licence", () => {
-    expect(mayUseAsset({ id: "x", title: "Unknown", licenceClass: null, licence: null, source: null, attribution: null }).allowed).toBe(false);
+    expect(
+      mayUseAsset({
+        id: "x",
+        title: "Unknown",
+        licenceClass: null,
+        licence: null,
+        source: null,
+        attribution: null,
+      }).allowed,
+    ).toBe(false);
   });
 
   it("selects an open-licensed bed and records its provenance", () => {

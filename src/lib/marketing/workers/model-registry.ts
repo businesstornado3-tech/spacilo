@@ -142,8 +142,7 @@ export function selectModel(
     return {
       ok: false,
       status: "MODEL_UNAVAILABLE",
-      reason:
-        "No compatible video model can run on this worker for the requested video.",
+      reason: "No compatible video model can run on this worker for the requested video.",
       candidates: fits,
     };
   }

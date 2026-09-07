@@ -9,6 +9,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AdminShell, AdminSectionBlock } from "@/components/admin/AdminShell";
+import { CampaignDecision } from "@/components/admin/CampaignDecision";
 import { MarketingConnections } from "@/components/admin/MarketingConnections";
 import { MarketingVideoPanel } from "@/components/admin/MarketingVideoPanel";
 import { VideoWorkers } from "@/components/admin/VideoWorkers";

@@ -52,6 +52,13 @@ export interface MarketingStudioSnapshot {
   settings: MarketingSettings;
   capabilities: PlatformCapability[];
   today: MarketingCampaign | null;
+  /** The founder's live decision on today's campaign, if there is one. */
+  todayDecision: {
+    status: string;
+    approvedAt: string | null;
+    decidedAt: string | null;
+    note: string | null;
+  } | null;
   recent: {
     id: string;
     planDate: string;

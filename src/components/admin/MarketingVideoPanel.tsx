@@ -107,7 +107,8 @@ export function MarketingVideoPanel({
       }),
     [snapshot],
   );
-  const chosenCard = choice === "AUTO" ? null : (cards.find((card) => card.mode === choice) ?? null);
+  const chosenCard =
+    choice === "AUTO" ? null : (cards.find((card) => card.mode === choice) ?? null);
   const autoReady = cards.some((card) => card.mode !== "PAID_CLOUD" && card.selectable);
   const blocked =
     choice === "AUTO"

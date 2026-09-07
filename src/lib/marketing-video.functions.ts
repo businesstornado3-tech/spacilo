@@ -61,6 +61,11 @@ export type MarketingVideoRow = {
   apiCostPence: number;
   infrastructureCostPence: number | null;
   coreAssetId: string | null;
+  /** The route the pixels were actually made on. */
+  executionMode: string | null;
+  workerId: string | null;
+  costSource: string | null;
+  jobPhase: string | null;
   attempt: number;
   createdAt: string;
 };
@@ -93,6 +98,10 @@ async function rowToVideo(supabase: any, row: any): Promise<MarketingVideoRow> {
     apiCostPence: row.api_cost_pence ?? 0,
     infrastructureCostPence: row.infrastructure_cost_pence ?? null,
     coreAssetId: row.core_asset_id ?? null,
+    executionMode: row.execution_mode ?? null,
+    workerId: row.worker_id ?? null,
+    costSource: row.cost_source ?? null,
+    jobPhase: row.job_phase ?? null,
     attempt: row.attempt ?? 1,
     createdAt: row.created_at,
   };

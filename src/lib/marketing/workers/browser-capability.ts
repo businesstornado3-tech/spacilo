@@ -49,7 +49,8 @@ export function browserCapability(probe: BrowserProbe): BrowserCapability {
   }
 
   const soft: string[] = [];
-  if (!probe.webgpu) soft.push("Graphics acceleration is unavailable, so only animated video can be made here.");
+  if (!probe.webgpu)
+    soft.push("Graphics acceleration is unavailable, so only animated video can be made here.");
   if (probe.approximateMemoryGb !== null && probe.approximateMemoryGb < 4) {
     soft.push("This device reports little memory, so keep videos short.");
   }
@@ -108,7 +109,9 @@ export async function probeBrowser(): Promise<BrowserProbe> {
   }
 
   const supportsCodec = (codec: string): boolean => {
-    const media = window as unknown as { MediaRecorder?: { isTypeSupported?: (type: string) => boolean } };
+    const media = window as unknown as {
+      MediaRecorder?: { isTypeSupported?: (type: string) => boolean };
+    };
     try {
       return media.MediaRecorder?.isTypeSupported?.(codec) ?? false;
     } catch {
@@ -125,7 +128,8 @@ export async function probeBrowser(): Promise<BrowserProbe> {
       typeof nav.hardwareConcurrency === "number" ? nav.hardwareConcurrency : null,
     codecs: CANDIDATE_CODECS.filter(supportsCodec),
     webCodecs: typeof (window as { VideoEncoder?: unknown }).VideoEncoder !== "undefined",
-    offscreenCanvas: typeof (window as { OffscreenCanvas?: unknown }).OffscreenCanvas !== "undefined",
+    offscreenCanvas:
+      typeof (window as { OffscreenCanvas?: unknown }).OffscreenCanvas !== "undefined",
     workers: typeof Worker !== "undefined",
   };
 }

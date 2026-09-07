@@ -13,4 +13,5 @@ export * from "./browser-capability";
 export * from "./cost";
 export * from "./media";
 export * from "./selection";
+export * from "./orchestration";
 export * from "./settings";

@@ -69,7 +69,14 @@ export function useCampaignVideos(campaignId: string | null) {
     query,
     generating,
     generate: useMutation({
-      mutationFn: (input: { assetId: string; tier: "draft" | "final"; confirmPaid?: boolean }) =>
+      mutationFn: (input: {
+        assetId: string;
+        tier: "draft" | "final";
+        confirmPaid?: boolean;
+        /** Founder's worker choice for this generation. */
+        worker?: "AUTO" | "BROWSER" | "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD";
+        browser?: unknown;
+      }) =>
         generate({
           data: { campaignId: campaignId!, confirmPaid: false, ...input },
         }),

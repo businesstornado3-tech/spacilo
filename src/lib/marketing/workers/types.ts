@@ -11,12 +11,7 @@
 /** The four execution modes. Nothing else may be persisted. */
 export type WorkerMode = "BROWSER" | "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD";
 
-export const WORKER_MODES: readonly WorkerMode[] = [
-  "BROWSER",
-  "LOCAL",
-  "FREE_CLOUD",
-  "PAID_CLOUD",
-];
+export const WORKER_MODES: readonly WorkerMode[] = ["BROWSER", "LOCAL", "FREE_CLOUD", "PAID_CLOUD"];
 
 /** Founder-facing preference. AUTO lets the orchestrator decide. */
 export type WorkerPreference = "AUTO" | WorkerMode;
@@ -75,11 +70,7 @@ export const RUNTIME_STATUS_LABEL: Record<WorkerRuntimeStatus, string> = {
 };
 
 /** Statuses that can accept a new job right now. */
-export const READY_STATUSES: readonly WorkerRuntimeStatus[] = [
-  "ONLINE",
-  "IDLE",
-  "MODEL_READY",
-];
+export const READY_STATUSES: readonly WorkerRuntimeStatus[] = ["ONLINE", "IDLE", "MODEL_READY"];
 
 /**
  * Raw hardware as a worker reports it. Every field is optional because a

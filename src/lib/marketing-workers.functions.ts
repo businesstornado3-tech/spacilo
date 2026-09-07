@@ -16,18 +16,14 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   applyWorkerPreferences,
-  browserCapability,
   costReport,
-  normaliseHardware,
+  WORKER_LABEL,
   readWorkerPreferences,
   selectWorker,
-  WORKER_LABEL,
   type BrowserProbe,
-  type CapabilityClass,
   type WorkerDescriptor,
   type WorkerMode,
   type WorkerPreferences,
-  type WorkerRuntimeStatus,
 } from "@/lib/marketing/workers";
 
 async function assertAdmin(supabase: any) {
@@ -44,41 +40,6 @@ async function loadSettings(supabase: any): Promise<Record<string, unknown>> {
   return (data?.settings ?? {}) as Record<string, unknown>;
 }
 
-function rowToDescriptor(row: any): WorkerDescriptor {
-  const hardware = row.hardware && Object.keys(row.hardware).length > 0
-    ? normaliseHardware(row.hardware)
-    : null;
-  return {
-    mode: row.mode as WorkerMode,
-    id: row.id as string,
-    label: row.label as string,
-    status: row.status as WorkerRuntimeStatus,
-    detail: row.status_detail as string,
-    capability: (hardware?.capability ?? (row.capability as CapabilityClass)) satisfies CapabilityClass,
-    hardware,
-    provider: row.provider ?? null,
-    installedModels: (row.installed_models ?? []) as string[],
-    enabled: row.enabled === true,
-    chargeable: row.mode === "PAID_CLOUD",
-    queued: Number(row.queued ?? 0),
-    lastHeartbeatAt: row.last_heartbeat_at ?? null,
-  };
-}
-
-/** A worker is treated as offline once its heartbeat goes quiet. */
-const HEARTBEAT_TIMEOUT_MS = 90_000;
-
-function withHeartbeatTimeout(worker: WorkerDescriptor, now: number): WorkerDescriptor {
-  if (worker.mode === "BROWSER") return worker;
-  const beat = worker.lastHeartbeatAt ? Date.parse(worker.lastHeartbeatAt) : NaN;
-  if (Number.isNaN(beat) || now - beat <= HEARTBEAT_TIMEOUT_MS) return worker;
-  return {
-    ...worker,
-    status: "OFFLINE",
-    detail: "No signal from this worker recently.",
-  };
-}
-
 export type VideoWorkerSnapshot = {
   workers: WorkerDescriptor[];
   preferences: WorkerPreferences;
@@ -90,41 +51,9 @@ export type VideoWorkerSnapshot = {
 async function snapshot(supabase: any, browser: BrowserProbe | null): Promise<VideoWorkerSnapshot> {
   const settings = await loadSettings(supabase);
   const preferences = readWorkerPreferences(settings);
-  const { data } = await supabase
-    .from("marketing_video_workers")
-    .select("*")
-    .order("mode", { ascending: true });
+  const { loadWorkers } = await import("@/lib/marketing/workers/registry.server");
+  const { workers } = await loadWorkers(supabase, browser);
 
-  const now = Date.now();
-  const stored = ((data ?? []) as any[])
-    .filter((row) => row.mode !== "BROWSER")
-    .map((row) => withHeartbeatTimeout(rowToDescriptor(row), now));
-
-  // The browser worker is not a database row: it is whatever machine the
-  // founder is sitting at, described only from what the page can actually see.
-  const capability = browser ? browserCapability(browser) : null;
-  const browserWorker: WorkerDescriptor = {
-    mode: "BROWSER",
-    id: null,
-    label: WORKER_LABEL.BROWSER,
-    status:
-      capability === null
-        ? "OFFLINE"
-        : capability.status === "UNSUPPORTED"
-          ? "ERROR"
-          : "IDLE",
-    detail: capability?.summary ?? "Not checked on this device yet.",
-    capability: capability?.status === "SUPPORTED" ? "MEDIUM" : "LIMITED",
-    hardware: null,
-    provider: null,
-    installedModels: [],
-    enabled: true,
-    chargeable: false,
-    queued: 0,
-    lastHeartbeatAt: null,
-  };
-
-  const workers = [browserWorker, ...stored];
   const selection = selectWorker({
     preference: preferences.defaultWorker,
     workers,
@@ -195,7 +124,8 @@ export const registerVideoWorker = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error) throw new Error("That worker could not be added. Check the name is not already used.");
+    if (error)
+      throw new Error("That worker could not be added. Check the name is not already used.");
 
     await supabase.from("marketing_audit").insert({
       action: "video_worker_registered",

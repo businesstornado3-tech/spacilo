@@ -223,3 +223,83 @@ export const updateVideoWorkerPreferences = createServerFn({ method: "POST" })
     });
     return next;
   });
+
+/* ------------------------------------------------------------- pairing */
+
+/**
+ * Pairing lets the founder connect a computer without ever handling a secret.
+ * The console shows a short code; the worker on the machine exchanges that
+ * code for its own access token, which EarnRoom stores only as a hash and
+ * never shows on screen.
+ */
+const PAIRING_MINUTES = 30;
+
+function pairingCode(): string {
+  // Unambiguous characters only, so the code can be read aloud or typed.
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  return [...bytes].map((byte) => alphabet[byte % alphabet.length]).join("");
+}
+
+export type WorkerPairing = {
+  code: string;
+  label: string;
+  expiresAt: string;
+  claimedAt: string | null;
+};
+
+export const getWorkerPairings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ pairings: WorkerPairing[] }> => {
+    const { supabase } = context;
+    await assertAdmin(supabase);
+    const { data } = await supabase
+      .from("marketing_video_worker_pairings")
+      .select("code, label, expires_at, claimed_at")
+      .gt("expires_at", new Date(Date.now() - 60 * 60 * 1000).toISOString())
+      .order("created_at", { ascending: false })
+      .limit(5);
+    return {
+      pairings: ((data ?? []) as any[]).map((row) => ({
+        code: row.code,
+        label: row.label,
+        expiresAt: row.expires_at,
+        claimedAt: row.claimed_at,
+      })),
+    };
+  });
+
+export const createWorkerPairing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { label?: string; mode?: "LOCAL" | "FREE_CLOUD" }) =>
+    z
+      .object({
+        label: z.string().trim().min(2).max(80).default("My computer"),
+        mode: z.enum(["LOCAL", "FREE_CLOUD"]).default("LOCAL"),
+      })
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data, context }): Promise<WorkerPairing> => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase);
+    const expiresAt = new Date(Date.now() + PAIRING_MINUTES * 60 * 1000).toISOString();
+    const code = pairingCode();
+
+    const { error } = await supabase.from("marketing_video_worker_pairings").insert({
+      code,
+      label: data.label,
+      mode: data.mode,
+      created_by: userId,
+      expires_at: expiresAt,
+    });
+    if (error) throw new Error("That setup code could not be created. Try again.");
+
+    await supabase.from("marketing_audit").insert({
+      action: "video_worker_pairing_created",
+      actor: "human",
+      actor_id: userId,
+      detail: `Setup code created for "${data.label}".`,
+    });
+
+    return { code, label: data.label, expiresAt, claimedAt: null };
+  });

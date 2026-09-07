@@ -466,81 +466,14 @@ export function VideoWorkers() {
           </ul>
 
           <div className="rounded-lg border border-border p-3">
-            <h5 className="type-body-sm font-semibold">Add a worker</h5>
+            <h5 className="type-body-sm font-semibold">Adding another machine</h5>
             <p className="mt-1 type-body-xs text-muted-foreground">
-              You'll get an access token once. Put it on the machine running the worker — EarnRoom
-              keeps only a fingerprint of it.
+              Machines are added through setup, never by hand: the computer creates its own key
+              during setup and EarnRoom keeps only a fingerprint of it. No key is ever displayed
+              here.
             </p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <label className="type-body-xs">
-                Kind
-                <select
-                  className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-2 type-body-sm"
-                  value={form.mode}
-                  onChange={(event) =>
-                    setForm({ ...form, mode: event.target.value as typeof form.mode })
-                  }
-                >
-                  <option value="LOCAL">My own computer</option>
-                  <option value="FREE_CLOUD">Free cloud worker</option>
-                  <option value="PAID_CLOUD">Paid cloud worker</option>
-                </select>
-              </label>
-              <label className="type-body-xs">
-                Name
-                <input
-                  className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-2 type-body-sm"
-                  value={form.label}
-                  onChange={(event) => setForm({ ...form, label: event.target.value })}
-                  placeholder="Studio desktop"
-                />
-              </label>
-              <label className="type-body-xs">
-                Address (optional)
-                <input
-                  className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-2 type-body-sm"
-                  value={form.endpointUrl}
-                  onChange={(event) => setForm({ ...form, endpointUrl: event.target.value })}
-                  placeholder="https://…"
-                />
-              </label>
-              <label className="type-body-xs">
-                Service name (optional)
-                <input
-                  className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-2 type-body-sm"
-                  value={form.provider}
-                  onChange={(event) => setForm({ ...form, provider: event.target.value })}
-                />
-              </label>
-            </div>
-            <button
-              type="button"
-              disabled={form.label.trim().length < 2 || workers.register.isPending}
-              className="mt-3 min-h-10 rounded-lg bg-primary px-3 type-body-sm text-primary-foreground disabled:opacity-50"
-              onClick={() =>
-                workers.register
-                  .mutateAsync({
-                    mode: form.mode,
-                    label: form.label.trim(),
-                    endpointUrl: form.endpointUrl.trim() || null,
-                    provider: form.provider.trim() || null,
-                  })
-                  .then((result) => {
-                    setToken(result.token);
-                    setForm({ ...form, label: "", endpointUrl: "", provider: "" });
-                  })
-                  .catch((error: Error) => setNotice(error.message))
-              }
-            >
-              Add worker
-            </button>
-            {token ? (
-              <Alert tone="warning" title="Copy this access token now">
-                <code className="break-all type-body-xs">{token}</code>
-                <p className="mt-1 type-body-xs">It is shown once and cannot be retrieved again.</p>
-              </Alert>
-            ) : null}
           </div>
+
 
           <div className="rounded-lg border border-border p-3">
             <h5 className="type-body-sm font-semibold">Generation controls</h5>

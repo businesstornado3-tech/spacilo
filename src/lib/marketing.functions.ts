@@ -216,6 +216,16 @@ export const getMarketingStudio = createServerFn({ method: "GET" })
       settings,
       capabilities: allCapabilities(connections, settings, now),
       today: (todayRow?.campaign ?? null) as MarketingCampaign | null,
+      // The live decision, read from its own columns rather than the stored
+      // plan, so an approval or rejection survives a page refresh.
+      todayDecision: todayRow
+        ? {
+            status: String(todayRow.status ?? "PLANNED"),
+            approvedAt: (todayRow.approved_at ?? null) as string | null,
+            decidedAt: (todayRow.decided_at ?? null) as string | null,
+            note: (todayRow.decision_note ?? null) as string | null,
+          }
+        : null,
       recent: ((recentRows ?? []) as any[]).map((row) => ({
         id: row.id,
         planDate: row.plan_date,

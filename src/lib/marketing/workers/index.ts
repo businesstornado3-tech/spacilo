@@ -15,3 +15,4 @@ export * from "./media";
 export * from "./selection";
 export * from "./orchestration";
 export * from "./settings";
+export * from "./setup";

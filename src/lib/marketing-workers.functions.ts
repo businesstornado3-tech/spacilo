@@ -303,3 +303,111 @@ export const createWorkerPairing = createServerFn({ method: "POST" })
 
     return { code, label: data.label, expiresAt, claimedAt: null };
   });
+
+/* ------------------------------------------- one-click computer setup */
+
+/**
+ * The founder presses one button. EarnRoom opens a short-lived setup session
+ * and hands back the address of the genuine Windows installer, named after
+ * that session so the installer can pair itself. No code is displayed, no
+ * token is ever shown, and the session dies in 30 minutes or on first use.
+ */
+export type ComputerSetupSession = {
+  /** Where the browser should fetch the real installer from. */
+  downloadPath: string;
+  expiresAt: string;
+  /** False when no genuine installer has been published yet. */
+  installerAvailable: boolean;
+  /** Opaque handle the console polls with. Not a credential on its own. */
+  handle: string;
+};
+
+function installerPublished(): boolean {
+  return Boolean(process.env["EARNROOM_WORKER_INSTALLER_URL"]);
+}
+
+export const beginComputerSetup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { label?: string }) =>
+    z.object({ label: z.string().trim().min(2).max(80).default("My computer") }).parse(input ?? {}),
+  )
+  .handler(async ({ data, context }): Promise<ComputerSetupSession> => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase);
+
+    const { installerFileName } = await import("@/lib/marketing/workers/setup");
+    const expiresAt = new Date(Date.now() + PAIRING_MINUTES * 60 * 1000).toISOString();
+    const code = pairingCode();
+
+    const { error } = await supabase.from("marketing_video_worker_pairings").insert({
+      code,
+      label: data.label,
+      mode: "LOCAL",
+      created_by: userId,
+      expires_at: expiresAt,
+    });
+    if (error) throw new Error("Setup could not be started. Try again.");
+
+    await supabase.from("marketing_audit").insert({
+      action: "video_worker_setup_started",
+      actor: "human",
+      actor_id: userId,
+      detail: `Computer setup started for "${data.label}".`,
+    });
+
+    return {
+      downloadPath: `/api/public/video-worker/setup/${installerFileName(code)}`,
+      expiresAt,
+      installerAvailable: installerPublished(),
+      handle: code,
+    };
+  });
+
+export type ComputerSetupStatus = {
+  claimed: boolean;
+  expired: boolean;
+  installerAvailable: boolean;
+  heartbeatAt: string | null;
+  worker: WorkerDescriptor | null;
+};
+
+export const getComputerSetupStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { handle: string }) =>
+    z.object({ handle: z.string().trim().min(6).max(16) }).parse(input),
+  )
+  .handler(async ({ data, context }): Promise<ComputerSetupStatus> => {
+    const { supabase } = context;
+    await assertAdmin(supabase);
+
+    const { data: row } = await supabase
+      .from("marketing_video_worker_pairings")
+      .select("claimed_at, expires_at, worker_id")
+      .eq("code", data.handle.toUpperCase())
+      .maybeSingle();
+
+    if (!row) {
+      return {
+        claimed: false,
+        expired: true,
+        installerAvailable: installerPublished(),
+        heartbeatAt: null,
+        worker: null,
+      };
+    }
+
+    let worker: WorkerDescriptor | null = null;
+    if (row.worker_id) {
+      const { loadWorkers } = await import("@/lib/marketing/workers/registry.server");
+      const { workers } = await loadWorkers(supabase, null);
+      worker = workers.find((entry) => entry.id === row.worker_id) ?? null;
+    }
+
+    return {
+      claimed: Boolean(row.claimed_at),
+      expired: !row.claimed_at && Date.parse(row.expires_at) < Date.now(),
+      installerAvailable: installerPublished(),
+      heartbeatAt: worker?.lastHeartbeatAt ?? null,
+      worker,
+    };
+  });

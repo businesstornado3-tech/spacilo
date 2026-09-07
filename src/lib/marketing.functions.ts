@@ -364,12 +364,15 @@ export const decideMarketingCampaign = createServerFn({ method: "POST" })
     const approved = data.decision === "APPROVE";
     const status = approved ? "APPROVED" : "REJECTED";
 
+    const decidedAt = new Date().toISOString();
     const { error } = await supabase
       .from("marketing_campaigns")
       .update({
         status,
         approved_by: approved ? context.userId : null,
-        approved_at: approved ? new Date().toISOString() : null,
+        approved_at: approved ? decidedAt : null,
+        decided_at: decidedAt,
+        decision_note: data.note ?? null,
       })
       .eq("id", data.campaignId);
     if (error) throw new Error(error.message);

@@ -41,10 +41,10 @@ export function useSetCaseSafety() {
       note?: string;
     }) => {
       const { error } = await supabase.rpc("set_support_case_safety", {
-        p_case_id: input.caseId,
+        ...(input.caseId === undefined ? {} : { p_case_id: input.caseId }),
         p_severity: input.severity,
         p_source: input.source,
-        p_note: input.note,
+        ...(input.note === undefined ? {} : { p_note: input.note }),
       });
       if (error) throw error;
     },
@@ -69,7 +69,7 @@ export function useApplySafetySuspension() {
         p_state: input.state,
         p_reason: input.reason,
         p_source: input.source,
-        p_case_id: input.caseId,
+        ...(input.caseId === undefined ? {} : { p_case_id: input.caseId }),
       });
       if (error) throw error;
     },

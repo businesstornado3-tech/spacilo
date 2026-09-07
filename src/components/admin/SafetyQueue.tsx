@@ -26,7 +26,9 @@ import {
   type SafetyCaseRow,
   type SafetyControlRow,
 } from "@/lib/admin/safety";
+import { isNewlyFlagged } from "@/lib/admin/incident";
 import { useLiftSafetySuspension } from "@/hooks/useSafetyQueue";
+
 import { formatDate } from "@/lib/format";
 
 export function SafetyQueue({

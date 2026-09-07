@@ -77,7 +77,7 @@ export function CampaignDecision({
   publications: readonly PublicationRecord[];
   deciding: boolean;
   publishing: boolean;
-  onDecide: (input: { decision: "APPROVE" | "REJECT"; note?: string }) => void;
+  onDecide: (input: { decision: "APPROVE" | "REJECT"; note?: string | undefined }) => void;
   onPublish: () => void;
   publishResults: { platform: string; state: string; detail: string }[] | null;
   error: string | null;

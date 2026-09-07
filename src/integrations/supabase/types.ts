@@ -4672,6 +4672,7 @@ export type Database = {
         Args: { p_from: string; p_to: string }
         Returns: Json
       }
+      admin_safety_incident: { Args: { p_case_id: string }; Returns: Json }
       admin_safety_queue: { Args: never; Returns: Json }
       analytics_is_public_path: { Args: { p_path: string }; Returns: boolean }
       analytics_prune: { Args: { p_keep_days?: number }; Returns: number }

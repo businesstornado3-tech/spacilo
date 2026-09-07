@@ -32,7 +32,12 @@ export interface SafetyCaseRow {
   summary: string;
   severity: SafetySeverity | null;
   source: SafetySource | null;
+  /** Set when staff gave the case a severity. */
+  safety_flagged_at?: string | null;
+  /** Staff-only reason recorded with the severity. */
+  severity_note?: string | null;
   created_at: string;
+
   last_activity_at: string | null;
   evidence_count: number;
   booking_status: string | null;

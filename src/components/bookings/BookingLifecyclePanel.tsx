@@ -38,6 +38,9 @@ import {
   type CollectionRejection,
 } from "@/lib/bookings-lifecycle";
 import { HandoverEvidence } from "@/components/bookings/HandoverEvidence";
+import { StorageAgreementPanel } from "@/components/bookings/StorageAgreementPanel";
+import { useStorageAgreement } from "@/hooks/useStorageAgreement";
+import { isAgreementActive } from "@/lib/agreements";
 import { CONFIRMATION_STATEMENT, partyFor, visibleStages } from "@/lib/handover";
 import { formatDate, formatPrice } from "@/lib/format";
 import {
@@ -74,7 +77,13 @@ export function BookingLifecyclePanel({
   const confirmHandover = useConfirmHandover();
   const confirmCollection = useConfirmCollection();
 
-  const handover = handoverGate({ booking, viewerId, paid, financiallyBlocked });
+  // The bilateral Storage Agreement gates the handover. The database re-checks
+  // it in `confirm_booking_handover`, so this only keeps the button honest.
+  const { data: agreement } = useStorageAgreement(booking.id, booking.status === "confirmed");
+  const agreementActive =
+    booking.status === "confirmed" ? isAgreementActive(agreement ?? null) : undefined;
+
+  const handover = handoverGate({ booking, viewerId, paid, financiallyBlocked, agreementActive });
   const collection = collectionGate({ booking, viewerId });
 
   const handoverSteps = handoverProgress(booking, "handover");
@@ -157,6 +166,8 @@ export function BookingLifecyclePanel({
           Completed on {formatDate(booking.completed_at)}.
         </p>
       ) : null}
+
+      {showHandover ? <StorageAgreementPanel bookingId={booking.id} audience={audience} /> : null}
 
       {showHandover ? (
         <div className="space-y-2 rounded-xl bg-muted/60 p-4">

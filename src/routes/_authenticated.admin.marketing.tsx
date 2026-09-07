@@ -99,9 +99,14 @@ function MarketingStudioRoute() {
         <div className="space-y-8">
           <AdminSectionBlock
             id="controls"
-            title="Operating mode"
-            note="Draft generates only. Approval required holds everything for you. Autonomous still cannot publish where a platform is not connected."
+            title="Publishing settings"
+            note="Draft only generates content without publishing. Approval required holds everything for you to approve — this is the default. Autonomous publishes on its own, and still cannot publish where a platform is not connected."
           >
+            <p className="mb-3 type-body-sm">
+              Publishing is currently{" "}
+              <strong>{snapshot.settings.pauseAllPublishing ? "paused" : "active"}</strong>.
+            </p>
+
             <div className="flex flex-wrap items-center gap-2">
               {(["DRAFT", "APPROVAL_REQUIRED", "AUTONOMOUS"] as const).map((mode) => (
                 <button

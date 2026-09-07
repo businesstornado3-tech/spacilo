@@ -314,36 +314,8 @@ function MarketingStudioRoute() {
           </AdminSectionBlock>
 
           <AdminSectionBlock
-            id="platforms"
-            title="Platform capability"
-            note="What each platform's official API can actually do, and whether EarnRoom is connected to it."
-          >
-            <ul className="grid gap-2 sm:grid-cols-2">
-              {snapshot.capabilities.map((capability) => (
-                <li key={capability.platform} className="rounded-xl border border-border p-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="type-body-sm font-semibold">{capability.label}</span>
-                    <Pill tone={capability.connection === "CONNECTED" ? "good" : "warn"}>
-                      {capability.statusLabel}
-                    </Pill>
-                  </div>
-                  <p className="mt-1 type-body-xs text-muted-foreground">{capability.reason}</p>
-                </li>
-              ))}
-            </ul>
-          </AdminSectionBlock>
-
-          <AdminSectionBlock
-            id="workers"
-            title="Video workers"
-            note="Where videos are actually made. Paid generation stays off until you switch it on."
-          >
-            <VideoWorkers />
-          </AdminSectionBlock>
-
-          <AdminSectionBlock
             id="connections"
-            title="Accounts and publishing"
+            title="Your accounts"
             note="Connect each account on that platform's own sign-in screen. EarnRoom never asks for or stores a platform password."
           >
             <MarketingConnections />
@@ -419,6 +391,45 @@ function MarketingStudioRoute() {
               </ul>
             )}
           </AdminSectionBlock>
+
+          <details id="advanced" className="rounded-xl border border-border p-4">
+            <summary className="cursor-pointer type-h5">Advanced administration</summary>
+            <p className="mt-1 type-body-sm text-muted-foreground">
+              Setting up where videos are made, and the technical detail behind each platform. You
+              do not need this to run a campaign.
+            </p>
+
+            <div className="mt-4 space-y-6">
+              <div>
+                <h4 className="type-h5">Set up where videos are made</h4>
+                <p className="mt-1 mb-3 type-body-sm text-muted-foreground">
+                  Paid video making stays off until you switch it on here.
+                </p>
+                <VideoWorkers />
+              </div>
+
+              <div>
+                <h4 className="type-h5">What each platform allows</h4>
+                <p className="mt-1 mb-3 type-body-sm text-muted-foreground">
+                  What each platform's own service can actually do, and whether EarnRoom is
+                  connected to it.
+                </p>
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {snapshot.capabilities.map((capability) => (
+                    <li key={capability.platform} className="rounded-xl border border-border p-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="type-body-sm font-semibold">{capability.label}</span>
+                        <Pill tone={capability.connection === "CONNECTED" ? "good" : "warn"}>
+                          {capability.statusLabel}
+                        </Pill>
+                      </div>
+                      <p className="mt-1 type-body-xs text-muted-foreground">{capability.reason}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </details>
         </div>
       ) : null}
     </AdminShell>

@@ -99,7 +99,8 @@ export function SafetyQueue({
                     {row.payment_hold ? " · payment on hold" : ""}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {isNewlyFlagged(row) ? <Badge variant="warning">New</Badge> : null}
                   {row.severity ? (
                     <Badge
                       variant={SEVERITY_TONE[row.severity] === "error" ? "destructive" : "warning"}
@@ -107,12 +108,18 @@ export function SafetyQueue({
                       {SEVERITY_LABEL[row.severity]}
                     </Badge>
                   ) : null}
+                  <Button asChild size="sm">
+                    <Link to="/admin/safety/$caseId" params={{ caseId: row.id }}>
+                      Open incident
+                    </Link>
+                  </Button>
                   <Button asChild variant="secondary" size="sm">
                     <Link to="/admin/support/$caseId" params={{ caseId: row.id }}>
                       Open case
                     </Link>
                   </Button>
                 </div>
+
               </div>
             </li>
           ))}

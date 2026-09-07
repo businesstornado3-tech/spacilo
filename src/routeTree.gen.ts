@@ -57,6 +57,7 @@ import { Route as AuthenticatedRenterSearchRouteImport } from './routes/_authent
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedAdminPolicyIndexRouteImport } from './routes/_authenticated.admin.policy.index'
 import { Route as AuthenticatedAdminReviewsIndexRouteImport } from './routes/_authenticated.admin.reviews.index'
+import { Route as AuthenticatedAdminSafetyCaseIdRouteImport } from './routes/_authenticated.admin.safety.$caseId'
 import { Route as AuthenticatedAdminSupportIndexRouteImport } from './routes/_authenticated.admin.support.index'
 import { Route as AuthenticatedAdminSupportCaseIdRouteImport } from './routes/_authenticated.admin.support.$caseId'
 import { Route as AuthenticatedHostMessagesIndexRouteImport } from './routes/_authenticated.host.messages.index'
@@ -338,6 +339,12 @@ const AuthenticatedAdminReviewsIndexRoute =
     path: '/admin/reviews/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSafetyCaseIdRoute =
+  AuthenticatedAdminSafetyCaseIdRouteImport.update({
+    id: '/admin/safety/$caseId',
+    path: '/admin/safety/$caseId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminSupportIndexRoute =
   AuthenticatedAdminSupportIndexRouteImport.update({
     id: '/admin/support/',
@@ -563,6 +570,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/host/': typeof AuthenticatedHostIndexRoute
   '/renter/': typeof AuthenticatedRenterIndexRoute
+  '/admin/safety/$caseId': typeof AuthenticatedAdminSafetyCaseIdRoute
   '/admin/support/$caseId': typeof AuthenticatedAdminSupportCaseIdRoute
   '/host/messages/$bookingId': typeof AuthenticatedHostMessagesBookingIdRoute
   '/host/payouts/refresh': typeof AuthenticatedHostPayoutsRefreshRoute
@@ -640,6 +648,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/host': typeof AuthenticatedHostIndexRoute
   '/renter': typeof AuthenticatedRenterIndexRoute
+  '/admin/safety/$caseId': typeof AuthenticatedAdminSafetyCaseIdRoute
   '/admin/support/$caseId': typeof AuthenticatedAdminSupportCaseIdRoute
   '/host/messages/$bookingId': typeof AuthenticatedHostMessagesBookingIdRoute
   '/host/payouts/refresh': typeof AuthenticatedHostPayoutsRefreshRoute
@@ -720,6 +729,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/host/': typeof AuthenticatedHostIndexRoute
   '/_authenticated/renter/': typeof AuthenticatedRenterIndexRoute
+  '/_authenticated/admin/safety/$caseId': typeof AuthenticatedAdminSafetyCaseIdRoute
   '/_authenticated/admin/support/$caseId': typeof AuthenticatedAdminSupportCaseIdRoute
   '/_authenticated/host/messages/$bookingId': typeof AuthenticatedHostMessagesBookingIdRoute
   '/_authenticated/host/payouts/refresh': typeof AuthenticatedHostPayoutsRefreshRoute
@@ -801,6 +811,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/host/'
     | '/renter/'
+    | '/admin/safety/$caseId'
     | '/admin/support/$caseId'
     | '/host/messages/$bookingId'
     | '/host/payouts/refresh'
@@ -878,6 +889,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/host'
     | '/renter'
+    | '/admin/safety/$caseId'
     | '/admin/support/$caseId'
     | '/host/messages/$bookingId'
     | '/host/payouts/refresh'
@@ -957,6 +969,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/host/'
     | '/_authenticated/renter/'
+    | '/_authenticated/admin/safety/$caseId'
     | '/_authenticated/admin/support/$caseId'
     | '/_authenticated/host/messages/$bookingId'
     | '/_authenticated/host/payouts/refresh'
@@ -1363,6 +1376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminReviewsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/safety/$caseId': {
+      id: '/_authenticated/admin/safety/$caseId'
+      path: '/admin/safety/$caseId'
+      fullPath: '/admin/safety/$caseId'
+      preLoaderRoute: typeof AuthenticatedAdminSafetyCaseIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/support/': {
       id: '/_authenticated/admin/support/'
       path: '/admin/support'
@@ -1692,6 +1712,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
   AuthenticatedAdminMarketingRoute: typeof AuthenticatedAdminMarketingRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminSafetyCaseIdRoute: typeof AuthenticatedAdminSafetyCaseIdRoute
   AuthenticatedAdminSupportCaseIdRoute: typeof AuthenticatedAdminSupportCaseIdRoute
   AuthenticatedSupportCasesCaseIdRoute: typeof AuthenticatedSupportCasesCaseIdRoute
   AuthenticatedAdminPolicyIndexRoute: typeof AuthenticatedAdminPolicyIndexRoute
@@ -1709,6 +1730,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
   AuthenticatedAdminMarketingRoute: AuthenticatedAdminMarketingRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminSafetyCaseIdRoute: AuthenticatedAdminSafetyCaseIdRoute,
   AuthenticatedAdminSupportCaseIdRoute: AuthenticatedAdminSupportCaseIdRoute,
   AuthenticatedSupportCasesCaseIdRoute: AuthenticatedSupportCasesCaseIdRoute,
   AuthenticatedAdminPolicyIndexRoute: AuthenticatedAdminPolicyIndexRoute,

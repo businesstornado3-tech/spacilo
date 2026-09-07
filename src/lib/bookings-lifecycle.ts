@@ -270,7 +270,8 @@ export type ActivationRejection =
   | "cancelled"
   | "completed"
   | "before_start_date"
-  | "financially_blocked";
+  | "financially_blocked"
+  | "agreement_required";
 
 export interface ActivationFacts {
   booking: Pick<Booking, "status" | "start_date" | "end_date" | "renter_id" | "host_id">;
@@ -279,8 +280,14 @@ export interface ActivationFacts {
   paid: boolean;
   /** A dispute or other financial hold is open against this booking. */
   financiallyBlocked?: boolean;
+  /**
+   * The bilateral Storage Agreement is ACTIVE (both parties accepted the same
+   * version). `undefined` means "not yet known", which never blocks on its own.
+   */
+  agreementActive?: boolean;
   now?: Date;
 }
+
 
 export type CompletionRejection =
   | "not_a_participant"
@@ -392,8 +399,16 @@ export function exactAddressVisible(
  * any point during storage: renters do sometimes collect early.
  */
 export function handoverGate(facts: ActivationFacts): GateResult {
-  return activationGate(facts);
+  const base = activationGate(facts);
+  if (!base.allowed) return base;
+  // The bilateral Storage Agreement must be ACTIVE before the items are
+  // finalised in the space. `stow_require_active_agreement` is the authority.
+  if (facts.agreementActive === false) {
+    return { allowed: false, reason: "agreement_required" };
+  }
+  return base;
 }
+
 
 export type CollectionRejection = "not_a_participant" | "not_active" | "cancelled";
 

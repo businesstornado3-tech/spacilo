@@ -34,6 +34,7 @@ export const ADMIN_SECTIONS: AdminSection[] = [
   { id: "earnroom-ai", label: "EarnRoom AI" },
   { id: "growth", label: "Growth radar" },
   { id: "operations", label: "Operations" },
+  { id: "safety", label: "Safety" },
   { id: "data-health", label: "Data health" },
 ];
 

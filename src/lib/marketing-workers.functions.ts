@@ -198,9 +198,10 @@ export const registerVideoWorker = createServerFn({ method: "POST" })
     if (error) throw new Error("That worker could not be added. Check the name is not already used.");
 
     await supabase.from("marketing_audit").insert({
-      action: "VIDEO_WORKER_REGISTERED",
+      action: "video_worker_registered",
+      actor: "human",
       actor_id: userId,
-      detail: { workerId: row.id, mode: data.mode, label: data.label },
+      detail: `${WORKER_LABEL[data.mode]} "${data.label}" registered.`,
     });
 
     return {
@@ -220,9 +221,10 @@ export const removeVideoWorker = createServerFn({ method: "POST" })
     await assertAdmin(supabase);
     await supabase.from("marketing_video_workers").delete().eq("id", data.workerId);
     await supabase.from("marketing_audit").insert({
-      action: "VIDEO_WORKER_REMOVED",
+      action: "video_worker_removed",
+      actor: "human",
       actor_id: userId,
-      detail: { workerId: data.workerId },
+      detail: `Video worker ${data.workerId} removed.`,
     });
     return { ok: true };
   });
@@ -240,9 +242,10 @@ export const setVideoWorkerEnabled = createServerFn({ method: "POST" })
       .update({ enabled: data.enabled })
       .eq("id", data.workerId);
     await supabase.from("marketing_audit").insert({
-      action: data.enabled ? "VIDEO_WORKER_ENABLED" : "VIDEO_WORKER_DISABLED",
+      action: data.enabled ? "video_worker_enabled" : "video_worker_disabled",
+      actor: "human",
       actor_id: userId,
-      detail: { workerId: data.workerId },
+      detail: `Video worker ${data.workerId} ${data.enabled ? "switched on" : "switched off"}.`,
     });
     return { ok: true };
   });
@@ -283,9 +286,10 @@ export const updateVideoWorkerPreferences = createServerFn({ method: "POST" })
       .from("marketing_settings")
       .upsert({ id: true, settings: { ...settings, videoWorker: next } });
     await supabase.from("marketing_audit").insert({
-      action: "VIDEO_WORKER_SETTINGS_UPDATED",
+      action: "video_worker_settings_updated",
+      actor: "human",
       actor_id: userId,
-      detail: { ...data },
+      detail: `Video worker settings updated: default ${next.defaultWorker}, paid compute ${next.paidComputeEnabled ? "on" : "off"}.`,
     });
     return next;
   });

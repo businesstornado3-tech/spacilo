@@ -192,7 +192,7 @@ export const getMarketingStudio = createServerFn({ method: "GET" })
     const planDate = londonDate(now);
     const { data: todayRow } = await supabase
       .from("marketing_campaigns")
-      .select("campaign")
+      .select("campaign, status, approved_at, decided_at, decision_note")
       .eq("plan_date", planDate)
       .order("created_at", { ascending: false })
       .limit(1)

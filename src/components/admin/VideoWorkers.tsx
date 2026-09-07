@@ -11,6 +11,7 @@
 import * as React from "react";
 
 import { Alert } from "@/components/common/Alert";
+import { ComputerSetup } from "@/components/admin/ComputerSetup";
 import { useVideoWorkers } from "@/hooks/useVideoWorkers";
 import {
   CAPABILITY_LABEL,
@@ -80,16 +81,6 @@ const PREFERENCE_OPTIONS: { value: WorkerPreference; label: string }[] = [
 
 /** Setup guidance. Honest: no installer is offered because none exists yet. */
 const SETUP_STEPS: Partial<Record<WorkerMode, { title: string; steps: string[]; note: string }>> = {
-  LOCAL: {
-    title: "Connect your computer",
-    steps: [
-      "On the computer that will make videos (ideally one with a dedicated graphics card), install Python 3.11 or newer.",
-      "Copy the worker folder from the EarnRoom project at worker/desktop onto that computer.",
-      "Create a setup code below, then run: python earnroom_worker.py --pair YOURCODE --site https://earnroom.co.uk",
-      "Leave it running. The computer appears here within a minute, with its real graphics memory and memory.",
-    ],
-    note: "A ready-made installer you can double-click is not available yet, so this step still needs someone to run that one command on the machine. Nothing secret is shown here — the computer creates its own key during setup.",
-  },
   FREE_CLOUD: {
     title: "Connect a free cloud worker",
     steps: [
@@ -202,14 +193,7 @@ export function VideoWorkers() {
   const workers = useVideoWorkers(true);
   const snapshot = workers.query.data;
   const [notice, setNotice] = React.useState<string | null>(null);
-  const [token, setToken] = React.useState<string | null>(null);
   const [setupFor, setSetupFor] = React.useState<WorkerMode | null>(null);
-  const [form, setForm] = React.useState({
-    mode: "LOCAL" as "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD",
-    label: "",
-    endpointUrl: "",
-    provider: "",
-  });
 
   if (workers.query.isError) {
     return (

@@ -1,40 +1,43 @@
-# EarnRoom desktop video worker
+# EarnRoom Video Worker (Windows, macOS, Linux)
 
-Lets a Windows, macOS or Linux computer make EarnRoom marketing videos at no
-running cost. It reports what the machine can do; EarnRoom decides whether to
-use it.
+Lets a computer make EarnRoom marketing videos at no running cost. It reports
+what the machine can do; EarnRoom decides whether to use it.
 
-## There is no ready-made installer yet
+## Windows — the normal route
 
-A signed, double-click installer is **not available yet**. Setting this up
-still needs a person to run a command on the machine. That limitation is stated
-in the Founder Console too, so nobody expects a download that does not exist.
+In the Founder Console: **Advanced administration → Set up where videos are
+made → My computer → Set up my computer**. EarnRoom downloads the installer,
+you open it, and the computer connects itself. There is no code to type and no
+key to copy: the setup session travels in the installer's filename, and the
+worker creates its own key on the machine.
 
-## Set it up
+The installer is built by `.github/workflows/windows-worker.yml` on a real
+Windows runner and published as a release asset. Set
+`EARNROOM_WORKER_INSTALLER_URL` to that asset's address to switch the button
+on. Until that is set, the console says plainly that no installer exists — it
+never offers a download that isn't real.
 
-1. In the Founder Console, open **Advanced administration → Set up where videos
-   are made → My computer** and create a setup code. The code lasts 30 minutes
-   and can be used once.
-2. On the computer that will make videos, install Python 3.11 or newer.
-3. Run, replacing the code with yours:
+**It is not code-signed.** Windows will show an "unknown publisher" warning
+until a code-signing certificate is bought and added to the workflow.
 
-   ```powershell
-   python earnroom_worker.py --pair ABCD2345 --site https://earnroom.co.uk
-   ```
+## macOS and Linux
 
-4. Leave the window open. The computer appears in the console within a minute,
-   with its real graphics memory, memory and installed models.
+Install Python 3.11+, then:
 
-The access token is created on this machine during pairing and written to
-`%USERPROFILE%\.earnroom-worker\worker.json` (owner-readable only). It is never
-shown in the console and EarnRoom stores only a hash of it.
+```bash
+python earnroom_worker.py --pair ABCD2345 --site https://earnroom.co.uk
+```
 
-## Keep it running
+The setup code comes from the same console section.
 
-- Windows: `build_windows.ps1` produces `dist\earnroom-worker.exe` with
-  PyInstaller and registers a per-user scheduled task that starts it at logon.
-- macOS/Linux: run it under `launchd`, `systemd --user`, or simply leave the
-  terminal open.
+## Files
+
+- `earnroom_core.py` — pairing, hardware detection, reporting in (shared).
+- `earnroom_app.py` — the Windows app window: Connecting / Connected / Offline
+  / Needs setup / Error, stop button, hardware view, starts at logon.
+- `earnroom_worker.py` — the command-line worker for macOS and Linux.
+- `installer/earnroom-worker.iss` — the Inno Setup installer script.
+- `build_windows.ps1` — local Windows build, same steps as the workflow.
 
 ## What it sends
 

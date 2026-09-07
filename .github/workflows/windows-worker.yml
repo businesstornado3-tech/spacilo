@@ -1,0 +1,69 @@
+# Builds the real EarnRoom Video Worker for Windows on a genuine Windows
+# runner: the app executable with PyInstaller, then the Inno Setup installer.
+#
+# The result is published as a release asset. Point the EARNROOM_WORKER_INSTALLER_URL
+# setting at that asset and the Founder Console's "Set up my computer" button
+# serves it. Until that is done, the console honestly says no installer exists.
+#
+# The installer is NOT code-signed. Windows SmartScreen will warn about an
+# unknown publisher until a code-signing certificate is purchased.
+name: Windows video worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to build, e.g. 1.0.0
+        required: true
+        default: 1.0.0
+  push:
+    tags:
+      - "worker-v*"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: worker/desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: echo "value=${{ github.event.inputs.version || github.ref_name }}" >> "$GITHUB_OUTPUT"
+
+      - name: Install build tools
+        run: python -m pip install --upgrade pip pyinstaller
+
+      - name: Build the worker application
+        run: >
+          pyinstaller --onefile --noconsole --name earnroom-worker
+          --hidden-import earnroom_core earnroom_app.py
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build the installer
+        env:
+          EARNROOM_WORKER_VERSION: ${{ steps.version.outputs.value }}
+        run: >
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\earnroom-worker.iss
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EarnRoom-Video-Worker-Setup
+          path: worker/desktop/dist/EarnRoom-Video-Worker-Setup.exe
+
+      - name: Publish as a release asset
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: worker/desktop/dist/EarnRoom-Video-Worker-Setup.exe

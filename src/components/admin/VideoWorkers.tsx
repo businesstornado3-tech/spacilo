@@ -11,6 +11,7 @@
 import * as React from "react";
 
 import { Alert } from "@/components/common/Alert";
+import { ComputerSetup } from "@/components/admin/ComputerSetup";
 import { useVideoWorkers } from "@/hooks/useVideoWorkers";
 import {
   CAPABILITY_LABEL,
@@ -80,16 +81,6 @@ const PREFERENCE_OPTIONS: { value: WorkerPreference; label: string }[] = [
 
 /** Setup guidance. Honest: no installer is offered because none exists yet. */
 const SETUP_STEPS: Partial<Record<WorkerMode, { title: string; steps: string[]; note: string }>> = {
-  LOCAL: {
-    title: "Connect your computer",
-    steps: [
-      "On the computer that will make videos (ideally one with a dedicated graphics card), install Python 3.11 or newer.",
-      "Copy the worker folder from the EarnRoom project at worker/desktop onto that computer.",
-      "Create a setup code below, then run: python earnroom_worker.py --pair YOURCODE --site https://earnroom.co.uk",
-      "Leave it running. The computer appears here within a minute, with its real graphics memory and memory.",
-    ],
-    note: "A ready-made installer you can double-click is not available yet, so this step still needs someone to run that one command on the machine. Nothing secret is shown here — the computer creates its own key during setup.",
-  },
   FREE_CLOUD: {
     title: "Connect a free cloud worker",
     steps: [
@@ -202,14 +193,7 @@ export function VideoWorkers() {
   const workers = useVideoWorkers(true);
   const snapshot = workers.query.data;
   const [notice, setNotice] = React.useState<string | null>(null);
-  const [token, setToken] = React.useState<string | null>(null);
   const [setupFor, setSetupFor] = React.useState<WorkerMode | null>(null);
-  const [form, setForm] = React.useState({
-    mode: "LOCAL" as "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD",
-    label: "",
-    endpointUrl: "",
-    provider: "",
-  });
 
   if (workers.query.isError) {
     return (
@@ -342,7 +326,11 @@ export function VideoWorkers() {
                 )}
               </div>
 
-              {setupFor === card.mode && SETUP_STEPS[card.mode] ? (
+              {setupFor === card.mode && card.mode === "LOCAL" ? (
+                <ComputerSetup onConnected={() => setNotice("Your computer is connected.")} />
+              ) : null}
+
+              {setupFor === card.mode && card.mode !== "LOCAL" && SETUP_STEPS[card.mode] ? (
                 <div className="mt-3 rounded-lg border border-border bg-secondary/40 p-3">
                   <p className="type-body-sm font-semibold">{SETUP_STEPS[card.mode]!.title}</p>
                   <ol className="mt-2 list-decimal space-y-1 pl-4 type-body-xs text-muted-foreground">
@@ -466,81 +454,14 @@ export function VideoWorkers() {
           </ul>
 
           <div className="rounded-lg border border-border p-3">
-            <h5 className="type-body-sm font-semibold">Add a worker</h5>
+            <h5 className="type-body-sm font-semibold">Adding another machine</h5>
             <p className="mt-1 type-body-xs text-muted-foreground">
-              You'll get an access token once. Put it on the machine running the worker — EarnRoom
-              keeps only a fingerprint of it.
+              Machines are added through setup, never by hand: the computer creates its own key
+              during setup and EarnRoom keeps only a fingerprint of it. No key is ever displayed
+              here.
             </p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <label className="type-body-xs">
-                Kind
-                <select
-                  className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-2 type-body-sm"
-                  value={form.mode}
-                  onChange={(event) =>
-                    setForm({ ...form, mode: event.target.value as typeof form.mode })
-                  }
-                >
-                  <option value="LOCAL">My own computer</option>
-                  <option value="FREE_CLOUD">Free cloud worker</option>
-                  <option value="PAID_CLOUD">Paid cloud worker</option>
-                </select>
-              </label>
-              <label className="type-body-xs">
-                Name
-                <input
-                  className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-2 type-body-sm"
-                  value={form.label}
-                  onChange={(event) => setForm({ ...form, label: event.target.value })}
-                  placeholder="Studio desktop"
-                />
-              </label>
-              <label className="type-body-xs">
-                Address (optional)
-                <input
-                  className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-2 type-body-sm"
-                  value={form.endpointUrl}
-                  onChange={(event) => setForm({ ...form, endpointUrl: event.target.value })}
-                  placeholder="https://…"
-                />
-              </label>
-              <label className="type-body-xs">
-                Service name (optional)
-                <input
-                  className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-2 type-body-sm"
-                  value={form.provider}
-                  onChange={(event) => setForm({ ...form, provider: event.target.value })}
-                />
-              </label>
-            </div>
-            <button
-              type="button"
-              disabled={form.label.trim().length < 2 || workers.register.isPending}
-              className="mt-3 min-h-10 rounded-lg bg-primary px-3 type-body-sm text-primary-foreground disabled:opacity-50"
-              onClick={() =>
-                workers.register
-                  .mutateAsync({
-                    mode: form.mode,
-                    label: form.label.trim(),
-                    endpointUrl: form.endpointUrl.trim() || null,
-                    provider: form.provider.trim() || null,
-                  })
-                  .then((result) => {
-                    setToken(result.token);
-                    setForm({ ...form, label: "", endpointUrl: "", provider: "" });
-                  })
-                  .catch((error: Error) => setNotice(error.message))
-              }
-            >
-              Add worker
-            </button>
-            {token ? (
-              <Alert tone="warning" title="Copy this access token now">
-                <code className="break-all type-body-xs">{token}</code>
-                <p className="mt-1 type-body-xs">It is shown once and cannot be retrieved again.</p>
-              </Alert>
-            ) : null}
           </div>
+
 
           <div className="rounded-lg border border-border p-3">
             <h5 className="type-body-sm font-semibold">Generation controls</h5>

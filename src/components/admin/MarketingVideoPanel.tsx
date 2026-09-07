@@ -17,7 +17,8 @@ import { useVideoWorkers } from "@/hooks/useVideoWorkers";
 import { buildAnimatedPlan } from "@/lib/marketing/animation";
 import { founderCards, type FounderCard } from "@/lib/marketing/workers/founder-view";
 import { definition } from "@/lib/marketing/platforms";
-import type { CampaignStory, PlatformAsset } from "@/lib/marketing/types";
+import { playerBox, versionRow } from "@/lib/marketing/review";
+import type { AspectRatio, CampaignStory, PlatformAsset } from "@/lib/marketing/types";
 import { cn } from "@/lib/utils";
 
 type WorkerChoice = "AUTO" | "BROWSER" | "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD";
@@ -55,6 +56,31 @@ async function toBase64(blob: Blob): Promise<string> {
     binary += String.fromCharCode(...buffer.subarray(i, i + chunk));
   }
   return btoa(binary);
+}
+
+/**
+ * A compact, aspect-correct player. A portrait clip is never stretched across
+ * the page: it stays the size it will actually be watched at.
+ */
+function CompactPlayer({
+  aspect,
+  src,
+  className,
+}: {
+  aspect: AspectRatio;
+  src: string;
+  className?: string;
+}) {
+  const box = playerBox(aspect);
+  return (
+    <video
+      controls
+      preload="metadata"
+      src={src}
+      style={{ width: "100%", maxWidth: box.widthPx, aspectRatio: aspect.replace(":", " / ") }}
+      className={cn("rounded-lg bg-secondary", className)}
+    />
+  );
 }
 
 function StatusChip({ card }: { card: FounderCard }) {
@@ -330,12 +356,7 @@ export function MarketingVideoPanel({
         </div>
 
         {coreVideo?.playbackUrl ? (
-          <video
-            controls
-            preload="metadata"
-            src={coreVideo.playbackUrl}
-            className="mt-3 w-full rounded-lg bg-secondary"
-          />
+          <CompactPlayer aspect={core?.aspect ?? "9:16"} src={coreVideo.playbackUrl} />
         ) : (
           <div className="mt-3 flex h-40 items-center justify-center rounded-lg border border-dashed border-border px-4 text-center type-body-sm text-muted-foreground">
             {working
@@ -425,26 +446,50 @@ export function MarketingVideoPanel({
           <ul className="mt-3 grid gap-3 sm:grid-cols-2">
             {versions.map((asset) => {
               const video = rows.find((row) => row.assetId === asset.id) ?? null;
+              // The stored file is the only thing that can prove a version
+              // exists, so the row is built from it — never from the plan.
+              const row = versionRow(
+                {
+                  ...asset,
+                  videoUrl: video?.playbackUrl ?? null,
+                  videoStatus:
+                    video?.status === "GENERATING"
+                      ? "GENERATING"
+                      : video?.playbackUrl
+                        ? "GENERATED"
+                        : video
+                          ? "FAILED"
+                          : "NOT_REQUESTED",
+                },
+                definition(asset.platform).label,
+              );
               return (
                 <li key={asset.id} className="rounded-xl border border-border p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="type-body-sm font-semibold">
-                      {definition(asset.platform).label}
-                    </span>
-                    <span className="type-body-xs text-muted-foreground">
-                      {asset.aspect} · {asset.seconds}s
-                    </span>
+                    <span className="type-body-sm font-semibold">{row.label}</span>
+                    <span className="type-body-xs text-muted-foreground">{row.meta}</span>
                   </div>
-                  {video?.playbackUrl ? (
-                    <video
-                      controls
-                      preload="metadata"
+                  <p
+                    className={cn(
+                      "mt-1 type-body-xs font-medium",
+                      row.tone === "good"
+                        ? "text-success-soft-foreground"
+                        : row.tone === "bad"
+                          ? "text-destructive"
+                          : "text-warning-soft-foreground",
+                    )}
+                  >
+                    {row.status}
+                  </p>
+                  {row.hasVideo && video?.playbackUrl ? (
+                    <CompactPlayer
+                      aspect={asset.aspect}
                       src={video.playbackUrl}
-                      className="mt-2 w-full rounded-lg bg-secondary"
+                      className="mt-2"
                     />
                   ) : (
-                    <p className="mt-2 type-body-xs text-muted-foreground">
-                      {video ? statusLabel(video.status) : "Made automatically with your video."}
+                    <p className="mt-1 type-body-xs text-muted-foreground">
+                      {video ? statusLabel(video.status) : row.detail}
                     </p>
                   )}
                 </li>

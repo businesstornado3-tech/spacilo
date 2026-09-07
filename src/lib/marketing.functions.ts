@@ -52,6 +52,13 @@ export interface MarketingStudioSnapshot {
   settings: MarketingSettings;
   capabilities: PlatformCapability[];
   today: MarketingCampaign | null;
+  /** The founder's live decision on today's campaign, if there is one. */
+  todayDecision: {
+    status: string;
+    approvedAt: string | null;
+    decidedAt: string | null;
+    note: string | null;
+  } | null;
   recent: {
     id: string;
     planDate: string;
@@ -192,7 +199,7 @@ export const getMarketingStudio = createServerFn({ method: "GET" })
     const planDate = londonDate(now);
     const { data: todayRow } = await supabase
       .from("marketing_campaigns")
-      .select("campaign")
+      .select("campaign, status, approved_at, decided_at, decision_note")
       .eq("plan_date", planDate)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -216,6 +223,16 @@ export const getMarketingStudio = createServerFn({ method: "GET" })
       settings,
       capabilities: allCapabilities(connections, settings, now),
       today: (todayRow?.campaign ?? null) as MarketingCampaign | null,
+      // The live decision, read from its own columns rather than the stored
+      // plan, so an approval or rejection survives a page refresh.
+      todayDecision: todayRow
+        ? {
+            status: String(todayRow.status ?? "PLANNED"),
+            approvedAt: (todayRow.approved_at ?? null) as string | null,
+            decidedAt: (todayRow.decided_at ?? null) as string | null,
+            note: (todayRow.decision_note ?? null) as string | null,
+          }
+        : null,
       recent: ((recentRows ?? []) as any[]).map((row) => ({
         id: row.id,
         planDate: row.plan_date,
@@ -347,12 +364,15 @@ export const decideMarketingCampaign = createServerFn({ method: "POST" })
     const approved = data.decision === "APPROVE";
     const status = approved ? "APPROVED" : "REJECTED";
 
+    const decidedAt = new Date().toISOString();
     const { error } = await supabase
       .from("marketing_campaigns")
       .update({
         status,
         approved_by: approved ? context.userId : null,
-        approved_at: approved ? new Date().toISOString() : null,
+        approved_at: approved ? decidedAt : null,
+        decided_at: decidedAt,
+        decision_note: data.note ?? null,
       })
       .eq("id", data.campaignId);
     if (error) throw new Error(error.message);

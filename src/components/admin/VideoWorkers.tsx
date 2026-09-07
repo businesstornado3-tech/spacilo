@@ -81,19 +81,20 @@ const PREFERENCE_OPTIONS: { value: WorkerPreference; label: string }[] = [
 /** Setup guidance. Honest: no installer is offered because none exists yet. */
 const SETUP_STEPS: Partial<Record<WorkerMode, { title: string; steps: string[]; note: string }>> = {
   LOCAL: {
-    title: "Install the EarnRoom video worker on your computer",
+    title: "Connect your computer",
     steps: [
-      "The worker application runs on a computer with a dedicated graphics card and reports in to EarnRoom on its own.",
-      "Add the computer under Advanced worker administration to get its one-time access token.",
-      "Put that token on the computer running the worker. EarnRoom keeps only a fingerprint of it.",
+      "On the computer that will make videos (ideally one with a dedicated graphics card), install Python 3.11 or newer.",
+      "Copy the worker folder from the EarnRoom project at worker/desktop onto that computer.",
+      "Create a setup code below, then run: python earnroom_worker.py --pair YOURCODE --site https://earnroom.co.uk",
+      "Leave it running. The computer appears here within a minute, with its real graphics memory and memory.",
     ],
-    note: "A ready-made installer download is not available yet, so this step still needs a person to set the worker running on the machine.",
+    note: "A ready-made installer you can double-click is not available yet, so this step still needs someone to run that one command on the machine. Nothing secret is shown here — the computer creates its own key during setup.",
   },
   FREE_CLOUD: {
     title: "Connect a free cloud worker",
     steps: [
       "A free cloud worker is a GPU machine running the EarnRoom worker on a free allowance.",
-      "Add it under Advanced worker administration with its address to get a one-time access token.",
+      "Create a setup code below and pair it the same way as your own computer.",
       "It appears here as ready only once it has actually checked in.",
     ],
     note: "No free cloud worker is deployed for EarnRoom yet. Nothing here is simulated — the card stays 'Not connected' until a real worker reports in.",
@@ -129,6 +130,72 @@ function statusTone(word: string): string {
 
 function jumpToGenerator() {
   document.getElementById("today")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/**
+ * Setup codes. The founder never handles a secret: the code is short-lived and
+ * single-use, and the computer creates its own key when it pairs.
+ */
+function PairingPanel({
+  mode,
+  pairings,
+  pending,
+  onCreate,
+}: {
+  mode: WorkerMode;
+  pairings: { code: string; label: string; expiresAt: string; claimedAt: string | null }[];
+  pending: boolean;
+  onCreate: (label: string) => void;
+}) {
+  const [label, setLabel] = React.useState(mode === "LOCAL" ? "My computer" : "Free cloud worker");
+  const live = pairings.filter(
+    (entry) => !entry.claimedAt && Date.parse(entry.expiresAt) > Date.now(),
+  );
+  return (
+    <div className="mt-3 rounded-lg border border-border p-3">
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="type-body-xs">
+          Name this machine
+          <input
+            value={label}
+            maxLength={80}
+            onChange={(event) => setLabel(event.target.value)}
+            className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-2 type-body-sm"
+          />
+        </label>
+        <button
+          type="button"
+          disabled={pending || label.trim().length < 2}
+          onClick={() => onCreate(label.trim())}
+          className="min-h-10 rounded-lg bg-primary px-3 type-body-sm text-primary-foreground disabled:opacity-50"
+        >
+          {pending ? "Creating…" : "Create setup code"}
+        </button>
+      </div>
+      {live.length > 0 ? (
+        <ul className="mt-3 space-y-1">
+          {live.map((entry) => (
+            <li key={entry.code} className="type-body-sm">
+              <code className="rounded bg-secondary px-2 py-1 font-mono tracking-widest">
+                {entry.code}
+              </code>{" "}
+              <span className="type-body-xs text-muted-foreground">
+                for {entry.label} · use before{" "}
+                {new Date(entry.expiresAt).toLocaleTimeString("en-GB", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 type-body-xs text-muted-foreground">
+          No setup code is waiting. Create one when you are at the machine.
+        </p>
+      )}
+    </div>
+  );
 }
 
 export function VideoWorkers() {
@@ -286,6 +353,17 @@ export function VideoWorkers() {
                   <p className="mt-2 type-body-xs text-warning-soft-foreground">
                     {SETUP_STEPS[card.mode]!.note}
                   </p>
+                  <PairingPanel
+                    mode={card.mode}
+                    pairings={workers.pairings.data?.pairings ?? []}
+                    pending={workers.createPairing.isPending}
+                    onCreate={(label) =>
+                      workers.createPairing
+                        .mutateAsync({ label })
+                        .then(() => setNotice("Setup code created. It lasts 30 minutes."))
+                        .catch((failure: Error) => setNotice(failure.message))
+                    }
+                  />
                 </div>
               ) : null}
             </li>

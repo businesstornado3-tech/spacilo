@@ -9,6 +9,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AdminShell, AdminSectionBlock } from "@/components/admin/AdminShell";
+import { CampaignDecision } from "@/components/admin/CampaignDecision";
 import { MarketingConnections } from "@/components/admin/MarketingConnections";
 import { MarketingVideoPanel } from "@/components/admin/MarketingVideoPanel";
 import { VideoWorkers } from "@/components/admin/VideoWorkers";
@@ -266,49 +267,30 @@ function MarketingStudioRoute() {
                   />
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      studio.decide.mutate({ campaignId: snapshot.today!.id, decision: "APPROVE" })
-                    }
-                    disabled={!snapshot.today.validation.passed || studio.decide.isPending}
-                    className="min-h-11 rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground disabled:opacity-60"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      studio.decide.mutate({ campaignId: snapshot.today!.id, decision: "REJECT" })
-                    }
-                    disabled={studio.decide.isPending}
-                    className="min-h-11 rounded-lg border border-border px-4 type-nav text-muted-foreground hover:bg-secondary"
-                  >
-                    Reject
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => studio.publish.mutate({ campaignId: snapshot.today!.id })}
-                    disabled={studio.publish.isPending}
-                    className="min-h-11 rounded-lg border border-border px-4 type-nav text-muted-foreground hover:bg-secondary"
-                  >
-                    Attempt publication
-                  </button>
-                </div>
-
-                {studio.publish.data ? (
-                  <Alert tone="info" title="Publication attempt">
-                    <ul className="space-y-1">
-                      {studio.publish.data.results.map((result) => (
-                        <li key={result.platform}>
-                          {definition(result.platform as never).label}:{" "}
-                          {result.state.replace(/_/g, " ").toLowerCase()} — {result.detail}
-                        </li>
-                      ))}
-                    </ul>
-                  </Alert>
-                ) : null}
+                <CampaignDecision
+                  campaign={snapshot.today}
+                  decision={snapshot.todayDecision}
+                  settings={snapshot.settings}
+                  capabilities={snapshot.capabilities}
+                  publications={snapshot.publications}
+                  deciding={studio.decide.isPending}
+                  publishing={studio.publish.isPending}
+                  onDecide={(input) =>
+                    studio.decide.mutate({ campaignId: snapshot.today!.id, ...input })
+                  }
+                  onPublish={() => studio.publish.mutate({ campaignId: snapshot.today!.id })}
+                  publishResults={
+                    studio.publish.data
+                      ? studio.publish.data.results.map((result) => ({
+                          ...result,
+                          platform: definition(result.platform as never).label,
+                        }))
+                      : null
+                  }
+                  error={
+                    ((studio.decide.error ?? studio.publish.error) as Error | null)?.message ?? null
+                  }
+                />
               </div>
             )}
           </AdminSectionBlock>

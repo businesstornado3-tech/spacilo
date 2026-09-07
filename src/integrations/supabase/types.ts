@@ -2575,6 +2575,8 @@ export type Database = {
           audience: string
           campaign: Json
           created_at: string
+          decided_at: string | null
+          decision_note: string | null
           hook: string
           id: string
           location_slug: string | null
@@ -2593,6 +2595,8 @@ export type Database = {
           audience: string
           campaign: Json
           created_at?: string
+          decided_at?: string | null
+          decision_note?: string | null
           hook: string
           id: string
           location_slug?: string | null
@@ -2611,6 +2615,8 @@ export type Database = {
           audience?: string
           campaign?: Json
           created_at?: string
+          decided_at?: string | null
+          decision_note?: string | null
           hook?: string
           id?: string
           location_slug?: string | null
@@ -2773,6 +2779,42 @@ export type Database = {
           settings?: Json
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      marketing_video_worker_pairings: {
+        Row: {
+          claimed_at: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          label: string
+          mode: string
+          worker_id: string | null
+        }
+        Insert: {
+          claimed_at?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          expires_at: string
+          id?: string
+          label: string
+          mode?: string
+          worker_id?: string | null
+        }
+        Update: {
+          claimed_at?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          label?: string
+          mode?: string
+          worker_id?: string | null
         }
         Relationships: []
       }

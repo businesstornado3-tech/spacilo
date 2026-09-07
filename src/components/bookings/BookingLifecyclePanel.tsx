@@ -83,7 +83,13 @@ export function BookingLifecyclePanel({
   const agreementActive =
     booking.status === "confirmed" ? isAgreementActive(agreement ?? null) : undefined;
 
-  const handover = handoverGate({ booking, viewerId, paid, financiallyBlocked, agreementActive });
+  const handover = handoverGate({
+    booking,
+    viewerId,
+    paid,
+    financiallyBlocked,
+    ...(agreementActive === undefined ? {} : { agreementActive }),
+  });
   const collection = collectionGate({ booking, viewerId });
 
   const handoverSteps = handoverProgress(booking, "handover");

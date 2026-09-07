@@ -44,7 +44,7 @@ export function useSetCaseSafety() {
         p_case_id: input.caseId,
         p_severity: input.severity,
         p_source: input.source,
-        p_note: input.note ?? null,
+        p_note: input.note,
       });
       if (error) throw error;
     },
@@ -69,7 +69,7 @@ export function useApplySafetySuspension() {
         p_state: input.state,
         p_reason: input.reason,
         p_source: input.source,
-        p_case_id: input.caseId ?? null,
+        p_case_id: input.caseId,
       });
       if (error) throw error;
     },

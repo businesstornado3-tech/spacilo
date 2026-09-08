@@ -165,7 +165,16 @@ export function MarketingVideoPanel({
     setStage("Drawing the scenes");
     try {
       const { renderAnimatedPlan } = await import("@/lib/marketing/animation/render.browser");
+      const { validatePlan, validateRender, qualityStatus } = await import(
+        "@/lib/marketing/animation/validation"
+      );
       const plan = buildAnimatedPlan({ campaignId, asset, story });
+      // Check the plan before a single frame is drawn: a bad plan costs nothing.
+      const planCheck = validatePlan(plan);
+      if (!planCheck.passed) {
+        setNotice(`This video was not made: ${planCheck.failures.join(" ")}`);
+        return false;
+      }
       const result = await renderAnimatedPlan(plan, {
         onProgress: (value) => {
           setProgress(value);

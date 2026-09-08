@@ -154,18 +154,17 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
               : null;
 
         if (!ok || !accessToken) {
-          await supabaseAdmin
-            .from("marketing_platform_connections")
-            .upsert(
-              {
-                platform,
-                connection: "NOT_CONNECTED",
-                last_error: "The platform did not return an authorisation.",
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: "platform" },
-            );
-          return page("Not connected", "The platform did not return an authorisation.", false);
+          const providerError =
+            typeof payload["error"] === "string"
+              ? (payload["error"] as string)
+              : typeof payload["error_description"] === "string"
+                ? (payload["error_description"] as string)
+                : "no reason given";
+          return fail(
+            "CODE_EXCHANGE_FAILED",
+            "Not connected",
+            `The platform did not return an authorisation (${providerError}).`,
+          );
         }
 
         const refreshToken =
@@ -175,18 +174,32 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
         const scopes = scopeText ? scopeText.split(/[ ,]+/).filter(Boolean) : [...def.scopes];
         const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null;
 
-        await supabaseAdmin.from("marketing_platform_tokens").upsert(
-          {
-            platform,
-            access_token_cipher: await encryptToken(accessToken),
-            refresh_token_cipher: refreshToken ? await encryptToken(refreshToken) : null,
-            scopes,
-            expires_at: expiresAt,
-            obtained_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "platform" },
-        );
+        let storeError: string | null = null;
+        try {
+          const { error } = await supabaseAdmin.from("marketing_platform_tokens").upsert(
+            {
+              platform,
+              access_token_cipher: await encryptToken(accessToken),
+              refresh_token_cipher: refreshToken ? await encryptToken(refreshToken) : null,
+              scopes,
+              expires_at: expiresAt,
+              obtained_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "platform" },
+          );
+          if (error) storeError = error.message;
+        } catch (caught) {
+          storeError = caught instanceof Error ? caught.message : "unknown storage failure";
+        }
+        if (storeError) {
+          return fail(
+            "TOKEN_STORAGE_FAILED",
+            "Not connected",
+            `The authorisation could not be saved securely (${storeError}).`,
+          );
+        }
+
 
         await supabaseAdmin.from("marketing_platform_connections").upsert(
           {

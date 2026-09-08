@@ -185,7 +185,13 @@ export function authorizeUrl(input: {
   );
   if (input.platform === "youtube" || input.platform === "youtube_shorts") {
     url.searchParams.set("access_type", "offline");
-    url.searchParams.set("prompt", "consent");
+    // `select_account consent` re-asks for the account and re-shows the
+    // permission screen even when the account already granted access, and
+    // granular consent renders each requested YouTube permission separately
+    // so a verification recording can show them. No scope is added or removed.
+    url.searchParams.set("prompt", "select_account consent");
+    url.searchParams.set("enable_granular_consent", "true");
+    url.searchParams.set("include_granted_scopes", "false");
   }
   return url.toString();
 }

@@ -268,3 +268,57 @@ describe("planned advertisement", () => {
     expect(validateRender(built, { ...outcome, characterFrames: 300 }).passed).toBe(true);
   });
 });
+
+describe("premium advertising qualities", () => {
+  it("changes framing across the film instead of holding one shot", () => {
+    const built = plan();
+    const framings = new Set(
+      built.scenes.filter((scene) => scene.role !== "endcard").map((scene) => scene.framing),
+    );
+    expect(framings.size).toBeGreaterThanOrEqual(3);
+    expect(scorePlan(built).SHOT_VARIETY).toBeGreaterThanOrEqual(75);
+  });
+
+  it("travels from an unsettled feeling to a settled one", () => {
+    const built = plan();
+    const moods = built.scenes.map((scene) => scene.mood);
+    expect(new Set(moods).size).toBeGreaterThanOrEqual(3);
+    expect(["relief", "delight"]).toContain(moods.at(-1));
+    expect(scorePlan(built).EMOTIONAL_ARC).toBe(100);
+  });
+
+  it("keeps the burned-in line short and takes every word from the campaign", () => {
+    const built = plan();
+    const source = `${movingStory.hook} ${movingStory.scenes.map((s) => s.caption).join(" ")}`;
+    for (const scene of built.scenes) {
+      if (scene.role === "endcard") continue;
+      expect(scene.caption.text.split(/\s+/).length).toBeLessThanOrEqual(8);
+      expect(source).toContain(scene.caption.text);
+    }
+    expect(scorePlan(built).VISUAL_STORYTELLING).toBe(100);
+  });
+
+  it("lets the people act rather than crowding them with badges", () => {
+    const built = plan();
+    for (const scene of built.scenes) {
+      if (!scene.cast.length) continue;
+      expect(scene.items.length).toBeLessThanOrEqual(1);
+      expect(scene.items.map((item) => item.element)).not.toContain("warning");
+    }
+  });
+
+  it("fails a plan that holds the same shot and feeling all the way through", () => {
+    const built = plan();
+    const flat = {
+      ...built,
+      scenes: built.scenes.map((scene) => ({
+        ...scene,
+        framing: "medium" as const,
+        mood: "tension" as const,
+      })),
+    };
+    const failures = validatePlan(flat).failures.join(" ");
+    expect(failures).toContain("framed the same way");
+    expect(failures).toContain("emotional change");
+  });
+});

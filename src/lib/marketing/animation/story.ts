@@ -52,6 +52,17 @@ export type CharacterCue = {
   delay: number;
 };
 
+/**
+ * How close the camera sits to the action. Advertising reads as advertising
+ * partly because the framing changes: a wide establishing shot, then a medium,
+ * then a face, then a detail. A film of identical mid shots reads as a slide
+ * deck however well it is drawn.
+ */
+export type Framing = "wide" | "medium" | "close" | "twoShot" | "detail";
+
+/** The feeling the scene is meant to leave, so the film has an emotional arc. */
+export type Mood = "tension" | "doubt" | "curiosity" | "hope" | "relief" | "delight";
+
 export type StoryboardScene = {
   index: number;
   beat: StoryBeat;
@@ -60,9 +71,60 @@ export type StoryboardScene = {
   /** Object library ids placed in the scene, on top of the environment. */
   props: readonly string[];
   shot: CameraShot;
+  /** How close the camera sits. Derived from the shot, never guessed. */
+  framing: Framing;
+  /** Where this scene sits on the emotional arc. */
+  mood: Mood;
   /** Plain-English note describing what changes in this scene. */
   note: string;
 };
+
+/** Framing follows the shot the storyboard already asked for. */
+export function framingForShot(shot: CameraShot): Framing {
+  switch (shot) {
+    case "establishing":
+    case "panLeft":
+    case "panRight":
+    case "reveal":
+      return "wide";
+    case "focusCharacter":
+      return "close";
+    case "focusObject":
+      return "detail";
+    case "twoShot":
+      return "twoShot";
+    default:
+      return "medium";
+  }
+}
+
+/**
+ * The arc every EarnRoom advertisement follows: it starts unsettled and ends
+ * settled. The beat decides the feeling, so the arc cannot drift.
+ */
+export function moodForBeat(beat: StoryBeat): Mood {
+  switch (beat) {
+    case "hook":
+      return "curiosity";
+    case "problem":
+      return "tension";
+    case "pain":
+      return "doubt";
+    case "discovery":
+      return "curiosity";
+    case "solution":
+    case "connection":
+      return "hope";
+    case "outcome":
+      return "relief";
+    default:
+      return "delight";
+  }
+}
+
+/** Moods that mean the story has resolved. The film must end on one of them. */
+export const RESOLVED_MOODS: readonly Mood[] = ["relief", "delight"];
+
 
 export type StoryTemplateId =
   | "STORAGE_PROBLEM"
@@ -84,7 +146,12 @@ export type Storyboard = {
   scenes: readonly StoryboardScene[];
 };
 
-type BeatTemplate = Omit<StoryboardScene, "index">;
+/**
+ * Templates state the shot; framing and mood follow from the shot and the beat,
+ * so no template can drift away from the arc.
+ */
+type BeatTemplate = Omit<StoryboardScene, "index" | "framing" | "mood"> &
+  Partial<Pick<StoryboardScene, "framing" | "mood">>;
 
 type StoryTemplate = {
   id: StoryTemplateId;
@@ -650,7 +717,12 @@ export function buildStoryboard(input: {
   const storyBeats = chosen.beats.filter((beat) => beat.beat !== "brand");
   const beats = compressBeats(storyBeats, input.sceneCount);
 
-  const scenes: StoryboardScene[] = beats.map((beat, index) => ({ ...beat, index }));
+  const scenes: StoryboardScene[] = beats.map((beat, index) => ({
+    ...beat,
+    index,
+    framing: beat.framing ?? framingForShot(beat.shot),
+    mood: beat.mood ?? moodForBeat(beat.beat),
+  }));
 
   const characters = [
     ...new Set(scenes.flatMap((scene) => scene.cast.map((member) => member.character))),

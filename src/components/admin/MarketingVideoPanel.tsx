@@ -165,7 +165,16 @@ export function MarketingVideoPanel({
     setStage("Drawing the scenes");
     try {
       const { renderAnimatedPlan } = await import("@/lib/marketing/animation/render.browser");
+      const { validatePlan, validateRender, qualityStatus } = await import(
+        "@/lib/marketing/animation/validation"
+      );
       const plan = buildAnimatedPlan({ campaignId, asset, story });
+      // Check the plan before a single frame is drawn: a bad plan costs nothing.
+      const planCheck = validatePlan(plan);
+      if (!planCheck.passed) {
+        setNotice(`This video was not made: ${planCheck.failures.join(" ")}`);
+        return false;
+      }
       const result = await renderAnimatedPlan(plan, {
         onProgress: (value) => {
           setProgress(value);
@@ -173,6 +182,9 @@ export function MarketingVideoPanel({
         },
       });
       setStage("Checking the branding");
+      // Check what was actually drawn, not what was intended.
+      const renderCheck = validateRender(plan, result.outcome);
+      const status = qualityStatus({ plan: planCheck, render: renderCheck });
       const stored = await videos.storeAnimated.mutateAsync({
         assetId: asset.id,
         platform: plan.platform,
@@ -184,11 +196,13 @@ export function MarketingVideoPanel({
         digest: plan.digest,
         scenes: plan.scenes.length,
         brandingNotes: [...plan.branding.notes],
+        qualityStatus: status,
+        qualityFailures: renderCheck.failures,
         mp4Base64: await toBase64(result.blob),
       });
       setNotice(
         stored.video.status === "RENDERED"
-          ? `Your video is ready — ${result.seconds.toFixed(1)} seconds, made in this browser, £0.`
+          ? `Your video is ready — ${result.seconds.toFixed(1)} seconds, made in this browser, £0. Quality check: production ready.`
           : `The file was made but did not pass its checks: ${stored.video.failureReason ?? "unknown reason"}`,
       );
       return stored.video.status === "RENDERED";

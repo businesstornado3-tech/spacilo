@@ -101,6 +101,14 @@ export function useCampaignVideos(campaignId: string | null) {
         digest: string;
         scenes: number;
         brandingNotes: string[];
+        /** Deterministic quality verdict from the browser renderer. */
+        qualityStatus:
+          | "DRAFT"
+          | "BROWSER_GENERATED"
+          | "BRAND_VALIDATED"
+          | "PRODUCTION_READY"
+          | "VALIDATION_FAILED";
+        qualityFailures: string[];
         mp4Base64: string;
       }) => storeAnimated({ data: { campaignId: campaignId!, ...input } }),
       onSuccess: invalidate,

@@ -1424,6 +1424,21 @@ export const storeAnimatedVideo = createServerFn({ method: "POST" })
         digest: z.string().min(4).max(64),
         scenes: z.number().int().min(1).max(40),
         brandingNotes: z.array(z.string().max(400)).max(10).default([]),
+        /**
+         * The deterministic quality verdict from the browser renderer. Only a
+         * clip that actually drew the official artwork and matched its plan is
+         * allowed to be stored as ready.
+         */
+        qualityStatus: z
+          .enum([
+            "DRAFT",
+            "BROWSER_GENERATED",
+            "BRAND_VALIDATED",
+            "PRODUCTION_READY",
+            "VALIDATION_FAILED",
+          ])
+          .default("DRAFT"),
+        qualityFailures: z.array(z.string().max(300)).max(20).default([]),
         /** Base64 MP4 produced locally. Capped so a request cannot be abused. */
         mp4Base64: z.string().min(100).max(40_000_000),
       })
@@ -1486,6 +1501,9 @@ export const storeAnimatedVideo = createServerFn({ method: "POST" })
         scenes: data.scenes,
         planDigest: data.digest,
         brandingNotes: data.brandingNotes,
+        qualityStatus: data.qualityStatus,
+        qualityFailures: data.qualityFailures,
+        audio: "none",
       },
       media_probe: media.probe,
       prompt: asset?.hook ?? null,
@@ -1537,26 +1555,37 @@ export const storeAnimatedVideo = createServerFn({ method: "POST" })
       },
     });
 
+    // A browser-made clip is only ready when the deterministic quality gate
+    // passed as well: the real logo drawn, the story intact, nothing missing.
+    const qualityPassed = data.qualityStatus === "PRODUCTION_READY";
+    const passed = brand.passed && qualityPassed;
+    const failureText = [
+      ...(brand.passed ? [] : brand.failures),
+      ...(qualityPassed ? [] : data.qualityFailures),
+    ].join(" ");
+
     const { data: stored } = await supabase
       .from("marketing_videos")
       .insert({
         ...baseRow,
-        status: brand.passed ? "RENDERED" : "BRAND_VALIDATION_FAILED",
-        queue_state: brand.passed ? "READY" : "FAILED",
+        status: passed ? "RENDERED" : "BRAND_VALIDATION_FAILED",
+        queue_state: passed ? "READY" : "FAILED",
         storage_path: path,
         duration_seconds: media.probe.durationSeconds ?? data.seconds,
-        brand_validation: brand,
-        failure_reason: brand.passed ? null : brand.failures.join(" "),
+        brand_validation: { ...brand, qualityStatus: data.qualityStatus },
+        failure_reason: passed
+          ? null
+          : failureText || "The video did not pass EarnRoom's quality checks.",
       })
       .select("*")
       .single();
 
     await supabase.from("marketing_audit").insert({
       campaign_id: data.campaignId,
-      action: brand.passed ? "video_rendered" : "brand_validation_failed",
-      detail: brand.passed
+      action: passed ? "video_rendered" : "brand_validation_failed",
+      detail: passed
         ? `Animated video made locally at no cost (${media.probe.width}×${media.probe.height}, ${media.probe.durationSeconds?.toFixed(1)}s) and stored for ${data.platform}.`
-        : brand.failures.join(" "),
+        : failureText,
       actor: "human",
       actor_id: context.userId,
     });

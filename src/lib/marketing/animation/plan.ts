@@ -6,8 +6,14 @@
  * module decides only what moves, where, and for how long, and it does so
  * deterministically: the same story always produces the same plan.
  *
+ * The narrative shape is fixed even though the words are not: every plan runs
+ * problem → pain → EarnRoom → renter → host → both sides → branded end card,
+ * trimmed to however many scenes the campaign actually has.
+ *
  * Pure module: no canvas, no network, no clock.
  */
+import iconAsset from "@/assets/brand/earnroom-icon-transparent.png.asset.json";
+import wordmarkAsset from "@/assets/brand/earnroom-wordmark-transparent.png.asset.json";
 import { brand } from "@/config/brand";
 import { siteOrigin } from "@/lib/seo/meta";
 
@@ -15,14 +21,21 @@ import type { CampaignStory, PlatformAsset, StoryScene } from "../types";
 import { elementsForText } from "./library";
 import { applyBranding, brandRules } from "./platform-branding";
 import {
+  COMPOSITIONS,
   FRAME_SIZES,
   type AnimatedPlan,
   type AnimatedScene,
+  type CameraMove,
   type Motion,
+  type SceneBackdrop,
   type SceneItem,
+  type SceneRole,
 } from "./types";
 
 const ENTRANCES: Motion[] = ["rise", "slide-left", "pop", "zoom", "slide-right", "bounce"];
+
+/** The narrative spine. Longer stories repeat the middle, never the ending. */
+const SPINE: SceneRole[] = ["problem", "pain", "solution", "renter", "host", "both"];
 
 /** Small, stable digest so an identical plan is recognisable across renders. */
 export function planDigest(value: unknown): string {
@@ -35,26 +48,112 @@ export function planDigest(value: unknown): string {
   return hash.toString(16).padStart(8, "0");
 }
 
-function layout(count: number, index: number): { x: number; y: number; size: number } {
-  if (count <= 1) return { x: 0.5, y: 0.44, size: 0.56 };
-  if (count === 2) return { x: index === 0 ? 0.31 : 0.69, y: 0.44, size: 0.38 };
-  const positions = [
-    { x: 0.28, y: 0.36 },
-    { x: 0.72, y: 0.36 },
-    { x: 0.5, y: 0.62 },
-  ];
-  const spot = positions[index] ?? positions[0]!;
-  return { x: spot.x, y: spot.y, size: 0.32 };
+/**
+ * Assigns each story scene its job in the narrative. The opening is always the
+ * problem and the last story scene always shows both sides, so a video cannot
+ * end in the middle of its own argument.
+ */
+export function rolesForStory(sceneCount: number): SceneRole[] {
+  const count = Math.max(1, sceneCount);
+  if (count === 1) return ["both"];
+  if (count >= SPINE.length) {
+    const roles = [...SPINE];
+    // Extra scenes extend the middle (the EarnRoom explanation), never the ends.
+    while (roles.length < count) roles.splice(3, 0, "solution");
+    return roles.slice(0, count);
+  }
+  const trimmed: SceneRole[] = ["problem"];
+  const middle: SceneRole[] = ["pain", "solution", "renter", "host"];
+  for (let i = 0; i < count - 2; i += 1) trimmed.push(middle[i] ?? "solution");
+  trimmed.push("both");
+  return trimmed;
 }
 
-function sceneItems(scene: StoryScene): SceneItem[] {
-  const ids = elementsForText(`${scene.visual} ${scene.caption}`);
+/** Illustrations the role always wants, so the narrative reads visually too. */
+const ROLE_ELEMENTS: Record<SceneRole, string[]> = {
+  problem: ["box-stack"],
+  pain: ["warning"],
+  solution: ["marketplace-link"],
+  renter: ["search-bar", "pin"],
+  host: ["garage", "earning"],
+  both: ["marketplace-link", "check"],
+  endcard: [],
+};
+
+/**
+ * The recurring cast for one campaign: the same people and objects reappear
+ * across scenes instead of every scene drawing something unrelated.
+ */
+export function castForStory(story: CampaignStory): string[] {
+  const text = [story.hook, ...story.scenes.map((scene) => `${scene.visual} ${scene.caption}`)].join(
+    " ",
+  );
+  return elementsForText(text).slice(0, 2);
+}
+
+function layout(
+  count: number,
+  index: number,
+  stageY: number,
+  stageScale: number,
+): { x: number; y: number; size: number } {
+  const scale = stageScale;
+  if (count <= 1) return { x: 0.5, y: stageY, size: 0.56 * scale };
+  if (count === 2)
+    return { x: index === 0 ? 0.32 : 0.68, y: stageY, size: 0.38 * scale };
+  const positions = [
+    { x: 0.29, y: stageY - 0.07 },
+    { x: 0.71, y: stageY - 0.07 },
+    { x: 0.5, y: stageY + 0.11 },
+  ];
+  const spot = positions[index] ?? positions[0]!;
+  return { x: spot.x, y: spot.y, size: 0.32 * scale };
+}
+
+function sceneItems(
+  scene: StoryScene,
+  role: SceneRole,
+  cast: readonly string[],
+  stageY: number,
+  stageScale: number,
+): SceneItem[] {
+  const fromWords = elementsForText(`${scene.visual} ${scene.caption}`);
+  const ids = [...new Set([...ROLE_ELEMENTS[role], ...cast, ...fromWords])].slice(0, 3);
   return ids.map((id, index) => ({
     element: id,
-    ...layout(ids.length, index),
+    ...layout(ids.length, index, stageY, stageScale),
     motion: ENTRANCES[(scene.index + index) % ENTRANCES.length]!,
     delay: Math.min(0.18 * index, Math.max(0, scene.seconds - 0.4)),
+    // Later items sit nearer the viewer, so the camera move separates them.
+    depth: ids.length <= 1 ? 0.6 : 0.35 + (index / Math.max(1, ids.length - 1)) * 0.55,
   }));
+}
+
+/** Slow, alternating camera moves. Deterministic, and never more than 8%. */
+function camera(index: number, role: SceneRole): CameraMove {
+  if (role === "endcard")
+    return { fromScale: 1.04, toScale: 1, fromX: 0, toX: 0, fromY: 0, toY: 0 };
+  const push = index % 2 === 0;
+  const drift = index % 4 < 2 ? 0.02 : -0.02;
+  return {
+    fromScale: push ? 1.0 : 1.07,
+    toScale: push ? 1.07 : 1.0,
+    fromX: -drift,
+    toX: drift,
+    fromY: drift * 0.6,
+    toY: -drift * 0.6,
+  };
+}
+
+function backdrop(index: number, role: SceneRole): SceneBackdrop {
+  if (role === "endcard")
+    return { base: "primary", tint: "primarySoft", motes: 5, horizon: false };
+  return {
+    base: index % 2 === 0 ? "canvas" : "surface",
+    tint: role === "host" || role === "both" ? "success" : "primarySoft",
+    motes: 6,
+    horizon: true,
+  };
 }
 
 /**
@@ -73,51 +172,71 @@ export function buildAnimatedPlan(input: {
   const rules = brandRules(asset.platform);
   const fps = input.fps ?? 30;
   const frame = FRAME_SIZES[asset.aspect];
+  const composition = COMPOSITIONS[asset.aspect];
+  const website = siteOrigin().replace(/^https?:\/\//, "");
 
   const branding = applyBranding({
     platform: asset.platform,
     tagline: brand.tagline,
-    website: siteOrigin().replace(/^https?:\/\//, ""),
+    website,
     cta: asset.cta,
   });
 
   const budget = Math.min(asset.seconds, rules.maxSeconds);
   const storySeconds = story.scenes.reduce((total, scene) => total + scene.seconds, 0) || 1;
-  const endCardSeconds = branding.showEndCard ? Math.min(2.5, budget * 0.22) : 0;
+  const endCardSeconds = branding.showEndCard ? Math.min(3, budget * 0.24) : 0;
   const scale = (budget - endCardSeconds) / storySeconds;
 
-  const scenes: AnimatedScene[] = story.scenes.map((scene, position) => ({
-    index: position,
-    seconds: Math.max(1, Number((scene.seconds * scale).toFixed(2))),
-    background: position % 2 === 0 ? "canvas" : "surface",
-    items: sceneItems(scene),
-    caption: {
-      text: position === 0 ? story.hook || scene.caption : scene.caption,
-      motion: position === 0 ? "reveal" : "slide-up",
-      emphasis: position === 0 ? "hook" : "body",
-    },
-    subCaption:
-      position === story.scenes.length - 1
-        ? { text: asset.cta, motion: "fade", emphasis: "cta" }
-        : null,
-    transition: position === 0 ? "cut" : "fade",
-  }));
+  const roles = rolesForStory(story.scenes.length);
+  const cast = castForStory(story);
+
+  const scenes: AnimatedScene[] = story.scenes.map((scene, position) => {
+    const role = roles[position] ?? "solution";
+    return {
+      index: position,
+      role,
+      seconds: Math.max(1, Number((scene.seconds * scale).toFixed(2))),
+      background: position % 2 === 0 ? "canvas" : "surface",
+      backdrop: backdrop(position, role),
+      camera: camera(position, role),
+      items: sceneItems(scene, role, cast, composition.stageY, composition.stageScale),
+      caption: {
+        text: position === 0 ? story.hook || scene.caption : scene.caption,
+        motion: position === 0 ? "reveal" : "slide-up",
+        emphasis: position === 0 ? "hook" : "body",
+      },
+      subCaption:
+        position === story.scenes.length - 1
+          ? { text: asset.cta, motion: "fade", emphasis: "cta" }
+          : null,
+      narration: scene.voiceover,
+      logo: branding.showWatermark ? "watermark" : "none",
+      transition: position === 0 ? "cut" : "fade",
+    };
+  });
 
   if (branding.showEndCard) {
     scenes.push({
       index: scenes.length,
+      role: "endcard",
       seconds: Number(endCardSeconds.toFixed(2)),
       background: "primary",
+      backdrop: backdrop(scenes.length, "endcard"),
+      camera: camera(scenes.length, "endcard"),
       items: [],
-      caption: { text: brand.name, motion: "zoom", emphasis: "brand" },
+      // The end card draws the real lock-up; this line is the approved tagline
+      // that sits beneath it, never a text stand-in for the logo.
+      caption: { text: brand.tagline, motion: "zoom", emphasis: "brand" },
       subCaption: {
         text:
           branding.showWebsite && branding.website
-            ? branding.website
-            : (branding.tagline ?? asset.cta),
+            ? `${asset.cta} · ${branding.website}`
+            : asset.cta,
         motion: "fade",
         emphasis: "cta",
       },
+      narration: asset.cta,
+      logo: "endcard",
       transition: "fade",
     });
   }
@@ -135,6 +254,14 @@ export function buildAnimatedPlan(input: {
     seconds,
     scenes,
     branding,
+    composition,
+    brand: {
+      name: brand.name,
+      tagline: brand.tagline,
+      website,
+      logoUrl: iconAsset.url,
+      wordmarkUrl: wordmarkAsset.url,
+    },
   };
 
   return { ...plan, digest: planDigest(plan) };

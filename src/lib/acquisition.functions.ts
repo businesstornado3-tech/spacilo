@@ -140,7 +140,7 @@ export const getAcquisitionStatus = createServerFn({ method: "GET" })
       build: (query: any) => any = (query) => query,
     ): Promise<number> => {
       const { count: value } = await build(
-        supabaseAdmin.from(table).select("*", { count: "exact", head: true }),
+        (supabaseAdmin as any).from(table).select("*", { count: "exact", head: true }),
       );
       return value ?? 0;
     };

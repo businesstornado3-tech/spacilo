@@ -28,6 +28,7 @@ import {
   type Mood,
   type StoryboardScene,
 } from "./story";
+import { environment } from "./environments";
 import { elementsForText } from "./library";
 import { applyBranding, brandRules } from "./platform-branding";
 import {
@@ -101,6 +102,11 @@ export function castForStory(story: CampaignStory): string[] {
   return elementsForText(text).slice(0, 2);
 }
 
+/**
+ * Places objects in the scene. Anything in a peopled scene rests on the floor
+ * of that environment rather than hanging in the air beside the character —
+ * floating props are exactly what makes a video read as moving clip art.
+ */
 function layout(
   count: number,
   index: number,
@@ -108,7 +114,20 @@ function layout(
   stageScale: number,
   /** True when people are on screen: props then keep clear of the centre. */
   peopled: boolean,
+  floor: { ground: number; widthOverHeight: number } | null = null,
 ): { x: number; y: number; size: number } {
+  if (peopled && floor) {
+    const size = (count <= 1 ? 0.26 : 0.2) * stageScale;
+    // The object's own height in fractions of the frame, so its base can sit
+    // exactly on the floor line.
+    const half = (size * floor.widthOverHeight) / 2;
+    const spots = [0.79, 0.19, 0.9];
+    return {
+      x: spots[index % spots.length]!,
+      y: floor.ground - half - 0.01,
+      size,
+    };
+  }
   const scale = stageScale;
   // With a character on stage the props sit to the sides and slightly higher,
   // so nothing lands on the person or in the caption band.
@@ -185,6 +204,7 @@ function sceneItems(
   stageY: number,
   stageScale: number,
   board: StoryboardScene | null,
+  floor: { ground: number; widthOverHeight: number },
 ): SceneItem[] {
   const fromWords = elementsForText(`${scene.visual} ${scene.caption}`);
   // Storyboard props come first: they are the objects the story actually needs,
@@ -200,7 +220,7 @@ function sceneItems(
     : candidates.slice(0, 3);
   return ids.map((id, index) => ({
     element: id,
-    ...layout(ids.length, index, stageY, stageScale, peopled),
+    ...layout(ids.length, index, stageY, stageScale, peopled, floor),
     motion: ENTRANCES[(scene.index + index) % ENTRANCES.length]!,
     delay: Math.min(0.18 * index, Math.max(0, scene.seconds - 0.4)),
     // Later items sit nearer the viewer, so the camera move separates them.
@@ -241,7 +261,7 @@ function camera(index: number, role: SceneRole, shot: CameraShot): CameraMove {
 /** Light follows feeling: cooler and flatter early, warmer as the story lands. */
 function backdrop(index: number, role: SceneRole, mood: Mood): SceneBackdrop {
   if (role === "endcard")
-    return { base: "primary", tint: "primarySoft", motes: 5, horizon: false };
+    return { base: "primary", tint: "primarySoft", motes: 3, horizon: false };
   const tint =
     mood === "tension" || mood === "doubt"
       ? "inkSoft"
@@ -322,9 +342,15 @@ export function buildAnimatedPlan(input: {
       background: position % 2 === 0 ? "canvas" : "surface",
       backdrop: backdrop(position, role, mood),
       camera: camera(position, role, shot),
-      items: sceneItems(scene, role, cast, composition.stageY, composition.stageScale, board),
+      items: sceneItems(scene, role, cast, composition.stageY, composition.stageScale, board, {
+        ground: environment(board?.environment ?? "ENV_HOME_LIVING_ROOM").ground,
+        widthOverHeight: frame.width / frame.height,
+      }),
       caption: {
-        text: shortenCaption(position === 0 ? story.hook || scene.caption : scene.caption),
+        text: shortenCaption(
+          position === 0 ? story.hook || scene.caption : scene.caption,
+          position === 0 ? 6 : 8,
+        ),
         motion: position === 0 ? "reveal" : "slide-up",
         emphasis: position === 0 ? "hook" : "body",
       },

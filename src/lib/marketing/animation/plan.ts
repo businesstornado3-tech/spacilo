@@ -138,12 +138,13 @@ function sceneItems(
   const fromWords = elementsForText(`${scene.visual} ${scene.caption}`);
   // Storyboard props come first: they are the objects the story actually needs,
   // and they stay the same object from scene to scene.
+  const peopled = (board?.cast.length ?? 0) > 0;
   const ids = [
     ...new Set([...(board?.props ?? []), ...ROLE_ELEMENTS[role], ...cast, ...fromWords]),
-  ].slice(0, 3);
+  ].slice(0, peopled ? 2 : 3);
   return ids.map((id, index) => ({
     element: id,
-    ...layout(ids.length, index, stageY, stageScale),
+    ...layout(ids.length, index, stageY, stageScale, peopled),
     motion: ENTRANCES[(scene.index + index) % ENTRANCES.length]!,
     delay: Math.min(0.18 * index, Math.max(0, scene.seconds - 0.4)),
     // Later items sit nearer the viewer, so the camera move separates them.

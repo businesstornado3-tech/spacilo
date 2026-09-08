@@ -304,6 +304,15 @@ function MarketingStudioRoute() {
           </AdminSectionBlock>
 
           <AdminSectionBlock
+            id="acquisition"
+            title="What is actually reaching people"
+            note="Read from real records only. A route is only marked live when it can genuinely deliver."
+          >
+            <AcquisitionStatus />
+          </AdminSectionBlock>
+
+
+          <AdminSectionBlock
             id="demand"
             title="What the engine saw"
             note="Real location intent from the last 30 days. Nothing here is invented."

@@ -45,12 +45,48 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
         const code = url.searchParams.get("code");
         const state = url.searchParams.get("state");
         const denied = url.searchParams.get("error");
-        if (denied) return page("Not connected", "The platform reported that permission was not granted.", false);
-        if (!code || !state) return page("Not connected", "The platform did not return an authorisation code.", false);
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { encryptToken } = await import("@/lib/marketing/token-crypto.server");
         const def = oauthDefinition(platform);
+
+        /**
+         * Records a plain-language reason on the connection row so the founder
+         * console can explain what happened. Never records a code, token or
+         * secret value — only the stage and the platform's own error name.
+         */
+        const fail = async (stage: string, title: string, message: string) => {
+          console.log(`[marketing-oauth] ${platform} ${stage}`);
+          await supabaseAdmin.from("marketing_platform_connections").upsert(
+            {
+              platform,
+              connection: "NOT_CONNECTED",
+              last_error: `${stage}: ${message}`,
+              last_checked_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "platform" },
+          );
+          return page(title, message, false);
+        };
+
+        if (denied) {
+          // Google/TikTok/Meta send the refusal reason here. `access_denied`
+          // from Google most often means the signed-in account is not on the
+          // app's test-user list while the app is still in Testing.
+          const reason =
+            denied === "access_denied"
+              ? "The platform refused the authorisation (access_denied). Sign in with the account that is listed as an approved test user for the application, and accept every requested permission."
+              : `The platform reported "${denied}" instead of an authorisation.`;
+          return fail("AUTHORISATION_REFUSED", "Not connected", reason);
+        }
+        if (!code || !state) {
+          return fail(
+            "NO_CODE_RETURNED",
+            "Not connected",
+            "The platform returned to EarnRoom without an authorisation code.",
+          );
+        }
 
         const { data: stateRow } = await supabaseAdmin
           .from("marketing_oauth_states")
@@ -58,18 +94,29 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
           .eq("state", state)
           .maybeSingle();
         if (!stateRow || stateRow.platform !== platform) {
-          return page("Not connected", "This sign-in request was not recognised.", false);
+          return fail("STATE_NOT_RECOGNISED", "Not connected", "This sign-in request was not recognised.");
         }
-        if (stateRow.used_at) return page("Not connected", "This sign-in link has already been used.", false);
+        if (stateRow.used_at) {
+          return fail("STATE_ALREADY_USED", "Not connected", "This sign-in link has already been used.");
+        }
         if (Date.parse(stateRow.expires_at) <= Date.now()) {
-          return page("Not connected", "This sign-in link has expired. Start again from the studio.", false);
+          return fail(
+            "STATE_EXPIRED",
+            "Not connected",
+            "This sign-in link has expired. Start again from the studio.",
+          );
         }
 
         const clientId = process.env[def.clientIdSecret];
         const clientSecret = process.env[def.clientSecretSecret];
         if (!clientId || !clientSecret) {
-          return page("Not connected", "This platform is not set up on the server yet.", false);
+          return fail(
+            "CONFIGURATION_MISSING",
+            "Not connected",
+            "This platform is not set up on the server yet.",
+          );
         }
+
 
         const body = new URLSearchParams({
           grant_type: "authorization_code",
@@ -107,18 +154,17 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
               : null;
 
         if (!ok || !accessToken) {
-          await supabaseAdmin
-            .from("marketing_platform_connections")
-            .upsert(
-              {
-                platform,
-                connection: "NOT_CONNECTED",
-                last_error: "The platform did not return an authorisation.",
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: "platform" },
-            );
-          return page("Not connected", "The platform did not return an authorisation.", false);
+          const providerError =
+            typeof payload["error"] === "string"
+              ? (payload["error"] as string)
+              : typeof payload["error_description"] === "string"
+                ? (payload["error_description"] as string)
+                : "no reason given";
+          return fail(
+            "CODE_EXCHANGE_FAILED",
+            "Not connected",
+            `The platform did not return an authorisation (${providerError}).`,
+          );
         }
 
         const refreshToken =
@@ -128,18 +174,32 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
         const scopes = scopeText ? scopeText.split(/[ ,]+/).filter(Boolean) : [...def.scopes];
         const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : null;
 
-        await supabaseAdmin.from("marketing_platform_tokens").upsert(
-          {
-            platform,
-            access_token_cipher: await encryptToken(accessToken),
-            refresh_token_cipher: refreshToken ? await encryptToken(refreshToken) : null,
-            scopes,
-            expires_at: expiresAt,
-            obtained_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "platform" },
-        );
+        let storeError: string | null = null;
+        try {
+          const { error } = await supabaseAdmin.from("marketing_platform_tokens").upsert(
+            {
+              platform,
+              access_token_cipher: await encryptToken(accessToken),
+              refresh_token_cipher: refreshToken ? await encryptToken(refreshToken) : null,
+              scopes,
+              expires_at: expiresAt,
+              obtained_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "platform" },
+          );
+          if (error) storeError = error.message;
+        } catch (caught) {
+          storeError = caught instanceof Error ? caught.message : "unknown storage failure";
+        }
+        if (storeError) {
+          return fail(
+            "TOKEN_STORAGE_FAILED",
+            "Not connected",
+            `The authorisation could not be saved securely (${storeError}).`,
+          );
+        }
+
 
         await supabaseAdmin.from("marketing_platform_connections").upsert(
           {

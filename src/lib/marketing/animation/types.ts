@@ -9,7 +9,7 @@
  */
 import type { AspectRatio, PlatformId } from "../types";
 import type { EnvironmentId } from "./environments";
-import type { CameraShot, CharacterCue, StoryBeat, StoryTemplateId } from "./story";
+import type { CameraShot, CharacterCue, Framing, Mood, StoryBeat, StoryTemplateId } from "./story";
 
 /** Palette slots. Values mirror the design tokens; never invented per campaign. */
 export type Paint =
@@ -135,6 +135,10 @@ export type AnimatedScene = {
   cast: readonly CharacterCue[];
   /** The camera behaviour for this scene. */
   shot: CameraShot;
+  /** How close the camera sits, so the film changes framing as it goes. */
+  framing: Framing;
+  /** Where this scene sits on the emotional arc. */
+  mood: Mood;
   /** One line describing what changes here, for the founder's storyboard. */
   note: string;
   seconds: number;

@@ -13,6 +13,7 @@ import { brand } from "@/config/brand";
 import { hasCharacter, isExpression, isPose } from "./characters";
 import { hasEnvironment } from "./environments";
 import { brandRules } from "./platform-branding";
+import { RESOLVED_MOODS } from "./story";
 import { COMPOSITIONS, FRAME_SIZES, type AnimatedPlan } from "./types";
 
 export type QualityStatus =
@@ -183,6 +184,35 @@ export function validatePlan(plan: AnimatedPlan): QualityCheck {
     }
   }
 
+  /* ------------------------------------------------- advertising qualities */
+  const storyScenes = plan.scenes.filter((scene) => scene.role !== "endcard");
+  if (storyScenes.length >= 3) {
+    const framings = new Set(storyScenes.map((scene) => scene.framing));
+    if (framings.size < 3) {
+      failures.push("Every scene is framed the same way, so the film reads as a slide deck.");
+    }
+    const moods = plan.scenes.map((scene) => scene.mood);
+    if (new Set(moods).size < 3) failures.push("The story has no emotional change in it.");
+    if (!RESOLVED_MOODS.includes(moods.at(-1)!)) {
+      failures.push("The film does not end on a resolved feeling.");
+    }
+    const shown = storyScenes.filter(
+      (scene) => scene.cast.length > 0 || scene.items.length > 0,
+    ).length;
+    if (shown / storyScenes.length < 0.8) {
+      failures.push("Too much of the story is told in words rather than shown.");
+    }
+  }
+  for (const scene of plan.scenes) {
+    if (scene.role === "endcard") continue;
+    if (scene.caption.text.trim().split(/\s+/).length > 9) {
+      failures.push(`Scene ${scene.index + 1} carries a sentence, not an advertising line.`);
+    }
+    if (scene.cast.length > 0 && scene.items.length > 1) {
+      failures.push(`Scene ${scene.index + 1} crowds the people with props.`);
+    }
+  }
+
   return { passed: failures.length === 0, failures };
 }
 
@@ -199,6 +229,12 @@ export type QualityScores = {
   SAFE_AREA_COMPLIANCE: number;
   SCENE_COMPLETENESS: number;
   PLATFORM_COMPLIANCE: number;
+  /** How much the camera changes across the film. */
+  SHOT_VARIETY: number;
+  /** Whether the film travels from unsettled to settled. */
+  EMOTIONAL_ARC: number;
+  /** How much of the story is shown rather than written on the screen. */
+  VISUAL_STORYTELLING: number;
 };
 
 export function scorePlan(plan: AnimatedPlan): QualityScores {
@@ -217,6 +253,24 @@ export function scorePlan(plan: AnimatedPlan): QualityScores {
     SAFE_AREA_COMPLIANCE: failed("safe area") ? 0 : 100,
     SCENE_COMPLETENESS: plan.scenes.every((scene) => scene.seconds >= 1) ? 100 : 50,
     PLATFORM_COMPLIANCE: plan.seconds <= rules.maxSeconds + 0.5 ? 100 : 0,
+    SHOT_VARIETY: Math.min(
+      100,
+      Math.round((new Set(plan.scenes.map((scene) => scene.framing)).size / 4) * 100),
+    ),
+    EMOTIONAL_ARC:
+      new Set(plan.scenes.map((scene) => scene.mood)).size >= 3 &&
+      RESOLVED_MOODS.includes(plan.scenes.at(-1)!.mood)
+        ? 100
+        : 50,
+    VISUAL_STORYTELLING: (() => {
+      const story = plan.scenes.filter((scene) => scene.role !== "endcard");
+      if (!story.length) return 100;
+      const shown = story.filter((scene) => scene.cast.length > 0 || scene.items.length > 0).length;
+      const wordy = story.filter(
+        (scene) => scene.caption.text.trim().split(/\s+/).length > 8,
+      ).length;
+      return Math.max(0, Math.round((shown / story.length) * 100) - wordy * 10);
+    })(),
   };
 }
 

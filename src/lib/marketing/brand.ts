@@ -92,3 +92,22 @@ export function isApprovedMessage(line: string): boolean {
     (approved) => approved.toLowerCase() === normalised,
   );
 }
+
+/**
+ * Finds real misspellings of the brand name in campaign copy.
+ *
+ * The web address is lower case by nature — `earnroom.co.uk` inside a link is
+ * the correct address, not a misspelling of the name — so web addresses and
+ * handles are removed before the name itself is checked. Everything that
+ * remains must read exactly "EarnRoom".
+ */
+export function brandMisspellings(text: string): string[] {
+  const withoutLinks = text
+    // Full URLs, bare domains and e-mail addresses.
+    .replace(/https?:\/\/\S+/gi, " ")
+    .replace(/\b[\w.-]*earnroom[\w-]*\.(?:co\.uk|com|uk|io|net|org)\b/gi, " ")
+    .replace(/\S+@\S+/g, " ");
+  // Every plausible way of writing the name, correct or not.
+  const pattern = /e\s?a\s?r\s?n[\s\-_]?r[o0a]{1,2}m{1,2}/gi;
+  return (withoutLinks.match(pattern) ?? []).filter((match) => match !== brand.name);
+}

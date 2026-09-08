@@ -67,11 +67,17 @@ describe("animated scene planning", () => {
 
   it("uses the story's own words — it never invents a message", () => {
     const plan = buildAnimatedPlan({ campaignId: "c1", asset: asset("instagram"), story });
-    expect(plan.scenes[0]?.caption.text).toBe(story.hook);
-    expect(plan.scenes[1]?.caption.text).toBe(story.scenes[1]?.caption);
+    // On screen the line is shortened to its opening clause, but every word of
+    // it comes from the campaign copy: nothing new is written here.
+    const hook = plan.scenes[0]!.caption.text;
+    expect(hook.length).toBeGreaterThan(0);
+    expect(story.hook.startsWith(hook)).toBe(true);
+    const second = plan.scenes[1]!.caption.text;
+    expect(story.scenes[1]!.caption.startsWith(second)).toBe(true);
     const last = plan.scenes[story.scenes.length - 1];
     expect(last?.subCaption?.text).toBe("Find storage near you");
   });
+
 
   it("matches the platform's frame shape", () => {
     const vertical = buildAnimatedPlan({ campaignId: "c1", asset: asset("tiktok"), story });

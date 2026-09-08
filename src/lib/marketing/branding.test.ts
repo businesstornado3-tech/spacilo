@@ -97,3 +97,41 @@ describe("brand insertion and validation", () => {
     expect(report.passed).toBe(false);
   });
 });
+
+describe("brand name spelling in campaign copy", () => {
+  const overlay = buildBrandOverlay({
+    platform: "instagram",
+    aspect: "9:16",
+    seconds: 20,
+    tagline: brandProfile().endCard.tagline,
+    cta: "Find storage near you.",
+  });
+  const rendered = { aspect: "9:16" as const, seconds: 20 };
+  const check = (copy: { title?: string; description?: string; caption?: string }) =>
+    validateBranding({
+      overlay,
+      expectedAspect: "9:16",
+      rendered,
+      copy: {
+        title: copy.title ?? "Storage near you",
+        description: copy.description ?? "EarnRoom connects people with spare space.",
+        caption: copy.caption ?? "EarnRoom",
+        cta: "Find storage near you.",
+      },
+    }).checks.find((entry) => entry.id === "brand_spelling")!;
+
+  it("accepts the web address, which is lower case by nature", () => {
+    expect(check({ description: "See spare space on earnroom.co.uk today." }).passed).toBe(true);
+    expect(check({ description: "Visit https://earnroom.co.uk/find-storage" }).passed).toBe(true);
+  });
+
+  it("accepts the name written exactly as approved", () => {
+    expect(check({ title: "EarnRoom in Portsmouth" }).passed).toBe(true);
+  });
+
+  it("still rejects every real misspelling", () => {
+    for (const wrong of ["Earn Room", "Earnroom", "EarnRom", "EarnRoam", "earn-room"]) {
+      expect(check({ title: `${wrong} storage` }).passed).toBe(false);
+    }
+  });
+});

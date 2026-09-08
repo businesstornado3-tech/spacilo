@@ -8,7 +8,7 @@
  *
  * Pure module: no clock, no network, no file system.
  */
-import { brandProfile, isApprovedMessage } from "./brand";
+import { brandMisspellings, brandProfile, isApprovedMessage } from "./brand";
 import type { AspectRatio, PlatformId } from "./types";
 
 export type OverlayLayer =
@@ -213,15 +213,15 @@ export function validateBranding(input: {
   });
 
   const body = `${input.copy.title} ${input.copy.description} ${input.copy.caption}`;
-  // Any way of writing the name other than exactly "EarnRoom" is a misspelling.
-  const misspelled = (body.match(/earn[\s-]?room/gi) ?? []).some((match) => match !== "EarnRoom");
+  const wrong = brandMisspellings(body);
   checks.push({
     id: "brand_spelling",
-    passed: !misspelled,
-    detail: misspelled
-      ? "The brand name is misspelled in the copy."
+    passed: wrong.length === 0,
+    detail: wrong.length
+      ? `The brand name is misspelled in the copy as “${wrong[0]}”.`
       : "Brand name spelled EarnRoom.",
   });
+
 
   const renderedAspect = input.rendered?.aspect ?? null;
   checks.push({

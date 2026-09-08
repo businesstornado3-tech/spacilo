@@ -18,7 +18,16 @@ import { brand } from "@/config/brand";
 import { siteOrigin } from "@/lib/seo/meta";
 
 import type { CampaignStory, MarketingAudience, PlatformAsset, StoryScene } from "../types";
-import { buildStoryboard, type StoryboardScene } from "./story";
+import {
+  buildStoryboard,
+  framingForShot,
+  moodForBeat,
+  type CameraShot,
+  type CharacterCue,
+  type Framing,
+  type Mood,
+  type StoryboardScene,
+} from "./story";
 import { elementsForText } from "./library";
 import { applyBranding, brandRules } from "./platform-branding";
 import {
@@ -127,6 +136,48 @@ function layout(
   return { x: spot.x, y: spot.y, size: (peopled ? 0.2 : 0.32) * scale };
 }
 
+/**
+ * Advertising is watched, not read. The campaign's own words are kept — nothing
+ * is invented here — but only the first clause is burned into the frame, so the
+ * picture carries the story and the caption confirms it. The full line is still
+ * spoken by the narration field the local worker uses.
+ */
+export function shortenCaption(text: string, maxWords = 8): string {
+  const first = text
+    .split(/(?<=[.!?])\s+|\s+[—–-]\s+|;\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean)[0];
+  const clause = (first ?? text).trim().replace(/[.,;:]$/, "");
+  const words = clause.split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) return clause;
+  return words.slice(0, maxWords).join(" ");
+}
+
+/** Abstract badges that stand in for feeling instead of showing it. */
+const ICONOGRAPHY = new Set(["warning", "check", "tick", "alert"]);
+
+/**
+ * Re-frames the storyboard's cast for the shot. A close shot brings the figure
+ * forward and off centre; a wide shot lets the environment breathe. The people
+ * themselves never change, so continuity survives the recomposition.
+ */
+export function castForFraming(
+  cast: readonly CharacterCue[],
+  framing: Framing,
+  safeSide: number,
+): CharacterCue[] {
+  const thirds = [0.36, 0.64, 0.5];
+  return cast.map((member, index) => {
+    const factor =
+      framing === "close" ? 1.55 : framing === "detail" ? 0.78 : framing === "wide" ? 0.84 : 1;
+    const x =
+      framing === "twoShot" || cast.length > 1
+        ? member.x
+        : Math.min(1 - safeSide - 0.04, Math.max(safeSide + 0.04, thirds[index % thirds.length]!));
+    return { ...member, x, scale: Number((member.scale * factor).toFixed(3)) };
+  });
+}
+
 function sceneItems(
   scene: StoryScene,
   role: SceneRole,
@@ -139,9 +190,14 @@ function sceneItems(
   // Storyboard props come first: they are the objects the story actually needs,
   // and they stay the same object from scene to scene.
   const peopled = (board?.cast.length ?? 0) > 0;
-  const ids = [
+  const candidates = [
     ...new Set([...(board?.props ?? []), ...ROLE_ELEMENTS[role], ...cast, ...fromWords]),
-  ].slice(0, peopled ? 2 : 3);
+  ];
+  // With people on screen the acting carries the beat: at most one real object
+  // joins them, and never an abstract badge standing in for an emotion.
+  const ids = peopled
+    ? candidates.filter((id) => !ICONOGRAPHY.has(id)).slice(0, 1)
+    : candidates.slice(0, 3);
   return ids.map((id, index) => ({
     element: id,
     ...layout(ids.length, index, stageY, stageScale, peopled),
@@ -152,29 +208,52 @@ function sceneItems(
   }));
 }
 
-/** Slow, alternating camera moves. Deterministic, and never more than 8%. */
-function camera(index: number, role: SceneRole): CameraMove {
+/**
+ * The camera does what the shot asked for, not what the scene number happens to
+ * be. Deterministic and always slow: nothing moves more than a few per cent.
+ */
+function camera(index: number, role: SceneRole, shot: CameraShot): CameraMove {
   if (role === "endcard")
     return { fromScale: 1.04, toScale: 1, fromX: 0, toX: 0, fromY: 0, toY: 0 };
-  const push = index % 2 === 0;
-  const drift = index % 4 < 2 ? 0.02 : -0.02;
-  return {
-    fromScale: push ? 1.0 : 1.07,
-    toScale: push ? 1.07 : 1.0,
-    fromX: -drift,
-    toX: drift,
-    fromY: drift * 0.6,
-    toY: -drift * 0.6,
-  };
+  const drift = index % 2 === 0 ? 0.018 : -0.018;
+  switch (shot) {
+    case "establishing":
+      return { fromScale: 1.02, toScale: 1.08, fromX: -0.02, toX: 0.01, fromY: 0.01, toY: -0.01 };
+    case "slowPush":
+      return { fromScale: 1.0, toScale: 1.1, fromX: 0, toX: 0, fromY: 0.012, toY: -0.012 };
+    case "slowPull":
+      return { fromScale: 1.12, toScale: 1.0, fromX: 0, toX: 0, fromY: -0.012, toY: 0.012 };
+    case "panLeft":
+      return { fromScale: 1.06, toScale: 1.06, fromX: 0.05, toX: -0.05, fromY: 0, toY: 0 };
+    case "panRight":
+      return { fromScale: 1.06, toScale: 1.06, fromX: -0.05, toX: 0.05, fromY: 0, toY: 0 };
+    case "focusCharacter":
+      return { fromScale: 1.08, toScale: 1.16, fromX: drift, toX: drift * 0.4, fromY: 0, toY: -0.01 };
+    case "focusObject":
+      return { fromScale: 1.04, toScale: 1.14, fromX: -drift, toX: 0, fromY: 0.02, toY: 0 };
+    case "twoShot":
+      return { fromScale: 1.05, toScale: 1.0, fromX: -0.012, toX: 0.012, fromY: 0, toY: 0 };
+    default:
+      return { fromScale: 1.03, toScale: 1.09, fromX: -drift, toX: drift, fromY: 0.01, toY: -0.01 };
+  }
 }
 
-function backdrop(index: number, role: SceneRole): SceneBackdrop {
+/** Light follows feeling: cooler and flatter early, warmer as the story lands. */
+function backdrop(index: number, role: SceneRole, mood: Mood): SceneBackdrop {
   if (role === "endcard")
     return { base: "primary", tint: "primarySoft", motes: 5, horizon: false };
+  const tint =
+    mood === "tension" || mood === "doubt"
+      ? "inkSoft"
+      : mood === "curiosity"
+        ? "line"
+        : mood === "hope"
+          ? "primarySoft"
+          : "success";
   return {
-    base: index % 2 === 0 ? "canvas" : "surface",
-    tint: role === "host" || role === "both" ? "success" : "primarySoft",
-    motes: 6,
+    base: mood === "relief" || mood === "delight" ? "canvas" : index % 2 === 0 ? "canvas" : "surface",
+    tint,
+    motes: mood === "tension" || mood === "doubt" ? 4 : 7,
     horizon: true,
   };
 }
@@ -226,21 +305,26 @@ export function buildAnimatedPlan(input: {
   const scenes: AnimatedScene[] = story.scenes.map((scene, position) => {
     const role = roles[position] ?? "solution";
     const board = storyboard.scenes[position] ?? storyboard.scenes.at(-1) ?? null;
+    const shot: CameraShot = board?.shot ?? "slowPush";
+    const framing = board?.framing ?? framingForShot(shot);
+    const mood = board?.mood ?? moodForBeat(board?.beat ?? "solution");
     return {
       index: position,
       role,
       beat: board?.beat ?? "solution",
       environment: board?.environment ?? "ENV_HOME_LIVING_ROOM",
-      cast: board?.cast ?? [],
-      shot: board?.shot ?? "slowPush",
+      cast: castForFraming(board?.cast ?? [], framing, composition.safe.side),
+      shot,
+      framing,
+      mood,
       note: board?.note ?? "",
       seconds: Math.max(1, Number((scene.seconds * scale).toFixed(2))),
       background: position % 2 === 0 ? "canvas" : "surface",
-      backdrop: backdrop(position, role),
-      camera: camera(position, role),
+      backdrop: backdrop(position, role, mood),
+      camera: camera(position, role, shot),
       items: sceneItems(scene, role, cast, composition.stageY, composition.stageScale, board),
       caption: {
-        text: position === 0 ? story.hook || scene.caption : scene.caption,
+        text: shortenCaption(position === 0 ? story.hook || scene.caption : scene.caption),
         motion: position === 0 ? "reveal" : "slide-up",
         emphasis: position === 0 ? "hook" : "body",
       },
@@ -262,11 +346,13 @@ export function buildAnimatedPlan(input: {
       environment: "ENV_CLOSING_BRAND",
       cast: [],
       shot: "reveal",
+      framing: "wide",
+      mood: "delight",
       note: "The EarnRoom lock-up, tagline, call to action and web address.",
       seconds: Number(endCardSeconds.toFixed(2)),
       background: "primary",
-      backdrop: backdrop(scenes.length, "endcard"),
-      camera: camera(scenes.length, "endcard"),
+      backdrop: backdrop(scenes.length, "endcard", "delight"),
+      camera: camera(scenes.length, "endcard", "reveal"),
       items: [],
       // The end card draws the real lock-up; this line is the approved tagline
       // that sits beneath it, never a text stand-in for the logo.

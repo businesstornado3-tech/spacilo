@@ -242,6 +242,19 @@ export function YoutubeVerificationDemo() {
         No client secret, access token or refresh token is ever shown here or stored in a recording.
       </Alert>
 
+      <section className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+        <h3 className="type-h3">Google verification recording checklist</h3>
+        <p className="mt-1 type-body-sm text-muted-foreground">
+          Record one continuous screen capture that shows all of the following, in this order.
+        </p>
+        <ol className="mt-2 list-decimal space-y-1 pl-5 type-body-sm text-foreground">
+          {RECORDING_CHECKLIST.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ol>
+      </section>
+
+
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Environment" value={data.environment} />
         <Field label="OAuth callback" value={data.callbackUrl} />

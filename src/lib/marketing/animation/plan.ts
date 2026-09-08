@@ -17,7 +17,8 @@ import wordmarkAsset from "@/assets/brand/earnroom-wordmark-transparent.png.asse
 import { brand } from "@/config/brand";
 import { siteOrigin } from "@/lib/seo/meta";
 
-import type { CampaignStory, PlatformAsset, StoryScene } from "../types";
+import type { CampaignStory, MarketingAudience, PlatformAsset, StoryScene } from "../types";
+import { buildStoryboard, type StoryboardScene } from "./story";
 import { elementsForText } from "./library";
 import { applyBranding, brandRules } from "./platform-branding";
 import {
@@ -116,9 +117,14 @@ function sceneItems(
   cast: readonly string[],
   stageY: number,
   stageScale: number,
+  board: StoryboardScene | null,
 ): SceneItem[] {
   const fromWords = elementsForText(`${scene.visual} ${scene.caption}`);
-  const ids = [...new Set([...ROLE_ELEMENTS[role], ...cast, ...fromWords])].slice(0, 3);
+  // Storyboard props come first: they are the objects the story actually needs,
+  // and they stay the same object from scene to scene.
+  const ids = [
+    ...new Set([...(board?.props ?? []), ...ROLE_ELEMENTS[role], ...cast, ...fromWords]),
+  ].slice(0, 3);
   return ids.map((id, index) => ({
     element: id,
     ...layout(ids.length, index, stageY, stageScale),
@@ -167,6 +173,9 @@ export function buildAnimatedPlan(input: {
   asset: PlatformAsset;
   story: CampaignStory;
   fps?: number;
+  /** From the existing campaign intelligence; never decided here. */
+  audience?: MarketingAudience | null;
+  topic?: string | null;
 }): AnimatedPlan {
   const { campaignId, asset, story } = input;
   const rules = brandRules(asset.platform);
@@ -189,17 +198,30 @@ export function buildAnimatedPlan(input: {
 
   const roles = rolesForStory(story.scenes.length);
   const cast = castForStory(story);
+  const storyboard = buildStoryboard({
+    story,
+    asset,
+    audience: input.audience ?? null,
+    topic: input.topic ?? null,
+    sceneCount: story.scenes.length,
+  });
 
   const scenes: AnimatedScene[] = story.scenes.map((scene, position) => {
     const role = roles[position] ?? "solution";
+    const board = storyboard.scenes[position] ?? storyboard.scenes.at(-1) ?? null;
     return {
       index: position,
       role,
+      beat: board?.beat ?? "solution",
+      environment: board?.environment ?? "ENV_HOME_LIVING_ROOM",
+      cast: board?.cast ?? [],
+      shot: board?.shot ?? "slowPush",
+      note: board?.note ?? "",
       seconds: Math.max(1, Number((scene.seconds * scale).toFixed(2))),
       background: position % 2 === 0 ? "canvas" : "surface",
       backdrop: backdrop(position, role),
       camera: camera(position, role),
-      items: sceneItems(scene, role, cast, composition.stageY, composition.stageScale),
+      items: sceneItems(scene, role, cast, composition.stageY, composition.stageScale, board),
       caption: {
         text: position === 0 ? story.hook || scene.caption : scene.caption,
         motion: position === 0 ? "reveal" : "slide-up",
@@ -219,6 +241,11 @@ export function buildAnimatedPlan(input: {
     scenes.push({
       index: scenes.length,
       role: "endcard",
+      beat: "brand",
+      environment: "ENV_CLOSING_BRAND",
+      cast: [],
+      shot: "reveal",
+      note: "The EarnRoom lock-up, tagline, call to action and web address.",
       seconds: Number(endCardSeconds.toFixed(2)),
       background: "primary",
       backdrop: backdrop(scenes.length, "endcard"),
@@ -253,6 +280,11 @@ export function buildAnimatedPlan(input: {
     fps,
     seconds,
     scenes,
+    storyboard: {
+      template: storyboard.template,
+      side: storyboard.side,
+      characters: storyboard.characters,
+    },
     branding,
     composition,
     brand: {

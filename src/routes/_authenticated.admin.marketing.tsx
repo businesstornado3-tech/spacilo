@@ -265,6 +265,8 @@ function MarketingStudioRoute() {
                     assets={snapshot.today.assets}
                     story={snapshot.today.story}
                     providerConfigured={providerConfigured}
+                    audience={snapshot.today.opportunity.audience}
+                    topic={snapshot.today.opportunity.topic}
                   />
                 </div>
 

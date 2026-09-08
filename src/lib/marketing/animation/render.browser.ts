@@ -14,6 +14,7 @@
  */
 import { ArrayBufferTarget, Muxer } from "mp4-muxer";
 
+import { drawCharacterFigure, drawEnvironmentLayer, groundLine } from "./draw.browser";
 import { element } from "./library";
 import type { AnimatedPlan, AnimatedScene, Motion, Paint, Shape } from "./types";
 import type { RenderOutcome } from "./validation";
@@ -178,38 +179,34 @@ function wrap(
   return lines.slice(0, 4).map((entryLine) => ({ text: entryLine.join(" "), words: entryLine }));
 }
 
-/** Layered backdrop: a tinted wash, drifting soft shapes and a faint horizon. */
-function drawBackdrop(ctx: CanvasRenderingContext2D, plan: AnimatedPlan, scene: AnimatedScene, t: number) {
+/** Soft drifting shapes and a faint horizon over the environment, for depth. */
+function drawAmbience(
+  ctx: CanvasRenderingContext2D,
+  plan: AnimatedPlan,
+  scene: AnimatedScene,
+  t: number,
+) {
   const { width, height } = plan;
-  const gradient = ctx.createLinearGradient(0, 0, width * 0.4, height);
-  gradient.addColorStop(0, PALETTE[scene.backdrop.base]);
-  gradient.addColorStop(1, PALETTE[scene.backdrop.base === "primary" ? "primary" : "surface"]);
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, width, height);
-
   ctx.save();
-  ctx.globalAlpha = scene.backdrop.base === "primary" ? 0.16 : 0.32;
+  ctx.globalAlpha = scene.backdrop.base === "primary" ? 0.14 : 0.16;
   ctx.fillStyle = PALETTE[scene.backdrop.tint];
   for (let i = 0; i < scene.backdrop.motes; i += 1) {
     // Deterministic positions: the same scene always drifts the same way.
     const seed = (i + 1) * (scene.index + 2);
     const x = ((Math.sin(seed * 12.9898) + 1) / 2) * width;
-    const y = ((Math.sin(seed * 78.233) + 1) / 2) * height;
-    const r = width * (0.06 + ((seed % 5) / 5) * 0.14);
+    const y = ((Math.sin(seed * 78.233) + 1) / 2) * height * 0.7;
+    const r = width * (0.05 + ((seed % 5) / 5) * 0.1);
     ctx.beginPath();
-    ctx.arc(x + Math.sin(t * 0.6 + seed) * width * 0.02, y + Math.cos(t * 0.5 + seed) * height * 0.015, r, 0, Math.PI * 2);
+    ctx.arc(
+      x + Math.sin(t * 0.6 + seed) * width * 0.02,
+      y + Math.cos(t * 0.5 + seed) * height * 0.015,
+      r,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
   ctx.restore();
-
-  if (scene.backdrop.horizon) {
-    ctx.save();
-    ctx.globalAlpha = 0.5;
-    ctx.fillStyle = PALETTE.line;
-    const y = height * (plan.composition.stageY + 0.13);
-    ctx.fillRect(0, y, width, Math.max(1, height * 0.0035));
-    ctx.restore();
-  }
 }
 
 /** Kinetic typography: words settle in one after another, not all at once. */
@@ -257,7 +254,7 @@ function drawText(
   return y;
 }
 
-type DrawStats = { logoFrames: number; smallestLogoPx: number };
+type DrawStats = { logoFrames: number; smallestLogoPx: number; characterFrames: number };
 
 function drawScene(
   ctx: CanvasRenderingContext2D,
@@ -273,14 +270,17 @@ function drawScene(
   const dark = scene.backdrop.base === "primary";
   let logoDrawn = false;
 
-  drawBackdrop(ctx, plan, scene, elapsed);
-
-  /* ------------------------------------------------- illustration + camera */
+  /* ---------------------------------------------------- camera + environment */
   const move = scene.camera;
   const eased = easeInOut(progress);
   const scale = move.fromScale + (move.toScale - move.fromScale) * eased;
   const panX = (move.fromX + (move.toX - move.fromX) * eased) * width;
   const panY = (move.fromY + (move.toY - move.fromY) * eased) * height;
+  const camera = { scale, panX, panY };
+
+  drawEnvironmentLayer(ctx, scene.environment, "back", { width, height, camera });
+  drawEnvironmentLayer(ctx, scene.environment, "mid", { width, height, camera });
+  drawAmbience(ctx, plan, scene, elapsed);
 
   for (const item of scene.items) {
     const itemProgress = clamp((elapsed - item.delay) / 0.6);
@@ -306,6 +306,30 @@ function drawScene(
     }
     ctx.restore();
   }
+
+  /* ------------------------------------------------------------ characters */
+  const ground = height * groundLine(scene.environment);
+  for (const member of scene.cast) {
+    const since = elapsed - member.delay;
+    if (since <= 0) continue;
+    const depth = 0.9;
+    const figureHeight = member.scale * height * (1 + (scale - 1) * depth);
+    drawCharacterFigure(ctx, {
+      characterId: member.character,
+      pose: member.pose,
+      expression: member.expression,
+      motion: member.motion,
+      x: member.x * width + panX * depth,
+      groundY: ground + panY * depth,
+      height: figureHeight,
+      facing: member.facing,
+      elapsed: since,
+      opacity: easeOut(since / 0.5),
+    });
+    stats.characterFrames += 1;
+  }
+
+  drawEnvironmentLayer(ctx, scene.environment, "fore", { width, height, camera });
 
   /* ----------------------------------------------------------- end card */
   if (scene.logo === "endcard") {
@@ -486,7 +510,7 @@ export async function renderAnimatedPlan(
   encoder.configure({ codec: chosen.codec, width, height, framerate: fps, bitrate: 4_500_000 });
 
   const totalFrames = Math.max(1, Math.round(plan.seconds * fps));
-  const stats: DrawStats = { logoFrames: 0, smallestLogoPx: 0 };
+  const stats: DrawStats = { logoFrames: 0, smallestLogoPx: 0, characterFrames: 0 };
   let frameIndex = 0;
   let hasPrevious = false;
 
@@ -551,6 +575,7 @@ export async function renderAnimatedPlan(
       bytes: buffer.byteLength,
       frames: frameIndex,
       logoFrames: stats.logoFrames,
+      characterFrames: stats.characterFrames,
       smallestLogoPx: Math.round(stats.smallestLogoPx),
       artworkLoaded: true,
     },

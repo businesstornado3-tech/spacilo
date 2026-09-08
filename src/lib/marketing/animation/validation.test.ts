@@ -73,6 +73,7 @@ function goodRender(input: AnimatedPlan): RenderOutcome {
     bytes: 900_000,
     frames: Math.round(input.seconds * input.fps),
     logoFrames: Math.round(input.seconds * input.fps),
+    characterFrames: Math.round(input.seconds * input.fps),
     smallestLogoPx: 136,
     artworkLoaded: true,
   };
@@ -128,10 +129,12 @@ describe("campaign story ordering", () => {
   });
 
   it("keeps the same cast across the campaign, so scenes belong together", () => {
-    const lead = castForStory(story)[0]!;
+    expect(castForStory(story).length).toBeGreaterThan(0);
     const built = plan();
-    const storyScenes = built.scenes.slice(0, story.scenes.length);
-    expect(storyScenes.every((scene) => scene.items.some((i) => i.element === lead))).toBe(true);
+    const people = new Set(built.scenes.flatMap((scene) => scene.cast.map((c) => c.character)));
+    expect(people.size).toBeGreaterThan(0);
+    expect(people.size).toBeLessThanOrEqual(2);
+    for (const id of people) expect(built.storyboard.characters).toContain(id);
   });
 
   it("rejects a plan that does not open on the problem", () => {
@@ -183,7 +186,7 @@ describe("placeholder and empty content", () => {
     const broken = {
       ...built,
       scenes: built.scenes.map((scene, index) =>
-        index === 1 ? { ...scene, items: [] } : scene,
+        index === 1 ? { ...scene, items: [], cast: [] } : scene,
       ),
     } as AnimatedPlan;
     expect(validatePlan(broken).failures.join(" ")).toMatch(/nothing in it/i);

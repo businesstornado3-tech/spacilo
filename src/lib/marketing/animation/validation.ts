@@ -82,7 +82,9 @@ export function validatePlan(plan: AnimatedPlan): QualityCheck {
   /* -------------------------------------------------------------- wording */
   const text = collectText(plan);
   const joined = text.join(" \u0000 ");
-  for (const match of joined.match(/earnroom/gi) ?? []) {
+  // The web address is lower case by nature; the brand name is not.
+  const spellable = joined.split(plan.brand.website).join(" ");
+  for (const match of spellable.match(/earnroom/gi) ?? []) {
     if (match !== brand.name) failures.push(`EarnRoom is misspelled as “${match}”.`);
   }
   const lower = joined.toLowerCase();

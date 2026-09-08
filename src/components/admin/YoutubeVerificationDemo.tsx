@@ -20,10 +20,13 @@ import { LoadingState } from "@/components/common/States";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/overlay/toast";
 import {
+  RECORDING_CHECKLIST,
   YOUTUBE_DEMO_STEPS,
   evidencedSteps,
+  publishingStateLabel,
   recordingLabel,
   runStatusLabel,
+  uploadConfirmed,
   type DemoStepId,
   type RecordingStatus,
 } from "@/lib/marketing/youtube-demo";
@@ -239,6 +242,19 @@ export function YoutubeVerificationDemo() {
         No client secret, access token or refresh token is ever shown here or stored in a recording.
       </Alert>
 
+      <section className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+        <h3 className="type-h3">Google verification recording checklist</h3>
+        <p className="mt-1 type-body-sm text-muted-foreground">
+          Record one continuous screen capture that shows all of the following, in this order.
+        </p>
+        <ol className="mt-2 list-decimal space-y-1 pl-5 type-body-sm text-foreground">
+          {RECORDING_CHECKLIST.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ol>
+      </section>
+
+
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Environment" value={data.environment} />
         <Field label="OAuth callback" value={data.callbackUrl} />
@@ -362,7 +378,67 @@ export function YoutubeVerificationDemo() {
       </section>
 
       <section>
+        <h3 className="type-h3">Verification evidence for this run</h3>
+        <p className="type-body-xs text-muted-foreground">
+          Every value below is stored against the run and comes from Google's own responses. Nothing
+          here is filled in by hand.
+        </p>
+        {run ? (
+          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+            <Field
+              label="Connected YouTube channel"
+              value={run.channel ? `${run.channel.title} (${run.channel.id})` : "Not retrieved yet"}
+            />
+            <Field
+              label="youtube.readonly evidence"
+              value={run.channel ? "Channel details returned live by YouTube" : "Not demonstrated yet"}
+            />
+            <Field
+              label="Selected approved marketing video"
+              value={
+                run.marketingVideoId
+                  ? (data.videos.find((video) => video.id === run.marketingVideoId)
+                      ? `${data.videos.find((video) => video.id === run.marketingVideoId)!.platform} · ${
+                          data.videos.find((video) => video.id === run.marketingVideoId)!.aspect
+                        } · ${data.videos.find((video) => video.id === run.marketingVideoId)!.seconds}s`
+                      : run.marketingVideoId)
+                  : "Not selected yet"
+              }
+            />
+            <Field
+              label="youtube.upload evidence"
+              value={
+                uploadConfirmed(run)
+                  ? "YouTube accepted the file and returned an identifier"
+                  : "Not uploaded yet"
+              }
+            />
+            <Field label="YouTube video ID" value={run.youtubeVideoId ?? "—"} />
+            <Field
+              label="YouTube watch URL"
+              value={
+                run.youtubeUrl ? (
+                  <a href={run.youtubeUrl} target="_blank" rel="noreferrer" className="text-primary underline">
+                    {run.youtubeUrl}
+                  </a>
+                ) : (
+                  "—"
+                )
+              }
+            />
+            <Field label="Final EarnRoom publishing state" value={publishingStateLabel(run)} />
+            <Field label="Run ID" value={run.id} />
+          </div>
+        ) : (
+          <p className="mt-2 type-body-sm text-muted-foreground">
+            Start a demonstration run to collect evidence.
+          </p>
+        )}
+      </section>
+
+      <section>
         <h3 className="type-h3">Demo checklist</h3>
+
         <p className="type-body-xs text-muted-foreground">
           Ticks marked automatically come from real stored evidence. The rest are yours to confirm
           as you record.

@@ -99,9 +99,41 @@ export function evidencedSteps(run: DemoRunView): DemoStepId[] {
   if (run.channel) done.push("channel_shown", "readonly_demo");
   if (run.marketingVideoId) done.push("select_video");
   if (run.youtubeVideoId) done.push("real_upload", "youtube_result");
-  if (run.status === "COMPLETE") done.push("final_state");
+  // The final publishing state is real once YouTube itself confirmed the
+  // upload and EarnRoom stored the returned identifier against the run.
+  if (uploadConfirmed(run) || run.status === "COMPLETE") done.push("final_state");
   return done;
 }
+
+/** True only when YouTube returned an identifier and EarnRoom stored it. */
+export function uploadConfirmed(run: DemoRunView): boolean {
+  return Boolean(
+    run.youtubeVideoId && run.marketingVideoId && (run.status === "UPLOADED" || run.status === "COMPLETE"),
+  );
+}
+
+/** Plain-English final publishing state, from stored evidence only. */
+export function publishingStateLabel(run: DemoRunView): string {
+  if (run.status === "FAILED") return "Upload failed — nothing was published";
+  if (!uploadConfirmed(run)) return "Not published yet";
+  return run.recordingStatus === "READY"
+    ? "Published to the connected YouTube channel (private) · recording saved"
+    : "Published to the connected YouTube channel (private)";
+}
+
+/** What the founder must have on screen in the submitted recording. */
+export const RECORDING_CHECKLIST: readonly string[] = [
+  "Record the entire screen, so Google's own windows are captured.",
+  "Start on earnroom.co.uk with the address bar visible.",
+  "Show the founder console publishing connection and click Connect YouTube.",
+  "Capture Google's sign-in, the unverified-app screen if it appears, and both requested YouTube permissions.",
+  "Pause the recording while typing a password or two-factor code, then resume.",
+  "Show the return to EarnRoom and the connected channel name and id (youtube.readonly).",
+  "Select an approved EarnRoom marketing video and run the real upload (youtube.upload).",
+  "Show the YouTube video id and watch URL returned by Google, and open the watch URL.",
+  "Finish on EarnRoom's final publishing state for the run.",
+];
+
 
 export function recordingLabel(status: RecordingStatus): string {
   switch (status) {

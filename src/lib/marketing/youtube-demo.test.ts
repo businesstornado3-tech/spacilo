@@ -1,14 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  RECORDING_CHECKLIST,
   YOUTUBE_DEMO_SCOPES,
   YOUTUBE_DEMO_STEPS,
   clientHint,
   demoRecordingPath,
   evidencedSteps,
+  publishingStateLabel,
   recordingLabel,
   redactSensitive,
   runStatusLabel,
+  uploadConfirmed,
   type DemoRunView,
 } from "./youtube-demo";
 
@@ -68,6 +71,26 @@ describe("youtube verification demo", () => {
     expect(steps).toContain("youtube_result");
     expect(steps).toContain("final_state");
   });
+
+  it("marks the final publishing state once YouTube confirmed the upload", () => {
+    const confirmed = run({ marketingVideoId: "v1", youtubeVideoId: "w8a12T4jhxc", status: "UPLOADED" });
+    expect(uploadConfirmed(confirmed)).toBe(true);
+    expect(evidencedSteps(confirmed)).toContain("final_state");
+    expect(publishingStateLabel(confirmed)).toMatch(/published/i);
+  });
+
+  it("never claims a final publishing state without a stored YouTube id", () => {
+    const pending = run({ marketingVideoId: "v1", status: "STARTED" });
+    expect(uploadConfirmed(pending)).toBe(false);
+    expect(evidencedSteps(pending)).not.toContain("final_state");
+    expect(publishingStateLabel(pending)).toBe("Not published yet");
+  });
+
+  it("lists what the submitted recording must show", () => {
+    expect(RECORDING_CHECKLIST.length).toBeGreaterThan(5);
+    expect(RECORDING_CHECKLIST.join(" ")).toMatch(/unverified-app/i);
+  });
+
 
   it("redacts access tokens, refresh tokens, client secrets and passwords", () => {
     const text = redactSensitive(

@@ -20,10 +20,13 @@ import { LoadingState } from "@/components/common/States";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/overlay/toast";
 import {
+  RECORDING_CHECKLIST,
   YOUTUBE_DEMO_STEPS,
   evidencedSteps,
+  publishingStateLabel,
   recordingLabel,
   runStatusLabel,
+  uploadConfirmed,
   type DemoStepId,
   type RecordingStatus,
 } from "@/lib/marketing/youtube-demo";

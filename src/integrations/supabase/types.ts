@@ -3095,6 +3095,66 @@ export type Database = {
           },
         ]
       }
+      marketing_youtube_demo_runs: {
+        Row: {
+          channel: Json | null
+          created_at: string
+          created_by: string
+          environment: string | null
+          id: string
+          marketing_video_id: string | null
+          notes: string | null
+          oauth_state: string | null
+          recording_bytes: number | null
+          recording_mime: string | null
+          recording_path: string | null
+          recording_status: string
+          scopes: string[]
+          status: string
+          updated_at: string
+          youtube_url: string | null
+          youtube_video_id: string | null
+        }
+        Insert: {
+          channel?: Json | null
+          created_at?: string
+          created_by: string
+          environment?: string | null
+          id?: string
+          marketing_video_id?: string | null
+          notes?: string | null
+          oauth_state?: string | null
+          recording_bytes?: number | null
+          recording_mime?: string | null
+          recording_path?: string | null
+          recording_status?: string
+          scopes?: string[]
+          status?: string
+          updated_at?: string
+          youtube_url?: string | null
+          youtube_video_id?: string | null
+        }
+        Update: {
+          channel?: Json | null
+          created_at?: string
+          created_by?: string
+          environment?: string | null
+          id?: string
+          marketing_video_id?: string | null
+          notes?: string | null
+          oauth_state?: string | null
+          recording_bytes?: number | null
+          recording_mime?: string | null
+          recording_path?: string | null
+          recording_status?: string
+          scopes?: string[]
+          status?: string
+          updated_at?: string
+          youtube_url?: string | null
+          youtube_video_id?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           body: string

@@ -98,6 +98,24 @@ export function YoutubeVerificationDemo() {
   const [selectedVideo, setSelectedVideo] = React.useState<string>("");
   const [recordingStatus, setRecordingStatus] = React.useState<RecordingStatus>("NOT_STARTED");
   const [captureSupported, setCaptureSupported] = React.useState<boolean | null>(null);
+  /**
+   * The OAuth callback redirects back here with a plain-language outcome only.
+   * It is read once and removed from the address bar, so the recording never
+   * shows an authorisation code or any query state.
+   */
+  const [returnNotice, setReturnNotice] = React.useState<{ ok: boolean; text: string } | null>(null);
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get("connected");
+    const failure = params.get("connect_error");
+    if (!connected && !failure) return;
+    setReturnNotice(
+      connected
+        ? { ok: true, text: "Authorisation returned from Google and stored securely." }
+        : { ok: false, text: failure ?? "The authorisation did not complete." },
+    );
+    window.history.replaceState({}, "", window.location.pathname);
+  }, []);
   const [message, setMessage] = React.useState<string | null>(null);
   const [manualSteps, setManualSteps] = React.useState<DemoStepId[]>([]);
 
@@ -241,6 +259,15 @@ export function YoutubeVerificationDemo() {
         database. It is not linked from any public page, and it is excluded from search engines.
         No client secret, access token or refresh token is ever shown here or stored in a recording.
       </Alert>
+
+      {returnNotice ? (
+        <Alert
+          tone={returnNotice.ok ? "success" : "warning"}
+          title={returnNotice.ok ? "Returned from Google" : "Not connected"}
+        >
+          {returnNotice.text}
+        </Alert>
+      ) : null}
 
       <section className="rounded-xl border border-primary/30 bg-primary/5 p-4">
         <h3 className="type-h3">Google verification recording checklist</h3>

@@ -124,11 +124,14 @@ export function publishingStateLabel(run: DemoRunView): string {
 /** What the founder must have on screen in the submitted recording. */
 export const RECORDING_CHECKLIST: readonly string[] = [
   "Record the entire screen, so Google's own windows are captured.",
+  "Before recording, remove EarnRoom's earlier access at myaccount.google.com → Data & privacy → Third-party access, so Google shows the full permission screen instead of \"already has some access\".",
   "Start on earnroom.co.uk with the address bar visible.",
   "Show the founder console publishing connection and click Connect YouTube.",
-  "Capture Google's sign-in, the unverified-app screen if it appears, and both requested YouTube permissions.",
+  "Capture Google's sign-in, the unverified-app screen if it appears, and both requested YouTube permissions with their tick boxes visible.",
+  "If Google still shows \"already has some access\", click \"See the 2 services…\" and keep the expanded permission list on screen for a few seconds.",
   "Pause the recording while typing a password or two-factor code, then resume.",
-  "Show the return to EarnRoom and the connected channel name and id (youtube.readonly).",
+  "Show the return to EarnRoom — the browser lands on a clean founder console page, with no authorisation code in the address bar.",
+  "Show the connected channel name and id (youtube.readonly).",
   "Select an approved EarnRoom marketing video and run the real upload (youtube.upload).",
   "Show the YouTube video id and watch URL returned by Google, and open the watch URL.",
   "Finish on EarnRoom's final publishing state for the run.",

@@ -320,8 +320,27 @@ export const verifyDemoChannel = createServerFn({ method: "POST" })
         return { ok: false, detail: "The request to YouTube could not be completed.", channel: null };
       }
       if (status === 401 || status === 403) {
-        return { ok: false, detail: "YouTube rejected the stored authorisation. Reconnect the channel.", channel: null };
+        // Keep Google's own reason: a disabled API, a missing scope and a
+        // revoked authorisation all arrive as 401/403 but need different action.
+        const error = (payload["error"] ?? {}) as Record<string, unknown>;
+        const first = Array.isArray(error["errors"]) ? ((error["errors"] as any[])[0] ?? {}) : {};
+        const reason = typeof first?.reason === "string" ? first.reason : null;
+        const message = typeof error["message"] === "string" ? (error["message"] as string) : "";
+        const detailText =
+          reason === "accessNotConfigured" || message.includes("has not been used in project")
+            ? "The YouTube Data API is not switched on for this Google Cloud project yet. Enable YouTube Data API v3 in the project, wait a few minutes, then retry — no need to reconnect."
+            : reason === "insufficientPermissions" || reason === "forbidden"
+              ? "Google accepted the sign-in but the granted permissions do not cover reading the channel. Reconnect and accept both permissions."
+              : status === 401
+                ? "YouTube rejected the stored authorisation (it was revoked or has expired). Reconnect the channel."
+                : `YouTube refused the request (${reason ?? "no reason given"}).`;
+        return {
+          ok: false,
+          detail: redactSensitive(`HTTP ${status}: ${detailText}`),
+          channel: null,
+        };
       }
+
       const items = Array.isArray(payload["items"]) ? (payload["items"] as any[]) : [];
       const first = items[0];
       if (!first?.id) {

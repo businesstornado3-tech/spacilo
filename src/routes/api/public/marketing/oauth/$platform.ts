@@ -24,14 +24,25 @@ const PLATFORMS = [
   "pinterest",
 ];
 
-function page(title: string, message: string, ok: boolean): Response {
-  return new Response(
-    `<!doctype html><meta charset="utf-8"><title>${title}</title>` +
-      `<body style="font-family:system-ui;padding:2rem;max-width:34rem">` +
-      `<h1 style="font-size:1.25rem">${title}</h1><p>${message}</p>` +
-      `<p><a href="/admin/marketing">Back to the marketing studio</a></p></body>`,
-    { status: ok ? 200 : 400, headers: { "content-type": "text/html; charset=utf-8" } },
-  );
+/**
+ * Sends the browser straight back to a clean EarnRoom page.
+ *
+ * The authorisation code arrives in this request's own URL and is used only
+ * server-side; redirecting immediately means it is never left on screen. The
+ * destination carries a plain-language outcome only — never a code or token.
+ */
+function back(platform: string, outcome: { ok: boolean; message: string }): Response {
+  const base =
+    platform === "youtube" || platform === "youtube_shorts"
+      ? "/admin/youtube-verification-demo"
+      : "/admin/marketing";
+  const query = outcome.ok
+    ? "connected=1"
+    : `connect_error=${encodeURIComponent(outcome.message)}`;
+  return new Response(null, {
+    status: 303,
+    headers: { location: `${base}?${query}`, "cache-control": "no-store" },
+  });
 }
 
 export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
@@ -39,7 +50,10 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
     handlers: {
       GET: async ({ request, params }) => {
         const platform = params.platform as PlatformId;
-        if (!PLATFORMS.includes(platform)) return page("Unknown platform", "That platform is not supported.", false);
+        const page = (title: string, message: string, ok: boolean) =>
+          back(platform, { ok, message: ok ? title : message });
+        if (!PLATFORMS.includes(platform))
+          return back("unknown", { ok: false, message: "That platform is not supported." });
 
         const url = new URL(request.url);
         const code = url.searchParams.get("code");

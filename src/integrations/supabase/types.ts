@@ -2631,6 +2631,36 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_oauth_states: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          platform: string
+          redirect_uri: string
+          state: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at: string
+          platform: string
+          redirect_uri: string
+          state: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          platform?: string
+          redirect_uri?: string
+          state?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       marketing_performance: {
         Row: {
           asset_id: string
@@ -2703,6 +2733,39 @@ export type Database = {
           last_checked_at?: string | null
           last_error?: string | null
           platform?: string
+          scopes?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketing_platform_tokens: {
+        Row: {
+          access_token_cipher: string
+          account_id: string | null
+          expires_at: string | null
+          obtained_at: string
+          platform: string
+          refresh_token_cipher: string | null
+          scopes: string[]
+          updated_at: string
+        }
+        Insert: {
+          access_token_cipher: string
+          account_id?: string | null
+          expires_at?: string | null
+          obtained_at?: string
+          platform: string
+          refresh_token_cipher?: string | null
+          scopes?: string[]
+          updated_at?: string
+        }
+        Update: {
+          access_token_cipher?: string
+          account_id?: string | null
+          expires_at?: string | null
+          obtained_at?: string
+          platform?: string
+          refresh_token_cipher?: string | null
           scopes?: string[]
           updated_at?: string
         }

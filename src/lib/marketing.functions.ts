@@ -24,6 +24,7 @@ import type {
   MarketingCampaign,
   MarketingSettings,
   PlatformCapability,
+  PlatformId,
   PublicationRecord,
 } from "@/lib/marketing/types";
 import type { ContentHistoryEntry } from "@/lib/marketing/coverage";
@@ -411,7 +412,46 @@ export const publishMarketingCampaign = createServerFn({ method: "POST" })
       const supabase = context.supabase as any;
       await assertAdmin(supabase);
       const now = Date.now();
-      const { attemptPublish, unconfiguredAdapter } = await import("@/lib/marketing");
+      const { attemptPublish, unconfiguredAdapter, adapterFor } = await import("@/lib/marketing");
+      // Stored authorisations live in a table only the server can read, and
+      // are decrypted here, per publish, and never returned to the browser.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { decryptToken } = await import("@/lib/marketing/token-crypto.server");
+      const { data: tokenRows } = await supabaseAdmin
+        .from("marketing_platform_tokens")
+        .select("platform, access_token_cipher, account_id, expires_at");
+      const { data: accountRows } = await supabase
+        .from("marketing_platform_connections")
+        .select("platform, account_id");
+
+      const resolveAdapter = async (platform: PlatformId) => {
+        const tokenRow = ((tokenRows ?? []) as any[]).find(
+          (row) => row.platform === platform || (platform === "youtube_shorts" && row.platform === "youtube"),
+        );
+        const accountId =
+          ((accountRows ?? []) as any[]).find((row) => row.platform === platform)?.account_id ??
+          tokenRow?.account_id ??
+          null;
+        if (!tokenRow || (tokenRow.expires_at && Date.parse(tokenRow.expires_at) <= now)) {
+          return unconfiguredAdapter(platform, settings);
+        }
+        let accessToken: string | null = null;
+        try {
+          accessToken = await decryptToken(tokenRow.access_token_cipher);
+        } catch {
+          accessToken = null;
+        }
+        if (!accessToken || !accountId) return unconfiguredAdapter(platform, settings);
+        return adapterFor(platform, {
+          connection: connections.find((entry) => entry.platform === platform) ?? null,
+          accessToken,
+          accountId,
+          settings,
+          connections,
+          now,
+          fetchImpl: fetch,
+        });
+      };
 
       const [settings, connections] = await Promise.all([
         readSettings(supabase),
@@ -450,7 +490,7 @@ export const publishMarketingCampaign = createServerFn({ method: "POST" })
         if (record.state === "PUBLISHED") continue;
 
         const attempt = await attemptPublish({
-          adapter: unconfiguredAdapter(asset.platform, settings),
+          adapter: await resolveAdapter(asset.platform),
           asset,
           campaign,
           connections,

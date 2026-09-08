@@ -8,6 +8,7 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
+import { AcquisitionStatus } from "@/components/admin/AcquisitionStatus";
 import { AdminShell, AdminSectionBlock } from "@/components/admin/AdminShell";
 import { CampaignDecision } from "@/components/admin/CampaignDecision";
 import { MarketingConnections } from "@/components/admin/MarketingConnections";
@@ -302,6 +303,15 @@ function MarketingStudioRoute() {
           >
             <MarketingConnections />
           </AdminSectionBlock>
+
+          <AdminSectionBlock
+            id="acquisition"
+            title="What is actually reaching people"
+            note="Read from real records only. A route is only marked live when it can genuinely deliver."
+          >
+            <AcquisitionStatus />
+          </AdminSectionBlock>
+
 
           <AdminSectionBlock
             id="demand"

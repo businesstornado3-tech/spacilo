@@ -1283,9 +1283,26 @@ export const startPlatformConnection = createServerFn({ method: "POST" })
       }
 
       const redirectUri = `${process.env["PUBLIC_SITE_URL"] ?? "https://earnroom.co.uk"}/api/public/marketing/oauth/${platform}`;
+
+      // A one-time, short-lived state record. The callback refuses anything
+      // that does not match it, so this endpoint cannot be triggered by a
+      // stranger following a link.
+      const oauthState = crypto.randomUUID().replace(/-/g, "");
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error: stateError } = await supabaseAdmin.from("marketing_oauth_states").insert({
+        state: oauthState,
+        platform,
+        created_by: context.userId,
+        redirect_uri: redirectUri,
+        expires_at: new Date(Date.now() + 15 * 60_000).toISOString(),
+      });
+      if (stateError) {
+        return { ok: false, url: null, detail: "Could not start the sign-in. Please try again." };
+      }
+
       return {
         ok: true,
-        url: authorizeUrl({ platform, clientId, redirectUri, state: context.userId }),
+        url: authorizeUrl({ platform, clientId, redirectUri, state: oauthState }),
         detail: `Complete sign-in, two-factor authentication and permissions on ${def.label} itself.`,
       };
     },

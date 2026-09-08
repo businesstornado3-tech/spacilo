@@ -182,6 +182,9 @@ export function MarketingVideoPanel({
         },
       });
       setStage("Checking the branding");
+      // Check what was actually drawn, not what was intended.
+      const renderCheck = validateRender(plan, result.outcome);
+      const status = qualityStatus({ plan: planCheck, render: renderCheck });
       const stored = await videos.storeAnimated.mutateAsync({
         assetId: asset.id,
         platform: plan.platform,

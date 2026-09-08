@@ -231,6 +231,10 @@ function drawText(
   ctx.textBaseline = "middle";
   ctx.font = options.font.replace("1px", `${options.size}px`);
   ctx.fillStyle = options.colour;
+  // A soft drop shadow keeps type legible over artwork without a heavy slab.
+  ctx.shadowColor = "rgba(12,20,28,0.28)";
+  ctx.shadowBlur = options.size * 0.22;
+  ctx.shadowOffsetY = options.size * 0.03;
   const lines = wrap(ctx, options.text, options.maxWidth);
   const lineHeight = options.size * 1.24;
   let y = options.centreY + motion.dy * plan.height;
@@ -384,12 +388,14 @@ function drawScene(
   // A soft scrim under the caption band, so type stays readable over artwork
   // without hiding the scene behind a solid slab.
   if (scene.logo !== "endcard") {
-    const bandTop = height * (comp.captionY - 0.14);
+    // Kept low and light: enough to hold the type, not enough to wash the
+    // people out of the bottom half of the frame.
+    const bandTop = height * (comp.captionY - 0.07);
     const scrim = ctx.createLinearGradient(0, bandTop, 0, height);
     const base = dark ? "0,0,0" : "255,255,255";
     scrim.addColorStop(0, `rgba(${base},0)`);
-    scrim.addColorStop(0.45, `rgba(${base},0.72)`);
-    scrim.addColorStop(1, `rgba(${base},0.9)`);
+    scrim.addColorStop(0.55, `rgba(${base},0.5)`);
+    scrim.addColorStop(1, `rgba(${base},0.72)`);
     ctx.save();
     ctx.fillStyle = scrim;
     ctx.fillRect(0, bandTop, width, height - bandTop);

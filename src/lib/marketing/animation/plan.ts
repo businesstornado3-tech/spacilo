@@ -349,7 +349,7 @@ export function buildAnimatedPlan(input: {
       caption: {
         text: shortenCaption(
           position === 0 ? story.hook || scene.caption : scene.caption,
-          position === 0 ? 6 : 8,
+          position === 0 ? 5 : 8,
         ),
         motion: position === 0 ? "reveal" : "slide-up",
         emphasis: position === 0 ? "hook" : "body",

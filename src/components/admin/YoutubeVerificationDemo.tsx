@@ -260,6 +260,15 @@ export function YoutubeVerificationDemo() {
         No client secret, access token or refresh token is ever shown here or stored in a recording.
       </Alert>
 
+      {returnNotice ? (
+        <Alert
+          tone={returnNotice.ok ? "success" : "warning"}
+          title={returnNotice.ok ? "Returned from Google" : "Not connected"}
+        >
+          {returnNotice.text}
+        </Alert>
+      ) : null}
+
       <section className="rounded-xl border border-primary/30 bg-primary/5 p-4">
         <h3 className="type-h3">Google verification recording checklist</h3>
         <p className="mt-1 type-body-sm text-muted-foreground">

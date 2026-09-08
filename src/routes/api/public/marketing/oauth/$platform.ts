@@ -45,12 +45,48 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
         const code = url.searchParams.get("code");
         const state = url.searchParams.get("state");
         const denied = url.searchParams.get("error");
-        if (denied) return page("Not connected", "The platform reported that permission was not granted.", false);
-        if (!code || !state) return page("Not connected", "The platform did not return an authorisation code.", false);
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { encryptToken } = await import("@/lib/marketing/token-crypto.server");
         const def = oauthDefinition(platform);
+
+        /**
+         * Records a plain-language reason on the connection row so the founder
+         * console can explain what happened. Never records a code, token or
+         * secret value — only the stage and the platform's own error name.
+         */
+        const fail = async (stage: string, title: string, message: string) => {
+          console.log(`[marketing-oauth] ${platform} ${stage}`);
+          await supabaseAdmin.from("marketing_platform_connections").upsert(
+            {
+              platform,
+              connection: "NOT_CONNECTED",
+              last_error: `${stage}: ${message}`,
+              last_checked_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "platform" },
+          );
+          return page(title, message, false);
+        };
+
+        if (denied) {
+          // Google/TikTok/Meta send the refusal reason here. `access_denied`
+          // from Google most often means the signed-in account is not on the
+          // app's test-user list while the app is still in Testing.
+          const reason =
+            denied === "access_denied"
+              ? "The platform refused the authorisation (access_denied). Sign in with the account that is listed as an approved test user for the application, and accept every requested permission."
+              : `The platform reported "${denied}" instead of an authorisation.`;
+          return fail("AUTHORISATION_REFUSED", "Not connected", reason);
+        }
+        if (!code || !state) {
+          return fail(
+            "NO_CODE_RETURNED",
+            "Not connected",
+            "The platform returned to EarnRoom without an authorisation code.",
+          );
+        }
 
         const { data: stateRow } = await supabaseAdmin
           .from("marketing_oauth_states")
@@ -58,18 +94,29 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
           .eq("state", state)
           .maybeSingle();
         if (!stateRow || stateRow.platform !== platform) {
-          return page("Not connected", "This sign-in request was not recognised.", false);
+          return fail("STATE_NOT_RECOGNISED", "Not connected", "This sign-in request was not recognised.");
         }
-        if (stateRow.used_at) return page("Not connected", "This sign-in link has already been used.", false);
+        if (stateRow.used_at) {
+          return fail("STATE_ALREADY_USED", "Not connected", "This sign-in link has already been used.");
+        }
         if (Date.parse(stateRow.expires_at) <= Date.now()) {
-          return page("Not connected", "This sign-in link has expired. Start again from the studio.", false);
+          return fail(
+            "STATE_EXPIRED",
+            "Not connected",
+            "This sign-in link has expired. Start again from the studio.",
+          );
         }
 
         const clientId = process.env[def.clientIdSecret];
         const clientSecret = process.env[def.clientSecretSecret];
         if (!clientId || !clientSecret) {
-          return page("Not connected", "This platform is not set up on the server yet.", false);
+          return fail(
+            "CONFIGURATION_MISSING",
+            "Not connected",
+            "This platform is not set up on the server yet.",
+          );
         }
+
 
         const body = new URLSearchParams({
           grant_type: "authorization_code",

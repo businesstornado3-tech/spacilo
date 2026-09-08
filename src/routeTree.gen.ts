@@ -90,6 +90,7 @@ import { Route as AuthenticatedHostSpacesSpaceIdEditRouteImport } from './routes
 import { Route as AuthenticatedRenterMessagesEnquiryConversationIdRouteImport } from './routes/_authenticated.renter.messages.enquiry.$conversationId'
 import { Route as AuthenticatedRenterRequestsRequestIdIndexRouteImport } from './routes/_authenticated.renter.requests.$requestId.index'
 import { Route as AuthenticatedRenterRequestsRequestIdBookingRouteImport } from './routes/_authenticated.renter.requests.$requestId.booking'
+import { Route as ApiPublicMarketingOauthPlatformRouteImport } from './routes/api/public/marketing/oauth/$platform'
 import { Route as ApiPublicVideoWorkerSetupFileRouteImport } from './routes/api/public/video-worker/setup.$file'
 
 const IndexRoute = IndexRouteImport.update({
@@ -538,6 +539,12 @@ const AuthenticatedRenterRequestsRequestIdBookingRoute =
     path: '/booking',
     getParentRoute: () => AuthenticatedRenterRequestsRequestIdRoute,
   } as any)
+const ApiPublicMarketingOauthPlatformRoute =
+  ApiPublicMarketingOauthPlatformRouteImport.update({
+    id: '/api/public/marketing/oauth/$platform',
+    path: '/api/public/marketing/oauth/$platform',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicVideoWorkerSetupFileRoute =
   ApiPublicVideoWorkerSetupFileRouteImport.update({
     id: '/api/public/video-worker/setup/$file',
@@ -625,6 +632,7 @@ export interface FileRoutesByFullPath {
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
   '/renter/messages/enquiry/$conversationId': typeof AuthenticatedRenterMessagesEnquiryConversationIdRoute
   '/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
+  '/api/public/marketing/oauth/$platform': typeof ApiPublicMarketingOauthPlatformRoute
   '/api/public/video-worker/setup/$file': typeof ApiPublicVideoWorkerSetupFileRoute
   '/renter/requests/$requestId/': typeof AuthenticatedRenterRequestsRequestIdIndexRoute
 }
@@ -705,6 +713,7 @@ export interface FileRoutesByTo {
   '/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
   '/renter/messages/enquiry/$conversationId': typeof AuthenticatedRenterMessagesEnquiryConversationIdRoute
   '/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
+  '/api/public/marketing/oauth/$platform': typeof ApiPublicMarketingOauthPlatformRoute
   '/api/public/video-worker/setup/$file': typeof ApiPublicVideoWorkerSetupFileRoute
   '/renter/requests/$requestId': typeof AuthenticatedRenterRequestsRequestIdIndexRoute
 }
@@ -790,6 +799,7 @@ export interface FileRoutesById {
   '/_authenticated/host/spaces/$spaceId/edit': typeof AuthenticatedHostSpacesSpaceIdEditRoute
   '/_authenticated/renter/messages/enquiry/$conversationId': typeof AuthenticatedRenterMessagesEnquiryConversationIdRoute
   '/_authenticated/renter/requests/$requestId/booking': typeof AuthenticatedRenterRequestsRequestIdBookingRoute
+  '/api/public/marketing/oauth/$platform': typeof ApiPublicMarketingOauthPlatformRoute
   '/api/public/video-worker/setup/$file': typeof ApiPublicVideoWorkerSetupFileRoute
   '/_authenticated/renter/requests/$requestId/': typeof AuthenticatedRenterRequestsRequestIdIndexRoute
 }
@@ -875,6 +885,7 @@ export interface FileRouteTypes {
     | '/host/spaces/$spaceId/edit'
     | '/renter/messages/enquiry/$conversationId'
     | '/renter/requests/$requestId/booking'
+    | '/api/public/marketing/oauth/$platform'
     | '/api/public/video-worker/setup/$file'
     | '/renter/requests/$requestId/'
   fileRoutesByTo: FileRoutesByTo
@@ -955,6 +966,7 @@ export interface FileRouteTypes {
     | '/host/spaces/$spaceId/edit'
     | '/renter/messages/enquiry/$conversationId'
     | '/renter/requests/$requestId/booking'
+    | '/api/public/marketing/oauth/$platform'
     | '/api/public/video-worker/setup/$file'
     | '/renter/requests/$requestId'
   id:
@@ -1039,6 +1051,7 @@ export interface FileRouteTypes {
     | '/_authenticated/host/spaces/$spaceId/edit'
     | '/_authenticated/renter/messages/enquiry/$conversationId'
     | '/_authenticated/renter/requests/$requestId/booking'
+    | '/api/public/marketing/oauth/$platform'
     | '/api/public/video-worker/setup/$file'
     | '/_authenticated/renter/requests/$requestId/'
   fileRoutesById: FileRoutesById
@@ -1077,6 +1090,7 @@ export interface RootRouteChildren {
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicVideoWorkerHeartbeatRoute: typeof ApiPublicVideoWorkerHeartbeatRoute
   ApiPublicVideoWorkerPairRoute: typeof ApiPublicVideoWorkerPairRoute
+  ApiPublicMarketingOauthPlatformRoute: typeof ApiPublicMarketingOauthPlatformRoute
   ApiPublicVideoWorkerSetupFileRoute: typeof ApiPublicVideoWorkerSetupFileRoute
 }
 
@@ -1649,6 +1663,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRenterRequestsRequestIdBookingRouteImport
       parentRoute: typeof AuthenticatedRenterRequestsRequestIdRoute
     }
+    '/api/public/marketing/oauth/$platform': {
+      id: '/api/public/marketing/oauth/$platform'
+      path: '/api/public/marketing/oauth/$platform'
+      fullPath: '/api/public/marketing/oauth/$platform'
+      preLoaderRoute: typeof ApiPublicMarketingOauthPlatformRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/video-worker/setup/$file': {
       id: '/api/public/video-worker/setup/$file'
       path: '/api/public/video-worker/setup/$file'
@@ -1860,6 +1881,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiPublicVideoWorkerHeartbeatRoute: ApiPublicVideoWorkerHeartbeatRoute,
   ApiPublicVideoWorkerPairRoute: ApiPublicVideoWorkerPairRoute,
+  ApiPublicMarketingOauthPlatformRoute: ApiPublicMarketingOauthPlatformRoute,
   ApiPublicVideoWorkerSetupFileRoute: ApiPublicVideoWorkerSetupFileRoute,
 }
 export const routeTree = rootRouteImport

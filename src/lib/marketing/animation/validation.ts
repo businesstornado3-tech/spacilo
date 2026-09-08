@@ -10,6 +10,8 @@
  */
 import { brand } from "@/config/brand";
 
+import { hasCharacter, isExpression, isPose } from "./characters";
+import { hasEnvironment } from "./environments";
 import { brandRules } from "./platform-branding";
 import { COMPOSITIONS, FRAME_SIZES, type AnimatedPlan } from "./types";
 
@@ -114,7 +116,7 @@ export function validatePlan(plan: AnimatedPlan): QualityCheck {
     if (scene.caption.text.length > lineBudget(plan, scale) * 4) {
       failures.push(`Scene ${scene.index + 1} has more caption than fits the safe area.`);
     }
-    if (scene.role !== "endcard" && scene.items.length === 0) {
+    if (scene.role !== "endcard" && scene.items.length === 0 && scene.cast.length === 0) {
       failures.push(`Scene ${scene.index + 1} has nothing in it.`);
     }
     if (scene.seconds < 1) failures.push(`Scene ${scene.index + 1} is too short to read.`);
@@ -134,7 +136,88 @@ export function validatePlan(plan: AnimatedPlan): QualityCheck {
     failures.push("The planned length is not valid for this platform.");
   }
 
+  /* ----------------------------------------------------------- storyboard */
+  if (!plan.brand.tagline.includes(brand.tagline) || plan.brand.tagline !== brand.tagline) {
+    failures.push("The approved EarnRoom tagline is not the one in the plan.");
+  }
+  if (plan.branding.showEndCard) {
+    const card = plan.scenes.find((scene) => scene.role === "endcard");
+    if (card && card.caption.text !== brand.tagline) {
+      failures.push(`The closing card must read exactly “${brand.tagline}”.`);
+    }
+  }
+  for (const scene of plan.scenes) {
+    if (!hasEnvironment(scene.environment)) {
+      failures.push(`Scene ${scene.index + 1} is set somewhere that does not exist.`);
+    }
+    for (const member of scene.cast) {
+      if (!hasCharacter(member.character)) {
+        failures.push(`Scene ${scene.index + 1} uses a character that is not in the library.`);
+      }
+      if (!isPose(member.pose) || !isExpression(member.expression)) {
+        failures.push(`Scene ${scene.index + 1} asks for a pose or expression that does not exist.`);
+      }
+      const inside =
+        member.x > plan.composition.safe.side && member.x < 1 - plan.composition.safe.side;
+      if (!inside) failures.push(`A character in scene ${scene.index + 1} stands outside the safe area.`);
+    }
+  }
+  // Continuity: the same people throughout, never swapped mid-story.
+  const used = [...new Set(plan.scenes.flatMap((scene) => scene.cast.map((c) => c.character)))];
+  for (const id of used) {
+    if (!plan.storyboard.characters.includes(id)) {
+      failures.push("A character appears who was not cast for this campaign.");
+    }
+  }
+  if (used.length > 2) failures.push("Too many different people appear for one story to follow.");
+  const beats = plan.scenes.map((scene) => scene.beat);
+  if (plan.scenes.length > 2) {
+    if (!beats.some((beat) => beat === "hook" || beat === "problem")) {
+      failures.push("The story has no beginning.");
+    }
+    if (!beats.some((beat) => beat === "solution" || beat === "discovery" || beat === "connection")) {
+      failures.push("The story has no middle.");
+    }
+    if (!beats.some((beat) => beat === "outcome" || beat === "brand")) {
+      failures.push("The story has no ending.");
+    }
+  }
+
   return { passed: failures.length === 0, failures };
+}
+
+/**
+ * A deterministic score for each thing that matters. Rules only — no model is
+ * asked whether the video is good enough.
+ */
+export type QualityScores = {
+  STORY_CONTINUITY: number;
+  CHARACTER_CONTINUITY: number;
+  BRAND_ACCURACY: number;
+  TEXT_ACCURACY: number;
+  VISUAL_COMPLETENESS: number;
+  SAFE_AREA_COMPLIANCE: number;
+  SCENE_COMPLETENESS: number;
+  PLATFORM_COMPLIANCE: number;
+};
+
+export function scorePlan(plan: AnimatedPlan): QualityScores {
+  const rules = brandRules(plan.platform);
+  const check = validatePlan(plan);
+  const failed = (needle: string) =>
+    check.failures.some((failure) => failure.toLowerCase().includes(needle));
+  const beats = new Set(plan.scenes.map((scene) => scene.beat));
+  const cast = new Set(plan.scenes.flatMap((scene) => scene.cast.map((c) => c.character)));
+  return {
+    STORY_CONTINUITY: beats.size >= 3 && !failed("story") ? 100 : 60,
+    CHARACTER_CONTINUITY: cast.size > 0 && cast.size <= 2 ? 100 : cast.size === 0 ? 70 : 40,
+    BRAND_ACCURACY: plan.brand.logoUrl && plan.brand.tagline === brand.tagline && !failed("brand") ? 100 : 0,
+    TEXT_ACCURACY: failed("placeholder") || failed("misspell") ? 0 : 100,
+    VISUAL_COMPLETENESS: plan.scenes.every((s) => s.items.length > 0 || s.cast.length > 0 || s.role === "endcard") ? 100 : 50,
+    SAFE_AREA_COMPLIANCE: failed("safe area") ? 0 : 100,
+    SCENE_COMPLETENESS: plan.scenes.every((scene) => scene.seconds >= 1) ? 100 : 50,
+    PLATFORM_COMPLIANCE: plan.seconds <= rules.maxSeconds + 0.5 ? 100 : 0,
+  };
 }
 
 /** What the renderer actually produced and drew. Reported, never assumed. */
@@ -145,6 +228,8 @@ export type RenderOutcome = {
   bytes: number;
   /** Frames on which the real EarnRoom artwork was painted. */
   logoFrames: number;
+  /** Character draws across the whole render, for the story check. */
+  characterFrames?: number;
   /** Whether the official artwork files decoded successfully. */
   artworkLoaded: boolean;
   /** Smallest width the lock-up was drawn at, in pixels. */
@@ -172,6 +257,10 @@ export function validateRender(plan: AnimatedPlan, outcome: RenderOutcome): Qual
   }
   if (outcome.seconds <= 0 || outcome.frames <= 0) failures.push("The finished video is empty.");
   if (outcome.bytes < 20_000) failures.push("The finished file is too small to be a real video.");
+  const wantsPeople = plan.scenes.some((scene) => scene.cast.length > 0);
+  if (wantsPeople && (outcome.characterFrames ?? 0) <= 0) {
+    failures.push("The people in the story were never drawn into the finished video.");
+  }
   return { passed: failures.length === 0, failures };
 }
 

@@ -17,7 +17,8 @@ import wordmarkAsset from "@/assets/brand/earnroom-wordmark-transparent.png.asse
 import { brand } from "@/config/brand";
 import { siteOrigin } from "@/lib/seo/meta";
 
-import type { CampaignStory, PlatformAsset, StoryScene } from "../types";
+import type { CampaignStory, MarketingAudience, PlatformAsset, StoryScene } from "../types";
+import { buildStoryboard, type StoryboardScene } from "./story";
 import { elementsForText } from "./library";
 import { applyBranding, brandRules } from "./platform-branding";
 import {
@@ -96,18 +97,34 @@ function layout(
   index: number,
   stageY: number,
   stageScale: number,
+  /** True when people are on screen: props then keep clear of the centre. */
+  peopled: boolean,
 ): { x: number; y: number; size: number } {
   const scale = stageScale;
-  if (count <= 1) return { x: 0.5, y: stageY, size: 0.56 * scale };
+  // With a character on stage the props sit to the sides and slightly higher,
+  // so nothing lands on the person or in the caption band.
+  const y = peopled ? stageY - 0.12 : stageY;
+  if (count <= 1)
+    return { x: peopled ? 0.74 : 0.5, y, size: (peopled ? 0.3 : 0.56) * scale };
   if (count === 2)
-    return { x: index === 0 ? 0.32 : 0.68, y: stageY, size: 0.38 * scale };
-  const positions = [
-    { x: 0.29, y: stageY - 0.07 },
-    { x: 0.71, y: stageY - 0.07 },
-    { x: 0.5, y: stageY + 0.11 },
-  ];
+    return {
+      x: index === 0 ? (peopled ? 0.2 : 0.32) : peopled ? 0.8 : 0.68,
+      y,
+      size: (peopled ? 0.24 : 0.38) * scale,
+    };
+  const positions = peopled
+    ? [
+        { x: 0.18, y: y - 0.04 },
+        { x: 0.82, y: y - 0.04 },
+        { x: 0.5, y: y - 0.16 },
+      ]
+    : [
+        { x: 0.29, y: stageY - 0.07 },
+        { x: 0.71, y: stageY - 0.07 },
+        { x: 0.5, y: stageY + 0.11 },
+      ];
   const spot = positions[index] ?? positions[0]!;
-  return { x: spot.x, y: spot.y, size: 0.32 * scale };
+  return { x: spot.x, y: spot.y, size: (peopled ? 0.2 : 0.32) * scale };
 }
 
 function sceneItems(
@@ -116,12 +133,18 @@ function sceneItems(
   cast: readonly string[],
   stageY: number,
   stageScale: number,
+  board: StoryboardScene | null,
 ): SceneItem[] {
   const fromWords = elementsForText(`${scene.visual} ${scene.caption}`);
-  const ids = [...new Set([...ROLE_ELEMENTS[role], ...cast, ...fromWords])].slice(0, 3);
+  // Storyboard props come first: they are the objects the story actually needs,
+  // and they stay the same object from scene to scene.
+  const peopled = (board?.cast.length ?? 0) > 0;
+  const ids = [
+    ...new Set([...(board?.props ?? []), ...ROLE_ELEMENTS[role], ...cast, ...fromWords]),
+  ].slice(0, peopled ? 2 : 3);
   return ids.map((id, index) => ({
     element: id,
-    ...layout(ids.length, index, stageY, stageScale),
+    ...layout(ids.length, index, stageY, stageScale, peopled),
     motion: ENTRANCES[(scene.index + index) % ENTRANCES.length]!,
     delay: Math.min(0.18 * index, Math.max(0, scene.seconds - 0.4)),
     // Later items sit nearer the viewer, so the camera move separates them.
@@ -167,6 +190,9 @@ export function buildAnimatedPlan(input: {
   asset: PlatformAsset;
   story: CampaignStory;
   fps?: number;
+  /** From the existing campaign intelligence; never decided here. */
+  audience?: MarketingAudience | null;
+  topic?: string | null;
 }): AnimatedPlan {
   const { campaignId, asset, story } = input;
   const rules = brandRules(asset.platform);
@@ -189,17 +215,30 @@ export function buildAnimatedPlan(input: {
 
   const roles = rolesForStory(story.scenes.length);
   const cast = castForStory(story);
+  const storyboard = buildStoryboard({
+    story,
+    asset,
+    audience: input.audience ?? null,
+    topic: input.topic ?? null,
+    sceneCount: story.scenes.length,
+  });
 
   const scenes: AnimatedScene[] = story.scenes.map((scene, position) => {
     const role = roles[position] ?? "solution";
+    const board = storyboard.scenes[position] ?? storyboard.scenes.at(-1) ?? null;
     return {
       index: position,
       role,
+      beat: board?.beat ?? "solution",
+      environment: board?.environment ?? "ENV_HOME_LIVING_ROOM",
+      cast: board?.cast ?? [],
+      shot: board?.shot ?? "slowPush",
+      note: board?.note ?? "",
       seconds: Math.max(1, Number((scene.seconds * scale).toFixed(2))),
       background: position % 2 === 0 ? "canvas" : "surface",
       backdrop: backdrop(position, role),
       camera: camera(position, role),
-      items: sceneItems(scene, role, cast, composition.stageY, composition.stageScale),
+      items: sceneItems(scene, role, cast, composition.stageY, composition.stageScale, board),
       caption: {
         text: position === 0 ? story.hook || scene.caption : scene.caption,
         motion: position === 0 ? "reveal" : "slide-up",
@@ -219,6 +258,11 @@ export function buildAnimatedPlan(input: {
     scenes.push({
       index: scenes.length,
       role: "endcard",
+      beat: "brand",
+      environment: "ENV_CLOSING_BRAND",
+      cast: [],
+      shot: "reveal",
+      note: "The EarnRoom lock-up, tagline, call to action and web address.",
       seconds: Number(endCardSeconds.toFixed(2)),
       background: "primary",
       backdrop: backdrop(scenes.length, "endcard"),
@@ -253,6 +297,11 @@ export function buildAnimatedPlan(input: {
     fps,
     seconds,
     scenes,
+    storyboard: {
+      template: storyboard.template,
+      side: storyboard.side,
+      characters: storyboard.characters,
+    },
     branding,
     composition,
     brand: {

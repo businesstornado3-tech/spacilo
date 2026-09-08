@@ -18,7 +18,12 @@ import { buildAnimatedPlan } from "@/lib/marketing/animation";
 import { founderCards, type FounderCard } from "@/lib/marketing/workers/founder-view";
 import { definition } from "@/lib/marketing/platforms";
 import { playerBox, versionRow } from "@/lib/marketing/review";
-import type { AspectRatio, CampaignStory, PlatformAsset } from "@/lib/marketing/types";
+import type {
+  AspectRatio,
+  CampaignStory,
+  MarketingAudience,
+  PlatformAsset,
+} from "@/lib/marketing/types";
 import { cn } from "@/lib/utils";
 
 type WorkerChoice = "AUTO" | "BROWSER" | "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD";
@@ -105,11 +110,16 @@ export function MarketingVideoPanel({
   assets,
   story,
   providerConfigured,
+  audience = null,
+  topic = null,
 }: {
   campaignId: string;
   assets: readonly PlatformAsset[];
   story: CampaignStory;
   providerConfigured: boolean;
+  /** From the existing campaign intelligence; used to cast the story. */
+  audience?: MarketingAudience | null;
+  topic?: string | null;
 }) {
   const videos = useCampaignVideos(campaignId);
   const workers = useVideoWorkers(true);
@@ -168,7 +178,7 @@ export function MarketingVideoPanel({
       const { validatePlan, validateRender, qualityStatus } = await import(
         "@/lib/marketing/animation/validation"
       );
-      const plan = buildAnimatedPlan({ campaignId, asset, story });
+      const plan = buildAnimatedPlan({ campaignId, asset, story, audience, topic });
       // Check the plan before a single frame is drawn: a bad plan costs nothing.
       const planCheck = validatePlan(plan);
       if (!planCheck.passed) {

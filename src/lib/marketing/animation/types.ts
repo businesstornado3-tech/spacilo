@@ -8,6 +8,8 @@
  * Pure module: no canvas, no DOM, no network, no clock.
  */
 import type { AspectRatio, PlatformId } from "../types";
+import type { EnvironmentId } from "./environments";
+import type { CameraShot, CharacterCue, StoryBeat, StoryTemplateId } from "./story";
 
 /** Palette slots. Values mirror the design tokens; never invented per campaign. */
 export type Paint =
@@ -125,6 +127,16 @@ export type SceneBackdrop = {
 export type AnimatedScene = {
   index: number;
   role: SceneRole;
+  /** The job this scene does in the advertisement, from the storyboard. */
+  beat: StoryBeat;
+  /** The layered environment the scene is set in. */
+  environment: EnvironmentId;
+  /** Who is on screen, what they are doing and how they feel. */
+  cast: readonly CharacterCue[];
+  /** The camera behaviour for this scene. */
+  shot: CameraShot;
+  /** One line describing what changes here, for the founder's storyboard. */
+  note: string;
   seconds: number;
   background: Paint;
   backdrop: SceneBackdrop;
@@ -180,6 +192,12 @@ export type AnimatedPlan = {
   fps: number;
   seconds: number;
   scenes: readonly AnimatedScene[];
+  /** The deterministic storyboard this plan was built from. */
+  storyboard: {
+    template: StoryTemplateId;
+    side: "renter" | "host" | "both";
+    characters: readonly string[];
+  };
   branding: AppliedBranding;
   composition: Composition;
   /** The official EarnRoom artwork, taken from the app's own asset pointers. */

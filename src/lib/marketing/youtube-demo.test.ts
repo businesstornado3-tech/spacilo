@@ -1,14 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  RECORDING_CHECKLIST,
   YOUTUBE_DEMO_SCOPES,
   YOUTUBE_DEMO_STEPS,
   clientHint,
   demoRecordingPath,
   evidencedSteps,
+  publishingStateLabel,
   recordingLabel,
   redactSensitive,
   runStatusLabel,
+  uploadConfirmed,
   type DemoRunView,
 } from "./youtube-demo";
 

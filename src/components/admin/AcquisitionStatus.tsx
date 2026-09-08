@@ -88,7 +88,7 @@ export function AcquisitionStatus() {
 
       <div className="grid gap-3 sm:grid-cols-2">
         {visible.map((channel) => (
-          <article key={`${channel.kind}-${channel.channel}`} className="rounded-xl border border-border p-4">
+          <article key={`${channel.kind}-${channel.key}`} className="rounded-xl border border-border p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-medium">{channel.label}</p>
@@ -98,13 +98,7 @@ export function AcquisitionStatus() {
               </div>
               <StatusPill status={channel.status} />
             </div>
-            <p className="mt-2 text-sm text-muted-foreground">{channel.reason}</p>
-            {channel.nextStep ? (
-              <p className="mt-2 text-sm">
-                <span className="font-medium">Next: </span>
-                {channel.nextStep}
-              </p>
-            ) : null}
+            <p className="mt-2 text-sm text-muted-foreground">{channel.detail}</p>
           </article>
         ))}
       </div>

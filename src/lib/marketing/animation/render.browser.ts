@@ -5,12 +5,18 @@
  * video encoder. There is no video API, no GPU rental and no per-video charge:
  * the only cost is the founder's own machine for the few seconds it runs.
  *
+ * The real EarnRoom artwork is loaded from the app's own approved asset files
+ * and painted into the frames. It is never redrawn, retyped or approximated —
+ * if the artwork cannot be loaded, the render fails rather than shipping a
+ * video with a fake logo in it.
+ *
  * Browser-only module. Nothing here is imported during server rendering.
  */
 import { ArrayBufferTarget, Muxer } from "mp4-muxer";
 
 import { element } from "./library";
 import type { AnimatedPlan, AnimatedScene, Motion, Paint, Shape } from "./types";
+import type { RenderOutcome } from "./validation";
 
 /* ------------------------------------------------------------------ paints */
 
@@ -52,6 +58,10 @@ export function animationSupport(): RenderSupport {
 
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const easeOut = (t: number) => 1 - Math.pow(1 - clamp(t), 3);
+const easeInOut = (t: number) => {
+  const x = clamp(t);
+  return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+};
 const easeBack = (t: number) => {
   const x = clamp(t);
   return 1 + 2.7 * Math.pow(x - 1, 3) + 1.7 * Math.pow(x - 1, 2);
@@ -84,6 +94,27 @@ function entry(motion: Motion, progress: number): Entry {
     default:
       return { opacity: t, dx: 0, dy: 0, scale: 1 };
   }
+}
+
+/* ----------------------------------------------------------------- artwork */
+
+export type Artwork = { icon: ImageBitmap; wordmark: ImageBitmap };
+
+/**
+ * Loads the approved EarnRoom artwork. Rejects rather than substituting text,
+ * so a clip can never be published with an invented logo.
+ */
+export async function loadArtwork(plan: AnimatedPlan): Promise<Artwork> {
+  const fetchBitmap = async (url: string) => {
+    const response = await fetch(url, { cache: "force-cache" });
+    if (!response.ok) throw new Error(`Could not load the EarnRoom artwork (${response.status}).`);
+    return createImageBitmap(await response.blob());
+  };
+  const [icon, wordmark] = await Promise.all([
+    fetchBitmap(plan.brand.logoUrl),
+    fetchBitmap(plan.brand.wordmarkUrl),
+  ]);
+  return { icon, wordmark };
 }
 
 /* ----------------------------------------------------------------- drawing */
@@ -126,43 +157,149 @@ function drawShape(
   }
 }
 
-function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+function wrap(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+): { text: string; words: string[] }[] {
   const words = text.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let line = "";
+  const lines: string[][] = [];
+  let line: string[] = [];
   for (const word of words) {
-    const candidate = line ? `${line} ${word}` : word;
-    if (ctx.measureText(candidate).width > maxWidth && line) {
+    const candidate = [...line, word].join(" ");
+    if (ctx.measureText(candidate).width > maxWidth && line.length) {
       lines.push(line);
-      line = word;
+      line = [word];
     } else {
-      line = candidate;
+      line = [...line, word];
     }
   }
-  if (line) lines.push(line);
-  return lines.slice(0, 4);
+  if (line.length) lines.push(line);
+  return lines.slice(0, 4).map((entryLine) => ({ text: entryLine.join(" "), words: entryLine }));
 }
+
+/** Layered backdrop: a tinted wash, drifting soft shapes and a faint horizon. */
+function drawBackdrop(ctx: CanvasRenderingContext2D, plan: AnimatedPlan, scene: AnimatedScene, t: number) {
+  const { width, height } = plan;
+  const gradient = ctx.createLinearGradient(0, 0, width * 0.4, height);
+  gradient.addColorStop(0, PALETTE[scene.backdrop.base]);
+  gradient.addColorStop(1, PALETTE[scene.backdrop.base === "primary" ? "primary" : "surface"]);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.save();
+  ctx.globalAlpha = scene.backdrop.base === "primary" ? 0.16 : 0.32;
+  ctx.fillStyle = PALETTE[scene.backdrop.tint];
+  for (let i = 0; i < scene.backdrop.motes; i += 1) {
+    // Deterministic positions: the same scene always drifts the same way.
+    const seed = (i + 1) * (scene.index + 2);
+    const x = ((Math.sin(seed * 12.9898) + 1) / 2) * width;
+    const y = ((Math.sin(seed * 78.233) + 1) / 2) * height;
+    const r = width * (0.06 + ((seed % 5) / 5) * 0.14);
+    ctx.beginPath();
+    ctx.arc(x + Math.sin(t * 0.6 + seed) * width * 0.02, y + Math.cos(t * 0.5 + seed) * height * 0.015, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  if (scene.backdrop.horizon) {
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = PALETTE.line;
+    const y = height * (plan.composition.stageY + 0.13);
+    ctx.fillRect(0, y, width, Math.max(1, height * 0.0035));
+    ctx.restore();
+  }
+}
+
+/** Kinetic typography: words settle in one after another, not all at once. */
+function drawText(
+  ctx: CanvasRenderingContext2D,
+  plan: AnimatedPlan,
+  options: {
+    text: string;
+    motion: Motion;
+    elapsed: number;
+    startAt: number;
+    size: number;
+    colour: string;
+    centreY: number;
+    maxWidth: number;
+    font: string;
+  },
+): number {
+  const motion = entry(options.motion, clamp((options.elapsed - options.startAt) / 0.6));
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = options.font.replace("1px", `${options.size}px`);
+  ctx.fillStyle = options.colour;
+  const lines = wrap(ctx, options.text, options.maxWidth);
+  const lineHeight = options.size * 1.24;
+  let y = options.centreY + motion.dy * plan.height;
+  let wordIndex = 0;
+  for (const line of lines) {
+    const lineWidth = ctx.measureText(line.text).width;
+    let x = plan.width / 2 - lineWidth / 2;
+    for (const word of line.words) {
+      const wordProgress = clamp(
+        (options.elapsed - options.startAt - wordIndex * 0.07) / 0.4,
+      );
+      const wordWidth = ctx.measureText(`${word} `).width;
+      ctx.globalAlpha = motion.opacity * easeOut(wordProgress);
+      ctx.fillText(word, x + wordWidth / 2, y + (1 - easeOut(wordProgress)) * options.size * 0.3);
+      x += wordWidth;
+      wordIndex += 1;
+    }
+    y += lineHeight;
+  }
+  ctx.restore();
+  return y;
+}
+
+type DrawStats = { logoFrames: number; smallestLogoPx: number };
 
 function drawScene(
   ctx: CanvasRenderingContext2D,
   plan: AnimatedPlan,
   scene: AnimatedScene,
   elapsed: number,
+  art: Artwork,
+  stats: DrawStats,
 ) {
   const { width, height } = plan;
-  ctx.fillStyle = PALETTE[scene.background];
-  ctx.fillRect(0, 0, width, height);
+  const comp = plan.composition;
+  const progress = scene.seconds > 0 ? clamp(elapsed / scene.seconds) : 1;
+  const dark = scene.backdrop.base === "primary";
+  let logoDrawn = false;
 
-  const brandDark = scene.background === "primary";
+  drawBackdrop(ctx, plan, scene, elapsed);
+
+  /* ------------------------------------------------- illustration + camera */
+  const move = scene.camera;
+  const eased = easeInOut(progress);
+  const scale = move.fromScale + (move.toScale - move.fromScale) * eased;
+  const panX = (move.fromX + (move.toX - move.fromX) * eased) * width;
+  const panY = (move.fromY + (move.toY - move.fromY) * eased) * height;
 
   for (const item of scene.items) {
-    const progress = clamp((elapsed - item.delay) / 0.6);
-    if (progress <= 0) continue;
-    const motion = entry(item.motion, progress);
-    const size = item.size * width * motion.scale;
-    const originX = (item.x + motion.dx) * width - size / 2;
-    const originY = (item.y + motion.dy) * height - size / 2;
+    const itemProgress = clamp((elapsed - item.delay) / 0.6);
+    if (itemProgress <= 0) continue;
+    const motion = entry(item.motion, itemProgress);
+    // Parallax: nearer items travel further with the camera.
+    const depthScale = 1 + (scale - 1) * (0.5 + item.depth);
+    const size = item.size * width * motion.scale * depthScale;
+    const originX =
+      (item.x + motion.dx) * width - size / 2 + panX * (0.4 + item.depth) + (item.depth - 0.6) * Math.sin(elapsed * 0.9) * width * 0.004;
+    const originY = (item.y + motion.dy) * height - size / 2 + panY * (0.4 + item.depth);
+
     ctx.save();
+    // A soft contact shadow, so illustrations sit in the scene rather than on it.
+    ctx.globalAlpha = motion.opacity * 0.16;
+    ctx.fillStyle = PALETTE.ink;
+    ctx.beginPath();
+    ctx.ellipse(originX + size / 2, originY + size * 0.98, size * 0.34, size * 0.06, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.globalAlpha = motion.opacity;
     for (const shape of element(item.element).shapes) {
       drawShape(ctx, shape, { x: originX, y: originY, size });
@@ -170,47 +307,84 @@ function drawScene(
     ctx.restore();
   }
 
-  // Caption block, always in the lower safe area so platform chrome never hides it.
-  const captionMotion = entry(scene.caption.motion, clamp(elapsed / 0.55));
-  const captionSize = Math.round(width * (scene.caption.emphasis === "hook" ? 0.075 : 0.058));
-  ctx.save();
-  ctx.globalAlpha = captionMotion.opacity;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = FONT_DISPLAY.replace("1px", `${captionSize}px`);
-  ctx.fillStyle = brandDark ? PALETTE.white : PALETTE.ink;
-  const lines = wrap(ctx, scene.caption.text, width * 0.84);
-  const baseY =
-    height * (scene.caption.emphasis === "brand" ? 0.46 : 0.76) + captionMotion.dy * height;
-  lines.forEach((line, index) => {
-    ctx.fillText(line, width / 2, baseY + index * captionSize * 1.25);
+  /* ----------------------------------------------------------- end card */
+  if (scene.logo === "endcard") {
+    const reveal = entry("zoom", clamp(elapsed / 0.7));
+    const markWidth = width * comp.logoScale * reveal.scale;
+    const markHeight = (markWidth / art.wordmark.width) * art.wordmark.height;
+    ctx.save();
+    ctx.globalAlpha = reveal.opacity;
+    ctx.drawImage(
+      art.wordmark,
+      width / 2 - markWidth / 2,
+      height * 0.34 - markHeight / 2,
+      markWidth,
+      markHeight,
+    );
+    ctx.restore();
+    logoDrawn = true;
+    stats.smallestLogoPx =
+      stats.smallestLogoPx === 0 ? markWidth : Math.min(stats.smallestLogoPx, markWidth);
+  }
+
+  /* -------------------------------------------------------------- captions */
+  const captionScale =
+    scene.caption.emphasis === "hook"
+      ? comp.hookScale
+      : scene.caption.emphasis === "brand"
+        ? comp.hookScale * 0.9
+        : comp.bodyScale;
+  const captionSize = Math.round(width * captionScale);
+  const captionY =
+    height * (scene.logo === "endcard" ? 0.6 : comp.captionY) - captionSize * 0.4;
+
+  const afterCaption = drawText(ctx, plan, {
+    text: scene.caption.text,
+    motion: scene.caption.motion,
+    elapsed,
+    startAt: 0.1,
+    size: captionSize,
+    colour: dark ? PALETTE.white : PALETTE.ink,
+    centreY: captionY,
+    maxWidth: width * comp.textWidth,
+    font: FONT_DISPLAY,
   });
 
   if (scene.subCaption) {
-    const subMotion = entry(scene.subCaption.motion, clamp((elapsed - 0.4) / 0.6));
-    ctx.globalAlpha = subMotion.opacity;
-    const subSize = Math.round(width * 0.045);
-    ctx.font = FONT_BODY.replace("1px", `${subSize}px`);
-    ctx.fillStyle = brandDark ? PALETTE.primarySoft : PALETTE.primary;
-    const subY = baseY + lines.length * captionSize * 1.25 + subSize * 0.9;
-    wrap(ctx, scene.subCaption.text, width * 0.8).forEach((line, index) => {
-      ctx.fillText(line, width / 2, subY + index * subSize * 1.3);
+    const subSize = Math.round(width * comp.ctaScale);
+    drawText(ctx, plan, {
+      text: scene.subCaption.text,
+      motion: scene.subCaption.motion,
+      elapsed,
+      startAt: 0.5,
+      size: subSize,
+      colour: dark ? PALETTE.primarySoft : PALETTE.primary,
+      centreY: afterCaption + subSize * 0.6,
+      maxWidth: width * (comp.textWidth - 0.04),
+      font: FONT_BODY,
     });
   }
-  ctx.restore();
 
-  // Persistent wordmark, only where the platform allows one.
-  if (plan.branding.showWatermark && !brandDark) {
+  /* ------------------------------------------------------------- watermark */
+  if (scene.logo === "watermark") {
+    const markWidth = Math.max(64, width * 0.19);
+    const markHeight = (markWidth / art.wordmark.width) * art.wordmark.height;
     ctx.save();
-    ctx.globalAlpha = 0.85;
-    const markSize = Math.round(width * 0.036);
-    ctx.font = FONT_DISPLAY.replace("1px", `${markSize}px`);
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
-    ctx.fillStyle = PALETTE.primary;
-    ctx.fillText("EarnRoom", width * 0.06, height * 0.05);
+    ctx.globalAlpha = 0.92;
+    ctx.drawImage(
+      art.wordmark,
+      width * comp.safe.side,
+      height * (comp.safe.top * 0.55),
+      markWidth,
+      markHeight,
+    );
     ctx.restore();
+    logoDrawn = true;
+    stats.smallestLogoPx =
+      stats.smallestLogoPx === 0 ? markWidth : Math.min(stats.smallestLogoPx, markWidth);
   }
+
+  if (logoDrawn) stats.logoFrames += 1;
 }
 
 /* --------------------------------------------------------------- rendering */
@@ -241,7 +415,7 @@ async function pickCodec(
         width,
         height,
         framerate: fps,
-        bitrate: 3_200_000,
+        bitrate: 4_500_000,
       });
       if (support.supported) return candidate;
     } catch {
@@ -257,6 +431,13 @@ export type RenderResult = {
   seconds: number;
   frames: number;
   codec: string;
+  /** What was actually drawn, for the deterministic quality gate. */
+  outcome: RenderOutcome;
+  /**
+   * Narration and music are not produced in the browser at £0; the campaign
+   * narration is carried in the plan for the local worker's audio pipeline.
+   */
+  audio: "none";
 };
 
 /**
@@ -274,11 +455,20 @@ export async function renderAnimatedPlan(
   const chosen = await pickCodec(width, height, fps);
   if (!chosen) throw new Error("This browser cannot record video at this size.");
 
+  const art = await loadArtwork(plan);
+
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Could not open a drawing surface in this browser.");
+
+  // Holds the last frame of the previous scene, so scenes dissolve into each
+  // other instead of flashing through a blank background.
+  const previous = document.createElement("canvas");
+  previous.width = width;
+  previous.height = height;
+  const previousCtx = previous.getContext("2d");
 
   const muxer = new Muxer({
     target: new ArrayBufferTarget(),
@@ -293,25 +483,32 @@ export async function renderAnimatedPlan(
       encodeError = error instanceof Error ? error : new Error(String(error));
     },
   });
-  encoder.configure({ codec: chosen.codec, width, height, framerate: fps, bitrate: 3_200_000 });
+  encoder.configure({ codec: chosen.codec, width, height, framerate: fps, bitrate: 4_500_000 });
 
   const totalFrames = Math.max(1, Math.round(plan.seconds * fps));
+  const stats: DrawStats = { logoFrames: 0, smallestLogoPx: 0 };
   let frameIndex = 0;
+  let hasPrevious = false;
 
   for (const scene of plan.scenes) {
     const sceneFrames = Math.max(1, Math.round(scene.seconds * fps));
+    const fadeFrames = Math.round(fps * 0.35);
     for (let f = 0; f < sceneFrames; f += 1) {
       if (encodeError) throw encodeError;
       const elapsed = f / fps;
-      drawScene(ctx, plan, scene, elapsed);
+      drawScene(ctx, plan, scene, elapsed, art, stats);
 
-      // Cross-fade the first few frames of a scene into the previous one.
-      if (scene.transition === "fade" && f < fps * 0.25) {
+      if (scene.transition === "fade" && hasPrevious && f < fadeFrames) {
         ctx.save();
-        ctx.globalAlpha = 1 - f / (fps * 0.25);
-        ctx.fillStyle = PALETTE.canvas;
-        ctx.fillRect(0, 0, width, height);
+        ctx.globalAlpha = 1 - easeInOut(f / fadeFrames);
+        ctx.drawImage(previous, 0, 0);
         ctx.restore();
+      }
+
+      if (previousCtx && f === sceneFrames - 1) {
+        previousCtx.clearRect(0, 0, width, height);
+        previousCtx.drawImage(canvas, 0, 0);
+        hasPrevious = true;
       }
 
       const frame = new VideoFrame(canvas, {
@@ -346,5 +543,16 @@ export async function renderAnimatedPlan(
     seconds: frameIndex / fps,
     frames: frameIndex,
     codec: chosen.codec,
+    audio: "none",
+    outcome: {
+      width,
+      height,
+      seconds: frameIndex / fps,
+      bytes: buffer.byteLength,
+      frames: frameIndex,
+      logoFrames: stats.logoFrames,
+      smallestLogoPx: Math.round(stats.smallestLogoPx),
+      artworkLoaded: true,
+    },
   };
 }

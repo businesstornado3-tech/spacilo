@@ -1424,6 +1424,21 @@ export const storeAnimatedVideo = createServerFn({ method: "POST" })
         digest: z.string().min(4).max(64),
         scenes: z.number().int().min(1).max(40),
         brandingNotes: z.array(z.string().max(400)).max(10).default([]),
+        /**
+         * The deterministic quality verdict from the browser renderer. Only a
+         * clip that actually drew the official artwork and matched its plan is
+         * allowed to be stored as ready.
+         */
+        qualityStatus: z
+          .enum([
+            "DRAFT",
+            "BROWSER_GENERATED",
+            "BRAND_VALIDATED",
+            "PRODUCTION_READY",
+            "VALIDATION_FAILED",
+          ])
+          .default("DRAFT"),
+        qualityFailures: z.array(z.string().max(300)).max(20).default([]),
         /** Base64 MP4 produced locally. Capped so a request cannot be abused. */
         mp4Base64: z.string().min(100).max(40_000_000),
       })

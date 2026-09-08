@@ -352,6 +352,21 @@ function drawScene(
   }
 
   /* -------------------------------------------------------------- captions */
+  // A soft scrim under the caption band, so type stays readable over artwork
+  // without hiding the scene behind a solid slab.
+  if (scene.logo !== "endcard") {
+    const bandTop = height * (comp.captionY - 0.14);
+    const scrim = ctx.createLinearGradient(0, bandTop, 0, height);
+    const base = dark ? "0,0,0" : "255,255,255";
+    scrim.addColorStop(0, `rgba(${base},0)`);
+    scrim.addColorStop(0.45, `rgba(${base},0.72)`);
+    scrim.addColorStop(1, `rgba(${base},0.9)`);
+    ctx.save();
+    ctx.fillStyle = scrim;
+    ctx.fillRect(0, bandTop, width, height - bandTop);
+    ctx.restore();
+  }
+
   const captionScale =
     scene.caption.emphasis === "hook"
       ? comp.hookScale

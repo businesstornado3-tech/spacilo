@@ -97,18 +97,34 @@ function layout(
   index: number,
   stageY: number,
   stageScale: number,
+  /** True when people are on screen: props then keep clear of the centre. */
+  peopled: boolean,
 ): { x: number; y: number; size: number } {
   const scale = stageScale;
-  if (count <= 1) return { x: 0.5, y: stageY, size: 0.56 * scale };
+  // With a character on stage the props sit to the sides and slightly higher,
+  // so nothing lands on the person or in the caption band.
+  const y = peopled ? stageY - 0.12 : stageY;
+  if (count <= 1)
+    return { x: peopled ? 0.74 : 0.5, y, size: (peopled ? 0.3 : 0.56) * scale };
   if (count === 2)
-    return { x: index === 0 ? 0.32 : 0.68, y: stageY, size: 0.38 * scale };
-  const positions = [
-    { x: 0.29, y: stageY - 0.07 },
-    { x: 0.71, y: stageY - 0.07 },
-    { x: 0.5, y: stageY + 0.11 },
-  ];
+    return {
+      x: index === 0 ? (peopled ? 0.2 : 0.32) : peopled ? 0.8 : 0.68,
+      y,
+      size: (peopled ? 0.24 : 0.38) * scale,
+    };
+  const positions = peopled
+    ? [
+        { x: 0.18, y: y - 0.04 },
+        { x: 0.82, y: y - 0.04 },
+        { x: 0.5, y: y - 0.16 },
+      ]
+    : [
+        { x: 0.29, y: stageY - 0.07 },
+        { x: 0.71, y: stageY - 0.07 },
+        { x: 0.5, y: stageY + 0.11 },
+      ];
   const spot = positions[index] ?? positions[0]!;
-  return { x: spot.x, y: spot.y, size: 0.32 * scale };
+  return { x: spot.x, y: spot.y, size: (peopled ? 0.2 : 0.32) * scale };
 }
 
 function sceneItems(

@@ -48,6 +48,7 @@ import { Route as ToolsSlugRouteImport } from './routes/tools.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated.admin.index'
 import { Route as AuthenticatedAdminDashboardRouteImport } from './routes/_authenticated.admin.dashboard'
 import { Route as AuthenticatedAdminMarketingRouteImport } from './routes/_authenticated.admin.marketing'
+import { Route as AuthenticatedAdminYoutubeVerificationDemoRouteImport } from './routes/_authenticated.admin.youtube-verification-demo'
 import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated.host.index'
 import { Route as AuthenticatedHostBookingsRouteImport } from './routes/_authenticated.host.bookings'
 import { Route as AuthenticatedHostEarningsRouteImport } from './routes/_authenticated.host.earnings'
@@ -289,6 +290,12 @@ const AuthenticatedAdminMarketingRoute =
   AuthenticatedAdminMarketingRouteImport.update({
     id: '/admin/marketing',
     path: '/admin/marketing',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminYoutubeVerificationDemoRoute =
+  AuthenticatedAdminYoutubeVerificationDemoRouteImport.update({
+    id: '/admin/youtube-verification-demo',
+    path: '/admin/youtube-verification-demo',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedHostIndexRoute = AuthenticatedHostIndexRouteImport.update({
@@ -590,6 +597,7 @@ export interface FileRoutesByFullPath {
   '/legal/': typeof LegalIndexRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
+  '/admin/youtube-verification-demo': typeof AuthenticatedAdminYoutubeVerificationDemoRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
@@ -672,6 +680,7 @@ export interface FileRoutesByTo {
   '/legal': typeof LegalIndexRoute
   '/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/admin/marketing': typeof AuthenticatedAdminMarketingRoute
+  '/admin/youtube-verification-demo': typeof AuthenticatedAdminYoutubeVerificationDemoRoute
   '/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/renter/matches': typeof AuthenticatedRenterMatchesRoute
@@ -757,6 +766,7 @@ export interface FileRoutesById {
   '/legal/': typeof LegalIndexRoute
   '/_authenticated/admin/dashboard': typeof AuthenticatedAdminDashboardRoute
   '/_authenticated/admin/marketing': typeof AuthenticatedAdminMarketingRoute
+  '/_authenticated/admin/youtube-verification-demo': typeof AuthenticatedAdminYoutubeVerificationDemoRoute
   '/_authenticated/host/bookings': typeof AuthenticatedHostBookingsRoute
   '/_authenticated/host/earnings': typeof AuthenticatedHostEarningsRoute
   '/_authenticated/renter/matches': typeof AuthenticatedRenterMatchesRoute
@@ -843,6 +853,7 @@ export interface FileRouteTypes {
     | '/legal/'
     | '/admin/dashboard'
     | '/admin/marketing'
+    | '/admin/youtube-verification-demo'
     | '/host/bookings'
     | '/host/earnings'
     | '/renter/matches'
@@ -925,6 +936,7 @@ export interface FileRouteTypes {
     | '/legal'
     | '/admin/dashboard'
     | '/admin/marketing'
+    | '/admin/youtube-verification-demo'
     | '/host/bookings'
     | '/host/earnings'
     | '/renter/matches'
@@ -1009,6 +1021,7 @@ export interface FileRouteTypes {
     | '/legal/'
     | '/_authenticated/admin/dashboard'
     | '/_authenticated/admin/marketing'
+    | '/_authenticated/admin/youtube-verification-demo'
     | '/_authenticated/host/bookings'
     | '/_authenticated/host/earnings'
     | '/_authenticated/renter/matches'
@@ -1367,6 +1380,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/marketing'
       fullPath: '/admin/marketing'
       preLoaderRoute: typeof AuthenticatedAdminMarketingRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/youtube-verification-demo': {
+      id: '/_authenticated/admin/youtube-verification-demo'
+      path: '/admin/youtube-verification-demo'
+      fullPath: '/admin/youtube-verification-demo'
+      preLoaderRoute: typeof AuthenticatedAdminYoutubeVerificationDemoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/host/': {
@@ -1795,6 +1815,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSpacefitRoute: typeof AuthenticatedSpacefitRoute
   AuthenticatedAdminDashboardRoute: typeof AuthenticatedAdminDashboardRoute
   AuthenticatedAdminMarketingRoute: typeof AuthenticatedAdminMarketingRoute
+  AuthenticatedAdminYoutubeVerificationDemoRoute: typeof AuthenticatedAdminYoutubeVerificationDemoRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminSafetyCaseIdRoute: typeof AuthenticatedAdminSafetyCaseIdRoute
   AuthenticatedAdminSupportCaseIdRoute: typeof AuthenticatedAdminSupportCaseIdRoute
@@ -1813,6 +1834,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSpacefitRoute: AuthenticatedSpacefitRoute,
   AuthenticatedAdminDashboardRoute: AuthenticatedAdminDashboardRoute,
   AuthenticatedAdminMarketingRoute: AuthenticatedAdminMarketingRoute,
+  AuthenticatedAdminYoutubeVerificationDemoRoute:
+    AuthenticatedAdminYoutubeVerificationDemoRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminSafetyCaseIdRoute: AuthenticatedAdminSafetyCaseIdRoute,
   AuthenticatedAdminSupportCaseIdRoute: AuthenticatedAdminSupportCaseIdRoute,

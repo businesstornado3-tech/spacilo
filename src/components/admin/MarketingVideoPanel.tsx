@@ -196,11 +196,13 @@ export function MarketingVideoPanel({
         digest: plan.digest,
         scenes: plan.scenes.length,
         brandingNotes: [...plan.branding.notes],
+        qualityStatus: status,
+        qualityFailures: renderCheck.failures,
         mp4Base64: await toBase64(result.blob),
       });
       setNotice(
         stored.video.status === "RENDERED"
-          ? `Your video is ready — ${result.seconds.toFixed(1)} seconds, made in this browser, £0.`
+          ? `Your video is ready — ${result.seconds.toFixed(1)} seconds, made in this browser, £0. Quality check: production ready.`
           : `The file was made but did not pass its checks: ${stored.video.failureReason ?? "unknown reason"}`,
       );
       return stored.video.status === "RENDERED";

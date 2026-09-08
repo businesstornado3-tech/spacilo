@@ -365,7 +365,67 @@ export function YoutubeVerificationDemo() {
       </section>
 
       <section>
+        <h3 className="type-h3">Verification evidence for this run</h3>
+        <p className="type-body-xs text-muted-foreground">
+          Every value below is stored against the run and comes from Google's own responses. Nothing
+          here is filled in by hand.
+        </p>
+        {run ? (
+          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+            <Field
+              label="Connected YouTube channel"
+              value={run.channel ? `${run.channel.title} (${run.channel.id})` : "Not retrieved yet"}
+            />
+            <Field
+              label="youtube.readonly evidence"
+              value={run.channel ? "Channel details returned live by YouTube" : "Not demonstrated yet"}
+            />
+            <Field
+              label="Selected approved marketing video"
+              value={
+                run.marketingVideoId
+                  ? (data.videos.find((video) => video.id === run.marketingVideoId)
+                      ? `${data.videos.find((video) => video.id === run.marketingVideoId)!.platform} · ${
+                          data.videos.find((video) => video.id === run.marketingVideoId)!.aspect
+                        } · ${data.videos.find((video) => video.id === run.marketingVideoId)!.seconds}s`
+                      : run.marketingVideoId)
+                  : "Not selected yet"
+              }
+            />
+            <Field
+              label="youtube.upload evidence"
+              value={
+                uploadConfirmed(run)
+                  ? "YouTube accepted the file and returned an identifier"
+                  : "Not uploaded yet"
+              }
+            />
+            <Field label="YouTube video ID" value={run.youtubeVideoId ?? "—"} />
+            <Field
+              label="YouTube watch URL"
+              value={
+                run.youtubeUrl ? (
+                  <a href={run.youtubeUrl} target="_blank" rel="noreferrer" className="text-primary underline">
+                    {run.youtubeUrl}
+                  </a>
+                ) : (
+                  "—"
+                )
+              }
+            />
+            <Field label="Final EarnRoom publishing state" value={publishingStateLabel(run)} />
+            <Field label="Run ID" value={run.id} />
+          </div>
+        ) : (
+          <p className="mt-2 type-body-sm text-muted-foreground">
+            Start a demonstration run to collect evidence.
+          </p>
+        )}
+      </section>
+
+      <section>
         <h3 className="type-h3">Demo checklist</h3>
+
         <p className="type-body-xs text-muted-foreground">
           Ticks marked automatically come from real stored evidence. The rest are yours to confirm
           as you record.

@@ -22,7 +22,8 @@ export const brand = {
     ai: "Show us your stuff. We'll help find the space.",
     trust: "Storage between people, built around trust.",
   },
-  supportEmail: "hello@earnroom.example",
+  /** Monitored inbox for support, privacy and data-deletion requests. */
+  supportEmail: "businesstornado3@gmail.com",
   locale: "en-GB",
   currency: "GBP",
   currencySymbol: "£",

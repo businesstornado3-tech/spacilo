@@ -635,6 +635,21 @@ export async function fetchInstagramMediaInsights(
 
 /* ---------------------------------------------------------- console status */
 
+/**
+ * The single source of truth for "Instagram is connected".
+ *
+ * Instagram counts as connected ONLY when the Instagram Login callback stored
+ * an encrypted Instagram USER token AND discovered the professional account.
+ * A Facebook Page that happens to have a linked Instagram account proves
+ * nothing here and must never produce a connected state.
+ */
+export function instagramIsConnected(input: {
+  hasStoredToken: boolean;
+  accountId: string | null | undefined;
+}): boolean {
+  return input.hasStoredToken && Boolean(input.accountId);
+}
+
 export type InstagramStatusInput = {
   configured: boolean;
   connected: boolean;

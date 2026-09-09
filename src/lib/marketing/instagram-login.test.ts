@@ -195,12 +195,12 @@ describe("instagram reel publishing", () => {
     const fetchImpl = vi.fn(async (url: unknown) => {
       const href = String(url);
       seen.push(href);
-      if (href.includes("/media_publish")) return json({ id: "media-999" });
-      if (href.includes("/media")) return json({ id: "container-1" });
-      if (href.includes("status_code")) return json({ status_code: "FINISHED" });
       if (href.includes("permalink")) {
         return json({ permalink: "https://www.instagram.com/reel/abc/" });
       }
+      if (href.includes("status_code")) return json({ status_code: "FINISHED" });
+      if (href.includes("/media_publish")) return json({ id: "media-999" });
+      if (href.includes("/media")) return json({ id: "container-1" });
       return json({});
     }) as unknown as typeof fetch;
 

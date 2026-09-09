@@ -345,10 +345,11 @@ export const selectMetaPage = createServerFn({ method: "POST" })
       const pageTokenCipher = await encryptToken(page.accessToken);
       const nowIso = new Date().toISOString();
 
+      // Facebook only. The Instagram token row belongs to Instagram Login.
       await (supabaseAdmin as any)
         .from("marketing_platform_tokens")
         .update({ page_token_cipher: pageTokenCipher, updated_at: nowIso })
-        .in("platform", ["facebook", "instagram"]);
+        .eq("platform", "facebook");
 
       await (supabaseAdmin as any).from("marketing_platform_connections").upsert(
         {

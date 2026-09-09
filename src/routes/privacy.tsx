@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 
 import { brand } from "@/config/brand";
 import { MarketingLayout, PageSection } from "@/components/layout/MarketingLayout";
+import { GOOGLE_SECTION_ID, googleIntro, googleSections } from "@/data/google-data";
 import { legalReviewNotice, measurementSections, privacyIntro } from "@/data/privacy";
 import { publicRouteMeta } from "@/lib/seo/meta";
 import { breadcrumbJsonLd, jsonLdScript } from "@/lib/seo/structured-data";
@@ -47,6 +48,39 @@ function PrivacyPage() {
             </article>
           ))}
         </div>
+
+        <section id={GOOGLE_SECTION_ID} className="mt-14 max-w-3xl scroll-mt-24">
+          <h2 className="type-h2">Google User Data and YouTube Integration</h2>
+          <p className="mt-3 type-body text-muted-foreground">{googleIntro}</p>
+
+          <div className="mt-6 grid gap-6">
+            {googleSections.map((section) => (
+              <article key={section.heading} className="rounded-xl border border-border bg-card p-5">
+                <h3 className="type-h3 text-foreground">{section.heading}</h3>
+                <p className="mt-2 type-body-sm text-muted-foreground">{section.body}</p>
+                {section.bullets ? (
+                  <ul className="mt-3 list-disc space-y-2 pl-5 type-body-sm text-muted-foreground">
+                    {section.bullets.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <p className="mt-8 max-w-3xl type-body-sm text-muted-foreground">
+          To ask us to delete your data, follow the{" "}
+          <Link to="/legal/data-deletion" className="underline underline-offset-2">
+            data deletion instructions
+          </Link>
+          . Privacy questions can be sent to{" "}
+          <a href={`mailto:${brand.supportEmail}`} className="underline underline-offset-2">
+            {brand.supportEmail}
+          </a>
+          .
+        </p>
 
         <p className="mt-8 max-w-3xl type-body-sm text-muted-foreground">{legalReviewNotice}</p>
       </PageSection>

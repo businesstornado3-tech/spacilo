@@ -40,6 +40,7 @@ import { Route as ApiVisionDetectRouteImport } from './routes/api/vision-detect'
 import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
 import { Route as LegalIndexRouteImport } from './routes/legal.index'
 import { Route as LegalDocRouteImport } from './routes/legal.$doc'
+import { Route as LegalDataDeletionRouteImport } from './routes/legal.data-deletion'
 import { Route as SpacefitSpaceRouteImport } from './routes/spacefit.space'
 import { Route as SpacefitStuffRouteImport } from './routes/spacefit.stuff'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
@@ -248,6 +249,11 @@ const LegalIndexRoute = LegalIndexRouteImport.update({
 const LegalDocRoute = LegalDocRouteImport.update({
   id: '/legal/$doc',
   path: '/legal/$doc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalDataDeletionRoute = LegalDataDeletionRouteImport.update({
+  id: '/legal/data-deletion',
+  path: '/legal/data-deletion',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SpacefitSpaceRoute = SpacefitSpaceRouteImport.update({
@@ -589,6 +595,7 @@ export interface FileRoutesByFullPath {
   '/api/vision-detect': typeof ApiVisionDetectRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$doc': typeof LegalDocRoute
+  '/legal/data-deletion': typeof LegalDataDeletionRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -672,6 +679,7 @@ export interface FileRoutesByTo {
   '/api/vision-detect': typeof ApiVisionDetectRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$doc': typeof LegalDocRoute
+  '/legal/data-deletion': typeof LegalDataDeletionRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -758,6 +766,7 @@ export interface FileRoutesById {
   '/api/vision-detect': typeof ApiVisionDetectRoute
   '/guides/$slug': typeof GuidesSlugRoute
   '/legal/$doc': typeof LegalDocRoute
+  '/legal/data-deletion': typeof LegalDataDeletionRoute
   '/spacefit/space': typeof SpacefitSpaceRoute
   '/spacefit/stuff': typeof SpacefitStuffRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -845,6 +854,7 @@ export interface FileRouteTypes {
     | '/api/vision-detect'
     | '/guides/$slug'
     | '/legal/$doc'
+    | '/legal/data-deletion'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
@@ -928,6 +938,7 @@ export interface FileRouteTypes {
     | '/api/vision-detect'
     | '/guides/$slug'
     | '/legal/$doc'
+    | '/legal/data-deletion'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
@@ -1013,6 +1024,7 @@ export interface FileRouteTypes {
     | '/api/vision-detect'
     | '/guides/$slug'
     | '/legal/$doc'
+    | '/legal/data-deletion'
     | '/spacefit/space'
     | '/spacefit/stuff'
     | '/spaces/$spaceId'
@@ -1093,6 +1105,7 @@ export interface RootRouteChildren {
   ApiSpaceplannerVisualiseRoute: typeof ApiSpaceplannerVisualiseRoute
   ApiVisionDetectRoute: typeof ApiVisionDetectRoute
   LegalDocRoute: typeof LegalDocRoute
+  LegalDataDeletionRoute: typeof LegalDataDeletionRoute
   SpacefitSpaceRoute: typeof SpacefitSpaceRoute
   SpacefitStuffRoute: typeof SpacefitStuffRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
@@ -1324,6 +1337,13 @@ declare module '@tanstack/react-router' {
       path: '/legal/$doc'
       fullPath: '/legal/$doc'
       preLoaderRoute: typeof LegalDocRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/data-deletion': {
+      id: '/legal/data-deletion'
+      path: '/legal/data-deletion'
+      fullPath: '/legal/data-deletion'
+      preLoaderRoute: typeof LegalDataDeletionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/spacefit/space': {
@@ -1894,6 +1914,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSpaceplannerVisualiseRoute: ApiSpaceplannerVisualiseRoute,
   ApiVisionDetectRoute: ApiVisionDetectRoute,
   LegalDocRoute: LegalDocRoute,
+  LegalDataDeletionRoute: LegalDataDeletionRoute,
   SpacefitSpaceRoute: SpacefitSpaceRoute,
   SpacefitStuffRoute: SpacefitStuffRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,

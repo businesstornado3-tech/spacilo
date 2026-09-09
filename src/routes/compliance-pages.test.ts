@@ -101,8 +101,9 @@ describe("OAuth integration is unchanged", () => {
   });
 
   it("keeps the Instagram Login scopes", () => {
-    expect(oauth).toContain("instagram_business_basic");
-    expect(oauth).toContain("instagram_business_content_publish");
+    const instagram = readText("src/lib/marketing/instagram-login.ts");
+    expect(instagram).toContain("instagram_business_basic");
+    expect(instagram).toContain("instagram_business_content_publish");
   });
 
   it("keeps the Facebook page scopes", () => {

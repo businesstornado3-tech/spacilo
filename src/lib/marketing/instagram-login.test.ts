@@ -10,7 +10,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { authorizeUrl, oauthDefinition, resolveOAuthCredentials } from "./oauth";
 import { adapterFor } from "./adapters";
-import { defaultMarketingSettings } from "./settings";
+import { defaultMarketingSettings, type PlatformConnectionRecord } from "./platforms";
 import {
   INSTAGRAM_LOGIN_SCOPES,
   exchangeInstagramCode,
@@ -24,7 +24,7 @@ import {
   publishInstagramLoginReel,
   sanitiseInstagramError,
 } from "./instagram-login";
-import type { MarketingCampaign, PlatformAsset, PlatformConnectionRecord } from "./types";
+import type { MarketingCampaign, PlatformAsset } from "./types";
 
 const NOW = Date.UTC(2026, 0, 5);
 const REDIRECT = "https://earnroom.co.uk/api/public/marketing/oauth/instagram";

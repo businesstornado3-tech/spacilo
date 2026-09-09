@@ -186,13 +186,18 @@ async function buildState(supabase: any): Promise<MetaConnectionState> {
     // Instagram stands alone: Instagram Login, its own authorisation, its own
     // account. It no longer inherits the Facebook connection or Page choice.
     if (platform === "instagram") {
+      // Deterministic rule: a stored Instagram token AND an account id.
+      const igConnected = instagramIsConnected({
+        hasStoredToken: instagramTokenStored,
+        accountId: row?.account_id ?? null,
+      });
       const igInput = {
         configured,
-        connected: row?.connection === "CONNECTED",
+        connected: igConnected,
         expired,
         paused: pausedAll || pausedPlatforms.includes("instagram"),
         accountFound: Boolean(row?.account_id),
-        lastError: row?.last_error ?? null,
+        lastError: igConnected ? (row?.last_error ?? null) : null,
         publishedBefore: Boolean(row?.last_published_at),
       };
       return {

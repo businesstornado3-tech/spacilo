@@ -23,6 +23,11 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { metaStatusDetail, metaStatusWord, type MetaStatusWord } from "@/lib/marketing/meta";
+import {
+  instagramStatusDetail,
+  instagramStatusWord,
+  type InstagramStatusWord,
+} from "@/lib/marketing/instagram-login";
 
 const BUCKET = "marketing-videos";
 /** Meta must be able to fetch the file for the whole processing window. */
@@ -88,11 +93,40 @@ async function readMetaTokens(): Promise<MetaTokens> {
   };
 }
 
+/**
+ * Reads the stored Instagram Login authorisation. This is an INSTAGRAM USER
+ * token stored under the `instagram` platform row; it is unrelated to the
+ * Facebook Page token and is never returned to the browser.
+ */
+async function readInstagramToken(): Promise<{ token: string | null; detail: string }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { decryptToken } = await import("@/lib/marketing/token-crypto.server");
+  const { data: row } = await (supabaseAdmin as any)
+    .from("marketing_platform_tokens")
+    .select("access_token_cipher, expires_at")
+    .eq("platform", "instagram")
+    .maybeSingle();
+  if (!row?.access_token_cipher) {
+    return { token: null, detail: "Instagram is not connected." };
+  }
+  if (row.expires_at && Date.parse(row.expires_at) <= Date.now()) {
+    return { token: null, detail: "TOKEN_EXPIRED: the Instagram authorisation has expired." };
+  }
+  try {
+    return { token: await decryptToken(row.access_token_cipher), detail: "Stored authorisation read." };
+  } catch {
+    return {
+      token: null,
+      detail: "The stored authorisation could not be read. Reconnect Instagram.",
+    };
+  }
+}
+
 /* ------------------------------------------------------------ console state */
 
 export type MetaPlatformState = {
   platform: "facebook" | "instagram";
-  status: MetaStatusWord;
+  status: MetaStatusWord | InstagramStatusWord;
   detail: string;
   accountId: string | null;
   accountLabel: string | null;
@@ -135,8 +169,34 @@ async function buildState(supabase: any): Promise<MetaConnectionState> {
   const build = (platform: "facebook" | "instagram"): MetaPlatformState => {
     const row = list.find((entry) => entry.platform === platform) ?? null;
     const facebookRow = list.find((entry) => entry.platform === "facebook") ?? null;
-    const connected = row?.connection === "CONNECTED" || facebookRow?.connection === "CONNECTED";
     const expired = Boolean(row?.expires_at && Date.parse(row.expires_at) <= Date.now());
+
+    // Instagram stands alone: Instagram Login, its own authorisation, its own
+    // account. It no longer inherits the Facebook connection or Page choice.
+    if (platform === "instagram") {
+      const igInput = {
+        configured,
+        connected: row?.connection === "CONNECTED",
+        expired,
+        paused: pausedAll || pausedPlatforms.includes("instagram"),
+        accountFound: Boolean(row?.account_id),
+        lastError: row?.last_error ?? null,
+        publishedBefore: Boolean(row?.last_published_at),
+      };
+      return {
+        platform,
+        status: instagramStatusWord(igInput),
+        detail: instagramStatusDetail(igInput),
+        accountId: row?.account_id ?? null,
+        accountLabel: row?.account_label ?? null,
+        linkedPageId: null,
+        paused: igInput.paused,
+        lastError: row?.last_error ?? null,
+        lastPublishedAt: row?.last_published_at ?? null,
+      };
+    }
+
+    const connected = row?.connection === "CONNECTED" || facebookRow?.connection === "CONNECTED";
     const input = {
       platform,
       configured,
@@ -435,13 +495,25 @@ export const publishMetaVideo = createServerFn({ method: "POST" })
       return refuse(
         platform === "facebook"
           ? "No Facebook Page is selected. Choose the Page to publish to first."
-          : "Instagram Professional account not found for this Facebook Page.",
+          : "ACCOUNT_NOT_FOUND: no Instagram professional account is stored. Reconnect Instagram.",
       );
     }
 
-    const { pageToken } = await readMetaTokens();
-    if (!pageToken) {
-      return refuse("No Facebook Page authorisation is stored. Select the Facebook Page again.");
+    /*
+     * Facebook publishes with the Page token; Instagram publishes with the
+     * Instagram USER token from Instagram Login. They are read separately.
+     */
+    let pageToken: string | null = null;
+    let instagramToken: string | null = null;
+    if (platform === "facebook") {
+      ({ pageToken } = await readMetaTokens());
+      if (!pageToken) {
+        return refuse("No Facebook Page authorisation is stored. Select the Facebook Page again.");
+      }
+    } else {
+      const stored = await readInstagramToken();
+      instagramToken = stored.token;
+      if (!instagramToken) return refuse(stored.detail);
     }
 
     /* The stored video and its campaign asset. */
@@ -508,7 +580,7 @@ export const publishMetaVideo = createServerFn({ method: "POST" })
 
     const adapter = adapterFor(platform as any, {
       connection: connections.find((entry) => entry.platform === platform) ?? null,
-      accessToken: pageToken,
+      accessToken: platform === "instagram" ? instagramToken : pageToken,
       accountId: connection.account_id,
       pageAccessToken: pageToken,
       settings: mergedSettings,
@@ -635,4 +707,78 @@ export const listMetaPublishableVideos = createServerFn({ method: "GET" })
       });
     }
     return { videos };
+  });
+
+/* ----------------------------------------------- instagram insights (real) */
+
+export type InstagramInsightsResult = {
+  ok: boolean;
+  detail: string;
+  /** Real values Instagram returned. Nothing is estimated or invented. */
+  platformMetrics: { name: string; value: number }[];
+  /** Metrics the API/permission level did not return. */
+  unavailable: string[];
+  /** EarnRoom-side conversions, kept clearly separate from platform metrics. */
+  attributedConversions: { name: string; value: number | null }[];
+};
+
+/**
+ * Retrieves genuine Instagram media insights through the official API. A
+ * metric Instagram does not return is reported as unavailable, never guessed,
+ * and platform metrics are never mixed with EarnRoom attribution.
+ */
+export const getInstagramInsights = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ mediaId: z.string().min(3).max(64) }).parse(data),
+  )
+  .handler(async ({ data, context }): Promise<InstagramInsightsResult> => {
+    const supabase = context.supabase as any;
+    await assertAdmin(supabase);
+    const empty = (detail: string): InstagramInsightsResult => ({
+      ok: false,
+      detail,
+      platformMetrics: [],
+      unavailable: [],
+      attributedConversions: [],
+    });
+    const stored = await readInstagramToken();
+    if (!stored.token) return empty(stored.detail);
+
+    const { fetchInstagramMediaInsights } = await import("@/lib/marketing/instagram-login");
+    const result = await fetchInstagramMediaInsights(fetch, {
+      mediaId: data.mediaId,
+      accessToken: stored.token,
+    });
+    if (!result.ok) return empty(`${result.state}: ${result.error}`);
+
+    // EarnRoom-attributed outcomes come from EarnRoom's own records, never
+    // from Instagram, and are labelled separately in the console.
+    const { data: publication } = await supabase
+      .from("marketing_publications")
+      .select("conversions")
+      .eq("platform_post_id", data.mediaId)
+      .maybeSingle();
+    const conversions = (publication?.conversions ?? {}) as Record<string, unknown>;
+    const attributed = [
+      "siteVisits",
+      "registrations",
+      "listings",
+      "enquiries",
+      "bookings",
+    ].map((name) => ({
+      name,
+      value: typeof conversions[name] === "number" ? (conversions[name] as number) : null,
+    }));
+
+    return {
+      ok: true,
+      detail: "Live figures from the Instagram API.",
+      platformMetrics: Object.entries(result.value.metrics).map(([name, value]) => ({
+        name,
+        value,
+      })),
+      unavailable: result.value.unavailable,
+      attributedConversions: attributed,
+    };
   });

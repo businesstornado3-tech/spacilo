@@ -42,6 +42,7 @@ const context = (over: Partial<AdapterContext> = {}): AdapterContext => ({
   connections: [connection("instagram")],
   now: NOW,
   fetchImpl: vi.fn() as unknown as typeof fetch,
+  sleep: async () => {},
   ...over,
 });
 

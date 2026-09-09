@@ -1264,21 +1264,19 @@ export const startPlatformConnection = createServerFn({ method: "POST" })
     async ({ data, context }): Promise<{ ok: boolean; url: string | null; detail: string }> => {
       const supabase = context.supabase as any;
       await assertAdmin(supabase);
-      const { oauthConfigState, oauthDefinition, authorizeUrl } =
+      const { oauthDefinition, authorizeUrl, resolveOAuthCredentials } =
         await import("@/lib/marketing/oauth");
       const platform = data.platform as PlatformId;
       const def = oauthDefinition(platform);
 
-      const clientId = process.env[def.clientIdSecret];
-      const state = oauthConfigState(
-        platform,
-        [def.clientIdSecret, def.clientSecretSecret].filter((name) => Boolean(process.env[name])),
-      );
-      if (!state.configured || !clientId) {
+      // Reads the values server-side only; nothing but missing NAMES is shown.
+      const credentials = resolveOAuthCredentials(platform, process.env);
+      const clientId = credentials.clientId;
+      if (credentials.missing.length > 0 || !clientId) {
         return {
           ok: false,
           url: null,
-          detail: `Requires configuration: ${state.missingSecrets.join(" and ")} must be set up before ${def.label} can be connected. Register the app at ${def.developerConsole}.`,
+          detail: `Requires configuration: ${credentials.missing.join(" and ")} must be set up before ${def.label} can be connected. Register the app at ${def.developerConsole}.`,
         };
       }
 

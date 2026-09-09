@@ -444,13 +444,12 @@ export const publishMarketingCampaign = createServerFn({ method: "POST" })
           accessToken = null;
         }
         if (!accessToken || !accountId) return unconfiguredAdapter(platform, settings);
-        // Meta publishes with the Facebook Page token, never the user token.
+        // Facebook publishes with the Facebook Page token, never the user
+        // token. Instagram uses Instagram Login and needs no Page token.
         let pageAccessToken: string | null = null;
-        if (platform === "facebook" || platform === "instagram") {
+        if (platform === "facebook") {
           const metaRow = ((tokenRows ?? []) as any[]).find(
-            (row) =>
-              row.page_token_cipher &&
-              (row.platform === "facebook" || row.platform === "instagram"),
+            (row) => row.page_token_cipher && row.platform === "facebook",
           );
           if (metaRow) {
             try {

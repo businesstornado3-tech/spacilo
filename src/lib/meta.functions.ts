@@ -708,3 +708,77 @@ export const listMetaPublishableVideos = createServerFn({ method: "GET" })
     }
     return { videos };
   });
+
+/* ----------------------------------------------- instagram insights (real) */
+
+export type InstagramInsightsResult = {
+  ok: boolean;
+  detail: string;
+  /** Real values Instagram returned. Nothing is estimated or invented. */
+  platformMetrics: { name: string; value: number }[];
+  /** Metrics the API/permission level did not return. */
+  unavailable: string[];
+  /** EarnRoom-side conversions, kept clearly separate from platform metrics. */
+  attributedConversions: { name: string; value: number | null }[];
+};
+
+/**
+ * Retrieves genuine Instagram media insights through the official API. A
+ * metric Instagram does not return is reported as unavailable, never guessed,
+ * and platform metrics are never mixed with EarnRoom attribution.
+ */
+export const getInstagramInsights = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ mediaId: z.string().min(3).max(64) }).parse(data),
+  )
+  .handler(async ({ data, context }): Promise<InstagramInsightsResult> => {
+    const supabase = context.supabase as any;
+    await assertAdmin(supabase);
+    const empty = (detail: string): InstagramInsightsResult => ({
+      ok: false,
+      detail,
+      platformMetrics: [],
+      unavailable: [],
+      attributedConversions: [],
+    });
+    const stored = await readInstagramToken();
+    if (!stored.token) return empty(stored.detail);
+
+    const { fetchInstagramMediaInsights } = await import("@/lib/marketing/instagram-login");
+    const result = await fetchInstagramMediaInsights(fetch, {
+      mediaId: data.mediaId,
+      accessToken: stored.token,
+    });
+    if (!result.ok) return empty(`${result.state}: ${result.error}`);
+
+    // EarnRoom-attributed outcomes come from EarnRoom's own records, never
+    // from Instagram, and are labelled separately in the console.
+    const { data: publication } = await supabase
+      .from("marketing_publications")
+      .select("conversions")
+      .eq("platform_post_id", data.mediaId)
+      .maybeSingle();
+    const conversions = (publication?.conversions ?? {}) as Record<string, unknown>;
+    const attributed = [
+      "siteVisits",
+      "registrations",
+      "listings",
+      "enquiries",
+      "bookings",
+    ].map((name) => ({
+      name,
+      value: typeof conversions[name] === "number" ? (conversions[name] as number) : null,
+    }));
+
+    return {
+      ok: true,
+      detail: "Live figures from the Instagram API.",
+      platformMetrics: Object.entries(result.value.metrics).map(([name, value]) => ({
+        name,
+        value,
+      })),
+      unavailable: result.value.unavailable,
+      attributedConversions: attributed,
+    };
+  });

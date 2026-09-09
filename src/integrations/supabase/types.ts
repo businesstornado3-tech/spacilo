@@ -2710,6 +2710,8 @@ export type Database = {
           expires_at: string | null
           last_checked_at: string | null
           last_error: string | null
+          last_published_at: string | null
+          linked_page_id: string | null
           platform: string
           scopes: string[]
           updated_at: string
@@ -2721,6 +2723,8 @@ export type Database = {
           expires_at?: string | null
           last_checked_at?: string | null
           last_error?: string | null
+          last_published_at?: string | null
+          linked_page_id?: string | null
           platform: string
           scopes?: string[]
           updated_at?: string
@@ -2732,6 +2736,8 @@ export type Database = {
           expires_at?: string | null
           last_checked_at?: string | null
           last_error?: string | null
+          last_published_at?: string | null
+          linked_page_id?: string | null
           platform?: string
           scopes?: string[]
           updated_at?: string
@@ -2744,6 +2750,7 @@ export type Database = {
           account_id: string | null
           expires_at: string | null
           obtained_at: string
+          page_token_cipher: string | null
           platform: string
           refresh_token_cipher: string | null
           scopes: string[]
@@ -2754,6 +2761,7 @@ export type Database = {
           account_id?: string | null
           expires_at?: string | null
           obtained_at?: string
+          page_token_cipher?: string | null
           platform: string
           refresh_token_cipher?: string | null
           scopes?: string[]
@@ -2764,6 +2772,7 @@ export type Database = {
           account_id?: string | null
           expires_at?: string | null
           obtained_at?: string
+          page_token_cipher?: string | null
           platform?: string
           refresh_token_cipher?: string | null
           scopes?: string[]

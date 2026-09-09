@@ -419,7 +419,7 @@ export const publishMarketingCampaign = createServerFn({ method: "POST" })
       const { decryptToken } = await import("@/lib/marketing/token-crypto.server");
       const { data: tokenRows } = await supabaseAdmin
         .from("marketing_platform_tokens")
-        .select("platform, access_token_cipher, account_id, expires_at");
+        .select("platform, access_token_cipher, page_token_cipher, account_id, expires_at");
       const { data: accountRows } = await supabase
         .from("marketing_platform_connections")
         .select("platform, account_id");
@@ -442,15 +442,50 @@ export const publishMarketingCampaign = createServerFn({ method: "POST" })
           accessToken = null;
         }
         if (!accessToken || !accountId) return unconfiguredAdapter(platform, settings);
+        // Meta publishes with the Facebook Page token, never the user token.
+        let pageAccessToken: string | null = null;
+        if (platform === "facebook" || platform === "instagram") {
+          const metaRow = ((tokenRows ?? []) as any[]).find(
+            (row) => row.page_token_cipher && (row.platform === "facebook" || row.platform === "instagram"),
+          );
+          if (metaRow) {
+            try {
+              pageAccessToken = await decryptToken(metaRow.page_token_cipher);
+            } catch {
+              pageAccessToken = null;
+            }
+          }
+        }
         return adapterFor(platform, {
           connection: connections.find((entry) => entry.platform === platform) ?? null,
           accessToken,
           accountId,
+          pageAccessToken,
           settings,
           connections,
           now,
           fetchImpl: fetch,
         });
+      };
+
+      /**
+       * Meta fetches the media itself, so a Meta asset is handed a temporary
+       * signed link to that one stored object. Nothing else is exposed and the
+       * link expires shortly after the processing window.
+       */
+      const metaMediaUrl = async (assetId: string): Promise<string | null> => {
+        const { data: video } = await supabase
+          .from("marketing_videos")
+          .select("storage_path")
+          .eq("campaign_id", data.campaignId)
+          .eq("asset_id", assetId)
+          .not("storage_path", "is", null)
+          .maybeSingle();
+        if (!video?.storage_path) return null;
+        const { data: signed } = await (supabaseAdmin as any).storage
+          .from("marketing-videos")
+          .createSignedUrl(video.storage_path, 3600);
+        return signed?.signedUrl ?? null;
       };
 
       const [settings, connections] = await Promise.all([
@@ -489,9 +524,14 @@ export const publishMarketingCampaign = createServerFn({ method: "POST" })
         };
         if (record.state === "PUBLISHED") continue;
 
+        const isMeta = asset.platform === "facebook" || asset.platform === "instagram";
+        const publishAsset = isMeta
+          ? { ...asset, videoUrl: (await metaMediaUrl(asset.id)) ?? asset.videoUrl }
+          : asset;
+
         const attempt = await attemptPublish({
           adapter: await resolveAdapter(asset.platform),
-          asset,
+          asset: publishAsset,
           campaign,
           connections,
           settings,

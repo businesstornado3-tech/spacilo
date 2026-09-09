@@ -22,4 +22,5 @@ export * from "./registry";
 export * from "./orchestrator";
 export * from "./acquisition";
 export * from "./adapters";
+export * from "./meta";
 export * from "./oauth";

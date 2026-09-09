@@ -38,6 +38,7 @@ const columns: { heading: string; links: FooterLink[] }[] = [
       { label: "Trust & safety", to: "/trust" },
       { label: "Storage policy", to: "/storage-policy" },
       { label: "Privacy & data", to: "/privacy" },
+      { label: "Data deletion", to: "/legal/data-deletion" },
       { label: "Terms", to: "/legal" },
     ],
   },

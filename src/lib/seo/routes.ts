@@ -37,6 +37,7 @@ export const PUBLIC_ROUTES: readonly PublicRouteEntry[] = [
   { path: "/legal/host-agreement", label: "Host agreement" },
   { path: "/legal/renter-agreement", label: "Renter agreement" },
   { path: "/legal/ai-disclaimer", label: "AI disclaimer" },
+  { path: "/legal/data-deletion", label: "Data Deletion Instructions" },
   { path: "/spacefit/stuff", label: "Scan My Stuff" },
   { path: "/spacefit/space", label: "Scan My Space" },
   { path: "/discover", label: "Discovery" },

@@ -9,6 +9,11 @@
  *
  * Pure module: it is handed the NAMES of configured secrets, never the values.
  */
+import {
+  INSTAGRAM_AUTHORIZE_URL,
+  INSTAGRAM_LOGIN_SCOPES,
+  INSTAGRAM_TOKEN_URL,
+} from "./instagram-login";
 import type { PlatformId } from "./types";
 
 export type OAuthDefinition = {
@@ -22,6 +27,9 @@ export type OAuthDefinition = {
   /** Server-side secret names. Values never leave the server. */
   clientIdSecret: string;
   clientSecretSecret: string;
+  /** Optional product-specific credentials that take precedence when set. */
+  overrideClientIdSecret?: string;
+  overrideClientSecretSecret?: string;
   /** Extra approval the platform imposes before unattended posting. */
   approvalNote: string | null;
   /** Where the founder registers the application. */
@@ -57,20 +65,22 @@ export const OAUTH_DEFINITIONS: readonly OAuthDefinition[] = [
     developerConsole: "https://console.cloud.google.com/apis/credentials",
   },
   {
+    // Instagram API with Instagram Login. The founder signs in on Instagram
+    // itself and Meta returns an Instagram USER access token; no Facebook Page
+    // is involved. The old Facebook-Login Instagram path is gone.
     platform: "instagram",
     label: "Instagram",
-    authorizeUrl: "https://www.facebook.com/v21.0/dialog/oauth",
-    tokenUrl: "https://graph.facebook.com/v21.0/oauth/access_token",
-    scopes: [
-      "instagram_basic",
-      "instagram_content_publish",
-      "pages_show_list",
-      "business_management",
-    ],
+    authorizeUrl: INSTAGRAM_AUTHORIZE_URL,
+    tokenUrl: INSTAGRAM_TOKEN_URL,
+    scopes: INSTAGRAM_LOGIN_SCOPES,
     clientIdSecret: "META_APP_ID",
     clientSecretSecret: "META_APP_SECRET",
+    // Meta issues a separate Instagram app id/secret for this product; when
+    // those are configured they take precedence over the Meta app credentials.
+    overrideClientIdSecret: "INSTAGRAM_APP_ID",
+    overrideClientSecretSecret: "INSTAGRAM_APP_SECRET",
     approvalNote:
-      "Requires an Instagram professional account linked to a Facebook Page, and Meta App Review for content publishing.",
+      "Requires an Instagram professional account and Meta App Review for content publishing. No Facebook Page is required.",
     developerConsole: "https://developers.facebook.com/apps",
   },
   {
@@ -149,9 +159,17 @@ export function oauthConfigState(
   configuredSecrets: readonly string[],
 ): OAuthConfigState {
   const def = oauthDefinition(platform);
-  const missing = [def.clientIdSecret, def.clientSecretSecret].filter(
-    (name) => !configuredSecrets.includes(name),
+  const overridePresent = Boolean(
+    def.overrideClientIdSecret &&
+      def.overrideClientSecretSecret &&
+      configuredSecrets.includes(def.overrideClientIdSecret) &&
+      configuredSecrets.includes(def.overrideClientSecretSecret),
   );
+  const missing = overridePresent
+    ? []
+    : [def.clientIdSecret, def.clientSecretSecret].filter(
+        (name) => !configuredSecrets.includes(name),
+      );
   return {
     platform,
     configured: missing.length === 0,
@@ -179,10 +197,9 @@ export function authorizeUrl(input: {
   url.searchParams.set("client_id", input.clientId);
   url.searchParams.set("redirect_uri", input.redirectUri);
   url.searchParams.set("state", input.state);
-  url.searchParams.set(
-    input.platform === "tiktok" ? "scope" : "scope",
-    def.scopes.join(input.platform === "tiktok" ? "," : " "),
-  );
+  // TikTok and Instagram Login both take a comma-separated scope list.
+  const separator = input.platform === "tiktok" || input.platform === "instagram" ? "," : " ";
+  url.searchParams.set("scope", def.scopes.join(separator));
   if (input.platform === "youtube" || input.platform === "youtube_shorts") {
     url.searchParams.set("access_type", "offline");
     // `select_account consent` re-asks for the account and re-shows the
@@ -194,4 +211,27 @@ export function authorizeUrl(input: {
     url.searchParams.set("include_granted_scopes", "false");
   }
   return url.toString();
+}
+
+/**
+ * Resolves the application credentials for a platform from server-side
+ * configuration. Values are read here and never leave the server; only the
+ * NAMES of any missing secrets are reported.
+ */
+export function resolveOAuthCredentials(
+  platform: PlatformId,
+  env: Record<string, string | undefined>,
+): { clientId: string | null; clientSecret: string | null; missing: string[] } {
+  const def = oauthDefinition(platform);
+  if (def.overrideClientIdSecret && def.overrideClientSecretSecret) {
+    const id = env[def.overrideClientIdSecret];
+    const secret = env[def.overrideClientSecretSecret];
+    if (id && secret) return { clientId: id, clientSecret: secret, missing: [] };
+  }
+  const clientId = env[def.clientIdSecret] ?? null;
+  const clientSecret = env[def.clientSecretSecret] ?? null;
+  const missing: string[] = [];
+  if (!clientId) missing.push(def.clientIdSecret);
+  if (!clientSecret) missing.push(def.clientSecretSecret);
+  return { clientId, clientSecret, missing };
 }

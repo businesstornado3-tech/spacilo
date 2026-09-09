@@ -11,7 +11,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 
-import { oauthDefinition } from "@/lib/marketing/oauth";
+import { oauthDefinition, resolveOAuthCredentials } from "@/lib/marketing/oauth";
 import type { PlatformId } from "@/lib/marketing/types";
 
 const PLATFORMS = [
@@ -121,14 +121,122 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
           );
         }
 
-        const clientId = process.env[def.clientIdSecret];
-        const clientSecret = process.env[def.clientSecretSecret];
+        const credentials = resolveOAuthCredentials(platform, process.env);
+        const clientId = credentials.clientId;
+        const clientSecret = credentials.clientSecret;
         if (!clientId || !clientSecret) {
           return fail(
             "CONFIGURATION_MISSING",
             "Not connected",
             "This platform is not set up on the server yet.",
           );
+        }
+
+        /*
+         * Instagram API with Instagram Login has its own token endpoint and
+         * its own long-lived token exchange, and identifies the account on
+         * graph.instagram.com rather than through a Facebook Page. It is
+         * handled here in full and never falls through to the Meta path.
+         */
+        if (platform === "instagram") {
+          const {
+            exchangeInstagramCode,
+            exchangeInstagramLongLivedToken,
+            fetchInstagramAccount,
+          } = await import("@/lib/marketing/instagram-login");
+
+          const exchanged = await exchangeInstagramCode(fetch, {
+            clientId,
+            clientSecret,
+            redirectUri: stateRow.redirect_uri,
+            code,
+          });
+          if (!exchanged.ok) {
+            return fail("CODE_EXCHANGE_FAILED", "Not connected", exchanged.error);
+          }
+
+          const longLived = await exchangeInstagramLongLivedToken(fetch, {
+            clientSecret,
+            accessToken: exchanged.value.accessToken,
+          });
+          // Only the long-lived token is stored; the short-lived one is dropped.
+          const igToken = longLived.ok ? longLived.value.accessToken : null;
+          if (!igToken) {
+            return fail(
+              "TOKEN_EXCHANGE_FAILED",
+              "Not connected",
+              longLived.ok ? "Instagram returned no long-lived authorisation." : longLived.error,
+            );
+          }
+          const igExpiresAt = longLived.ok && longLived.value.expiresInSeconds
+            ? new Date(Date.now() + longLived.value.expiresInSeconds * 1000).toISOString()
+            : null;
+
+          const account = await fetchInstagramAccount(fetch, igToken);
+          if (!account.ok) {
+            return fail("ACCOUNT_LOOKUP_FAILED", "Not connected", account.error);
+          }
+          const igScopes =
+            exchanged.value.permissions.length > 0
+              ? [...exchanged.value.permissions]
+              : [...def.scopes];
+
+          try {
+            const { error } = await supabaseAdmin.from("marketing_platform_tokens").upsert(
+              {
+                platform,
+                access_token_cipher: await encryptToken(igToken),
+                refresh_token_cipher: null,
+                scopes: igScopes,
+                expires_at: igExpiresAt,
+                obtained_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "platform" },
+            );
+            if (error) {
+              return fail(
+                "TOKEN_STORAGE_FAILED",
+                "Not connected",
+                `The authorisation could not be saved securely (${error.message}).`,
+              );
+            }
+          } catch (caught) {
+            return fail(
+              "TOKEN_STORAGE_FAILED",
+              "Not connected",
+              `The authorisation could not be saved securely (${caught instanceof Error ? caught.message : "unknown storage failure"}).`,
+            );
+          }
+
+          const label = account.value.username
+            ? `@${account.value.username}`
+            : (account.value.name ?? "Instagram professional account");
+          await supabaseAdmin.from("marketing_platform_connections").upsert(
+            {
+              platform,
+              connection: "CONNECTED",
+              scopes: igScopes,
+              account_id: account.value.id,
+              account_label: label,
+              linked_page_id: null,
+              expires_at: igExpiresAt,
+              last_error: null,
+              last_checked_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "platform" },
+          );
+          await supabaseAdmin
+            .from("marketing_oauth_states")
+            .update({ used_at: new Date().toISOString() })
+            .eq("state", state);
+          await supabaseAdmin.from("marketing_audit").insert({
+            action: "platform_connected",
+            detail: `Instagram ${label} authorised through Instagram Login.`,
+            actor: "human",
+          });
+          return page("Instagram connected", "", true);
         }
 
 

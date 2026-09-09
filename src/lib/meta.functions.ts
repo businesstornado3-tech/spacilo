@@ -23,6 +23,11 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { metaStatusDetail, metaStatusWord, type MetaStatusWord } from "@/lib/marketing/meta";
+import {
+  instagramStatusDetail,
+  instagramStatusWord,
+  type InstagramStatusWord,
+} from "@/lib/marketing/instagram-login";
 
 const BUCKET = "marketing-videos";
 /** Meta must be able to fetch the file for the whole processing window. */
@@ -88,11 +93,40 @@ async function readMetaTokens(): Promise<MetaTokens> {
   };
 }
 
+/**
+ * Reads the stored Instagram Login authorisation. This is an INSTAGRAM USER
+ * token stored under the `instagram` platform row; it is unrelated to the
+ * Facebook Page token and is never returned to the browser.
+ */
+async function readInstagramToken(): Promise<{ token: string | null; detail: string }> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { decryptToken } = await import("@/lib/marketing/token-crypto.server");
+  const { data: row } = await (supabaseAdmin as any)
+    .from("marketing_platform_tokens")
+    .select("access_token_cipher, expires_at")
+    .eq("platform", "instagram")
+    .maybeSingle();
+  if (!row?.access_token_cipher) {
+    return { token: null, detail: "Instagram is not connected." };
+  }
+  if (row.expires_at && Date.parse(row.expires_at) <= Date.now()) {
+    return { token: null, detail: "TOKEN_EXPIRED: the Instagram authorisation has expired." };
+  }
+  try {
+    return { token: await decryptToken(row.access_token_cipher), detail: "Stored authorisation read." };
+  } catch {
+    return {
+      token: null,
+      detail: "The stored authorisation could not be read. Reconnect Instagram.",
+    };
+  }
+}
+
 /* ------------------------------------------------------------ console state */
 
 export type MetaPlatformState = {
   platform: "facebook" | "instagram";
-  status: MetaStatusWord;
+  status: MetaStatusWord | InstagramStatusWord;
   detail: string;
   accountId: string | null;
   accountLabel: string | null;
@@ -135,8 +169,34 @@ async function buildState(supabase: any): Promise<MetaConnectionState> {
   const build = (platform: "facebook" | "instagram"): MetaPlatformState => {
     const row = list.find((entry) => entry.platform === platform) ?? null;
     const facebookRow = list.find((entry) => entry.platform === "facebook") ?? null;
-    const connected = row?.connection === "CONNECTED" || facebookRow?.connection === "CONNECTED";
     const expired = Boolean(row?.expires_at && Date.parse(row.expires_at) <= Date.now());
+
+    // Instagram stands alone: Instagram Login, its own authorisation, its own
+    // account. It no longer inherits the Facebook connection or Page choice.
+    if (platform === "instagram") {
+      const igInput = {
+        configured,
+        connected: row?.connection === "CONNECTED",
+        expired,
+        paused: pausedAll || pausedPlatforms.includes("instagram"),
+        accountFound: Boolean(row?.account_id),
+        lastError: row?.last_error ?? null,
+        publishedBefore: Boolean(row?.last_published_at),
+      };
+      return {
+        platform,
+        status: instagramStatusWord(igInput),
+        detail: instagramStatusDetail(igInput),
+        accountId: row?.account_id ?? null,
+        accountLabel: row?.account_label ?? null,
+        linkedPageId: null,
+        paused: igInput.paused,
+        lastError: row?.last_error ?? null,
+        lastPublishedAt: row?.last_published_at ?? null,
+      };
+    }
+
+    const connected = row?.connection === "CONNECTED" || facebookRow?.connection === "CONNECTED";
     const input = {
       platform,
       configured,

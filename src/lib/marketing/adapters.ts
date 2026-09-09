@@ -10,7 +10,8 @@
  * carry no vendor SDK.
  */
 import { capabilityFor, definition, type PlatformConnectionRecord } from "./platforms";
-import { publishFacebookPageVideo, publishInstagramReel } from "./meta";
+import { publishFacebookPageVideo } from "./meta";
+import { publishInstagramLoginReel } from "./instagram-login";
 import { oauthDefinition } from "./oauth";
 import type {
   MarketingCampaign,
@@ -126,14 +127,25 @@ function metaAdapter(
   capability: PlatformCapability,
   accountId: string,
 ): PublishingChannelAdapter {
+  /*
+   * Facebook publishes with the PAGE token. Instagram uses Instagram Login and
+   * publishes with the INSTAGRAM USER token — it has no Facebook Page
+   * dependency at all.
+   */
   const pageToken = context.pageAccessToken ?? null;
-  if (!pageToken) {
+  const instagramToken = context.accessToken ?? null;
+  if (platform === "facebook" && !pageToken) {
     return unavailableAdapter(
       platform,
       context,
-      platform === "facebook"
-        ? "Connected, but no Facebook Page has been selected. Choose the Page to publish to."
-        : "Connected, but the Facebook Page that governs this Instagram account has not been selected.",
+      "Connected, but no Facebook Page has been selected. Choose the Page to publish to.",
+    );
+  }
+  if (platform === "instagram" && !instagramToken) {
+    return unavailableAdapter(
+      platform,
+      context,
+      "Instagram is not authorised. Connect the Instagram professional account.",
     );
   }
 
@@ -163,17 +175,17 @@ function metaAdapter(
       return publishFacebookPageVideo({
         fetchImpl: context.fetchImpl,
         pageId: accountId,
-        pageAccessToken: pageToken,
+        pageAccessToken: pageToken as string,
         videoUrl: asset.videoUrl,
         description: asset.description,
         title: asset.title,
         now: context.now,
       });
     }
-    return publishInstagramReel({
+    return publishInstagramLoginReel({
       fetchImpl: context.fetchImpl,
       instagramAccountId: accountId,
-      pageAccessToken: pageToken,
+      accessToken: instagramToken as string,
       videoUrl: asset.videoUrl,
       caption: asset.caption,
       now: context.now,

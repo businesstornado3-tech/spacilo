@@ -495,13 +495,25 @@ export const publishMetaVideo = createServerFn({ method: "POST" })
       return refuse(
         platform === "facebook"
           ? "No Facebook Page is selected. Choose the Page to publish to first."
-          : "Instagram Professional account not found for this Facebook Page.",
+          : "ACCOUNT_NOT_FOUND: no Instagram professional account is stored. Reconnect Instagram.",
       );
     }
 
-    const { pageToken } = await readMetaTokens();
-    if (!pageToken) {
-      return refuse("No Facebook Page authorisation is stored. Select the Facebook Page again.");
+    /*
+     * Facebook publishes with the Page token; Instagram publishes with the
+     * Instagram USER token from Instagram Login. They are read separately.
+     */
+    let pageToken: string | null = null;
+    let instagramToken: string | null = null;
+    if (platform === "facebook") {
+      ({ pageToken } = await readMetaTokens());
+      if (!pageToken) {
+        return refuse("No Facebook Page authorisation is stored. Select the Facebook Page again.");
+      }
+    } else {
+      const stored = await readInstagramToken();
+      instagramToken = stored.token;
+      if (!instagramToken) return refuse(stored.detail);
     }
 
     /* The stored video and its campaign asset. */
@@ -568,7 +580,7 @@ export const publishMetaVideo = createServerFn({ method: "POST" })
 
     const adapter = adapterFor(platform as any, {
       connection: connections.find((entry) => entry.platform === platform) ?? null,
-      accessToken: pageToken,
+      accessToken: platform === "instagram" ? instagramToken : pageToken,
       accountId: connection.account_id,
       pageAccessToken: pageToken,
       settings: mergedSettings,

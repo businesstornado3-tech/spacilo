@@ -414,3 +414,60 @@ describe("instagram adapter", () => {
     if (!result.ok) expect(result.state).toBe("AUTH_REQUIRED");
   });
 });
+
+describe("instagram connection source of truth", () => {
+  it("is connected only with a stored token and an account id", () => {
+    expect(instagramIsConnected({ hasStoredToken: true, accountId: "17841425343792806" })).toBe(
+      true,
+    );
+  });
+
+  it("is not connected when no Instagram token is stored", () => {
+    expect(instagramIsConnected({ hasStoredToken: false, accountId: "17841425343792806" })).toBe(
+      false,
+    );
+  });
+
+  it("is not connected when no Instagram account id was discovered", () => {
+    expect(instagramIsConnected({ hasStoredToken: true, accountId: null })).toBe(false);
+  });
+
+  it("reports NOT CONNECTED for a Facebook-Page-derived row with no token", () => {
+    const input = {
+      configured: true,
+      connected: instagramIsConnected({ hasStoredToken: false, accountId: null }),
+      expired: false,
+      paused: false,
+      accountFound: false,
+      lastError: null,
+      publishedBefore: false,
+    };
+    expect(instagramStatusWord(input)).toBe("NOT CONNECTED");
+  });
+
+  it("reports NOT CONNECTED when a token is missing even though an account id lingers", () => {
+    const input = {
+      configured: true,
+      connected: instagramIsConnected({ hasStoredToken: false, accountId: "1784142" }),
+      expired: false,
+      paused: false,
+      accountFound: true,
+      lastError: null,
+      publishedBefore: false,
+    };
+    expect(instagramStatusWord(input)).toBe("NOT CONNECTED");
+  });
+
+  it("reports CONNECTED after a genuine Instagram Login callback", () => {
+    const input = {
+      configured: true,
+      connected: instagramIsConnected({ hasStoredToken: true, accountId: "1784142" }),
+      expired: false,
+      paused: false,
+      accountFound: true,
+      lastError: null,
+      publishedBefore: false,
+    };
+    expect(instagramStatusWord(input)).toBe("CONNECTED");
+  });
+});

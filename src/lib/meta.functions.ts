@@ -143,7 +143,19 @@ export type MetaConnectionState = {
   instagram: MetaPlatformState;
 };
 
+/** True only when an unexpired encrypted Instagram USER token is stored. */
+async function hasStoredInstagramToken(): Promise<boolean> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: row } = await (supabaseAdmin as any)
+    .from("marketing_platform_tokens")
+    .select("access_token_cipher")
+    .eq("platform", "instagram")
+    .maybeSingle();
+  return Boolean(row?.access_token_cipher);
+}
+
 async function buildState(supabase: any): Promise<MetaConnectionState> {
+  const instagramTokenStored = await hasStoredInstagramToken();
   const [{ data: rows }, settings] = await Promise.all([
     supabase
       .from("marketing_platform_connections")

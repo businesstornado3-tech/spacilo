@@ -364,57 +364,24 @@ export const selectMetaPage = createServerFn({ method: "POST" })
         { onConflict: "platform" },
       );
 
-      // Instagram: only a Professional account linked to this Page counts.
+      /*
+       * Informational only. A Facebook Page may or may not have a linked
+       * Instagram professional account; either way this NEVER writes the
+       * Instagram connection row. Instagram is established solely by the
+       * Instagram Login callback.
+       */
       const instagram = await discoverInstagramAccount(fetch, page.id, page.accessToken);
       let instagramDetail: string;
       if (!instagram.ok) {
-        instagramDetail = instagram.error;
-        await (supabaseAdmin as any).from("marketing_platform_connections").upsert(
-          {
-            platform: "instagram",
-            connection: "CONNECTED",
-            account_id: null,
-            account_label: null,
-            linked_page_id: page.id,
-            last_error: instagram.error,
-            last_checked_at: nowIso,
-            updated_at: nowIso,
-          },
-          { onConflict: "platform" },
-        );
+        instagramDetail = `Instagram relationship could not be checked: ${instagram.error}`;
       } else if (!instagram.value) {
-        instagramDetail = "Instagram Professional account not found for this Facebook Page.";
-        await (supabaseAdmin as any).from("marketing_platform_connections").upsert(
-          {
-            platform: "instagram",
-            connection: "CONNECTED",
-            account_id: null,
-            account_label: null,
-            linked_page_id: page.id,
-            last_error: instagramDetail,
-            last_checked_at: nowIso,
-            updated_at: nowIso,
-          },
-          { onConflict: "platform" },
-        );
+        instagramDetail =
+          "No Instagram professional account is linked to this Facebook Page. Instagram is connected separately through Instagram Login.";
       } else {
         const label = instagram.value.username
           ? `@${instagram.value.username}`
-          : (instagram.value.name ?? "Instagram Professional account");
-        instagramDetail = `Instagram Professional account ${label} linked to this Page.`;
-        await (supabaseAdmin as any).from("marketing_platform_connections").upsert(
-          {
-            platform: "instagram",
-            connection: "CONNECTED",
-            account_id: instagram.value.id,
-            account_label: label,
-            linked_page_id: page.id,
-            last_error: null,
-            last_checked_at: nowIso,
-            updated_at: nowIso,
-          },
-          { onConflict: "platform" },
-        );
+          : (instagram.value.name ?? "Instagram professional account");
+        instagramDetail = `This Page is linked to Instagram ${label}. Connect Instagram separately to publish Reels.`;
       }
 
       await supabase.from("marketing_audit").insert({

@@ -19,9 +19,11 @@ import {
   listMetaPublishableVideos,
   publishMetaVideo,
   selectMetaPage,
+  getInstagramInsights,
   type MetaConnectionState,
   type MetaPageOption,
   type MetaPublishableVideo,
+  type InstagramInsightsResult,
 } from "@/lib/meta.functions";
 
 const metaKeys = {
@@ -48,6 +50,7 @@ export function useMetaConnection() {
   const choosePage = useServerFn(selectMetaPage);
   const fetchVideos = useServerFn(listMetaPublishableVideos);
   const publish = useServerFn(publishMetaVideo);
+  const insights = useServerFn(getInstagramInsights);
 
   const state = useQuery<MetaConnectionState>({
     queryKey: metaKeys.state,
@@ -72,6 +75,9 @@ export function useMetaConnection() {
         publish({ data: input }),
       onSuccess: invalidate,
     }),
+    insights: useMutation({
+      mutationFn: (mediaId: string) => insights({ data: { mediaId } }),
+    }),
   };
 }
 
@@ -91,6 +97,8 @@ export function MetaCardExtras({
   const [pages, setPages] = React.useState<MetaPageOption[] | null>(null);
   const [notice, setNotice] = React.useState<string | null>(null);
   const [videoId, setVideoId] = React.useState<string>("");
+  const [publishedId, setPublishedId] = React.useState<string | null>(null);
+  const [figures, setFigures] = React.useState<InstagramInsightsResult | null>(null);
 
   const snapshot = meta.state.data;
   if (!snapshot) return null;
@@ -100,7 +108,9 @@ export function MetaCardExtras({
   return (
     <div className="mt-3 space-y-2 rounded-lg border border-border bg-secondary/30 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="type-body-xs font-semibold">Meta publishing</span>
+        <span className="type-body-xs font-semibold">
+          {platform === "instagram" ? "Instagram publishing" : "Facebook Page publishing"}
+        </span>
         <span
           className={cn(
             "rounded-full border px-2 py-0.5 type-body-xs font-medium",
@@ -112,9 +122,15 @@ export function MetaCardExtras({
       </div>
       <p className="type-body-xs text-muted-foreground">{entry.detail}</p>
 
+      {platform === "instagram" && entry.accountId ? (
+        <p className="type-body-xs text-muted-foreground">
+          Instagram account ID {entry.accountId}
+        </p>
+      ) : null}
+
       {entry.accountLabel ? (
         <p className="type-body-xs">
-          {platform === "facebook" ? "Facebook Page: " : "Instagram: "}
+          {platform === "facebook" ? "Facebook Page: " : "Instagram account: "}
           <span className="font-semibold">{entry.accountLabel}</span>
         </p>
       ) : null}
@@ -187,13 +203,14 @@ export function MetaCardExtras({
             onClick={() =>
               meta.publish
                 .mutateAsync({ platform, videoId })
-                .then((result) =>
+                .then((result) => {
+                  setPublishedId(result.ok ? result.platformPostId : null);
                   setNotice(
                     result.ok
                       ? `${result.detail} Id ${result.platformPostId}${result.platformUrl ? ` — ${result.platformUrl}` : ""}`
                       : `${result.state}: ${result.detail}`,
-                  ),
-                )
+                  );
+                })
             }
             className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground disabled:opacity-50"
           >
@@ -205,6 +222,51 @@ export function MetaCardExtras({
             <p className="type-body-xs text-muted-foreground">
               Last confirmed by Meta on {new Date(entry.lastPublishedAt).toLocaleString("en-GB")}.
             </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {platform === "instagram" && publishedId ? (
+        <div className="space-y-1 border-t border-border pt-2">
+          <button
+            type="button"
+            disabled={meta.insights.isPending}
+            onClick={() => meta.insights.mutateAsync(publishedId).then(setFigures)}
+            className="min-h-9 rounded-lg border border-border px-2 type-body-xs hover:bg-secondary"
+          >
+            {meta.insights.isPending ? "Checking…" : "Check Instagram figures"}
+          </button>
+          {figures ? (
+            <div className="space-y-1">
+              <p className="type-body-xs font-semibold">Platform metrics</p>
+              {figures.platformMetrics.length > 0 ? (
+                <ul className="type-body-xs text-muted-foreground">
+                  {figures.platformMetrics.map((metric) => (
+                    <li key={metric.name}>
+                      {metric.name}: {metric.value.toLocaleString("en-GB")}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="type-body-xs text-muted-foreground">{figures.detail}</p>
+              )}
+              {figures.unavailable.map((name) => (
+                <p key={name} className="type-body-xs text-muted-foreground">
+                  {name}: NOT AVAILABLE FROM INSTAGRAM API
+                </p>
+              ))}
+              <p className="type-body-xs font-semibold">EarnRoom attributed conversions</p>
+              <ul className="type-body-xs text-muted-foreground">
+                {figures.attributedConversions.map((entryRow) => (
+                  <li key={entryRow.name}>
+                    {entryRow.name}:{" "}
+                    {entryRow.value === null
+                      ? "none recorded yet"
+                      : entryRow.value.toLocaleString("en-GB")}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : null}
         </div>
       ) : null}

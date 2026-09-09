@@ -24,6 +24,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { metaStatusDetail, metaStatusWord, type MetaStatusWord } from "@/lib/marketing/meta";
 import {
+  instagramIsConnected,
   instagramStatusDetail,
   instagramStatusWord,
   type InstagramStatusWord,
@@ -143,7 +144,19 @@ export type MetaConnectionState = {
   instagram: MetaPlatformState;
 };
 
+/** True only when an unexpired encrypted Instagram USER token is stored. */
+async function hasStoredInstagramToken(): Promise<boolean> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: row } = await (supabaseAdmin as any)
+    .from("marketing_platform_tokens")
+    .select("access_token_cipher")
+    .eq("platform", "instagram")
+    .maybeSingle();
+  return Boolean(row?.access_token_cipher);
+}
+
 async function buildState(supabase: any): Promise<MetaConnectionState> {
+  const instagramTokenStored = await hasStoredInstagramToken();
   const [{ data: rows }, settings] = await Promise.all([
     supabase
       .from("marketing_platform_connections")
@@ -174,13 +187,18 @@ async function buildState(supabase: any): Promise<MetaConnectionState> {
     // Instagram stands alone: Instagram Login, its own authorisation, its own
     // account. It no longer inherits the Facebook connection or Page choice.
     if (platform === "instagram") {
+      // Deterministic rule: a stored Instagram token AND an account id.
+      const igConnected = instagramIsConnected({
+        hasStoredToken: instagramTokenStored,
+        accountId: row?.account_id ?? null,
+      });
       const igInput = {
         configured,
-        connected: row?.connection === "CONNECTED",
+        connected: igConnected,
         expired,
         paused: pausedAll || pausedPlatforms.includes("instagram"),
         accountFound: Boolean(row?.account_id),
-        lastError: row?.last_error ?? null,
+        lastError: igConnected ? (row?.last_error ?? null) : null,
         publishedBefore: Boolean(row?.last_published_at),
       };
       return {
@@ -345,10 +363,11 @@ export const selectMetaPage = createServerFn({ method: "POST" })
       const pageTokenCipher = await encryptToken(page.accessToken);
       const nowIso = new Date().toISOString();
 
+      // Facebook only. The Instagram token row belongs to Instagram Login.
       await (supabaseAdmin as any)
         .from("marketing_platform_tokens")
         .update({ page_token_cipher: pageTokenCipher, updated_at: nowIso })
-        .in("platform", ["facebook", "instagram"]);
+        .eq("platform", "facebook");
 
       await (supabaseAdmin as any).from("marketing_platform_connections").upsert(
         {
@@ -364,57 +383,24 @@ export const selectMetaPage = createServerFn({ method: "POST" })
         { onConflict: "platform" },
       );
 
-      // Instagram: only a Professional account linked to this Page counts.
+      /*
+       * Informational only. A Facebook Page may or may not have a linked
+       * Instagram professional account; either way this NEVER writes the
+       * Instagram connection row. Instagram is established solely by the
+       * Instagram Login callback.
+       */
       const instagram = await discoverInstagramAccount(fetch, page.id, page.accessToken);
       let instagramDetail: string;
       if (!instagram.ok) {
-        instagramDetail = instagram.error;
-        await (supabaseAdmin as any).from("marketing_platform_connections").upsert(
-          {
-            platform: "instagram",
-            connection: "CONNECTED",
-            account_id: null,
-            account_label: null,
-            linked_page_id: page.id,
-            last_error: instagram.error,
-            last_checked_at: nowIso,
-            updated_at: nowIso,
-          },
-          { onConflict: "platform" },
-        );
+        instagramDetail = `Instagram relationship could not be checked: ${instagram.error}`;
       } else if (!instagram.value) {
-        instagramDetail = "Instagram Professional account not found for this Facebook Page.";
-        await (supabaseAdmin as any).from("marketing_platform_connections").upsert(
-          {
-            platform: "instagram",
-            connection: "CONNECTED",
-            account_id: null,
-            account_label: null,
-            linked_page_id: page.id,
-            last_error: instagramDetail,
-            last_checked_at: nowIso,
-            updated_at: nowIso,
-          },
-          { onConflict: "platform" },
-        );
+        instagramDetail =
+          "No Instagram professional account is linked to this Facebook Page. Instagram is connected separately through Instagram Login.";
       } else {
         const label = instagram.value.username
           ? `@${instagram.value.username}`
-          : (instagram.value.name ?? "Instagram Professional account");
-        instagramDetail = `Instagram Professional account ${label} linked to this Page.`;
-        await (supabaseAdmin as any).from("marketing_platform_connections").upsert(
-          {
-            platform: "instagram",
-            connection: "CONNECTED",
-            account_id: instagram.value.id,
-            account_label: label,
-            linked_page_id: page.id,
-            last_error: null,
-            last_checked_at: nowIso,
-            updated_at: nowIso,
-          },
-          { onConflict: "platform" },
-        );
+          : (instagram.value.name ?? "Instagram professional account");
+        instagramDetail = `This Page is linked to Instagram ${label}. Connect Instagram separately to publish Reels.`;
       }
 
       await supabase.from("marketing_audit").insert({

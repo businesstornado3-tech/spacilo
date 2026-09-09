@@ -18,6 +18,7 @@ import {
   fetchInstagramAccount,
   fetchInstagramMediaInsights,
   instagramErrorState,
+  instagramIsConnected,
   instagramStatusDetail,
   instagramStatusWord,
   publicationStateFor,

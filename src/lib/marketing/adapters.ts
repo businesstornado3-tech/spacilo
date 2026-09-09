@@ -40,6 +40,8 @@ export type AdapterContext = {
   now: number;
   /** Injected transport, so tests never touch the network. */
   fetchImpl: typeof fetch;
+  /** Injected delay, so processing polls can be exercised without waiting. */
+  sleep?: (ms: number) => Promise<void>;
 };
 
 export interface PublishingChannelAdapter {
@@ -189,6 +191,7 @@ function metaAdapter(
       videoUrl: asset.videoUrl,
       caption: asset.caption,
       now: context.now,
+      ...(context.sleep ? { sleep: context.sleep } : {}),
     });
   };
 

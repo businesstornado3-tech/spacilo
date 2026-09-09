@@ -30,7 +30,8 @@ const metaKeys = {
 };
 
 function statusTone(status: string): string {
-  if (status === "CONNECTED") return "border-success/30 bg-success-soft text-success-soft-foreground";
+  if (status === "CONNECTED")
+    return "border-success/30 bg-success-soft text-success-soft-foreground";
   if (status === "LAST ATTEMPT FAILED" || status === "AUTHORIZATION REQUIRED") {
     return "border-destructive/30 bg-destructive/10 text-destructive";
   }
@@ -196,12 +197,13 @@ export function MetaCardExtras({
             }
             className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground disabled:opacity-50"
           >
-            {meta.publish.isPending ? "Publishing…" : `Publish to ${platform === "facebook" ? "Facebook Page" : "Instagram"}`}
+            {meta.publish.isPending
+              ? "Publishing…"
+              : `Publish to ${platform === "facebook" ? "Facebook Page" : "Instagram"}`}
           </button>
           {entry.lastPublishedAt ? (
             <p className="type-body-xs text-muted-foreground">
-              Last confirmed by Meta on{" "}
-              {new Date(entry.lastPublishedAt).toLocaleString("en-GB")}.
+              Last confirmed by Meta on {new Date(entry.lastPublishedAt).toLocaleString("en-GB")}.
             </p>
           ) : null}
         </div>

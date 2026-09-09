@@ -42,8 +42,7 @@ export type MetaInstagramAccount = {
 };
 
 export type MetaResult<T> =
-  | { ok: true; value: T }
-  | { ok: false; error: string; retryable: boolean };
+  { ok: true; value: T } | { ok: false; error: string; retryable: boolean };
 
 const TOKEN_LIKE = /\b(EAA|IGQ|GHA)[A-Za-z0-9_-]{12,}\b/g;
 
@@ -128,7 +127,8 @@ export async function discoverPages(
       accessToken: token,
       category: typeof row["category"] === "string" ? row["category"] : null,
       // Meta omits `tasks` for some app configurations; absence is not a refusal.
-      canPublish: tasks.length === 0 || tasks.includes("CREATE_CONTENT") || tasks.includes("MANAGE"),
+      canPublish:
+        tasks.length === 0 || tasks.includes("CREATE_CONTENT") || tasks.includes("MANAGE"),
     });
   }
   return { ok: true, value: pages };
@@ -385,17 +385,14 @@ export async function publishInstagramReel(input: InstagramPublishInput): Promis
   /* 3. Publish — the only step that produces a real media id */
   let publishResponse: Response;
   try {
-    publishResponse = await input.fetchImpl(
-      graphUrl(`${input.instagramAccountId}/media_publish`),
-      {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          creation_id: containerId,
-          access_token: input.pageAccessToken,
-        }).toString(),
-      },
-    );
+    publishResponse = await input.fetchImpl(graphUrl(`${input.instagramAccountId}/media_publish`), {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        creation_id: containerId,
+        access_token: input.pageAccessToken,
+      }).toString(),
+    });
   } catch (error) {
     const failure = transportFailure(error);
     return { ok: false, state: "UPLOAD_FAILED", error: failure.error, retryable: true };
@@ -432,7 +429,9 @@ export async function publishInstagramReel(input: InstagramPublishInput): Promis
     if (permaResponse.ok) {
       const permaPayload = await readJson(permaResponse);
       permalink =
-        typeof permaPayload["permalink"] === "string" ? (permaPayload["permalink"] as string) : null;
+        typeof permaPayload["permalink"] === "string"
+          ? (permaPayload["permalink"] as string)
+          : null;
     }
   } catch {
     permalink = null;

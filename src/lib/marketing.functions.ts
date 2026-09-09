@@ -426,7 +426,9 @@ export const publishMarketingCampaign = createServerFn({ method: "POST" })
 
       const resolveAdapter = async (platform: PlatformId) => {
         const tokenRow = ((tokenRows ?? []) as any[]).find(
-          (row) => row.platform === platform || (platform === "youtube_shorts" && row.platform === "youtube"),
+          (row) =>
+            row.platform === platform ||
+            (platform === "youtube_shorts" && row.platform === "youtube"),
         );
         const accountId =
           ((accountRows ?? []) as any[]).find((row) => row.platform === platform)?.account_id ??
@@ -446,7 +448,9 @@ export const publishMarketingCampaign = createServerFn({ method: "POST" })
         let pageAccessToken: string | null = null;
         if (platform === "facebook" || platform === "instagram") {
           const metaRow = ((tokenRows ?? []) as any[]).find(
-            (row) => row.page_token_cipher && (row.platform === "facebook" || row.platform === "instagram"),
+            (row) =>
+              row.page_token_cipher &&
+              (row.platform === "facebook" || row.platform === "instagram"),
           );
           if (metaRow) {
             try {

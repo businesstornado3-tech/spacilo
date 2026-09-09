@@ -137,7 +137,10 @@ function metaAdapter(
     );
   }
 
-  const call = async (asset: PlatformAsset, _campaign: MarketingCampaign): Promise<PublishResult> => {
+  const call = async (
+    asset: PlatformAsset,
+    _campaign: MarketingCampaign,
+  ): Promise<PublishResult> => {
     void _campaign;
     const check = validateAssetForPlatform(asset);
     if (!check.ok) {
@@ -321,7 +324,6 @@ export function adapterFor(
   if (platform === "facebook" || platform === "instagram") {
     return metaAdapter(platform, context, capability, accountId);
   }
-
 
   const call = async (
     asset: PlatformAsset,

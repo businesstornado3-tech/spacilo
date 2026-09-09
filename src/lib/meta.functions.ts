@@ -193,9 +193,7 @@ export type MetaPageOption = {
 export const listMetaPages = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(
-    async ({
-      context,
-    }): Promise<{ ok: boolean; detail: string; pages: MetaPageOption[] }> => {
+    async ({ context }): Promise<{ ok: boolean; detail: string; pages: MetaPageOption[] }> => {
       const supabase = context.supabase as any;
       await assertAdmin(supabase);
       if (!metaConfigured()) {
@@ -247,9 +245,7 @@ export const listMetaPages = createServerFn({ method: "POST" })
  */
 export const selectMetaPage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
-    z.object({ pageId: z.string().min(1).max(64) }).parse(data),
-  )
+  .inputValidator((data: unknown) => z.object({ pageId: z.string().min(1).max(64) }).parse(data))
   .handler(
     async ({
       data,
@@ -434,9 +430,7 @@ export const publishMetaVideo = createServerFn({ method: "POST" })
       .from("marketing_platform_connections")
       .select("platform, connection, account_id, account_label")
       .in("platform", ["facebook", "instagram"]);
-    const connection = ((connectionRows ?? []) as any[]).find(
-      (row) => row.platform === platform,
-    );
+    const connection = ((connectionRows ?? []) as any[]).find((row) => row.platform === platform);
     if (!connection?.account_id) {
       return refuse(
         platform === "facebook"
@@ -447,9 +441,7 @@ export const publishMetaVideo = createServerFn({ method: "POST" })
 
     const { pageToken } = await readMetaTokens();
     if (!pageToken) {
-      return refuse(
-        "No Facebook Page authorisation is stored. Select the Facebook Page again.",
-      );
+      return refuse("No Facebook Page authorisation is stored. Select the Facebook Page again.");
     }
 
     /* The stored video and its campaign asset. */
@@ -480,9 +472,8 @@ export const publishMetaVideo = createServerFn({ method: "POST" })
       return refuse("The stored video file could not be prepared for Meta.", "UPLOAD_FAILED");
     }
 
-    const { adapterFor, attemptPublish, defaultMarketingSettings } = await import(
-      "@/lib/marketing"
-    );
+    const { adapterFor, attemptPublish, defaultMarketingSettings } =
+      await import("@/lib/marketing");
     const mergedSettings = { ...defaultMarketingSettings(), ...settings } as any;
     const connections = ((connectionRows ?? []) as any[]).map((row) => ({
       platform: row.platform,

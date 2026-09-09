@@ -24,6 +24,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { metaStatusDetail, metaStatusWord, type MetaStatusWord } from "@/lib/marketing/meta";
 import {
+  instagramIsConnected,
   instagramStatusDetail,
   instagramStatusWord,
   type InstagramStatusWord,

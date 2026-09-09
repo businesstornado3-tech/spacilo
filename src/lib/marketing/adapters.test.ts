@@ -107,3 +107,60 @@ describe("platform publishing adapters", () => {
     expect(result.ok).toBe(false);
   });
 });
+
+describe("meta adapters", () => {
+  it("refuses Facebook publishing when no Page token is stored", async () => {
+    const adapter = adapterFor(
+      "facebook",
+      context({
+        connection: connection("facebook"),
+        connections: [connection("facebook")],
+        accountId: "1111",
+        pageAccessToken: null,
+      }),
+    );
+    const result = await adapter.publish(asset({ platform: "facebook", aspect: "16:9" }), campaign);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.state).toBe("AUTH_REQUIRED");
+  });
+
+  it("publishes a Facebook Page video with the Page token, not the user token", async () => {
+    const fetchImpl = vi.fn(
+      async () => new Response(JSON.stringify({ id: "vid-1" }), { status: 200 }),
+    ) as unknown as typeof fetch;
+    const adapter = adapterFor(
+      "facebook",
+      context({
+        connection: connection("facebook"),
+        connections: [connection("facebook")],
+        accountId: "1111",
+        accessToken: "user-token",
+        pageAccessToken: "page-token",
+        fetchImpl,
+      }),
+    );
+    const result = await adapter.publish(asset({ platform: "facebook", aspect: "16:9" }), campaign);
+    expect(result).toMatchObject({ ok: true, platformPostId: "vid-1" });
+    const call = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls[0]!;
+    expect(String(call[0])).toContain("/1111/videos");
+    expect(String((call[1] as RequestInit).body)).toContain("access_token=page-token");
+    expect(String((call[1] as RequestInit).body)).not.toContain("user-token");
+  });
+
+  it("only reports Instagram as published after media_publish returns an id", async () => {
+    const responses = [
+      new Response(JSON.stringify({ id: "container-1" }), { status: 200 }),
+      new Response(JSON.stringify({ status_code: "FINISHED" }), { status: 200 }),
+      new Response(JSON.stringify({ id: "media-1" }), { status: 200 }),
+      new Response(JSON.stringify({ permalink: "https://instagram.com/reel/x" }), { status: 200 }),
+    ];
+    let index = 0;
+    const fetchImpl = vi.fn(async () => responses[index++]!) as unknown as typeof fetch;
+    const adapter = adapterFor(
+      "instagram",
+      context({ pageAccessToken: "page-token", fetchImpl }),
+    );
+    const result = await adapter.publish(asset(), campaign);
+    expect(result).toMatchObject({ ok: true, platformPostId: "media-1" });
+  });
+});

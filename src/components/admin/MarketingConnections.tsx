@@ -10,6 +10,7 @@
 import * as React from "react";
 
 import { Alert } from "@/components/common/Alert";
+import { MetaCardExtras, useMetaConnection } from "@/components/admin/MetaPublishing";
 import { usePublishingConnections } from "@/hooks/useMarketingVideos";
 import { definition } from "@/lib/marketing/platforms";
 import { workerStatusLabel } from "@/lib/marketing/worker-status";
@@ -42,6 +43,7 @@ function statusTone(word: string): string {
 
 export function MarketingConnections() {
   const connections = usePublishingConnections(true);
+  const meta = useMetaConnection();
   const snapshot = connections.query.data;
   const [notice, setNotice] = React.useState<string | null>(null);
   const [manage, setManage] = React.useState<string | null>(null);
@@ -159,6 +161,13 @@ export function MarketingConnections() {
                     </button>
                   )}
                 </div>
+              ) : null}
+
+              {platform.platform === "facebook" || platform.platform === "instagram" ? (
+                <MetaCardExtras
+                  platform={platform.platform as "facebook" | "instagram"}
+                  meta={meta}
+                />
               ) : null}
 
               {manage === platform.platform ? (

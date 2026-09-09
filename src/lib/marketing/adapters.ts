@@ -10,6 +10,7 @@
  * carry no vendor SDK.
  */
 import { capabilityFor, definition, type PlatformConnectionRecord } from "./platforms";
+import { publishFacebookPageVideo, publishInstagramReel } from "./meta";
 import { oauthDefinition } from "./oauth";
 import type {
   MarketingCampaign,
@@ -27,6 +28,12 @@ export type AdapterContext = {
   accessToken: string | null;
   /** Platform account/page/channel the founder selected. */
   accountId: string | null;
+  /**
+   * Meta only: the Facebook Page access token that governs the selected Page
+   * and its linked Instagram Professional account. A Meta user token cannot
+   * publish to a Page, so Facebook/Instagram refuse without this.
+   */
+  pageAccessToken?: string | null;
   settings: MarketingSettings;
   connections: readonly PlatformConnectionRecord[];
   now: number;
@@ -104,6 +111,88 @@ export function unavailableAdapter(
     upload: blocked,
     publish: blocked,
     getPublicationStatus: async () => ({ state: "UNKNOWN", url: null }),
+    getAnalytics: async () => null,
+  };
+}
+
+/**
+ * Facebook Pages and Instagram Professional accounts, through the official
+ * Meta Graph API. Both use the Page access token — never the Meta user token,
+ * and never the Meta user id as the destination.
+ */
+function metaAdapter(
+  platform: "facebook" | "instagram",
+  context: AdapterContext,
+  capability: PlatformCapability,
+  accountId: string,
+): PublishingChannelAdapter {
+  const pageToken = context.pageAccessToken ?? null;
+  if (!pageToken) {
+    return unavailableAdapter(
+      platform,
+      context,
+      platform === "facebook"
+        ? "Connected, but no Facebook Page has been selected. Choose the Page to publish to."
+        : "Connected, but the Facebook Page that governs this Instagram account has not been selected.",
+    );
+  }
+
+  const call = async (
+    asset: PlatformAsset,
+    _campaign: MarketingCampaign,
+  ): Promise<PublishResult> => {
+    void _campaign;
+    const check = validateAssetForPlatform(asset);
+    if (!check.ok) {
+      return {
+        ok: false,
+        state: "VALIDATION_FAILED",
+        error: check.problems.join(" "),
+        retryable: false,
+      };
+    }
+    if (!asset.videoUrl) {
+      return {
+        ok: false,
+        state: "UPLOAD_FAILED",
+        error: "No media link is available for Meta to fetch this video from.",
+        retryable: true,
+      };
+    }
+    if (platform === "facebook") {
+      return publishFacebookPageVideo({
+        fetchImpl: context.fetchImpl,
+        pageId: accountId,
+        pageAccessToken: pageToken,
+        videoUrl: asset.videoUrl,
+        description: asset.description,
+        title: asset.title,
+        now: context.now,
+      });
+    }
+    return publishInstagramReel({
+      fetchImpl: context.fetchImpl,
+      instagramAccountId: accountId,
+      pageAccessToken: pageToken,
+      videoUrl: asset.videoUrl,
+      caption: asset.caption,
+      now: context.now,
+    });
+  };
+
+  return {
+    platform,
+    capability: () => capability,
+    validateAsset: validateAssetForPlatform,
+    upload: call,
+    publish: call,
+    getPublicationStatus: async (platformPostId) => ({
+      state: "PUBLISHED",
+      url:
+        platform === "facebook"
+          ? `https://www.facebook.com/${accountId}/videos/${platformPostId}`
+          : null,
+    }),
     getAnalytics: async () => null,
   };
 }
@@ -228,6 +317,13 @@ export function adapterFor(
 
   const token = context.accessToken;
   const accountId = context.accountId;
+
+  // Meta needs its own multi-step flows: a Facebook Page publish must use the
+  // Page access token, and an Instagram publish is only real after
+  // media_publish returns an id. Both live in the Meta module.
+  if (platform === "facebook" || platform === "instagram") {
+    return metaAdapter(platform, context, capability, accountId);
+  }
 
   const call = async (
     asset: PlatformAsset,

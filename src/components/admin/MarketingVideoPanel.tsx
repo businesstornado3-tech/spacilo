@@ -135,6 +135,8 @@ export function MarketingVideoPanel({
         paidComputeEnabled: paidEnabled,
         selected: choice,
         browserSupported: support ? support.supported : null,
+        paidProviderConfigured: snapshot?.paidProviderConfigured ?? false,
+        installerAvailable: snapshot?.installerAvailable ?? false,
       }),
     [snapshot, paidEnabled, choice, support],
   );

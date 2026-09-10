@@ -129,29 +129,39 @@ export function MarketingVideoPanel({
   const [busy, setBusy] = React.useState<string | null>(null);
   const [stage, setStage] = React.useState<string | null>(null);
   const [progress, setProgress] = React.useState(0);
-  // "AUTO" is "choose for me", which never reaches a paid route.
-  const [choice, setChoice] = React.useState<WorkerChoice>("AUTO");
+  // Exactly one mode is ever active. Nothing is chosen for the founder, and a
+  // free choice is never promoted to a paid one.
+  const [choice, setChoice] = React.useState<WorkerChoice>(null);
+  const [showSetup, setShowSetup] = React.useState(false);
 
   const browser = workers.browser;
   const snapshot = workers.query.data;
-  const cards = React.useMemo(
+  const paidEnabled = snapshot?.preferences.paidComputeEnabled ?? false;
+  const modeCards = React.useMemo(
     () =>
-      founderCards({
+      simpleModeCards({
         workers: snapshot?.workers ?? [],
-        paidComputeEnabled: snapshot?.preferences.paidComputeEnabled ?? false,
-        costLines: snapshot?.costLines ?? [],
+        paidComputeEnabled: paidEnabled,
+        selected: choice,
+        browserSupported: support ? support.supported : null,
       }),
-    [snapshot],
+    [snapshot, paidEnabled, choice, support],
   );
-  const chosenCard =
-    choice === "AUTO" ? null : (cards.find((card) => card.mode === choice) ?? null);
-  const autoReady = cards.some((card) => card.mode !== "PAID_CLOUD" && card.selectable);
-  const blocked =
-    choice === "AUTO"
-      ? autoReady
-        ? null
-        : "No free route is ready yet. Set up one of the options above, or enable paid cloud."
-      : (chosenCard?.blockedMessage ?? null);
+  const selection = validateModeSelection(modeCards, choice);
+  const summary = generationSummary({
+    cards: modeCards,
+    selected: choice,
+    paidComputeEnabled: paidEnabled,
+  });
+  const blocked = selection.ok ? null : selection.message;
+
+  // Pick the first available free mode once, so the page is usable straight
+  // away — never a paid one, and never after the founder has chosen.
+  React.useEffect(() => {
+    if (choice !== null) return;
+    const firstFree = modeCards.find((card) => card.mode !== "PAID_CLOUD" && card.available);
+    if (firstFree) setChoice(firstFree.mode);
+  }, [choice, modeCards]);
 
   // The renderer is browser-only, so it is loaded after the page is interactive.
   React.useEffect(() => {

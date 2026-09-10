@@ -23,6 +23,14 @@ import {
   validateModeSelection,
 } from "@/lib/marketing/workers/mode-panel";
 import { estimatedCostPence } from "@/lib/marketing/usage";
+import {
+  PAID_PRESETS,
+  paidConfirmationMessage,
+  paidPresetCostLine,
+  paidPresetCostPence,
+  paidPresetSpecLine,
+  type PaidQuality,
+} from "@/lib/marketing/paid-presets";
 import { definition } from "@/lib/marketing/platforms";
 import { playerBox, versionRow } from "@/lib/marketing/review";
 import type {
@@ -141,9 +149,13 @@ export function MarketingVideoPanel({
     [snapshot, paidEnabled, choice, support],
   );
   const selection = validateModeSelection(modeCards, choice);
-  // The estimate covers the whole run — the campaign video and every platform
-  // version — so the Generate button carries the real number.
-  const estimatedPence = React.useMemo(() => {
+  // Which paid preset is chosen, and whether its one confirmation is showing.
+  const [paidQuality, setPaidQuality] = React.useState<PaidQuality>("STANDARD");
+  const [confirmingPaid, setConfirmingPaid] = React.useState(false);
+  // On the paid route the estimate is the chosen preset's own cost — one paid
+  // video, at the configuration that will actually be sent. On the free routes
+  // it is the whole run, which costs nothing anyway.
+  const freeRunPence = React.useMemo(() => {
     let total = 0;
     for (const asset of assets) {
       const pence = estimatedCostPence("720p", asset.seconds);
@@ -152,6 +164,8 @@ export function MarketingVideoPanel({
     }
     return total;
   }, [assets]);
+  const estimatedPence =
+    choice === "PAID_CLOUD" ? paidPresetCostPence(paidQuality) : freeRunPence;
   const summary = generationSummary({
     cards: modeCards,
     selected: choice,
@@ -165,22 +179,44 @@ export function MarketingVideoPanel({
     if (dailyLimit !== null) setLimitDraft(String(dailyLimit));
   }, [dailyLimit]);
 
-  /** The one Paid Cloud switch. Enabling also selects the mode; nothing runs. */
-  const togglePaid = (next: boolean) => {
-    workers.preferences
-      .mutateAsync({ paidComputeEnabled: next })
-      .then(() => {
-        setChoice((current) => {
-          if (next) return "PAID_CLOUD";
-          return current === "PAID_CLOUD" ? null : current;
-        });
-        setNotice(
-          next
-            ? "Paid Cloud is on. Nothing has been generated or charged — pressing Generate Paid Video starts a paid generation."
-            : "Paid Cloud is off. No paid video can be made.",
-        );
-      })
-      .catch((error: Error) => setNotice(error.message));
+  /**
+   * The paid route, start to finish, in one place: choose Standard or Highest
+   * quality, press Generate, confirm once. Nothing paid can begin any other
+   * way, and no free route is ever promoted to this one.
+   */
+  const startPaid = async (quality: PaidQuality) => {
+    if (!core) return;
+    setConfirmingPaid(false);
+    if (snapshot?.paidProviderConfigured !== true) {
+      setNotice("The paid video service is not configured, so no paid video can be made.");
+      return;
+    }
+    if (snapshot.preferences.generationPaused) {
+      setNotice("Video generation is paused, so no paid video can be made.");
+      return;
+    }
+    setStage("Starting the paid generation");
+    try {
+      // Pressing Generate and confirming is the founder's explicit choice, so
+      // the paid route is armed here rather than on a separate settings page.
+      if (!paidEnabled) await workers.preferences.mutateAsync({ paidComputeEnabled: true });
+      setChoice("PAID_CLOUD");
+      const result = await videos.generate.mutateAsync({
+        assetId: core.id,
+        tier: "final",
+        worker: "PAID_CLOUD",
+        quality,
+        browser,
+        confirmPaid: true,
+      });
+      setNotice(
+        `${result.workerLabel ? `Using ${result.workerLabel}. ` : ""}${result.detail} ${paidPresetCostLine(quality)} (estimate).`,
+      );
+      setStage(result.started ? "Making your video" : null);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "The paid video could not be started.");
+      setStage(null);
+    }
   };
 
   const saveDailyLimit = () => {
@@ -418,18 +454,86 @@ export function MarketingVideoPanel({
                     {card.actionLabel}
                   </button>
                 ) : null}
-                {card.mode === "PAID_CLOUD" ? (
-                  <button
-                    type="button"
-                    disabled={workers.preferences.isPending}
-                    aria-pressed={paidEnabled}
-                    onClick={() => togglePaid(!paidEnabled)}
-                    className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary disabled:opacity-60"
-                  >
-                    {paidEnabled ? "Disable Paid Cloud" : "Enable Paid Cloud"}
-                  </button>
-                ) : null}
               </div>
+              {card.mode === "PAID_CLOUD" ? (
+                <div className="mt-3 space-y-2 border-t border-border pt-3">
+                  {snapshot?.paidProviderConfigured !== true ? (
+                    <p className="type-body-xs text-muted-foreground">
+                      The paid video service is not configured, so no paid video can be made.
+                    </p>
+                  ) : snapshot.preferences.generationPaused ? (
+                    <p className="type-body-xs text-warning-soft-foreground">
+                      Video generation is paused, so no paid video can be made.
+                    </p>
+                  ) : (
+                    <>
+                      {(["STANDARD", "HIGHEST"] as const).map((quality) => (
+                        <label
+                          key={quality}
+                          className={cn(
+                            "flex cursor-pointer gap-2 rounded-lg border p-2",
+                            paidQuality === quality ? "border-primary" : "border-border",
+                          )}
+                        >
+                          <input
+                            type="radio"
+                            name="paid-quality"
+                            className="mt-1"
+                            checked={paidQuality === quality}
+                            onChange={() => {
+                              setPaidQuality(quality);
+                              setConfirmingPaid(false);
+                            }}
+                          />
+                          <span>
+                            <span className="block type-body-xs font-semibold">
+                              {PAID_PRESETS[quality].title}
+                            </span>
+                            <span className="block type-body-xs text-muted-foreground">
+                              {PAID_PRESETS[quality].description}
+                            </span>
+                            <span className="block type-body-xs text-muted-foreground">
+                              {paidPresetSpecLine(quality)} · {paidPresetCostLine(quality)}
+                            </span>
+                          </span>
+                        </label>
+                      ))}
+                      <p className="type-body-xs font-medium">{paidPresetCostLine(paidQuality)}</p>
+                      {confirmingPaid ? (
+                        <div className="rounded-lg border border-border p-2">
+                          <p className="type-body-xs">{paidConfirmationMessage(paidQuality)}</p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              disabled={working}
+                              onClick={() => void startPaid(paidQuality)}
+                              className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                            >
+                              Confirm and generate
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmingPaid(false)}
+                              className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={!core || working}
+                          onClick={() => setConfirmingPaid(true)}
+                          className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                        >
+                          Generate {PAID_PRESETS[paidQuality].title.toLowerCase()} video
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              ) : null}
               {card.blockedMessage ? (
                 <p className="mt-2 type-body-xs text-warning-soft-foreground">
                   {card.blockedMessage}

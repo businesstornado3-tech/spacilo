@@ -21,6 +21,7 @@ import type { MarketingCampaign, PlatformAsset, PlatformId } from "@/lib/marketi
 import type { BrandValidationReport } from "@/lib/marketing/branding";
 import type { MediaProbe } from "@/lib/marketing/media-probe";
 import type { OAuthConfigState } from "@/lib/marketing/oauth";
+import { PAID_PRESETS } from "@/lib/marketing/paid-presets";
 
 const BUCKET = "marketing-videos";
 
@@ -255,6 +256,8 @@ const generateSchema = z.object({
   browser: z.any().nullable().optional(),
   /** Explicit founder confirmation that a paid generation may be charged. */
   confirmPaid: z.boolean().default(false),
+  /** Which paid preset to use. Only read on the paid route. */
+  quality: z.enum(["STANDARD", "HIGHEST"]).optional(),
 });
 
 export type GenerateVideoResult = {
@@ -542,7 +545,16 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
 
     const spec = buildVideoPrompt(campaign, asset);
     const tier = workerCfg.selfHostedTier(data.tier);
-    const seconds = Math.min(tier.secondsCap, Math.max(3, spec.seconds));
+    // A paid preset fixes the configuration exactly; the free routes keep
+    // their own tier settings untouched.
+    const paidPreset =
+      data.quality && (data.worker ?? preferences.defaultWorker) === "PAID_CLOUD"
+        ? PAID_PRESETS[data.quality]
+        : null;
+    const seconds = paidPreset
+      ? paidPreset.seconds
+      : Math.min(tier.secondsCap, Math.max(3, spec.seconds));
+    const requestResolution = paidPreset ? paidPreset.resolution : tier.resolution;
     const config = worker.selfHostedConfig();
 
     /* ---- which worker actually runs this ---- */
@@ -559,7 +571,7 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
       workers,
       request: {
         seconds,
-        resolution: tier.resolution,
+        resolution: requestResolution,
         aspect: asset.aspect,
         voice: false,
         music: true,
@@ -593,9 +605,11 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
 
     const resolution =
       execution.route === "PAID_CLOUD"
-        ? data.tier === "draft"
-          ? "360p"
-          : "720p"
+        ? paidPreset
+          ? paidPreset.resolution
+          : data.tier === "draft"
+            ? "360p"
+            : "720p"
         : tier.resolution;
     const planned = {
       route: execution.route,
@@ -868,7 +882,7 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
       prompt: spec.prompt,
       aspect: asset.aspect,
       seconds,
-      resolution: resolution as "360p" | "720p",
+      resolution: resolution as "360p" | "720p" | "1080p",
     });
     if (!job.ok) return failNow(job.status, job.reason, false);
 

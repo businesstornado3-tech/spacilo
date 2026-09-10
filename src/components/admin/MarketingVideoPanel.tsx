@@ -230,11 +230,7 @@ export function MarketingVideoPanel({
 
   // Everything goes through the orchestrator: the server resolves the route,
   // and only tells this page to draw when the browser is the chosen route.
-  const run = async (
-    asset: PlatformAsset,
-    tier: "draft" | "final",
-    confirmPaid = false,
-  ): Promise<boolean> => {
+  const run = async (asset: PlatformAsset, tier: "draft" | "final"): Promise<boolean> => {
     // The chosen mode must be genuinely available; nothing is switched
     // silently, and no generation starts on an unavailable route.
     const gate = validateModeSelection(modeCards, choice);
@@ -242,6 +238,9 @@ export function MarketingVideoPanel({
       setNotice(gate.message ?? "Choose a video generation mode first.");
       return false;
     }
+    // Paid Cloud has one switch. It is on, the founder chose it, and pressing
+    // Generate Paid Video is the confirmation — there is no second dialog.
+    const confirmPaid = choice === "PAID_CLOUD" && paidEnabled;
     try {
       setStage("Choosing where to make it");
       const result = await videos.generate.mutateAsync({
@@ -253,14 +252,12 @@ export function MarketingVideoPanel({
       });
 
       if (result.status === "CONFIRMATION_REQUIRED") {
-        setNotice(result.detail);
+        // Only reachable when Paid Cloud is off: nothing paid may start.
+        setNotice("Paid Cloud is switched off, so no paid video can be made.");
         setStage(null);
-        // Every paid video is confirmed on its own, however the mode was set.
-        if (window.confirm(`${PAID_GENERATION_CONFIRMATION}\n\nGenerate Paid Video?`)) {
-          return run(asset, tier, true);
-        }
         return false;
       }
+
 
       const route = result.workerLabel ? `Using ${result.workerLabel}. ` : "";
       if (result.status === "BROWSER_RENDER_REQUIRED") {

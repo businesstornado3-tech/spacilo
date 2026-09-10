@@ -342,8 +342,11 @@ describe("founder settings", () => {
     expect(off.defaultWorker).toBe("AUTO");
   });
 
-  it("keeps limits inside sane bounds", () => {
-    const prefs = readWorkerPreferences({ videoWorker: { usage: { maxVideosPerDay: 9999 } } });
-    expect(prefs.usage.maxVideosPerDay).toBe(50);
+  it("keeps money caps inside sane bounds and carries no video-count quota", () => {
+    const prefs = readWorkerPreferences({
+      videoWorker: { spend: { perDayPence: 999_999 }, usage: { maxVideosPerDay: 9999 } },
+    });
+    expect(prefs.spend.perDayPence).toBe(100_000);
+    expect((prefs as Record<string, unknown>)["usage"]).toBeUndefined();
   });
 });

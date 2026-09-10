@@ -204,13 +204,6 @@ const PREFERENCES = z.object({
   autonomousPublishing: z.boolean().optional(),
   generationPaused: z.boolean().optional(),
   publishingPaused: z.boolean().optional(),
-  usage: z
-    .object({
-      maxVideosPerDay: z.number().optional(),
-      maxVariantsPerCampaign: z.number().optional(),
-      maxRegenerationsPerAsset: z.number().optional(),
-    })
-    .optional(),
   spend: z
     .object({
       perVideoPence: z.number().optional(),

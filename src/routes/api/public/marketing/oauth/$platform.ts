@@ -13,6 +13,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { oauthDefinition, resolveOAuthCredentials } from "@/lib/marketing/oauth";
 import type { PlatformId } from "@/lib/marketing/types";
+import { runtimeFetch } from "@/lib/marketing/runtime-fetch";
 
 const PLATFORMS = [
   "youtube",
@@ -145,7 +146,7 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
             fetchInstagramAccount,
           } = await import("@/lib/marketing/instagram-login");
 
-          const exchanged = await exchangeInstagramCode(fetch, {
+          const exchanged = await exchangeInstagramCode(runtimeFetch, {
             clientId,
             clientSecret,
             redirectUri: stateRow.redirect_uri,
@@ -155,7 +156,7 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
             return fail("CODE_EXCHANGE_FAILED", "Not connected", exchanged.error);
           }
 
-          const longLived = await exchangeInstagramLongLivedToken(fetch, {
+          const longLived = await exchangeInstagramLongLivedToken(runtimeFetch, {
             clientSecret,
             accessToken: exchanged.value.accessToken,
           });
@@ -172,7 +173,7 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
             ? new Date(Date.now() + longLived.value.expiresInSeconds * 1000).toISOString()
             : null;
 
-          const account = await fetchInstagramAccount(fetch, igToken);
+          const account = await fetchInstagramAccount(runtimeFetch, igToken);
           if (!account.ok) {
             return fail("ACCOUNT_LOOKUP_FAILED", "Not connected", account.error);
           }

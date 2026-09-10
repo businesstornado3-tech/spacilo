@@ -126,7 +126,6 @@ export function pairingScript(input: {
     "$hw=@{operatingSystem=(Get-CimInstance Win32_OperatingSystem).Caption;cpuThreads=[int]$env:NUMBER_OF_PROCESSORS;ramGb=[math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1GB,1)}",
     `$body=@{code='${code}';label='${label}';hardware=$hw} | ConvertTo-Json -Depth 4`,
     `$r=Invoke-RestMethod -Method Post -Uri '${site}/api/public/video-worker/pair' -ContentType 'application/json' -UserAgent 'EarnRoom-Video-Worker/1.0' -Body $body`,
-    `@{site='${site}';workerId=$r.workerId;heartbeatUrl=$r.heartbeatUrl;label='${label}'} + @{} | Out-Null`,
     `$state=[ordered]@{site='${site}';workerId=$r.workerId;heartbeatUrl=$r.heartbeatUrl;label='${label}'}`,
     "$state['token']=$r.token",
     "($state | ConvertTo-Json) | Set-Content -Path (Join-Path $d 'worker.json') -Encoding utf8",

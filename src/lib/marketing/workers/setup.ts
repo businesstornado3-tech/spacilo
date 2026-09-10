@@ -221,3 +221,35 @@ export function capabilityVerdict(profile: HardwareProfile): CapabilityVerdict {
       : `${profile.capabilityReason} This computer can still make short, simple animated videos, but not cinematic ones — those will use another route.`,
   };
 }
+
+export type ComputerSetupSignals = SetupSignals & {
+  /** The founder told us this machine already has the worker installed. */
+  alreadyInstalled?: boolean;
+  /** The worker is paired but has stopped reporting in. */
+  stale?: boolean;
+  /** Something actually failed. */
+  failed?: boolean;
+  /** The paired worker is enabled and reporting a usable status. */
+  workerReady?: boolean;
+};
+
+/**
+ * One honest state. CONNECTED and READY require a real worker heartbeat, not
+ * a browser visiting this page.
+ */
+export function computerSetupState(signals: ComputerSetupSignals): ComputerSetupState {
+  if (signals.failed) return "ERROR";
+  if (signals.heartbeatAt && !signals.stale) {
+    return signals.workerReady && signals.hardware ? "READY" : "CONNECTED";
+  }
+  if (signals.heartbeatAt && signals.stale) return "OFFLINE";
+  if (signals.claimed) return "WORKER_CONNECTING";
+  if (signals.expired) return "OFFLINE";
+  if (signals.sessionCreated) {
+    if (signals.alreadyInstalled) return "SETUP_SESSION_CREATED";
+    if (signals.downloadStarted) return "INSTALLATION_PENDING";
+    return "INSTALLER_DOWNLOADING";
+  }
+  if (signals.alreadyInstalled) return "INSTALLED_NEEDS_SETUP";
+  return "NOT_INSTALLED";
+}

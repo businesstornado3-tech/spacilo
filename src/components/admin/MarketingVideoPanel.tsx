@@ -141,12 +141,59 @@ export function MarketingVideoPanel({
     [snapshot, paidEnabled, choice, support],
   );
   const selection = validateModeSelection(modeCards, choice);
+  // The estimate covers the whole run — the campaign video and every platform
+  // version — so the Generate button carries the real number.
+  const estimatedPence = React.useMemo(() => {
+    let total = 0;
+    for (const asset of assets) {
+      const pence = estimatedCostPence("720p", asset.seconds);
+      if (pence === null) return null;
+      total += pence;
+    }
+    return total;
+  }, [assets]);
   const summary = generationSummary({
     cards: modeCards,
     selected: choice,
     paidComputeEnabled: paidEnabled,
+    estimatedPence,
   });
   const blocked = selection.ok ? null : selection.message;
+  const dailyLimit = snapshot?.preferences.usage.maxVideosPerDay ?? null;
+  const [limitDraft, setLimitDraft] = React.useState<string>("");
+  React.useEffect(() => {
+    if (dailyLimit !== null) setLimitDraft(String(dailyLimit));
+  }, [dailyLimit]);
+
+  /** The one Paid Cloud switch. Enabling also selects the mode; nothing runs. */
+  const togglePaid = (next: boolean) => {
+    workers.preferences
+      .mutateAsync({ paidComputeEnabled: next })
+      .then(() => {
+        setChoice((current) => {
+          if (next) return "PAID_CLOUD";
+          return current === "PAID_CLOUD" ? null : current;
+        });
+        setNotice(
+          next
+            ? "Paid Cloud is on. Nothing has been generated or charged — pressing Generate Paid Video starts a paid generation."
+            : "Paid Cloud is off. No paid video can be made.",
+        );
+      })
+      .catch((error: Error) => setNotice(error.message));
+  };
+
+  const saveDailyLimit = () => {
+    const value = Number(limitDraft);
+    if (!Number.isFinite(value) || value < 1 || value > 50) {
+      setNotice("Choose a daily video limit between 1 and 50.");
+      return;
+    }
+    workers.preferences
+      .mutateAsync({ usage: { maxVideosPerDay: Math.round(value) } })
+      .then(() => setNotice(`Daily video limit is now ${Math.round(value)} videos a day.`))
+      .catch((error: Error) => setNotice(error.message));
+  };
 
   // Pick the first available free mode once, so the page is usable straight
   // away — never a paid one, and never after the founder has chosen.

@@ -81,7 +81,34 @@ export type StudioPublicationInput = {
   state: string;
   platformUrl: string | null;
   platformPostId: string | null;
+  /** The real, already-sanitised reason the platform gave. Never a token. */
+  error?: string | null;
 };
+
+/** Publication states that mean the last attempt did not succeed. */
+export const FAILED_PUBLICATION_STATES = [
+  "UPLOAD_FAILED",
+  "PLATFORM_REJECTED",
+  "VALIDATION_FAILED",
+  "AUTH_REQUIRED",
+  "FAILED",
+] as const;
+
+/** Turns a stored publication state into one plain founder-facing sentence. */
+export function failureHeadline(state: string, label: string): string {
+  switch (state) {
+    case "AUTH_REQUIRED":
+      return `${label} did not accept the stored sign-in.`;
+    case "PLATFORM_REJECTED":
+      return `${label} rejected the video.`;
+    case "VALIDATION_FAILED":
+      return `The video did not meet ${label}'s requirements.`;
+    case "UPLOAD_FAILED":
+      return `The upload to ${label} did not finish.`;
+    default:
+      return `${label} did not confirm a publication.`;
+  }
+}
 
 /**
  * Builds all seven rows. `videoReady` is the canonical final-branded-artifact

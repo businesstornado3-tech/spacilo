@@ -521,8 +521,44 @@ export function MarketingVideoPanel({
           {summary.paidLine ? (
             <p className="type-body-xs text-muted-foreground">{summary.paidLine}</p>
           ) : null}
-          <p className="type-body-xs text-muted-foreground">{summary.costLine}</p>
+          <p
+            className={cn(
+              "type-body-xs",
+              choice === "PAID_CLOUD" ? "font-medium" : "text-muted-foreground",
+            )}
+          >
+            {summary.costLine}
+          </p>
         </div>
+
+        {/* The daily limit is a real safety control, so it is raised here
+            rather than on some other settings page. */}
+        <div className="mt-3 flex flex-wrap items-end gap-2 rounded-lg border border-border px-3 py-2">
+          <label className="type-body-xs text-muted-foreground" htmlFor="daily-video-limit">
+            Daily video limit
+            <input
+              id="daily-video-limit"
+              type="number"
+              min={1}
+              max={50}
+              value={limitDraft}
+              onChange={(event) => setLimitDraft(event.target.value)}
+              className="mt-1 block h-9 w-24 rounded-lg border border-border bg-background px-2 type-body-sm"
+            />
+          </label>
+          <button
+            type="button"
+            disabled={workers.preferences.isPending || limitDraft === String(dailyLimit ?? "")}
+            onClick={saveDailyLimit}
+            className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary disabled:opacity-60"
+          >
+            Save limit
+          </button>
+          <p className="type-body-xs text-muted-foreground">
+            Videos a day, across all campaigns. Paid Cloud does not raise this limit.
+          </p>
+        </div>
+
 
         <div className="mt-3 flex flex-wrap gap-2">
           <button

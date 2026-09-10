@@ -33,8 +33,18 @@ const campaign = {
   },
   story: {
     scenes: [
-      { seconds: 5, visual: "A cluttered hallway.", voiceover: "No room left.", caption: "No room" },
-      { seconds: 10, visual: "A neighbour's empty garage.", voiceover: "Space nearby.", caption: "Space nearby" },
+      {
+        seconds: 5,
+        visual: "A cluttered hallway.",
+        voiceover: "No room left.",
+        caption: "No room",
+      },
+      {
+        seconds: 10,
+        visual: "A neighbour's empty garage.",
+        voiceover: "Space nearby.",
+        caption: "Space nearby",
+      },
     ],
   },
 } as unknown as MarketingCampaign;

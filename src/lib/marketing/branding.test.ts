@@ -158,7 +158,8 @@ describe("brand identity survives every generation mode", () => {
     const stripped = {
       ...spec,
       layers: spec.layers.filter(
-        (layer) => !(layer.kind === "logo" && layer.position === "bottom-right") &&
+        (layer) =>
+          !(layer.kind === "logo" && layer.position === "bottom-right") &&
           !(layer.kind === "text" && layer.role === "tagline" && layer.fromSeconds === 0),
       ),
     };

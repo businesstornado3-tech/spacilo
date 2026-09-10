@@ -152,7 +152,8 @@ export function simpleModeCards(input: {
           available: false,
           action: "NONE",
           actionLabel: "Use Computer Mode",
-          blockedMessage: "Computer Mode is busy right now. Wait for it to finish, or choose another mode.",
+          blockedMessage:
+            "Computer Mode is busy right now. Wait for it to finish, or choose another mode.",
         });
       }
       if (!ready(worker)) {
@@ -227,7 +228,8 @@ export function simpleModeCards(input: {
       return card({
         ...shell,
         status: "NOT AVAILABLE",
-        statusNote: "High-performance cloud generation is available once a paid worker is connected.",
+        statusNote:
+          "High-performance cloud generation is available once a paid worker is connected.",
         available: false,
         action: "NONE",
         actionLabel: "Use Paid Cloud",

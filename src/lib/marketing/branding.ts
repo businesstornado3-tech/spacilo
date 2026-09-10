@@ -263,7 +263,6 @@ export function validateBranding(input: {
       : "Brand name spelled EarnRoom.",
   });
 
-
   const renderedAspect = input.rendered?.aspect ?? null;
   checks.push({
     id: "aspect_ratio",

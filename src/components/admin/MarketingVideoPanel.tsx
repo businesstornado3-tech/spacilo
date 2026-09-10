@@ -93,7 +93,6 @@ function CompactPlayer({
   );
 }
 
-
 export function MarketingVideoPanel({
   campaignId,
   assets,
@@ -174,9 +173,8 @@ export function MarketingVideoPanel({
     setStage("Drawing the scenes");
     try {
       const { renderAnimatedPlan } = await import("@/lib/marketing/animation/render.browser");
-      const { validatePlan, validateRender, qualityStatus } = await import(
-        "@/lib/marketing/animation/validation"
-      );
+      const { validatePlan, validateRender, qualityStatus } =
+        await import("@/lib/marketing/animation/validation");
       const plan = buildAnimatedPlan({ campaignId, asset, story, audience, topic });
       // Check the plan before a single frame is drawn: a bad plan costs nothing.
       const planCheck = validatePlan(plan);
@@ -559,11 +557,7 @@ export function MarketingVideoPanel({
                     {row.status}
                   </p>
                   {row.hasVideo && video?.playbackUrl ? (
-                    <CompactPlayer
-                      aspect={asset.aspect}
-                      src={video.playbackUrl}
-                      className="mt-2"
-                    />
+                    <CompactPlayer aspect={asset.aspect} src={video.playbackUrl} className="mt-2" />
                   ) : (
                     <p className="mt-1 type-body-xs text-muted-foreground">
                       {video ? statusLabel(video.status) : row.detail}

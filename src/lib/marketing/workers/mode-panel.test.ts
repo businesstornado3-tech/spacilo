@@ -35,8 +35,7 @@ const cards = (input: Partial<Parameters<typeof simpleModeCards>[0]> = {}): Simp
     ...input,
   });
 
-const find = (list: SimpleModeCard[], mode: WorkerMode) =>
-  list.find((card) => card.mode === mode)!;
+const find = (list: SimpleModeCard[], mode: WorkerMode) => list.find((card) => card.mode === mode)!;
 
 describe("simple video generation modes", () => {
   it("offers exactly the four founder modes", () => {
@@ -67,10 +66,7 @@ describe("simple video generation modes", () => {
   });
 
   it("asks the founder to start an offline computer worker rather than pretending", () => {
-    const card = find(
-      cards({ workers: [worker("BROWSER"), worker("LOCAL", "OFFLINE")] }),
-      "LOCAL",
-    );
+    const card = find(cards({ workers: [worker("BROWSER"), worker("LOCAL", "OFFLINE")] }), "LOCAL");
     expect(card.status).toBe("OFFLINE");
     expect(card.actionLabel).toBe("Start Computer Worker");
     expect(card.blockedMessage).toContain("Start the EarnRoom Video Worker on your computer.");

@@ -216,7 +216,7 @@ export async function publishYoutubeVideo(request: YoutubeUploadRequest): Promis
     put = await fetchImpl(location, {
       method: "PUT",
       headers: { "Content-Type": "video/mp4", "Content-Length": String(bytes.byteLength) },
-      body: bytes,
+      body: bytes as unknown as BodyInit,
     });
   } catch {
     return {

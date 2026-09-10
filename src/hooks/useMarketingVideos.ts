@@ -17,6 +17,7 @@ import {
   pollCampaignVideo,
   startPlatformConnection,
   storeAnimatedVideo,
+  storeBrandedVideo,
   testPlatformConnection,
   updatePlatformPublishing,
   updateVideoProviderSettings,

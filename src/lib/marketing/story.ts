@@ -7,6 +7,7 @@
  * illustrative — no fabricated customer, testimonial or result.
  */
 import { brandProfile, taglineFor } from "./brand";
+import type { CreativeTreatment } from "./creative";
 import type { CampaignStory, MarketingOpportunity, StoryFormat, StoryScene } from "./types";
 
 function formatFor(opportunity: MarketingOpportunity): StoryFormat {
@@ -45,7 +46,7 @@ function hookFor(opportunity: MarketingOpportunity): string {
  */
 export function buildStory(
   opportunity: MarketingOpportunity,
-  options: { seconds?: number } = {},
+  options: { seconds?: number; creative?: CreativeTreatment } = {},
 ): CampaignStory {
   const profile = brandProfile();
   const place = opportunity.location?.name ?? "your area";

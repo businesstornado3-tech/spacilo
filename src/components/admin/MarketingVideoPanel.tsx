@@ -726,7 +726,6 @@ export function MarketingVideoPanel({
           ) : null}
         </div>
       </div>
-
     </div>
   );
 }

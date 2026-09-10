@@ -364,9 +364,7 @@ export const beginComputerSetup = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await assertAdmin(supabase);
 
-    const { installerFileName, pairingFileName } = await import(
-      "@/lib/marketing/workers/setup"
-    );
+    const { installerFileName, pairingFileName } = await import("@/lib/marketing/workers/setup");
     const expiresAt = new Date(Date.now() + PAIRING_MINUTES * 60 * 1000).toISOString();
     const code = pairingCode();
 

@@ -46,7 +46,9 @@ export function ComputerSetup({
   const [session, setSession] = React.useState<ComputerSetupSession | null>(null);
   const [downloadStarted, setDownloadStarted] = React.useState(false);
   const [problem, setProblem] = React.useState<string | null>(null);
-  const [label, setLabel] = React.useState(mode === "FREE_CLOUD" ? "Free cloud machine" : "My computer");
+  const [label, setLabel] = React.useState(
+    mode === "FREE_CLOUD" ? "Free cloud machine" : "My computer",
+  );
   // True when the founder says this machine already runs the worker, so we
   // pair the running worker instead of downloading anything again.
   const [alreadyInstalled, setAlreadyInstalled] = React.useState(false);
@@ -196,8 +198,8 @@ export function ComputerSetup({
           <p className="mt-2 type-body-xs text-muted-foreground">
             Already installed and showing “Needs setup”? Choose “Pair this computer”. EarnRoom sends
             a small file — open it once on that computer and the worker connects itself. Nothing is
-            downloaded again. Chrome may first ask whether to keep the file: choose “Keep”, then open
-            it.
+            downloaded again. Chrome may first ask whether to keep the file: choose “Keep”, then
+            open it.
           </p>
         </>
       ) : (

@@ -54,29 +54,34 @@ function MarketingStudioRoute() {
   const decision = snapshot?.todayDecision?.status ?? null;
   const approved = decision === "APPROVED" || decision === "SCHEDULED" || decision === "PUBLISHED";
   const rejected = decision === "REJECTED";
+  // Safety failure is a real validation result — never the same thing as
+  // "the founder has not decided yet".
   const safetyFailed = today ? !today.validation.passed : false;
+  const safetyReasons = today?.validation.failures ?? [];
   // Only a genuine emergency stop blocks the whole studio.
   const globallyPaused = snapshot?.settings.pauseAllPublishing ?? false;
+  const autonomous = snapshot?.settings.globalMode === "AUTONOMOUS";
 
-  const generateButton = (label: string, primary: boolean) => (
+  // Exactly one campaign-generation action exists on this page.
+  const generateButton = (
     <button
       type="button"
       onClick={() => studio.generate.mutate({})}
       disabled={studio.generate.isPending}
-      className={
-        primary
-          ? "inline-flex min-h-11 items-center rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground disabled:opacity-60"
-          : "inline-flex min-h-11 items-center rounded-lg border border-border px-3 type-nav text-muted-foreground hover:bg-secondary disabled:opacity-60"
-      }
+      className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground disabled:opacity-60"
     >
-      {studio.generate.isPending ? "Generating today's campaign…" : label}
+      {studio.generate.isPending
+        ? "Generating today's campaign…"
+        : today
+          ? "Generate Today's Campaign"
+          : "Generate Today's Campaign"}
     </button>
   );
 
   return (
     <AdminShell
       title="Marketing Studio"
-      description="Generate today's campaign, make the video, and publish it."
+      description="Generate today's campaign, make the video, approve it, and publish it."
     >
       {studio.query.isLoading ? <LoadingState label="Loading the Marketing Studio…" /> : null}
       {studio.query.isError ? (
@@ -97,7 +102,7 @@ function MarketingStudioRoute() {
           <AdminSectionBlock id="today" title="Today's campaign">
             {!today ? (
               <div className="space-y-4">
-                {generateButton("Generate Today's Campaign", true)}
+                {generateButton}
                 {!studio.generate.isPending ? (
                   <EmptyState
                     title="Ready to create today's campaign"
@@ -143,12 +148,12 @@ function MarketingStudioRoute() {
                   </div>
                 </dl>
 
-                {generateButton("Generate a new campaign", false)}
+                {generateButton}
               </div>
             )}
           </AdminSectionBlock>
 
-          {/* 2 and 3 — one mode choice, one Generate Video button, one player */}
+          {/* 2 — one mode choice, one Generate Video button, one player */}
           {today ? (
             <AdminSectionBlock id="video" title="Generate video">
               <MarketingVideoPanel
@@ -162,27 +167,48 @@ function MarketingStudioRoute() {
             </AdminSectionBlock>
           ) : null}
 
-          {/* 4 — approval, on this page, with one clear action */}
+          {/* 3 — approval: a founder decision, told apart from a safety result */}
           {today ? (
             <AdminSectionBlock id="approval" title="Campaign approval">
               {safetyFailed ? (
                 <div className="space-y-3">
-                  <p className="type-body-sm font-semibold">Approval unavailable</p>
-                  <p className="type-body-sm text-muted-foreground">
-                    This campaign did not pass EarnRoom's safety and accuracy checks.
+                  <p className="type-body-sm font-semibold">Status: Safety validation failed</p>
+                  {safetyReasons.length > 0 ? (
+                    <ul className="space-y-1">
+                      {safetyReasons.map((reason) => (
+                        <li key={reason} className="type-body-sm text-muted-foreground">
+                          • {reason}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="type-body-sm text-muted-foreground">
+                      This campaign did not pass EarnRoom's safety and accuracy checks.
+                    </p>
+                  )}
+                  <p className="type-body-xs text-muted-foreground">
+                    Approval is unavailable until a campaign passes these checks.
                   </p>
-                  {generateButton("Generate Today's Campaign", true)}
                 </div>
               ) : approved ? (
-                <p className="type-body-sm text-success-soft-foreground">Approved ✓</p>
+                <p className="type-body-sm text-success-soft-foreground">
+                  Status: Approved ✓ — publishing is unlocked.
+                </p>
+              ) : rejected ? (
+                <div className="space-y-2">
+                  <p className="type-body-sm font-semibold">Status: Rejected</p>
+                  <p className="type-body-sm text-muted-foreground">
+                    Publishing stays off for this campaign. Generate today's campaign again above
+                    when you want a new version.
+                  </p>
+                </div>
               ) : (
                 <div className="space-y-3">
+                  <p className="type-body-sm font-semibold">Status: Awaiting approval</p>
                   <p className="type-body-sm text-muted-foreground">
-                    {rejected ? "Campaign needs a new approved version" : "Ready for approval"}
+                    This campaign passed EarnRoom's safety and accuracy checks. It is your decision.
                   </p>
-                  {rejected ? (
-                    generateButton("Generate Today's Campaign", true)
-                  ) : (
+                  <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
                       disabled={studio.decide.isPending}
@@ -191,13 +217,58 @@ function MarketingStudioRoute() {
                       }
                       className="min-h-11 rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground disabled:opacity-60"
                     >
-                      {studio.decide.isPending ? "Approving…" : "Approve Campaign"}
+                      {studio.decide.isPending ? "Saving…" : "Approve Campaign"}
                     </button>
-                  )}
+                    <button
+                      type="button"
+                      disabled={studio.decide.isPending}
+                      onClick={() =>
+                        studio.decide.mutate({ campaignId: today.id, decision: "REJECT" })
+                      }
+                      className="min-h-11 rounded-lg border border-border px-4 type-nav font-semibold text-destructive hover:bg-secondary disabled:opacity-60"
+                    >
+                      Reject Campaign
+                    </button>
+                  </div>
+                  {studio.decide.isError ? (
+                    <Alert tone="error" title="That didn't save">
+                      Please try again.
+                    </Alert>
+                  ) : null}
                 </div>
               )}
             </AdminSectionBlock>
           ) : null}
+
+          {/* 4 — publishing mode, a real stored setting */}
+          <AdminSectionBlock id="publishing-mode" title="Publishing mode">
+            <div className="space-y-3">
+              <p className="type-body-sm">
+                Autonomous publishing: <strong>{autonomous ? "ON" : "OFF"}</strong>
+              </p>
+              <p className="type-body-sm text-muted-foreground">
+                When ON, an approved campaign with a finished video can be published automatically
+                to your connected platforms, following EarnRoom's usual safety and publishing rules.
+                When OFF, you publish each platform yourself below.
+              </p>
+              <button
+                type="button"
+                disabled={studio.settings.isPending}
+                onClick={() =>
+                  studio.settings.mutate({
+                    globalMode: autonomous ? "APPROVAL_REQUIRED" : "AUTONOMOUS",
+                  })
+                }
+                className="min-h-11 rounded-lg border border-border px-4 type-nav font-semibold hover:bg-secondary disabled:opacity-60"
+              >
+                {studio.settings.isPending
+                  ? "Saving…"
+                  : autonomous
+                    ? "Turn autonomous publishing off"
+                    : "Turn autonomous publishing on"}
+              </button>
+            </div>
+          </AdminSectionBlock>
 
           {/* 5 — one card per platform: connect, publish, watch */}
           <AdminSectionBlock id="publish" title="Publish">

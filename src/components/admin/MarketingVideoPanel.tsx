@@ -313,6 +313,61 @@ export function MarketingVideoPanel({
     }
   };
 
+  /*
+   * The paid route returns a beautiful but completely unbranded film. It is
+   * held by the server with no stored path — so nothing can publish it — until
+   * the approved EarnRoom lock-up, wordmark and tagline have actually been
+   * composed onto the pixels here and checked frame by frame.
+   */
+  const brandingStarted = React.useRef<Set<string>>(new Set());
+  const addBranding = React.useCallback(
+    async (video: MarketingVideoRow) => {
+      if (!video.rawPlaybackUrl || !video.brandingPlan) return;
+      brandingStarted.current.add(video.id);
+      setBusy(video.assetId);
+      setProgress(0);
+      setStage("Adding the EarnRoom branding");
+      try {
+        const { composeBranding } = await import("@/lib/marketing/branding/compositor.browser");
+        const result = await composeBranding(video.rawPlaybackUrl, video.brandingPlan, {
+          onProgress: (value) => setProgress(value),
+        });
+        setStage("Checking the branding");
+        const stored = await videos.storeBranded.mutateAsync({
+          videoId: video.id,
+          receipt: result.receipt,
+          mp4Base64: await toBase64(result.blob),
+        });
+        setNotice(
+          stored.video.status === "RENDERED"
+            ? `EarnRoom branding added — the logo is on the closing card and "Make space earn." runs through the film.`
+            : `The branding was refused: ${stored.video.failureReason ?? "unknown reason"}`,
+        );
+      } catch (error) {
+        setNotice(
+          error instanceof Error
+            ? `The EarnRoom branding could not be added: ${error.message}`
+            : "The EarnRoom branding could not be added.",
+        );
+      } finally {
+        setBusy(null);
+        setProgress(0);
+        setStage(null);
+      }
+    },
+    [videos],
+  );
+
+  const awaitingBranding = rows.filter(
+    (row) => row.status === "AWAITING_BRANDING" && row.rawPlaybackUrl && row.brandingPlan,
+  );
+  const firstAwaiting = awaitingBranding[0] ?? null;
+  React.useEffect(() => {
+    if (!firstAwaiting) return;
+    if (brandingStarted.current.has(firstAwaiting.id)) return;
+    void addBranding(firstAwaiting);
+  }, [firstAwaiting, addBranding]);
+
   // Everything goes through the orchestrator: the server resolves the route,
   // and only tells this page to draw when the browser is the chosen route.
   const run = async (asset: PlatformAsset, tier: "draft" | "final"): Promise<boolean> => {

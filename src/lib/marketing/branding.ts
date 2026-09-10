@@ -72,13 +72,25 @@ export function buildBrandOverlay(input: {
   const layers: OverlayLayer[] = [];
 
   if (input.watermark !== false) {
+    // The approved wordmark rides the whole film, from the first frame to the
+    // end card, so branding survives whichever route rendered the pixels.
     layers.push({
       kind: "logo",
       asset: profile.watermark.asset,
       position: profile.watermark.position,
       width: 0.16,
       opacity: profile.watermark.opacity,
-      fromSeconds: 1,
+      fromSeconds: 0,
+      toSeconds: endCardFrom,
+    });
+    // The primary campaign tagline is held throughout as well, never left to
+    // the end card alone and never left to the generative model to draw.
+    layers.push({
+      kind: "text",
+      role: "tagline",
+      value: PRIMARY_TAGLINE,
+      position: "lower-third",
+      fromSeconds: 0,
       toSeconds: endCardFrom,
     });
   }

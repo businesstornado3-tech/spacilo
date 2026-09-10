@@ -47,7 +47,6 @@ function bounded(value: unknown, fallback: number, max: number): number {
 export function readWorkerPreferences(settings: unknown): WorkerPreferences {
   const record = (settings ?? {}) as Record<string, unknown>;
   const raw = (record["videoWorker"] ?? {}) as Record<string, unknown>;
-  const usage = (raw["usage"] ?? {}) as Record<string, unknown>;
   const spend = (raw["spend"] ?? {}) as Record<string, unknown>;
   const preference = raw["defaultWorker"];
 

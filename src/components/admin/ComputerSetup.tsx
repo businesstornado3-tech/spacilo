@@ -70,6 +70,28 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
     return true;
   };
 
+  /**
+   * The pairing file is tiny, so we check the server's answer first and then
+   * let the browser download it straight from our own address. Handing Chrome
+   * a blob instead is what left half-finished ".crdownload" files behind.
+   */
+  const deliverPairing = async (path: string): Promise<boolean> => {
+    const response = await fetch(path, { credentials: "same-origin" });
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      setProblem(body.error ?? `The pairing file could not be prepared (${response.status}).`);
+      return false;
+    }
+    const anchor = document.createElement("a");
+    anchor.href = path;
+    anchor.download = path.split("/").pop()!;
+    anchor.rel = "noopener";
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    return true;
+  };
+
   const start = useMutation({
     mutationFn: (installed: boolean) =>
       begin({ data: { label: label.trim() || "My computer" } }).then((created) => ({

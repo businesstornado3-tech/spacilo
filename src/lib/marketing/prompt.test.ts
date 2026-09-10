@@ -14,7 +14,7 @@ const asset: PlatformAsset = {
   hashtags: ["#earnroom"],
   cta: "Find storage when you need it.",
   seconds: 15,
-  state: "PLANNED",
+  state: "DRAFT",
   videoUrl: null,
   thumbnailUrl: null,
   videoStatus: "NOT_REQUESTED",

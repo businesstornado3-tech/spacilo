@@ -212,18 +212,20 @@ describe("simple video generation modes", () => {
     expect(generateButtonLabel("PAID_CLOUD")).toBe("Generate Paid Video");
   });
 
-  it("keeps a per-video paid confirmation message", () => {
-    expect(PAID_GENERATION_CONFIRMATION).toContain("may incur usage charges");
+  it("shows the estimated cost in pounds, or says it is not known", () => {
+    expect(estimatedCostLine(120)).toBe("Estimated cost: £1.20");
+    expect(estimatedCostLine(0)).toBe("Estimated cost: £0.00");
+    expect(estimatedCostLine(null)).toBe("Estimated cost: not known for this video");
   });
 
-  it("summarises the selected mode and its cost protection", () => {
+  it("summarises the selected mode and shows the estimate before generating", () => {
     const free = generationSummary({
       cards: cards({ selected: "BROWSER" }),
       selected: "BROWSER",
       paidComputeEnabled: false,
     });
     expect(free.modeLine).toBe("Selected generation mode: Browser Preview");
-    expect(free.costLine).toBe("Cost protection: £0");
+    expect(free.costLine).toBe("Cost: £0");
 
     const paid = generationSummary({
       cards: cards({
@@ -233,10 +235,11 @@ describe("simple video generation modes", () => {
       }),
       selected: "PAID_CLOUD",
       paidComputeEnabled: true,
+      estimatedPence: 120,
     });
     expect(paid.modeLine).toBe("Selected generation mode: Paid Cloud");
-    expect(paid.paidLine).toBe("Paid Cloud: ENABLED");
-    expect(paid.costLine).toBe("Cost protection: Confirmation required");
+    expect(paid.costLine).toBe("Estimated cost: £1.20");
+    expect(paid.costLine).not.toContain("Confirmation required");
   });
 
   it("refuses to generate when no mode has been chosen", () => {

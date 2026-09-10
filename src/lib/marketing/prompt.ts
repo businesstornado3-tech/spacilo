@@ -12,6 +12,7 @@
  * Pure module: no clock, no network, no vendor SDK.
  */
 import { brandProfile, taglineFor } from "./brand";
+import { CREATIVE_TREATMENTS, treatmentDirectives } from "./creative";
 import { definition } from "./platforms";
 import type { AspectRatio, MarketingCampaign, PlatformAsset, PlatformId } from "./types";
 
@@ -73,6 +74,16 @@ function situation(campaign: MarketingCampaign): string {
     default:
       return campaign.opportunity.problem;
   }
+}
+
+/**
+ * The creative-treatment directives for this campaign, when the campaign
+ * recorded one. Older campaigns simply have none and film as before.
+ */
+function creativeLines(campaign: MarketingCampaign): string[] {
+  const id = campaign.story.creative?.treatmentId;
+  const treatment = CREATIVE_TREATMENTS.find((entry) => entry.id === id);
+  return treatment ? treatmentDirectives(treatment) : [];
 }
 
 export function buildVideoPrompt(

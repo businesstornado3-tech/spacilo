@@ -361,6 +361,8 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
     const now = Date.now();
     const nowIso = new Date(now).toISOString();
 
+    const attemptRef = attemptReference(platform, now);
+
     const refuse = (detail: string, state = "AUTH_REQUIRED"): PublishOutcome => ({
       ok: false,
       state,
@@ -369,6 +371,8 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       platformUrl: null,
       visibility: null,
       alreadyPublished: false,
+      attemptRef,
+      retryable: retryableState(state),
     });
 
     /* Settings and pause control. */

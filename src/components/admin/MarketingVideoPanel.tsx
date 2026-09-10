@@ -462,6 +462,14 @@ export function MarketingVideoPanel({
           </ul>
         ) : null}
 
+        <div className="mt-3 rounded-lg bg-secondary px-3 py-2">
+          <p className="type-body-xs font-medium">{summary.modeLine}</p>
+          {summary.paidLine ? (
+            <p className="type-body-xs text-muted-foreground">{summary.paidLine}</p>
+          ) : null}
+          <p className="type-body-xs text-muted-foreground">{summary.costLine}</p>
+        </div>
+
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"

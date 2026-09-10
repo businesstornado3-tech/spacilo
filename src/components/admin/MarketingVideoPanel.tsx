@@ -232,6 +232,13 @@ export function MarketingVideoPanel({
     tier: "draft" | "final",
     confirmPaid = false,
   ): Promise<boolean> => {
+    // The chosen mode must be genuinely available; nothing is switched
+    // silently, and no generation starts on an unavailable route.
+    const gate = validateModeSelection(modeCards, choice);
+    if (!gate.ok || choice === null) {
+      setNotice(gate.message ?? "Choose a video generation mode first.");
+      return false;
+    }
     try {
       setStage("Choosing where to make it");
       const result = await videos.generate.mutateAsync({

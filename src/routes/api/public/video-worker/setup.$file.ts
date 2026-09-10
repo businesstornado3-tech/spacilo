@@ -81,7 +81,7 @@ export const Route = createFileRoute("/api/public/video-worker/setup/$file")({
         }
 
 
-        const file = await fetch(upstream, { redirect: "follow" });
+        const file = await fetch(upstream!, { redirect: "follow" });
         if (!file.ok || !file.body) {
           return json({ error: "The installer could not be fetched right now." }, 502);
         }

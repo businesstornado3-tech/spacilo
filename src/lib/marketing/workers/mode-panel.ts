@@ -356,25 +356,27 @@ export function generationSummary(input: {
   cards: readonly SimpleModeCard[];
   selected: WorkerMode | null;
   paidComputeEnabled: boolean;
+  /** Estimated provider cost of the whole run, in pence. */
+  estimatedPence?: number | null;
 }): { modeLine: string; paidLine: string | null; costLine: string } {
   const chosen = input.cards.find((entry) => entry.mode === input.selected) ?? null;
   if (!chosen) {
     return {
       modeLine: "Selected generation mode: none selected",
       paidLine: null,
-      costLine: "Cost protection: no generation can start",
+      costLine: "No generation can start until you choose a mode.",
     };
   }
   if (chosen.mode === "PAID_CLOUD") {
     return {
       modeLine: "Selected generation mode: Paid Cloud",
-      paidLine: `Paid Cloud: ${input.paidComputeEnabled ? "ENABLED" : "DISABLED"}`,
-      costLine: "Cost protection: Confirmation required",
+      paidLine: null,
+      costLine: estimatedCostLine(input.estimatedPence ?? null),
     };
   }
   return {
     modeLine: `Selected generation mode: ${chosen.title}`,
     paidLine: null,
-    costLine: "Cost protection: £0",
+    costLine: "Cost: £0",
   };
 }

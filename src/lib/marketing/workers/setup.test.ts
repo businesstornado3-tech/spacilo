@@ -103,7 +103,7 @@ describe("capability verdict is honest about weak machines", () => {
 describe("a computer that already has the worker", () => {
   const online = {
     ...BASE,
-    hardware: normaliseHardware({ operatingSystem: "Windows 11", ramGb: 30.7, cpuThreads: 16 }),
+    hardware: normaliseHardware({ os: "Windows 11", ramGb: 30.7, cpuCores: 16 }),
   };
 
   it("names and reads back the pairing file", () => {

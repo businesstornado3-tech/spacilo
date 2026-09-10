@@ -93,22 +93,6 @@ function CompactPlayer({
   );
 }
 
-function StatusChip({ card }: { card: FounderCard }) {
-  const good = card.status === "READY" || card.status === "CONNECTED" || card.status === "ENABLED";
-  const warn = card.status === "BUSY" || card.status === "LIMITED" || card.status === "PAUSED";
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 type-body-xs font-medium",
-        good && "border-success/30 bg-success-soft text-success-soft-foreground",
-        warn && "border-warning/30 bg-warning-soft text-warning-soft-foreground",
-        !good && !warn && "border-border bg-secondary text-muted-foreground",
-      )}
-    >
-      {card.status.toLowerCase().replace(/^./, (letter) => letter.toUpperCase())}
-    </span>
-  );
-}
 
 export function MarketingVideoPanel({
   campaignId,

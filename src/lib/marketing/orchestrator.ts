@@ -46,7 +46,6 @@ export type PlanInput = {
   insights: readonly LearningInsight[];
   /** Registry ids already issued, so the sequence keeps counting. */
   existingIds: readonly string[];
-  publishedToday?: number;
   /** Force a specific opportunity (founder override). */
   forceOpportunityKey?: string;
   platforms?: readonly PlatformId[];
@@ -150,8 +149,6 @@ export function planDailyCampaign(input: PlanInput): DailyPlan {
     assets,
     history: input.history,
     now: input.now,
-    publishedToday: input.publishedToday ?? 0,
-    maxDailyPublications: input.settings.maxDailyPublications,
   });
 
   const statedAssets = assets.map((asset) => ({
@@ -189,9 +186,9 @@ export function planDailyCampaign(input: PlanInput): DailyPlan {
       ? "FAILED"
       : input.settings.globalMode === "DRAFT"
         ? "DRAFT"
-        : input.settings.globalMode === "APPROVAL_REQUIRED"
-          ? "AWAITING_APPROVAL"
-          : "APPROVED",
+        : input.settings.globalMode === "AUTONOMOUS" && input.settings.autoApprove
+          ? "APPROVED"
+          : "AWAITING_APPROVAL",
     scheduledFor: null,
     audit,
   };

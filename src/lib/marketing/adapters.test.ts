@@ -157,10 +157,7 @@ describe("meta adapters", () => {
     ];
     let index = 0;
     const fetchImpl = vi.fn(async () => responses[index++]!) as unknown as typeof fetch;
-    const adapter = adapterFor(
-      "instagram",
-      context({ pageAccessToken: "page-token", fetchImpl }),
-    );
+    const adapter = adapterFor("instagram", context({ pageAccessToken: "page-token", fetchImpl }));
     const result = await adapter.publish(asset(), campaign);
     expect(result).toMatchObject({ ok: true, platformPostId: "media-1" });
   });

@@ -56,24 +56,81 @@ export interface DemoStep {
 
 /** The order the recording must show, matching Google's review guidance. */
 export const YOUTUBE_DEMO_STEPS: readonly DemoStep[] = [
-  { id: "open_app", label: "Open the real EarnRoom application", detail: "Show earnroom.co.uk in the address bar." },
-  { id: "open_connection", label: "Go to the YouTube publishing connection", detail: "Founder console → Marketing → Publishing connections." },
-  { id: "click_connect", label: "Click Connect YouTube", detail: "EarnRoom never asks for a Google password." },
-  { id: "google_oauth", label: "Google sign-in appears", detail: "Pause the recording while typing the password or a two-factor code." },
-  { id: "unverified_screen", label: "Google's unverified-app screen", detail: "If it appears for the test account, leave it in the recording." },
-  { id: "permissions", label: "Requested YouTube permissions shown", detail: "Both requested permissions must be visible on Google's screen." },
-  { id: "authorise", label: "Authorise with the designated test account", detail: "Use the Google account nominated in the verification submission." },
-  { id: "return_to_app", label: "Return to EarnRoom", detail: "The callback confirms the authorisation was stored." },
-  { id: "channel_shown", label: "Connected channel shown in EarnRoom", detail: "The channel name and id come back from Google." },
-  { id: "readonly_demo", label: "Demonstrate youtube.readonly", detail: "Retrieve the connected channel information live on this page." },
-  { id: "select_video", label: "Select an approved EarnRoom marketing video", detail: "Only real, rendered campaign videos appear in the list." },
-  { id: "real_upload", label: "Upload with the real youtube.upload API", detail: "The file is sent to YouTube's resumable upload endpoint." },
-  { id: "youtube_result", label: "Show the real YouTube result", detail: "The video id and watch URL returned by YouTube." },
-  { id: "final_state", label: "Show EarnRoom's final publishing state", detail: "The run is recorded with the confirmed YouTube identifier." },
+  {
+    id: "open_app",
+    label: "Open the real EarnRoom application",
+    detail: "Show earnroom.co.uk in the address bar.",
+  },
+  {
+    id: "open_connection",
+    label: "Go to the YouTube publishing connection",
+    detail: "Founder console → Marketing → Publishing connections.",
+  },
+  {
+    id: "click_connect",
+    label: "Click Connect YouTube",
+    detail: "EarnRoom never asks for a Google password.",
+  },
+  {
+    id: "google_oauth",
+    label: "Google sign-in appears",
+    detail: "Pause the recording while typing the password or a two-factor code.",
+  },
+  {
+    id: "unverified_screen",
+    label: "Google's unverified-app screen",
+    detail: "If it appears for the test account, leave it in the recording.",
+  },
+  {
+    id: "permissions",
+    label: "Requested YouTube permissions shown",
+    detail: "Both requested permissions must be visible on Google's screen.",
+  },
+  {
+    id: "authorise",
+    label: "Authorise with the designated test account",
+    detail: "Use the Google account nominated in the verification submission.",
+  },
+  {
+    id: "return_to_app",
+    label: "Return to EarnRoom",
+    detail: "The callback confirms the authorisation was stored.",
+  },
+  {
+    id: "channel_shown",
+    label: "Connected channel shown in EarnRoom",
+    detail: "The channel name and id come back from Google.",
+  },
+  {
+    id: "readonly_demo",
+    label: "Demonstrate youtube.readonly",
+    detail: "Retrieve the connected channel information live on this page.",
+  },
+  {
+    id: "select_video",
+    label: "Select an approved EarnRoom marketing video",
+    detail: "Only real, rendered campaign videos appear in the list.",
+  },
+  {
+    id: "real_upload",
+    label: "Upload with the real youtube.upload API",
+    detail: "The file is sent to YouTube's resumable upload endpoint.",
+  },
+  {
+    id: "youtube_result",
+    label: "Show the real YouTube result",
+    detail: "The video id and watch URL returned by YouTube.",
+  },
+  {
+    id: "final_state",
+    label: "Show EarnRoom's final publishing state",
+    detail: "The run is recorded with the confirmed YouTube identifier.",
+  },
 ];
 
 export type DemoRunStatus = "STARTED" | "CHANNEL_VERIFIED" | "UPLOADED" | "COMPLETE" | "FAILED";
-export type RecordingStatus = "NOT_STARTED" | "RECORDING" | "PAUSED" | "PROCESSING" | "READY" | "FAILED";
+export type RecordingStatus =
+  "NOT_STARTED" | "RECORDING" | "PAUSED" | "PROCESSING" | "READY" | "FAILED";
 
 export interface DemoRunView {
   id: string;
@@ -108,7 +165,9 @@ export function evidencedSteps(run: DemoRunView): DemoStepId[] {
 /** True only when YouTube returned an identifier and EarnRoom stored it. */
 export function uploadConfirmed(run: DemoRunView): boolean {
   return Boolean(
-    run.youtubeVideoId && run.marketingVideoId && (run.status === "UPLOADED" || run.status === "COMPLETE"),
+    run.youtubeVideoId &&
+    run.marketingVideoId &&
+    (run.status === "UPLOADED" || run.status === "COMPLETE"),
   );
 }
 
@@ -124,11 +183,11 @@ export function publishingStateLabel(run: DemoRunView): string {
 /** What the founder must have on screen in the submitted recording. */
 export const RECORDING_CHECKLIST: readonly string[] = [
   "Record the entire screen, so Google's own windows are captured.",
-  "Before recording, remove EarnRoom's earlier access at myaccount.google.com → Data & privacy → Third-party access, so Google shows the full permission screen instead of \"already has some access\".",
+  'Before recording, remove EarnRoom\'s earlier access at myaccount.google.com → Data & privacy → Third-party access, so Google shows the full permission screen instead of "already has some access".',
   "Start on earnroom.co.uk with the address bar visible.",
   "Show the founder console publishing connection and click Connect YouTube.",
   "Capture Google's sign-in, the unverified-app screen if it appears, and both requested YouTube permissions with their tick boxes visible.",
-  "If Google still shows \"already has some access\", click \"See the 2 services…\" and keep the expanded permission list on screen for a few seconds.",
+  'If Google still shows "already has some access", click "See the 2 services…" and keep the expanded permission list on screen for a few seconds.',
   "Pause the recording while typing a password or two-factor code, then resume.",
   "Show the return to EarnRoom — the browser lands on a clean founder console page, with no authorisation code in the address bar.",
   "Show the connected channel name and id (youtube.readonly).",
@@ -136,7 +195,6 @@ export const RECORDING_CHECKLIST: readonly string[] = [
   "Show the YouTube video id and watch URL returned by Google, and open the watch URL.",
   "Finish on EarnRoom's final publishing state for the run.",
 ];
-
 
 export function recordingLabel(status: RecordingStatus): string {
   switch (status) {

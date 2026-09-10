@@ -422,6 +422,13 @@ export type MarketingSettings = {
   /** Meaningful primary campaigns per day. */
   dailyCampaignTarget: number;
   maxDailyPublications: number;
+  /** Successful autonomous publications allowed per calendar day. */
+  maxDailyAutonomousPublications: number;
+  /**
+   * When true, a campaign that passes EVERY mandatory validation check is
+   * approved by the engine. It never approves a campaign that failed a check.
+   */
+  autoApprove: boolean;
   globalMode: PublishingMode;
   platformModes: Partial<Record<PlatformId, PublishingMode>>;
   /** Emergency control — generation continues, publishing stops. */

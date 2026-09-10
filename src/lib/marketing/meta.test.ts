@@ -37,7 +37,11 @@ describe("meta graph version", () => {
 describe("sanitiseMetaError", () => {
   it("redacts token-shaped material and falls back safely", () => {
     const message = sanitiseMetaError(
-      { error: { message: "Invalid token EAABsBcs12345678abcdefgh for access_token=EAAsecretvalue" } },
+      {
+        error: {
+          message: "Invalid token EAABsBcs12345678abcdefgh for access_token=EAAsecretvalue",
+        },
+      },
       "fallback",
     );
     expect(message).not.toContain("EAABsBcs12345678abcdefgh");

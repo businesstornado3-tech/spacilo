@@ -14,6 +14,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AdminShell, AdminSectionBlock } from "@/components/admin/AdminShell";
 import { MarketingVideoPanel } from "@/components/admin/MarketingVideoPanel";
 import { PublishSection } from "@/components/admin/PublishSection";
+import { PublishingModeSection } from "@/components/admin/PublishingModeSection";
 import { EmptyState, LoadingState } from "@/components/common/States";
 import { Alert } from "@/components/common/Alert";
 import { useMarketingStudio } from "@/hooks/useMarketingStudio";
@@ -60,7 +61,6 @@ function MarketingStudioRoute() {
   const safetyReasons = today?.validation.failures ?? [];
   // Only a genuine emergency stop blocks the whole studio.
   const globallyPaused = snapshot?.settings.pauseAllPublishing ?? false;
-  const autonomous = snapshot?.settings.globalMode === "AUTONOMOUS";
 
   // Exactly one campaign-generation action exists on this page.
   const generateButton = (
@@ -238,32 +238,7 @@ function MarketingStudioRoute() {
 
           {/* 4 — publishing mode, a real stored setting */}
           <AdminSectionBlock id="publishing-mode" title="Publishing mode">
-            <div className="space-y-3">
-              <p className="type-body-sm">
-                Autonomous publishing: <strong>{autonomous ? "ON" : "OFF"}</strong>
-              </p>
-              <p className="type-body-sm text-muted-foreground">
-                When ON, an approved campaign with a finished video can be published automatically
-                to your connected platforms, following EarnRoom's usual safety and publishing rules.
-                When OFF, you publish each platform yourself below.
-              </p>
-              <button
-                type="button"
-                disabled={studio.settings.isPending}
-                onClick={() =>
-                  studio.settings.mutate({
-                    globalMode: autonomous ? "APPROVAL_REQUIRED" : "AUTONOMOUS",
-                  })
-                }
-                className="min-h-11 rounded-lg border border-border px-4 type-nav font-semibold hover:bg-secondary disabled:opacity-60"
-              >
-                {studio.settings.isPending
-                  ? "Saving…"
-                  : autonomous
-                    ? "Turn autonomous publishing off"
-                    : "Turn autonomous publishing on"}
-              </button>
-            </div>
+            <PublishingModeSection studio={studio} />
           </AdminSectionBlock>
 
           {/* 5 — one card per platform: connect, publish, watch */}

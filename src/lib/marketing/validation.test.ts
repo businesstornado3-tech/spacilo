@@ -26,8 +26,6 @@ const run = (
     assets: plan.campaign.assets,
     history: [],
     now: NOW,
-    publishedToday: 0,
-    maxDailyPublications: settings.maxDailyPublications,
     ...over,
   });
 
@@ -83,11 +81,5 @@ describe("content validation", () => {
     const result = run({ history });
     expect(result.passed).toBe(false);
     expect(result.failures.join(" ")).toContain("Same opportunity already ran");
-  });
-
-  it("enforces the daily publication cap", () => {
-    const result = run({ publishedToday: settings.maxDailyPublications });
-    expect(result.passed).toBe(false);
-    expect(result.failures.join(" ")).toContain("Daily publication limit");
   });
 });

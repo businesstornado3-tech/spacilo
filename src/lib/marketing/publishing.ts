@@ -66,8 +66,10 @@ export function stateAfterValidation(
   if (settings.pauseAllPublishing || settings.pausedPlatforms.includes(platform)) return "PAUSED";
   const mode = settings.platformModes[platform] ?? settings.globalMode;
   if (mode === "DRAFT") return "VALIDATED";
-  if (mode === "APPROVAL_REQUIRED") return "APPROVAL_REQUIRED";
-  return "QUEUED";
+  // Autonomous publishing still waits for an approval unless the founder has
+  // also switched auto-approve on.
+  if (mode === "AUTONOMOUS" && settings.autoApprove) return "QUEUED";
+  return "APPROVAL_REQUIRED";
 }
 
 export type PublishAttempt = {

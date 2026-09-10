@@ -154,7 +154,10 @@ export function outreachChannelStatus(signals: OutreachChannelSignals): ChannelD
     return out("PLATFORM_APPROVAL_REQUIRED", "Terms and lawful basis have not been signed off.");
   }
   if (signals.deliveryMode === "mock" || !signals.adapterTransmits) {
-    return out("MOCK", signals.setupNote ?? "Practice only — this reaches nobody outside EarnRoom.");
+    return out(
+      "MOCK",
+      signals.setupNote ?? "Practice only — this reaches nobody outside EarnRoom.",
+    );
   }
   if (signals.lastError) return out("FAILED", signals.lastError);
   return out("LIVE", "Authorised to deliver to real people.");

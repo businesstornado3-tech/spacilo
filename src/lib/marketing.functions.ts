@@ -70,6 +70,17 @@ export interface MarketingStudioSnapshot {
     priority: number;
   }[];
   publications: PublicationRecord[];
+  /**
+   * Autonomous publishing usage for the current calendar day. This counts
+   * confirmed autonomous publications only — never drafts, generated videos,
+   * failures or manual publishing.
+   */
+  autonomous: {
+    enabled: boolean;
+    autoApprove: boolean;
+    limit: number;
+    publishedToday: number;
+  };
   coverage: {
     slug: string;
     name: string;
@@ -182,6 +193,21 @@ async function readPerformanceInsights(supabase: any, history: ContentHistoryEnt
   return learningInsights({ records: records as any, history });
 }
 
+/** Start of the current London calendar day, as an ISO timestamp. */
+function dayStartIso(planDate: string): string {
+  return new Date(`${planDate}T00:00:00.000Z`).toISOString();
+}
+
+/** Confirmed autonomous publications recorded today. One per campaign. */
+async function autonomousPublishedToday(supabase: any, planDate: string): Promise<number> {
+  const { data } = await supabase
+    .from("marketing_audit")
+    .select("id")
+    .eq("action", "autonomous_published")
+    .gte("created_at", dayStartIso(planDate));
+  return ((data ?? []) as any[]).length;
+}
+
 export const getMarketingStudio = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<MarketingStudioSnapshot> => {
@@ -221,8 +247,16 @@ export const getMarketingStudio = createServerFn({ method: "GET" })
       .order("updated_at", { ascending: false })
       .limit(60);
 
+    const autonomousUsed = await autonomousPublishedToday(supabase, planDate);
+
     return {
       settings,
+      autonomous: {
+        enabled: settings.globalMode === "AUTONOMOUS",
+        autoApprove: settings.autoApprove === true,
+        limit: settings.maxDailyAutonomousPublications ?? 5,
+        publishedToday: autonomousUsed,
+      },
       capabilities: allCapabilities(connections, settings, now),
       today: (todayRow?.campaign ?? null) as MarketingCampaign | null,
       // The live decision, read from its own columns rather than the stored
@@ -308,15 +342,6 @@ export const planMarketingCampaign = createServerFn({ method: "POST" })
       history,
       insights,
       existingIds,
-      // The daily limit is about how much EarnRoom actually PUBLISHES today,
-      // not how many campaigns were drafted. Counting drafts made every extra
-      // campaign fail its own safety check once four had been written.
-      publishedToday: history.filter(
-        (entry) =>
-          entry.publishedAt !== null &&
-          new Date(entry.publishedAt).toISOString().slice(0, 10) ===
-            new Date(now).toISOString().slice(0, 10),
-      ).length,
       ...(data.forceOpportunityKey ? { forceOpportunityKey: data.forceOpportunityKey } : {}),
     });
 
@@ -406,187 +431,314 @@ export const decideMarketingCampaign = createServerFn({ method: "POST" })
  * Attempts publication for each queued asset. With no platform connected this
  * records an honest AUTH_REQUIRED state — it never fabricates a published post.
  */
+type PublishOutcome = { results: { platform: string; state: string; detail: string }[] };
+
+/**
+ * The one publishing routine. Manual publishing and autonomous publishing both
+ * run through it, so a campaign is only ever PUBLISHED when a platform itself
+ * confirms the post.
+ */
+async function publishCampaignAssets(
+  supabase: any,
+  userId: string,
+  data: { campaignId: string },
+): Promise<PublishOutcome> {
+  {
+    const now = Date.now();
+    const { attemptPublish, unconfiguredAdapter, adapterFor } = await import("@/lib/marketing");
+    // Stored authorisations live in a table only the server can read, and
+    // are decrypted here, per publish, and never returned to the browser.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { decryptToken } = await import("@/lib/marketing/token-crypto.server");
+    const { data: tokenRows } = await supabaseAdmin
+      .from("marketing_platform_tokens")
+      .select("platform, access_token_cipher, page_token_cipher, account_id, expires_at");
+    const { data: accountRows } = await supabase
+      .from("marketing_platform_connections")
+      .select("platform, account_id");
+
+    const resolveAdapter = async (platform: PlatformId) => {
+      const tokenRow = ((tokenRows ?? []) as any[]).find(
+        (row) =>
+          row.platform === platform ||
+          (platform === "youtube_shorts" && row.platform === "youtube"),
+      );
+      const accountId =
+        ((accountRows ?? []) as any[]).find((row) => row.platform === platform)?.account_id ??
+        tokenRow?.account_id ??
+        null;
+      if (!tokenRow || (tokenRow.expires_at && Date.parse(tokenRow.expires_at) <= now)) {
+        return unconfiguredAdapter(platform, settings);
+      }
+      let accessToken: string | null = null;
+      try {
+        accessToken = await decryptToken(tokenRow.access_token_cipher);
+      } catch {
+        accessToken = null;
+      }
+      if (!accessToken || !accountId) return unconfiguredAdapter(platform, settings);
+      // Facebook publishes with the Facebook Page token, never the user
+      // token. Instagram uses Instagram Login and needs no Page token.
+      let pageAccessToken: string | null = null;
+      if (platform === "facebook") {
+        const metaRow = ((tokenRows ?? []) as any[]).find(
+          (row) => row.page_token_cipher && row.platform === "facebook",
+        );
+        if (metaRow) {
+          try {
+            pageAccessToken = await decryptToken(metaRow.page_token_cipher);
+          } catch {
+            pageAccessToken = null;
+          }
+        }
+      }
+      return adapterFor(platform, {
+        connection: connections.find((entry) => entry.platform === platform) ?? null,
+        accessToken,
+        accountId,
+        pageAccessToken,
+        settings,
+        connections,
+        now,
+        fetchImpl: runtimeFetch,
+      });
+    };
+
+    /**
+     * Meta fetches the media itself, so a Meta asset is handed a temporary
+     * signed link to that one stored object. Nothing else is exposed and the
+     * link expires shortly after the processing window.
+     */
+    const metaMediaUrl = async (assetId: string): Promise<string | null> => {
+      const { data: video } = await supabase
+        .from("marketing_videos")
+        .select("storage_path")
+        .eq("campaign_id", data.campaignId)
+        .eq("asset_id", assetId)
+        .not("storage_path", "is", null)
+        .maybeSingle();
+      if (!video?.storage_path) return null;
+      const { data: signed } = await (supabaseAdmin as any).storage
+        .from("marketing-videos")
+        .createSignedUrl(video.storage_path, 3600);
+      return signed?.signedUrl ?? null;
+    };
+
+    const [settings, connections] = await Promise.all([
+      readSettings(supabase),
+      readConnections(supabase),
+    ]);
+    const { data: row } = await supabase
+      .from("marketing_campaigns")
+      .select("campaign, status")
+      .eq("id", data.campaignId)
+      .maybeSingle();
+    if (!row?.campaign) throw new Error("That campaign no longer exists.");
+    const campaign = row.campaign as MarketingCampaign;
+    if (row.status !== "APPROVED") throw new Error("Approve the campaign before publishing it.");
+
+    const { data: pubRows } = await supabase
+      .from("marketing_publications")
+      .select(
+        "campaign_id, asset_id, platform, state, platform_post_id, platform_url, error, retry_count, updated_at",
+      )
+      .eq("campaign_id", data.campaignId);
+
+    const results: { platform: string; state: string; detail: string }[] = [];
+    for (const asset of campaign.assets) {
+      const existing = ((pubRows ?? []) as any[]).find((entry) => entry.asset_id === asset.id);
+      const record: PublicationRecord = {
+        campaignId: campaign.id,
+        assetId: asset.id,
+        platform: asset.platform,
+        state: existing?.state ?? "QUEUED",
+        platformPostId: existing?.platform_post_id ?? null,
+        platformUrl: existing?.platform_url ?? null,
+        error: existing?.error ?? null,
+        retryCount: existing?.retry_count ?? 0,
+        updatedAt: now,
+      };
+      if (record.state === "PUBLISHED") continue;
+
+      const isMeta = asset.platform === "facebook" || asset.platform === "instagram";
+      const publishAsset = isMeta
+        ? { ...asset, videoUrl: (await metaMediaUrl(asset.id)) ?? asset.videoUrl }
+        : asset;
+
+      const attempt = await attemptPublish({
+        adapter: await resolveAdapter(asset.platform),
+        asset: publishAsset,
+        campaign,
+        connections,
+        settings,
+        record,
+        now,
+      });
+
+      await supabase
+        .from("marketing_publications")
+        .update({
+          state: attempt.record.state,
+          platform_post_id: attempt.record.platformPostId,
+          platform_url: attempt.record.platformUrl,
+          error: attempt.record.error,
+          retry_count: attempt.record.retryCount,
+          published_at: attempt.record.state === "PUBLISHED" ? new Date(now).toISOString() : null,
+        })
+        .eq("campaign_id", campaign.id)
+        .eq("asset_id", asset.id);
+
+      await supabase.from("marketing_audit").insert({
+        campaign_id: campaign.id,
+        action: attempt.record.state === "PUBLISHED" ? "published" : "publication_blocked",
+        detail: attemptDetail(attempt),
+        actor: "engine",
+        actor_id: userId,
+      });
+
+      results.push({
+        platform: asset.platform,
+        state: attempt.record.state,
+        detail: attemptDetail(attempt),
+      });
+    }
+
+    const published = results.every((result) => result.state === "PUBLISHED") && results.length > 0;
+    if (published) {
+      await supabase
+        .from("marketing_campaigns")
+        .update({ status: "PUBLISHED", published_at: new Date(now).toISOString() })
+        .eq("id", campaign.id);
+    }
+
+    return { results };
+  }
+}
+
 export const publishMarketingCampaign = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z.object({ campaignId: z.string().min(3).max(64) }).parse(data),
   )
+  .handler(async ({ data, context }): Promise<PublishOutcome> => {
+    const supabase = context.supabase as any;
+    await assertAdmin(supabase);
+    return publishCampaignAssets(supabase, context.userId, data);
+  });
+
+/**
+ * One autonomous cycle: auto-approve (only when every mandatory check passed)
+ * and then publish, stopping at the founder's autonomous daily limit. Manual
+ * generation, approval and publishing are never affected by this limit.
+ */
+export const runAutonomousPublishing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .handler(
     async ({
-      data,
       context,
-    }): Promise<{ results: { platform: string; state: string; detail: string }[] }> => {
+    }): Promise<{
+      ran: boolean;
+      detail: string;
+      publishedToday: number;
+      limit: number;
+      results: { platform: string; state: string; detail: string }[];
+    }> => {
       const supabase = context.supabase as any;
       await assertAdmin(supabase);
       const now = Date.now();
-      const { attemptPublish, unconfiguredAdapter, adapterFor } = await import("@/lib/marketing");
-      // Stored authorisations live in a table only the server can read, and
-      // are decrypted here, per publish, and never returned to the browser.
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { decryptToken } = await import("@/lib/marketing/token-crypto.server");
-      const { data: tokenRows } = await supabaseAdmin
-        .from("marketing_platform_tokens")
-        .select("platform, access_token_cipher, page_token_cipher, account_id, expires_at");
-      const { data: accountRows } = await supabase
-        .from("marketing_platform_connections")
-        .select("platform, account_id");
+      const { londonDate } = await import("@/lib/marketing");
+      const planDate = londonDate(now);
+      const settings = await readSettings(supabase);
+      const limit = settings.maxDailyAutonomousPublications ?? 5;
+      const used = await autonomousPublishedToday(supabase, planDate);
+      const idle = (detail: string) => ({
+        ran: false,
+        detail,
+        publishedToday: used,
+        limit,
+        results: [],
+      });
 
-      const resolveAdapter = async (platform: PlatformId) => {
-        const tokenRow = ((tokenRows ?? []) as any[]).find(
-          (row) =>
-            row.platform === platform ||
-            (platform === "youtube_shorts" && row.platform === "youtube"),
-        );
-        const accountId =
-          ((accountRows ?? []) as any[]).find((row) => row.platform === platform)?.account_id ??
-          tokenRow?.account_id ??
-          null;
-        if (!tokenRow || (tokenRow.expires_at && Date.parse(tokenRow.expires_at) <= now)) {
-          return unconfiguredAdapter(platform, settings);
-        }
-        let accessToken: string | null = null;
-        try {
-          accessToken = await decryptToken(tokenRow.access_token_cipher);
-        } catch {
-          accessToken = null;
-        }
-        if (!accessToken || !accountId) return unconfiguredAdapter(platform, settings);
-        // Facebook publishes with the Facebook Page token, never the user
-        // token. Instagram uses Instagram Login and needs no Page token.
-        let pageAccessToken: string | null = null;
-        if (platform === "facebook") {
-          const metaRow = ((tokenRows ?? []) as any[]).find(
-            (row) => row.page_token_cipher && row.platform === "facebook",
-          );
-          if (metaRow) {
-            try {
-              pageAccessToken = await decryptToken(metaRow.page_token_cipher);
-            } catch {
-              pageAccessToken = null;
-            }
-          }
-        }
-        return adapterFor(platform, {
-          connection: connections.find((entry) => entry.platform === platform) ?? null,
-          accessToken,
-          accountId,
-          pageAccessToken,
-          settings,
-          connections,
-          now,
-          fetchImpl: runtimeFetch,
-        });
-      };
+      if (settings.globalMode !== "AUTONOMOUS") return idle("Autonomous publishing is off.");
+      if (settings.pauseAllPublishing) return idle("Publishing is paused.");
+      if (used >= limit) return idle("Autonomous daily publishing limit reached.");
 
-      /**
-       * Meta fetches the media itself, so a Meta asset is handed a temporary
-       * signed link to that one stored object. Nothing else is exposed and the
-       * link expires shortly after the processing window.
-       */
-      const metaMediaUrl = async (assetId: string): Promise<string | null> => {
-        const { data: video } = await supabase
-          .from("marketing_videos")
-          .select("storage_path")
-          .eq("campaign_id", data.campaignId)
-          .eq("asset_id", assetId)
-          .not("storage_path", "is", null)
-          .maybeSingle();
-        if (!video?.storage_path) return null;
-        const { data: signed } = await (supabaseAdmin as any).storage
-          .from("marketing-videos")
-          .createSignedUrl(video.storage_path, 3600);
-        return signed?.signedUrl ?? null;
-      };
-
-      const [settings, connections] = await Promise.all([
-        readSettings(supabase),
-        readConnections(supabase),
-      ]);
       const { data: row } = await supabase
         .from("marketing_campaigns")
-        .select("campaign, status")
-        .eq("id", data.campaignId)
+        .select("id, campaign, status")
+        .eq("plan_date", planDate)
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
-      if (!row?.campaign) throw new Error("That campaign no longer exists.");
+      if (!row?.campaign) return idle("No campaign for today yet.");
       const campaign = row.campaign as MarketingCampaign;
-      if (row.status !== "APPROVED") throw new Error("Approve the campaign before publishing it.");
+      const campaignId = String(row.id);
 
-      const { data: pubRows } = await supabase
-        .from("marketing_publications")
-        .select(
-          "campaign_id, asset_id, platform, state, platform_post_id, platform_url, error, retry_count, updated_at",
-        )
-        .eq("campaign_id", data.campaignId);
+      // Auto-approve NEVER approves a campaign that failed a mandatory check.
+      if (!campaign.validation.passed) return idle("Today's campaign did not pass validation.");
+      if (row.status === "PUBLISHED") return idle("Today's campaign is already published.");
+      if (row.status === "REJECTED") return idle("Today's campaign was rejected.");
 
-      const results: { platform: string; state: string; detail: string }[] = [];
-      for (const asset of campaign.assets) {
-        const existing = ((pubRows ?? []) as any[]).find((entry) => entry.asset_id === asset.id);
-        const record: PublicationRecord = {
-          campaignId: campaign.id,
-          assetId: asset.id,
-          platform: asset.platform,
-          state: existing?.state ?? "QUEUED",
-          platformPostId: existing?.platform_post_id ?? null,
-          platformUrl: existing?.platform_url ?? null,
-          error: existing?.error ?? null,
-          retryCount: existing?.retry_count ?? 0,
-          updatedAt: now,
-        };
-        if (record.state === "PUBLISHED") continue;
+      // Only a stored, branded EarnRoom video is ever publishable.
+      const { data: videoRows } = await supabase
+        .from("marketing_videos")
+        .select("asset_id, storage_path")
+        .eq("campaign_id", campaignId)
+        .not("storage_path", "is", null)
+        .limit(1);
+      if (((videoRows ?? []) as any[]).length === 0)
+        return idle("The branded video for today's campaign is not ready yet.");
 
-        const isMeta = asset.platform === "facebook" || asset.platform === "instagram";
-        const publishAsset = isMeta
-          ? { ...asset, videoUrl: (await metaMediaUrl(asset.id)) ?? asset.videoUrl }
-          : asset;
-
-        const attempt = await attemptPublish({
-          adapter: await resolveAdapter(asset.platform),
-          asset: publishAsset,
-          campaign,
-          connections,
-          settings,
-          record,
-          now,
-        });
-
+      if (row.status !== "APPROVED") {
+        if (!settings.autoApprove) return idle("Waiting for your approval.");
+        const decidedAt = new Date(now).toISOString();
+        await supabase
+          .from("marketing_campaigns")
+          .update({
+            status: "APPROVED",
+            approved_by: context.userId,
+            approved_at: decidedAt,
+            decided_at: decidedAt,
+            decision_note: "Auto-approved: every mandatory EarnRoom validation check passed.",
+          })
+          .eq("id", campaignId);
         await supabase
           .from("marketing_publications")
-          .update({
-            state: attempt.record.state,
-            platform_post_id: attempt.record.platformPostId,
-            platform_url: attempt.record.platformUrl,
-            error: attempt.record.error,
-            retry_count: attempt.record.retryCount,
-            published_at: attempt.record.state === "PUBLISHED" ? new Date(now).toISOString() : null,
-          })
-          .eq("campaign_id", campaign.id)
-          .eq("asset_id", asset.id);
-
+          .update({ state: "QUEUED" })
+          .eq("campaign_id", campaignId)
+          .in("state", ["APPROVAL_REQUIRED", "VALIDATED", "QUEUED"]);
         await supabase.from("marketing_audit").insert({
-          campaign_id: campaign.id,
-          action: attempt.record.state === "PUBLISHED" ? "published" : "publication_blocked",
-          detail: attemptDetail(attempt),
+          campaign_id: campaignId,
+          action: "auto_approved",
+          detail: "Auto-approved by EarnRoom after all mandatory validation checks passed.",
           actor: "engine",
           actor_id: context.userId,
         });
+      }
 
-        results.push({
-          platform: asset.platform,
-          state: attempt.record.state,
-          detail: attemptDetail(attempt),
+      const outcome = await publishCampaignAssets(supabase, context.userId, { campaignId });
+      const confirmed = outcome.results.filter((result) => result.state === "PUBLISHED");
+      // Quota is only ever consumed by a publication a platform confirmed.
+      if (confirmed.length > 0) {
+        await supabase.from("marketing_audit").insert({
+          campaign_id: campaignId,
+          action: "autonomous_published",
+          detail: `Autonomous publication confirmed on ${confirmed.map((entry) => entry.platform).join(", ")}.`,
+          actor: "engine",
+          actor_id: context.userId,
         });
       }
 
-      const published =
-        results.every((result) => result.state === "PUBLISHED") && results.length > 0;
-      if (published) {
-        await supabase
-          .from("marketing_campaigns")
-          .update({ status: "PUBLISHED", published_at: new Date(now).toISOString() })
-          .eq("id", campaign.id);
-      }
-
-      return { results };
+      return {
+        ran: true,
+        detail:
+          confirmed.length > 0
+            ? `Published to ${confirmed.map((entry) => entry.platform).join(", ")}.`
+            : "No platform confirmed a publication this cycle.",
+        publishedToday: used + (confirmed.length > 0 ? 1 : 0),
+        limit,
+        results: outcome.results,
+      };
     },
   );
 
@@ -594,6 +746,8 @@ const settingsSchema = z.object({
   globalMode: z.enum(["DRAFT", "APPROVAL_REQUIRED", "AUTONOMOUS"]).optional(),
   pauseAllPublishing: z.boolean().optional(),
   maxDailyPublications: z.number().int().min(0).max(20).optional(),
+  maxDailyAutonomousPublications: z.number().int().min(1).max(500).optional(),
+  autoApprove: z.boolean().optional(),
   pausedPlatforms: z.array(z.string().max(40)).max(20).optional(),
 });
 
@@ -613,7 +767,7 @@ export const updateMarketingSettings = createServerFn({ method: "POST" })
 
     await supabase.from("marketing_audit").insert({
       action: "settings_updated",
-      detail: `Mode ${next.globalMode}; publishing ${next.pauseAllPublishing ? "paused" : "active"}; max ${next.maxDailyPublications}/day.`,
+      detail: `Mode ${next.globalMode}; publishing ${next.pauseAllPublishing ? "paused" : "active"}; auto-approve ${next.autoApprove ? "on" : "off"}; autonomous limit ${next.maxDailyAutonomousPublications}/day.`,
       actor: "human",
       actor_id: context.userId,
     });

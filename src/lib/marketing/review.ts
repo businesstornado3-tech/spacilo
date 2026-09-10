@@ -42,12 +42,7 @@ export function playerBox(aspect: AspectRatio): PlayerBox {
 /* -------------------------------------------------------------- versions */
 
 export type VersionStatus =
-  | "NOT GENERATED"
-  | "BEING MADE"
-  | "READY TO REVIEW"
-  | "PUBLISHED"
-  | "FAILED"
-  | "CANCELLED";
+  "NOT GENERATED" | "BEING MADE" | "READY TO REVIEW" | "PUBLISHED" | "FAILED" | "CANCELLED";
 
 export type VersionRow = {
   assetId: string;

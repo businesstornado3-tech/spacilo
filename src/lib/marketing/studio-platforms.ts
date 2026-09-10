@@ -36,13 +36,7 @@ export const STUDIO_PLATFORM_LABEL: Record<StudioPlatform, string> = {
 };
 
 export type StudioPlatformState =
-  | "NOT_CONNECTED"
-  | "CONNECTED"
-  | "READY"
-  | "NOT_READY"
-  | "PUBLISHING"
-  | "PUBLISHED"
-  | "FAILED";
+  "NOT_CONNECTED" | "CONNECTED" | "READY" | "NOT_READY" | "PUBLISHING" | "PUBLISHED" | "FAILED";
 
 export type StudioPlatformAction = "CONNECT" | "PUBLISH" | "WATCH" | "NONE";
 

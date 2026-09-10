@@ -37,7 +37,8 @@ function toneFor(state: string): string {
   if (state === "PUBLISHED" || state === "READY")
     return "border-success/30 bg-success-soft text-success-soft-foreground";
   if (state === "FAILED") return "border-destructive/30 bg-destructive/10 text-destructive";
-  if (state === "NOT_READY") return "border-warning/30 bg-warning-soft text-warning-soft-foreground";
+  if (state === "NOT_READY")
+    return "border-warning/30 bg-warning-soft text-warning-soft-foreground";
   return "border-border bg-secondary text-muted-foreground";
 }
 

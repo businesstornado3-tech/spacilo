@@ -92,9 +92,8 @@ export const BROWSER_UNAVAILABLE_MESSAGE =
   "Browser generation isn't available in this browser. Try Computer Mode or Free Cloud.";
 export const FREE_CLOUD_UNAVAILABLE_MESSAGE =
   "No free cloud video worker is currently connected.";
-export const PAID_CLOUD_DISABLED_MESSAGE = "Paid generation is switched off.";
 export const PAID_CLOUD_CONFIGURATION_MESSAGE =
-  "Paid Cloud is enabled, but the video provider is not configured.";
+  "The paid video service is not configured, so no paid video can be made.";
 export const INSTALLER_UNAVAILABLE_MESSAGE =
   "The EarnRoom Video Worker installer has not been published yet.";
 export const COMPUTER_START_MESSAGE = "Start the EarnRoom Video Worker on your computer.";

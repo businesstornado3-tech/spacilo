@@ -124,57 +124,30 @@ describe("simple video generation modes", () => {
     expect(gone.statusNote).toBe("No free cloud video worker is currently connected.");
   });
 
-  it("keeps Paid Cloud off by default", () => {
-    const card = find(cards({ paidProviderConfigured: true }), "PAID_CLOUD");
-    expect(card.status).toBe("DISABLED");
-    expect(card.available).toBe(false);
-    expect(card.statusNote).toBe("Paid generation is switched off.");
-    expect(card.actionLabel).toBe("Enable Paid Cloud");
-    expect(validateModeSelection(cards(), "PAID_CLOUD").ok).toBe(false);
-  });
-
-  it("is immediately usable once Paid Cloud is switched on", () => {
-    const list = cards({ paidComputeEnabled: true, paidProviderConfigured: true });
+  it("offers Paid Cloud with no separate switch, just one cost confirmation", () => {
+    const list = cards({ paidProviderConfigured: true });
     const card = find(list, "PAID_CLOUD");
-    expect(card.status).toBe("ACTIVE");
+    expect(card.status).toBe("AVAILABLE");
     expect(card.available).toBe(true);
+    expect(card.action).toBe("SELECT");
+    expect(card.actionLabel).toBe("Use Paid Cloud");
+    expect(card.costLine).not.toContain("Confirmation required");
     expect(validateModeSelection(list, "PAID_CLOUD").ok).toBe(true);
   });
 
-  it("offers exactly one paid switch and no second confirmation step", () => {
-    const off = find(cards({ paidProviderConfigured: true }), "PAID_CLOUD");
-    expect(off.action).toBe("ENABLE_PAID");
-    expect(off.actionLabel).toBe("Enable Paid Cloud");
-    const on = find(
-      cards({ paidComputeEnabled: true, paidProviderConfigured: true }),
-      "PAID_CLOUD",
-    );
-    expect(on.action).toBe("DISABLE_PAID");
-    expect(on.actionLabel).toBe("Disable Paid Cloud");
-    expect(on.statusNote).not.toMatch(/confirm(ed|ation)/i);
-    expect(on.costLine).not.toContain("Confirmation required");
-  });
-
-  it("blocks paid generation again the moment Paid Cloud is switched off", () => {
-    const list = cards({ paidComputeEnabled: false, paidProviderConfigured: true });
-    const gate = validateModeSelection(list, "PAID_CLOUD");
-    expect(gate.ok).toBe(false);
-    expect(find(list, "PAID_CLOUD").available).toBe(false);
-  });
-
   it("needs no worker registry row for the hosted paid route", () => {
-    const list = cards({ paidComputeEnabled: true, paidProviderConfigured: true });
+    const list = cards({ paidProviderConfigured: true });
     // Only the browser worker exists — there is no PAID_CLOUD registry row.
     expect(find(list, "PAID_CLOUD").available).toBe(true);
   });
 
   it("says configuration is required when the provider is not configured", () => {
-    const list = cards({ paidComputeEnabled: true, paidProviderConfigured: false });
+    const list = cards({ paidProviderConfigured: false });
     const card = find(list, "PAID_CLOUD");
-    expect(card.status).toBe("ENABLED — CONFIGURATION REQUIRED");
+    expect(card.status).toBe("CONFIGURATION REQUIRED");
     expect(card.available).toBe(false);
     expect(card.blockedMessage).toBe(
-      "Paid Cloud is enabled, but the video provider is not configured.",
+      "The paid video service is not configured, so no paid video can be made.",
     );
     expect(card.blockedMessage).not.toContain("worker");
   });
@@ -186,7 +159,7 @@ describe("simple video generation modes", () => {
       paidProviderConfigured: true,
     });
     const card = find(list, "PAID_CLOUD");
-    expect(card.status).toBe("ENABLED — TEMPORARILY UNAVAILABLE");
+    expect(card.status).toBe("TEMPORARILY UNAVAILABLE");
     expect(card.available).toBe(false);
   });
 

@@ -49,6 +49,11 @@ export type PlanInput = {
   /** Force a specific opportunity (founder override). */
   forceOpportunityKey?: string;
   platforms?: readonly PlatformId[];
+  /**
+   * Creative treatments used by recent campaigns, most recent first. Used only
+   * to avoid filming the same story twice; it never blocks a campaign.
+   */
+  recentCreative?: readonly CreativeHistoryEntry[];
 };
 
 export type DailyPlan = {

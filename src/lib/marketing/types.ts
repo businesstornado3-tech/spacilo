@@ -142,6 +142,20 @@ export type StoryScene = {
 export type CampaignStory = {
   format: StoryFormat;
   hook: string;
+  /**
+   * Which creative treatment was filmed. Recorded so campaign history can stop
+   * the next campaign repeating the same film. Absent on older campaigns.
+   */
+  creative?: {
+    treatmentId: string;
+    name: string;
+    family: string;
+    hook: string;
+    setting: string;
+    openingShot: string;
+    ending: string;
+    avoided: readonly string[];
+  };
   scenes: readonly StoryScene[];
   renterCta: string;
   hostCta: string | null;

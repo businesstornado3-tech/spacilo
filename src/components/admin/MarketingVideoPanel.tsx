@@ -21,9 +21,8 @@ import {
   generationSummary,
   simpleModeCards,
   validateModeSelection,
-  PAID_ENABLE_CONFIRMATION,
-  PAID_GENERATION_CONFIRMATION,
 } from "@/lib/marketing/workers/mode-panel";
+import { estimatedCostPence } from "@/lib/marketing/usage";
 import { definition } from "@/lib/marketing/platforms";
 import { playerBox, versionRow } from "@/lib/marketing/review";
 import type {
@@ -142,12 +141,59 @@ export function MarketingVideoPanel({
     [snapshot, paidEnabled, choice, support],
   );
   const selection = validateModeSelection(modeCards, choice);
+  // The estimate covers the whole run — the campaign video and every platform
+  // version — so the Generate button carries the real number.
+  const estimatedPence = React.useMemo(() => {
+    let total = 0;
+    for (const asset of assets) {
+      const pence = estimatedCostPence("720p", asset.seconds);
+      if (pence === null) return null;
+      total += pence;
+    }
+    return total;
+  }, [assets]);
   const summary = generationSummary({
     cards: modeCards,
     selected: choice,
     paidComputeEnabled: paidEnabled,
+    estimatedPence,
   });
   const blocked = selection.ok ? null : selection.message;
+  const dailyLimit = snapshot?.preferences.usage.maxVideosPerDay ?? null;
+  const [limitDraft, setLimitDraft] = React.useState<string>("");
+  React.useEffect(() => {
+    if (dailyLimit !== null) setLimitDraft(String(dailyLimit));
+  }, [dailyLimit]);
+
+  /** The one Paid Cloud switch. Enabling also selects the mode; nothing runs. */
+  const togglePaid = (next: boolean) => {
+    workers.preferences
+      .mutateAsync({ paidComputeEnabled: next })
+      .then(() => {
+        setChoice((current) => {
+          if (next) return "PAID_CLOUD";
+          return current === "PAID_CLOUD" ? null : current;
+        });
+        setNotice(
+          next
+            ? "Paid Cloud is on. Nothing has been generated or charged — pressing Generate Paid Video starts a paid generation."
+            : "Paid Cloud is off. No paid video can be made.",
+        );
+      })
+      .catch((error: Error) => setNotice(error.message));
+  };
+
+  const saveDailyLimit = () => {
+    const value = Number(limitDraft);
+    if (!Number.isFinite(value) || value < 1 || value > 50) {
+      setNotice("Choose a daily video limit between 1 and 50.");
+      return;
+    }
+    workers.preferences
+      .mutateAsync({ usage: { maxVideosPerDay: Math.round(value) } })
+      .then(() => setNotice(`Daily video limit is now ${Math.round(value)} videos a day.`))
+      .catch((error: Error) => setNotice(error.message));
+  };
 
   // Pick the first available free mode once, so the page is usable straight
   // away — never a paid one, and never after the founder has chosen.
@@ -231,11 +277,7 @@ export function MarketingVideoPanel({
 
   // Everything goes through the orchestrator: the server resolves the route,
   // and only tells this page to draw when the browser is the chosen route.
-  const run = async (
-    asset: PlatformAsset,
-    tier: "draft" | "final",
-    confirmPaid = false,
-  ): Promise<boolean> => {
+  const run = async (asset: PlatformAsset, tier: "draft" | "final"): Promise<boolean> => {
     // The chosen mode must be genuinely available; nothing is switched
     // silently, and no generation starts on an unavailable route.
     const gate = validateModeSelection(modeCards, choice);
@@ -243,6 +285,9 @@ export function MarketingVideoPanel({
       setNotice(gate.message ?? "Choose a video generation mode first.");
       return false;
     }
+    // Paid Cloud has one switch. It is on, the founder chose it, and pressing
+    // Generate Paid Video is the confirmation — there is no second dialog.
+    const confirmPaid = choice === "PAID_CLOUD" && paidEnabled;
     try {
       setStage("Choosing where to make it");
       const result = await videos.generate.mutateAsync({
@@ -254,14 +299,12 @@ export function MarketingVideoPanel({
       });
 
       if (result.status === "CONFIRMATION_REQUIRED") {
-        setNotice(result.detail);
+        // Only reachable when Paid Cloud is off: nothing paid may start.
+        setNotice("Paid Cloud is switched off, so no paid video can be made.");
         setStage(null);
-        // Every paid video is confirmed on its own, however the mode was set.
-        if (window.confirm(`${PAID_GENERATION_CONFIRMATION}\n\nGenerate Paid Video?`)) {
-          return run(asset, tier, true);
-        }
         return false;
       }
+
 
       const route = result.workerLabel ? `Using ${result.workerLabel}. ` : "";
       if (result.status === "BROWSER_RENDER_REQUIRED") {
@@ -300,8 +343,8 @@ export function MarketingVideoPanel({
       <div>
         <h4 className="type-h5">Video generation mode</h4>
         <p className="mt-1 type-body-sm text-muted-foreground">
-          Choose how this video is made. Paid Cloud stays switched off until you enable it, and
-          every paid video is still confirmed on its own.
+          Choose how this video is made. Paid Cloud stays switched off until you enable it here —
+          that one switch is the only place it is turned on or off.
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {modeCards.map((card) => (
@@ -379,23 +422,8 @@ export function MarketingVideoPanel({
                   <button
                     type="button"
                     disabled={workers.preferences.isPending}
-                    onClick={() => {
-                      // Enabling only authorises the route. It never starts a
-                      // generation and never spends anything by itself.
-                      const next = !paidEnabled;
-                      if (next && !window.confirm(PAID_ENABLE_CONFIRMATION)) return;
-                      if (!next && choice === "PAID_CLOUD") setChoice(null);
-                      workers.preferences
-                        .mutateAsync({ paidComputeEnabled: next })
-                        .then(() =>
-                          setNotice(
-                            next
-                              ? "Paid Cloud is enabled. Nothing has been generated and nothing has been charged — each paid video is still confirmed separately."
-                              : "Paid Cloud is disabled. No paid generation can be requested.",
-                          ),
-                        )
-                        .catch((error: Error) => setNotice(error.message));
-                    }}
+                    aria-pressed={paidEnabled}
+                    onClick={() => togglePaid(!paidEnabled)}
                     className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary disabled:opacity-60"
                   >
                     {paidEnabled ? "Disable Paid Cloud" : "Enable Paid Cloud"}
@@ -493,8 +521,44 @@ export function MarketingVideoPanel({
           {summary.paidLine ? (
             <p className="type-body-xs text-muted-foreground">{summary.paidLine}</p>
           ) : null}
-          <p className="type-body-xs text-muted-foreground">{summary.costLine}</p>
+          <p
+            className={cn(
+              "type-body-xs",
+              choice === "PAID_CLOUD" ? "font-medium" : "text-muted-foreground",
+            )}
+          >
+            {summary.costLine}
+          </p>
         </div>
+
+        {/* The daily limit is a real safety control, so it is raised here
+            rather than on some other settings page. */}
+        <div className="mt-3 flex flex-wrap items-end gap-2 rounded-lg border border-border px-3 py-2">
+          <label className="type-body-xs text-muted-foreground" htmlFor="daily-video-limit">
+            Daily video limit
+            <input
+              id="daily-video-limit"
+              type="number"
+              min={1}
+              max={50}
+              value={limitDraft}
+              onChange={(event) => setLimitDraft(event.target.value)}
+              className="mt-1 block h-9 w-24 rounded-lg border border-border bg-background px-2 type-body-sm"
+            />
+          </label>
+          <button
+            type="button"
+            disabled={workers.preferences.isPending || limitDraft === String(dailyLimit ?? "")}
+            onClick={saveDailyLimit}
+            className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary disabled:opacity-60"
+          >
+            Save limit
+          </button>
+          <p className="type-body-xs text-muted-foreground">
+            Videos a day, across all campaigns. Paid Cloud does not raise this limit.
+          </p>
+        </div>
+
 
         <div className="mt-3 flex flex-wrap gap-2">
           <button

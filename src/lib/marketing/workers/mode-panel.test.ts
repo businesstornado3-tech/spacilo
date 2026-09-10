@@ -5,7 +5,7 @@ import {
   generationSummary,
   simpleModeCards,
   validateModeSelection,
-  PAID_GENERATION_CONFIRMATION,
+  estimatedCostLine,
   type SimpleModeCard,
 } from "./mode-panel";
 import { withHostedPaidCloud } from "./hosted";
@@ -133,12 +133,33 @@ describe("simple video generation modes", () => {
     expect(validateModeSelection(cards(), "PAID_CLOUD").ok).toBe(false);
   });
 
-  it("is READY when Paid Cloud is enabled and the hosted provider is configured", () => {
+  it("is immediately usable once Paid Cloud is switched on", () => {
     const list = cards({ paidComputeEnabled: true, paidProviderConfigured: true });
     const card = find(list, "PAID_CLOUD");
-    expect(card.status).toBe("ENABLED — READY");
+    expect(card.status).toBe("ACTIVE");
     expect(card.available).toBe(true);
     expect(validateModeSelection(list, "PAID_CLOUD").ok).toBe(true);
+  });
+
+  it("offers exactly one paid switch and no second confirmation step", () => {
+    const off = find(cards({ paidProviderConfigured: true }), "PAID_CLOUD");
+    expect(off.action).toBe("ENABLE_PAID");
+    expect(off.actionLabel).toBe("Enable Paid Cloud");
+    const on = find(
+      cards({ paidComputeEnabled: true, paidProviderConfigured: true }),
+      "PAID_CLOUD",
+    );
+    expect(on.action).toBe("DISABLE_PAID");
+    expect(on.actionLabel).toBe("Disable Paid Cloud");
+    expect(on.statusNote).not.toMatch(/confirm(ed|ation)/i);
+    expect(on.costLine).not.toContain("Confirmation required");
+  });
+
+  it("blocks paid generation again the moment Paid Cloud is switched off", () => {
+    const list = cards({ paidComputeEnabled: false, paidProviderConfigured: true });
+    const gate = validateModeSelection(list, "PAID_CLOUD");
+    expect(gate.ok).toBe(false);
+    expect(find(list, "PAID_CLOUD").available).toBe(false);
   });
 
   it("needs no worker registry row for the hosted paid route", () => {
@@ -191,18 +212,20 @@ describe("simple video generation modes", () => {
     expect(generateButtonLabel("PAID_CLOUD")).toBe("Generate Paid Video");
   });
 
-  it("keeps a per-video paid confirmation message", () => {
-    expect(PAID_GENERATION_CONFIRMATION).toContain("may incur usage charges");
+  it("shows the estimated cost in pounds, or says it is not known", () => {
+    expect(estimatedCostLine(120)).toBe("Estimated cost: £1.20");
+    expect(estimatedCostLine(0)).toBe("Estimated cost: £0.00");
+    expect(estimatedCostLine(null)).toBe("Estimated cost: not known for this video");
   });
 
-  it("summarises the selected mode and its cost protection", () => {
+  it("summarises the selected mode and shows the estimate before generating", () => {
     const free = generationSummary({
       cards: cards({ selected: "BROWSER" }),
       selected: "BROWSER",
       paidComputeEnabled: false,
     });
     expect(free.modeLine).toBe("Selected generation mode: Browser Preview");
-    expect(free.costLine).toBe("Cost protection: £0");
+    expect(free.costLine).toBe("Cost: £0");
 
     const paid = generationSummary({
       cards: cards({
@@ -212,10 +235,11 @@ describe("simple video generation modes", () => {
       }),
       selected: "PAID_CLOUD",
       paidComputeEnabled: true,
+      estimatedPence: 120,
     });
     expect(paid.modeLine).toBe("Selected generation mode: Paid Cloud");
-    expect(paid.paidLine).toBe("Paid Cloud: ENABLED");
-    expect(paid.costLine).toBe("Cost protection: Confirmation required");
+    expect(paid.costLine).toBe("Estimated cost: £1.20");
+    expect(paid.costLine).not.toContain("Confirmation required");
   });
 
   it("refuses to generate when no mode has been chosen", () => {

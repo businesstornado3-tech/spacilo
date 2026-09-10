@@ -32,7 +32,13 @@ export type SimpleModeStatus =
   | "ENABLED — TEMPORARILY UNAVAILABLE";
 
 /** The single action a card offers. Nothing technical is ever exposed. */
-export type SimpleModeAction = "SELECT" | "INSTALL" | "START" | "ENABLE_PAID" | "NONE";
+export type SimpleModeAction =
+  | "SELECT"
+  | "INSTALL"
+  | "START"
+  | "ENABLE_PAID"
+  | "DISABLE_PAID"
+  | "NONE";
 
 export type SimpleModeCard = {
   mode: WorkerMode;
@@ -79,7 +85,7 @@ const COPY: Record<
   PAID_CLOUD: {
     title: "Paid Cloud",
     description: "Higher-quality cloud video generation, switched on by you.",
-    cost: "May incur usage charges — confirmed for every video",
+    cost: "May incur usage charges — the estimated cost is shown before you generate",
     limitation: null,
   },
 };
@@ -271,8 +277,8 @@ export function simpleModeCards(input: {
         status: "ENABLED — CONFIGURATION REQUIRED",
         statusNote: PAID_CLOUD_CONFIGURATION_MESSAGE,
         available: false,
-        action: "NONE",
-        actionLabel: "Use Paid Cloud",
+        action: "DISABLE_PAID",
+        actionLabel: "Disable Paid Cloud",
         blockedMessage: PAID_CLOUD_CONFIGURATION_MESSAGE,
       });
     }
@@ -284,18 +290,20 @@ export function simpleModeCards(input: {
         status: "ENABLED — TEMPORARILY UNAVAILABLE",
         statusNote: "Paid Cloud is temporarily unavailable.",
         available: false,
-        action: "NONE",
-        actionLabel: "Use Paid Cloud",
+        action: "DISABLE_PAID",
+        actionLabel: "Disable Paid Cloud",
         blockedMessage: "Paid Cloud is temporarily unavailable. Choose another mode or try later.",
       });
     }
+    // Switched on and ready: the single switch is the only paid control, and
+    // pressing Generate Paid Video is the confirmation.
     return card({
       ...shell,
-      status: selected ? "ACTIVE" : "ENABLED — READY",
-      statusNote: "Every paid video is still confirmed on its own.",
+      status: "ACTIVE",
+      statusNote: "Generate Paid Video starts a paid generation.",
       available: true,
-      action: "SELECT",
-      actionLabel: "Use Paid Cloud",
+      action: "DISABLE_PAID",
+      actionLabel: "Disable Paid Cloud",
       blockedMessage: null,
     });
   });
@@ -317,13 +325,16 @@ export function generateButtonLabel(selected: WorkerMode | null): string {
   }
 }
 
-/** The one-line confirmation shown before any paid generation starts. */
-export const PAID_GENERATION_CONFIRMATION =
-  "This video will use Paid Cloud generation and may incur usage charges.";
-
-/** The confirmation shown before Paid Cloud is switched on at all. */
-export const PAID_ENABLE_CONFIRMATION =
-  "Paid Cloud generation can incur usage charges. Enable Paid Cloud?";
+/**
+ * The estimated cost line shown immediately before Generate Paid Video, so the
+ * button itself is informed consent. There is no second confirmation step.
+ */
+export function estimatedCostLine(pence: number | null): string {
+  if (pence === null || !Number.isFinite(pence)) {
+    return "Estimated cost: not known for this video";
+  }
+  return `Estimated cost: £${(Math.max(0, Math.round(pence)) / 100).toFixed(2)}`;
+}
 
 /**
  * Gate run before a generation starts. It never switches mode on the founder's
@@ -345,25 +356,27 @@ export function generationSummary(input: {
   cards: readonly SimpleModeCard[];
   selected: WorkerMode | null;
   paidComputeEnabled: boolean;
+  /** Estimated provider cost of the whole run, in pence. */
+  estimatedPence?: number | null;
 }): { modeLine: string; paidLine: string | null; costLine: string } {
   const chosen = input.cards.find((entry) => entry.mode === input.selected) ?? null;
   if (!chosen) {
     return {
       modeLine: "Selected generation mode: none selected",
       paidLine: null,
-      costLine: "Cost protection: no generation can start",
+      costLine: "No generation can start until you choose a mode.",
     };
   }
   if (chosen.mode === "PAID_CLOUD") {
     return {
       modeLine: "Selected generation mode: Paid Cloud",
-      paidLine: `Paid Cloud: ${input.paidComputeEnabled ? "ENABLED" : "DISABLED"}`,
-      costLine: "Cost protection: Confirmation required",
+      paidLine: null,
+      costLine: estimatedCostLine(input.estimatedPence ?? null),
     };
   }
   return {
     modeLine: `Selected generation mode: ${chosen.title}`,
     paidLine: null,
-    costLine: "Cost protection: £0",
+    costLine: "Cost: £0",
   };
 }

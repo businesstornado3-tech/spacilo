@@ -187,7 +187,8 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
           <p className="mt-2 type-body-xs text-muted-foreground">
             Already installed and showing “Needs setup”? Choose “Pair this computer”. EarnRoom sends
             a small file — open it once on that computer and the worker connects itself. Nothing is
-            downloaded again.
+            downloaded again. Chrome may first ask whether to keep the file: choose “Keep”, then open
+            it.
           </p>
         </>
       ) : (
@@ -200,7 +201,7 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
           </p>
           <p className="mt-1 type-body-xs text-muted-foreground">
             {alreadyInstalled && !view.connected
-              ? "Open the small pairing file EarnRoom just sent on that computer. The worker checks for it every few seconds and will connect by itself."
+              ? "Open the small pairing file EarnRoom just sent on that computer. If Chrome asks, choose “Keep” first. The worker checks for it every few seconds and will connect by itself."
               : view.detail}
           </p>
 

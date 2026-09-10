@@ -19,7 +19,16 @@ import {
   getComputerSetupStatus,
   type ComputerSetupSession,
 } from "@/lib/marketing-workers.functions";
-import { capabilityVerdict, hardwareSummary, SETUP_JOURNEY, SETUP_STAGE_LABEL, setupView } from "@/lib/marketing/workers";
+import {
+  capabilityVerdict,
+  COMPUTER_SETUP_STATE_LABEL,
+  computerSetupState,
+  hardwareSummary,
+  READY_STATUSES,
+  SETUP_JOURNEY,
+  SETUP_STAGE_LABEL,
+  setupView,
+} from "@/lib/marketing/workers";
 import { cn } from "@/lib/utils";
 
 export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
@@ -31,6 +40,9 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
   const [downloadStarted, setDownloadStarted] = React.useState(false);
   const [problem, setProblem] = React.useState<string | null>(null);
   const [label, setLabel] = React.useState("My computer");
+  // True when the founder says this machine already runs the worker, so we
+  // pair the running worker instead of downloading anything again.
+  const [alreadyInstalled, setAlreadyInstalled] = React.useState(false);
 
   const poll = useQuery({
     queryKey: ["marketing", "computer-setup", session?.handle ?? "none"],
@@ -39,31 +51,43 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
     refetchInterval: 5_000,
   });
 
+  /** Downloads a file the browser was handed by our own server. */
+  const deliver = async (path: string): Promise<boolean> => {
+    const response = await fetch(path);
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      setProblem(body.error ?? "The file could not be downloaded.");
+      return false;
+    }
+    const url = URL.createObjectURL(await response.blob());
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = path.split("/").pop()!;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    return true;
+  };
+
   const start = useMutation({
-    mutationFn: () => begin({ data: { label: label.trim() || "My computer" } }),
-    onSuccess: async (created) => {
+    mutationFn: (installed: boolean) =>
+      begin({ data: { label: label.trim() || "My computer" } }).then((created) => ({
+        created,
+        installed,
+      })),
+    onSuccess: async ({ created, installed }) => {
       setProblem(null);
       setDownloadStarted(false);
+      setAlreadyInstalled(installed);
       setSession(created);
-      if (!created.installerAvailable) return;
-      // Fetch it as a real file first, so a server-side problem is reported
-      // here instead of leaving the founder with a broken download.
-      const response = await fetch(created.downloadPath);
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        setProblem(body.error ?? "The installer could not be downloaded.");
+      if (installed) {
+        // Already installed: hand the running worker its setup session only.
+        await deliver(created.pairingPath);
         return;
       }
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = created.downloadPath.split("/").pop()!;
-      document.body.append(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(url);
-      setDownloadStarted(true);
+      if (!created.installerAvailable) return;
+      if (await deliver(created.downloadPath)) setDownloadStarted(true);
     },
     onError: (failure: Error) => setProblem(failure.message),
   });
@@ -76,7 +100,19 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
     heartbeatAt: poll.data?.heartbeatAt ?? null,
     hardware: worker?.hardware ?? null,
     expired: poll.data?.expired ?? false,
+    installerAvailable: session ? session.installerAvailable || alreadyInstalled : true,
+  });
+
+  const state = computerSetupState({
+    sessionCreated: Boolean(session),
+    downloadStarted,
+    claimed: poll.data?.claimed ?? false,
+    heartbeatAt: poll.data?.heartbeatAt ?? null,
+    hardware: worker?.hardware ?? null,
+    expired: poll.data?.expired ?? false,
     installerAvailable: session ? session.installerAvailable : true,
+    alreadyInstalled,
+    workerReady: Boolean(worker && worker.enabled && READY_STATUSES.includes(worker.status)),
   });
 
   const connectedRef = React.useRef(false);
@@ -112,17 +148,39 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
             <button
               type="button"
               disabled={start.isPending}
-              onClick={() => start.mutate()}
+              onClick={() => start.mutate(false)}
               className="min-h-11 rounded-lg bg-primary px-3 type-nav font-semibold text-primary-foreground disabled:opacity-50"
             >
               {start.isPending ? SETUP_STAGE_LABEL.PREPARING : "Set up my computer"}
             </button>
+            <button
+              type="button"
+              disabled={start.isPending}
+              onClick={() => start.mutate(true)}
+              className="min-h-11 rounded-lg border border-border px-3 type-nav font-semibold disabled:opacity-50"
+            >
+              Pair this computer — worker already installed
+            </button>
           </div>
+          <p className="mt-2 type-body-xs text-muted-foreground">
+            Already installed and showing “Needs setup”? Choose “Pair this computer”. EarnRoom sends
+            a small file — open it once on that computer and the worker connects itself. Nothing is
+            downloaded again.
+          </p>
         </>
       ) : (
         <>
-          <p className="type-body-sm font-semibold">{view.label}</p>
-          <p className="mt-1 type-body-xs text-muted-foreground">{view.detail}</p>
+          <p className="type-body-xs text-muted-foreground">{COMPUTER_SETUP_STATE_LABEL[state]}</p>
+          <p className="type-body-sm font-semibold">
+            {alreadyInstalled && !view.connected
+              ? "Waiting for this computer to connect"
+              : view.label}
+          </p>
+          <p className="mt-1 type-body-xs text-muted-foreground">
+            {alreadyInstalled && !view.connected
+              ? "Open the small pairing file EarnRoom just sent on that computer. The worker checks for it every few seconds and will connect by itself."
+              : view.detail}
+          </p>
 
           {view.stage !== "UNAVAILABLE" && view.stage !== "EXPIRED" ? (
             <ol className="mt-3 space-y-1">
@@ -168,6 +226,7 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
               onClick={() => {
                 setSession(null);
                 setDownloadStarted(false);
+                setAlreadyInstalled(false);
               }}
             >
               Start again

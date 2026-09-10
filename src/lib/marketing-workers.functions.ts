@@ -332,6 +332,11 @@ export const createWorkerPairing = createServerFn({ method: "POST" })
 export type ComputerSetupSession = {
   /** Where the browser should fetch the real installer from. */
   downloadPath: string;
+  /**
+   * Where to fetch the tiny pairing file for a computer that already has the
+   * worker installed. No installer download is involved.
+   */
+  pairingPath: string;
   expiresAt: string;
   /** False when no genuine installer has been published yet. */
   installerAvailable: boolean;
@@ -352,7 +357,9 @@ export const beginComputerSetup = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await assertAdmin(supabase);
 
-    const { installerFileName } = await import("@/lib/marketing/workers/setup");
+    const { installerFileName, pairingFileName } = await import(
+      "@/lib/marketing/workers/setup"
+    );
     const expiresAt = new Date(Date.now() + PAIRING_MINUTES * 60 * 1000).toISOString();
     const code = pairingCode();
 
@@ -374,6 +381,7 @@ export const beginComputerSetup = createServerFn({ method: "POST" })
 
     return {
       downloadPath: `/api/public/video-worker/setup/${installerFileName(code)}`,
+      pairingPath: `/api/public/video-worker/setup/${pairingFileName(code)}`,
       expiresAt,
       installerAvailable: installerPublished(),
       handle: code,

@@ -124,6 +124,7 @@ export function MarketingVideoPanel({
   // free choice is never promoted to a paid one.
   const [choice, setChoice] = React.useState<WorkerChoice>(null);
   const [showSetup, setShowSetup] = React.useState(false);
+  const setupRef = React.useRef<HTMLDivElement | null>(null);
 
   const browser = workers.browser;
   const snapshot = workers.query.data;
@@ -351,7 +352,15 @@ export function MarketingVideoPanel({
                 {card.action === "INSTALL" ? (
                   <button
                     type="button"
-                    onClick={() => setShowSetup(true)}
+                    onClick={() => {
+                      setShowSetup(true);
+                      // Otherwise the panel opens below the fold and the
+                      // button looks like it did nothing.
+                      window.setTimeout(
+                        () => setupRef.current?.scrollIntoView({ block: "center" }),
+                        0,
+                      );
+                    }}
                     className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground hover:opacity-90"
                   >
                     {card.actionLabel}
@@ -402,7 +411,7 @@ export function MarketingVideoPanel({
           ))}
         </div>
         {showSetup ? (
-          <div className="mt-3 rounded-xl border border-border p-3">
+          <div ref={setupRef} className="mt-3 rounded-xl border border-border p-3">
             <ComputerSetup onConnected={() => void workers.query.refetch()} />
           </div>
         ) : null}

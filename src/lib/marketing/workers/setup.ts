@@ -50,6 +50,7 @@ export const SETUP_JOURNEY: readonly SetupStage[] = [
 export const SETUP_WINDOW_MINUTES = 30;
 
 const CODE_PATTERN = /^EarnRoom-Video-Worker-Setup-([A-Z0-9]{6,16})\.exe$/;
+const PAIR_PATTERN = /^EarnRoom-Pair-This-Computer-([A-Z0-9]{6,16})\.cmd$/;
 
 /**
  * The download is named after the setup session, so the installer can pair
@@ -65,6 +66,69 @@ export function pairingCodeFromFileName(fileName: string): string | null {
   const match = CODE_PATTERN.exec(fileName.trim());
   return match ? match[1]! : null;
 }
+
+/**
+ * A computer that already has the worker installed does not need another
+ * download. It needs the setup session handed to the worker that is already
+ * running, which is exactly what this tiny file does when opened: it writes
+ * the session where the worker already looks for it, every few seconds.
+ */
+export function pairingFileName(code: string): string {
+  return `EarnRoom-Pair-This-Computer-${code.toUpperCase().replace(/[^A-Z0-9]/g, "")}.cmd`;
+}
+
+/** Reads the setup code back out of a pairing filename. */
+export function pairingCodeFromPairFileName(fileName: string): string | null {
+  const match = PAIR_PATTERN.exec(fileName.trim());
+  return match ? match[1]! : null;
+}
+
+/** The contents of that file. It carries the session only — never a token. */
+export function pairingScript(input: { code: string; site: string; label: string }): string {
+  const code = input.code.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const site = input.site.replace(/[^A-Za-z0-9:/._-]/g, "");
+  const label = input.label.replace(/[^A-Za-z0-9 ._-]/g, "").slice(0, 80) || "My computer";
+  return [
+    "@echo off",
+    'set "ERDIR=%USERPROFILE%\\.earnroom-worker"',
+    'if not exist "%ERDIR%" mkdir "%ERDIR%"',
+    `> "%ERDIR%\\setup.json" echo {"code":"${code}","site":"${site}","label":"${label}"}`,
+    "echo EarnRoom Video Worker: this computer is connecting.",
+    "echo You can close this window.",
+    "timeout /t 5 >nul",
+    "",
+  ].join("\r\n");
+}
+
+/**
+ * The founder-facing state of one computer, in the plain words the console
+ * shows. Every state is entered only on a signal that actually arrived; a
+ * browser reaching this page never makes a computer CONNECTED.
+ */
+export type ComputerSetupState =
+  | "NOT_INSTALLED"
+  | "INSTALLER_DOWNLOADING"
+  | "INSTALLATION_PENDING"
+  | "INSTALLED_NEEDS_SETUP"
+  | "SETUP_SESSION_CREATED"
+  | "WORKER_CONNECTING"
+  | "CONNECTED"
+  | "READY"
+  | "OFFLINE"
+  | "ERROR";
+
+export const COMPUTER_SETUP_STATE_LABEL: Record<ComputerSetupState, string> = {
+  NOT_INSTALLED: "Worker not installed",
+  INSTALLER_DOWNLOADING: "Downloading the worker",
+  INSTALLATION_PENDING: "Waiting for you to install it",
+  INSTALLED_NEEDS_SETUP: "Worker installed — setup required",
+  SETUP_SESSION_CREATED: "Waiting for this computer to connect",
+  WORKER_CONNECTING: "Computer connecting",
+  CONNECTED: "Computer connected",
+  READY: "Computer ready",
+  OFFLINE: "Computer offline",
+  ERROR: "Setup problem",
+};
 
 export type SetupSignals = {
   /** The founder has pressed the button and a session exists. */
@@ -156,4 +220,36 @@ export function capabilityVerdict(profile: HardwareProfile): CapabilityVerdict {
       ? `${profile.capabilityReason} This computer can make videos here.`
       : `${profile.capabilityReason} This computer can still make short, simple animated videos, but not cinematic ones — those will use another route.`,
   };
+}
+
+export type ComputerSetupSignals = SetupSignals & {
+  /** The founder told us this machine already has the worker installed. */
+  alreadyInstalled?: boolean;
+  /** The worker is paired but has stopped reporting in. */
+  stale?: boolean;
+  /** Something actually failed. */
+  failed?: boolean;
+  /** The paired worker is enabled and reporting a usable status. */
+  workerReady?: boolean;
+};
+
+/**
+ * One honest state. CONNECTED and READY require a real worker heartbeat, not
+ * a browser visiting this page.
+ */
+export function computerSetupState(signals: ComputerSetupSignals): ComputerSetupState {
+  if (signals.failed) return "ERROR";
+  if (signals.heartbeatAt && !signals.stale) {
+    return signals.workerReady && signals.hardware ? "READY" : "CONNECTED";
+  }
+  if (signals.heartbeatAt && signals.stale) return "OFFLINE";
+  if (signals.claimed) return "WORKER_CONNECTING";
+  if (signals.expired) return "OFFLINE";
+  if (signals.sessionCreated) {
+    if (signals.alreadyInstalled) return "SETUP_SESSION_CREATED";
+    if (signals.downloadStarted) return "INSTALLATION_PENDING";
+    return "INSTALLER_DOWNLOADING";
+  }
+  if (signals.alreadyInstalled) return "INSTALLED_NEEDS_SETUP";
+  return "NOT_INSTALLED";
 }

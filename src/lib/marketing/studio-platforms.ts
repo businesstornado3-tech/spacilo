@@ -197,8 +197,23 @@ export function studioPlatformRows(input: {
       return null;
     })();
 
-    const failed =
-      publication && publication.state !== "PUBLISHED" && publication.state.includes("FAIL");
+    // A failed attempt is any stored state that is neither queued nor
+    // published — including the platform refusing the sign-in or the file.
+    const failed = Boolean(
+      publication &&
+        publication.state !== "PUBLISHED" &&
+        ((FAILED_PUBLICATION_STATES as readonly string[]).includes(publication.state) ||
+          Boolean(publication.error)),
+    );
+    // The founder sees the platform's own words, never a "please try again".
+    const failureReason = failed
+      ? [
+          failureHeadline(publication!.state, label),
+          publication!.error ? `Reason: ${publication!.error}` : null,
+        ]
+          .filter(Boolean)
+          .join(" ")
+      : null;
 
     return {
       ...base,
@@ -208,7 +223,8 @@ export function studioPlatformRows(input: {
       actionLabel: failed && !blocked ? "Try again" : "Publish",
       canPublish: !blocked,
       publishing: blocked ?? (failed ? "Last attempt failed" : "Ready"),
-      reason: blocked ?? (failed ? `${label} publishing failed. Please try again.` : null),
+      reason: blocked ?? failureReason,
+      failureReason,
     };
   });
 }

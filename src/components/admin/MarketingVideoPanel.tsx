@@ -179,22 +179,44 @@ export function MarketingVideoPanel({
     if (dailyLimit !== null) setLimitDraft(String(dailyLimit));
   }, [dailyLimit]);
 
-  /** The one Paid Cloud switch. Enabling also selects the mode; nothing runs. */
-  const togglePaid = (next: boolean) => {
-    workers.preferences
-      .mutateAsync({ paidComputeEnabled: next })
-      .then(() => {
-        setChoice((current) => {
-          if (next) return "PAID_CLOUD";
-          return current === "PAID_CLOUD" ? null : current;
-        });
-        setNotice(
-          next
-            ? "Paid Cloud is on. Nothing has been generated or charged — pressing Generate Paid Video starts a paid generation."
-            : "Paid Cloud is off. No paid video can be made.",
-        );
-      })
-      .catch((error: Error) => setNotice(error.message));
+  /**
+   * The paid route, start to finish, in one place: choose Standard or Highest
+   * quality, press Generate, confirm once. Nothing paid can begin any other
+   * way, and no free route is ever promoted to this one.
+   */
+  const startPaid = async (quality: PaidQuality) => {
+    if (!core) return;
+    setConfirmingPaid(false);
+    if (snapshot?.paidProviderConfigured !== true) {
+      setNotice("The paid video service is not configured, so no paid video can be made.");
+      return;
+    }
+    if (snapshot.preferences.generationPaused) {
+      setNotice("Video generation is paused, so no paid video can be made.");
+      return;
+    }
+    setStage("Starting the paid generation");
+    try {
+      // Pressing Generate and confirming is the founder's explicit choice, so
+      // the paid route is armed here rather than on a separate settings page.
+      if (!paidEnabled) await workers.preferences.mutateAsync({ paidComputeEnabled: true });
+      setChoice("PAID_CLOUD");
+      const result = await videos.generate.mutateAsync({
+        assetId: core.id,
+        tier: "final",
+        worker: "PAID_CLOUD",
+        quality,
+        browser,
+        confirmPaid: true,
+      });
+      setNotice(
+        `${result.workerLabel ? `Using ${result.workerLabel}. ` : ""}${result.detail} ${paidPresetCostLine(quality)} (estimate).`,
+      );
+      setStage(result.started ? "Making your video" : null);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "The paid video could not be started.");
+      setStage(null);
+    }
   };
 
   const saveDailyLimit = () => {

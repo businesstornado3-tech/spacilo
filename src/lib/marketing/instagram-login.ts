@@ -127,8 +127,6 @@ export function publicationStateFor(
   }
 }
 
-
-
 /**
  * A transport failure never reached Instagram at all. The exact runtime reason
  * is kept (it distinguishes a worker-runtime fault from DNS/network), and the
@@ -396,9 +394,7 @@ const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(r
  * create container → poll processing → media_publish → permalink.
  * Only the id returned by `media_publish` becomes the published media id.
  */
-export async function publishInstagramLoginReel(
-  input: InstagramReelInput,
-): Promise<PublishResult> {
+export async function publishInstagramLoginReel(input: InstagramReelInput): Promise<PublishResult> {
   const sleep = input.sleep ?? defaultSleep;
   const interval = input.pollIntervalMs ?? 5_000;
   const attempts = input.maxPollAttempts ?? 24;
@@ -559,7 +555,6 @@ export async function publishInstagramLoginReel(
       retryable: true,
     };
   }
-
 
   /* 4. Permalink — best effort; never blocks a confirmed publication */
   let permalink: string | null = null;

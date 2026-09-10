@@ -26,12 +26,15 @@ import {
 import { cn } from "@/lib/utils";
 
 const publishingKeys = {
-  surface: (campaignId: string | null) => ["marketing", "publishing", campaignId ?? "none"] as const,
+  surface: (campaignId: string | null) =>
+    ["marketing", "publishing", campaignId ?? "none"] as const,
 };
 
 function capabilityTone(capability: PlatformPublishingState["capability"]): string {
-  if (capability === "READY") return "border-success/30 bg-success-soft text-success-soft-foreground";
-  if (capability === "LAST_ATTEMPT_FAILED") return "border-destructive/30 bg-destructive/10 text-destructive";
+  if (capability === "READY")
+    return "border-success/30 bg-success-soft text-success-soft-foreground";
+  if (capability === "LAST_ATTEMPT_FAILED")
+    return "border-destructive/30 bg-destructive/10 text-destructive";
   return "border-warning/30 bg-warning-soft text-warning-soft-foreground";
 }
 
@@ -294,7 +297,12 @@ export function CampaignPublishing({ campaignId }: { campaignId: string | null }
         >
           <p>{outcome.result.detail}</p>
           {outcome.result.platformUrl ? (
-            <a className="underline" href={outcome.result.platformUrl} target="_blank" rel="noreferrer">
+            <a
+              className="underline"
+              href={outcome.result.platformUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
               Open the published item
             </a>
           ) : null}

@@ -117,7 +117,12 @@ async function assertAdmin(supabase: any): Promise<void> {
  */
 export function platformStateFrom(input: {
   platform: PublishablePlatform;
-  connectionRow: { connection?: string; account_id?: string | null; account_label?: string | null; last_error?: string | null } | null;
+  connectionRow: {
+    connection?: string;
+    account_id?: string | null;
+    account_label?: string | null;
+    last_error?: string | null;
+  } | null;
   hasToken: boolean;
   paused: boolean;
 }): PlatformPublishingState {
@@ -244,7 +249,11 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
     }
 
     const [{ data: campaignRow }, { data: videoRows }, { data: pubRows }] = await Promise.all([
-      supabase.from("marketing_campaigns").select("campaign, status").eq("id", campaignId).maybeSingle(),
+      supabase
+        .from("marketing_campaigns")
+        .select("campaign, status")
+        .eq("id", campaignId)
+        .maybeSingle(),
       supabase
         .from("marketing_videos")
         .select("id, asset_id, storage_path, status, aspect, seconds")
@@ -257,7 +266,7 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
 
     const campaign = (campaignRow?.campaign ?? null) as any;
     const assets: PublishableAsset[] = [];
-    for (const video of ((videoRows ?? []) as any[])) {
+    for (const video of (videoRows ?? []) as any[]) {
       const source = ((campaign?.assets ?? []) as any[]).find(
         (entry) => entry.id === video.asset_id,
       );
@@ -269,7 +278,9 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
         aspect: video.aspect ?? source?.aspect ?? "9:16",
         seconds: video.seconds ?? source?.seconds ?? 0,
         title: String(source?.title ?? "EarnRoom").slice(0, 100),
-        description: String(source?.description ?? "EarnRoom — make space earn. https://earnroom.co.uk"),
+        description: String(
+          source?.description ?? "EarnRoom — make space earn. https://earnroom.co.uk",
+        ),
         caption: String(source?.caption ?? source?.description ?? "EarnRoom — make space earn."),
         brandedArtifactReady: branded,
         artifactDetail: branded
@@ -446,7 +457,8 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       (entry) => entry.id === video.asset_id,
     );
 
-    const { adapterFor, attemptPublish, defaultMarketingSettings } = await import("@/lib/marketing");
+    const { adapterFor, attemptPublish, defaultMarketingSettings } =
+      await import("@/lib/marketing");
     const mergedSettings = { ...defaultMarketingSettings(), ...settings } as any;
     const connections = ((connectionRows ?? []) as any[]).map((row) => ({
       platform: row.platform === "youtube" ? row.platform : row.platform,

@@ -25,7 +25,9 @@ export type YoutubeChannelsResult = {
 
 function googleReason(payload: Record<string, unknown>): string | null {
   const error = (payload["error"] ?? {}) as Record<string, unknown>;
-  const errors = Array.isArray(error["errors"]) ? (error["errors"] as Record<string, unknown>[]) : [];
+  const errors = Array.isArray(error["errors"])
+    ? (error["errors"] as Record<string, unknown>[])
+    : [];
   const first = errors[0] ?? {};
   return typeof first["reason"] === "string" ? (first["reason"] as string) : null;
 }
@@ -36,10 +38,7 @@ function googleMessage(payload: Record<string, unknown>): string | null {
 }
 
 /** Explains a 401/403 in the founder's language, keeping Google's own reason. */
-export function youtubeAuthFailureDetail(
-  status: number,
-  payload: Record<string, unknown>,
-): string {
+export function youtubeAuthFailureDetail(status: number, payload: Record<string, unknown>): string {
   const reason = googleReason(payload);
   const message = googleMessage(payload) ?? "";
   if (reason === "accessNotConfigured" || message.includes("has not been used in project")) {
@@ -86,7 +85,9 @@ export async function fetchYoutubeChannels(
     };
   }
 
-  const items = Array.isArray(payload["items"]) ? (payload["items"] as Record<string, unknown>[]) : [];
+  const items = Array.isArray(payload["items"])
+    ? (payload["items"] as Record<string, unknown>[])
+    : [];
   const channels: YoutubeChannel[] = items
     .filter((item) => typeof item["id"] === "string")
     .map((item) => {
@@ -101,11 +102,16 @@ export async function fetchYoutubeChannels(
   if (channels.length === 0) {
     return {
       ok: false,
-      detail: "YouTube returned no channel for this account. The Google account has no YouTube channel.",
+      detail:
+        "YouTube returned no channel for this account. The Google account has no YouTube channel.",
       channels: [],
     };
   }
-  return { ok: true, detail: "Channels read from YouTube with the stored authorisation.", channels };
+  return {
+    ok: true,
+    detail: "Channels read from YouTube with the stored authorisation.",
+    channels,
+  };
 }
 
 export type YoutubeUploadRequest = {
@@ -277,7 +283,9 @@ export async function fetchYoutubeVideoStatus(
         privacyStatus: null,
         uploadStatus: null,
         rejectionReason: null,
-        detail: googleMessage(payload) ?? `YouTube did not return the video status (HTTP ${response.status}).`,
+        detail:
+          googleMessage(payload) ??
+          `YouTube did not return the video status (HTTP ${response.status}).`,
       };
     }
     const items = Array.isArray(payload["items"])

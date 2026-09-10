@@ -136,7 +136,10 @@ function youtubeAdapter(
   capability: PlatformCapability,
   accessToken: string,
 ): PublishingChannelAdapter {
-  const call = async (asset: PlatformAsset, _campaign: MarketingCampaign): Promise<PublishResult> => {
+  const call = async (
+    asset: PlatformAsset,
+    _campaign: MarketingCampaign,
+  ): Promise<PublishResult> => {
     void _campaign;
     const check = validateAssetForPlatform(asset);
     if (!check.ok) {

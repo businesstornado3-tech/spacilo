@@ -319,7 +319,6 @@ function MarketingStudioRoute() {
             <AcquisitionStatus />
           </AdminSectionBlock>
 
-
           <AdminSectionBlock
             id="demand"
             title="What the engine saw"

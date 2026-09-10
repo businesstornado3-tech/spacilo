@@ -57,42 +57,72 @@ export function buildStory(
   const hostCta = profile.hostCtas[0]!;
   const tagline = taglineFor(opportunity.key);
 
+  // The creative treatment, when one was chosen, decides WHAT is filmed. The
+  // voiceover still comes from the campaign's own evidence, so the picture
+  // varies while the argument stays true to the opportunity.
+  const creative = options.creative ?? null;
+  const beat = (index: number, fallbackVisual: string, fallbackCaption: string) => ({
+    visual: creative?.beats[index]?.visual ?? fallbackVisual,
+    caption: creative?.beats[index]?.caption ?? fallbackCaption,
+  });
+  const openHook = creative?.hook ?? hookFor(opportunity);
+
+  const one = beat(
+    0,
+    hostSide
+      ? "A half-empty garage: a bike, a few paint tins, plenty of floor."
+      : "A hallway stacked with boxes, a bike leaning against them.",
+    openHook,
+  );
+  const two = beat(
+    1,
+    "Close, unhurried shots of the everyday things involved — boxes, furniture, a cot, seasonal crates.",
+    "Why it matters",
+  );
+  const three = beat(
+    2,
+    hostSide
+      ? "The same garage, tidied, with a few labelled boxes neatly in one bay."
+      : `A map pin settling over ${place}, then a nearby garage door opening.`,
+    hostSide ? "Space that could earn" : "Space closer than you think",
+  );
+  const four = beat(
+    3,
+    "Two people, two doorsteps, one handover of boxes — plain and ordinary.",
+    "How EarnRoom works",
+  );
+
   const scenes: StoryScene[] = [
     {
       index: 1,
-      visual: hostSide
-        ? "A half-empty garage: a bike, a few paint tins, plenty of floor."
-        : "A hallway stacked with boxes, a bike leaning against them.",
-      voiceover: hookFor(opportunity),
-      caption: hookFor(opportunity),
+      visual: one.visual,
+      voiceover: openHook,
+      caption: one.caption,
       seconds: 4,
     },
     {
       index: 2,
-      visual:
-        "Close, unhurried shots of the everyday things involved — boxes, furniture, a cot, seasonal crates.",
+      visual: two.visual,
       voiceover: opportunity.evidence[1]?.statement.startsWith("If unresolved")
         ? opportunity.evidence[1].statement.replace("If unresolved: ", "")
         : `${opportunity.problem} It is more common than people think.`,
-      caption: "Why it matters",
+      caption: two.caption,
       seconds: 6,
     },
     {
       index: 3,
-      visual: hostSide
-        ? "The same garage, tidied, with a few labelled boxes neatly in one bay."
-        : `A map pin settling over ${place}, then a nearby garage door opening.`,
+      visual: three.visual,
       voiceover: hostSide
         ? "What if part of that space could earn instead of sitting empty?"
         : "What if someone nearby had suitable spare space?",
-      caption: hostSide ? "Space that could earn" : "Space closer than you think",
+      caption: three.caption,
       seconds: 6,
     },
     {
       index: 4,
-      visual: "Two people, two doorsteps, one handover of boxes — plain and ordinary.",
+      visual: four.visual,
       voiceover: "EarnRoom connects people who need storage with people who have space to spare.",
-      caption: "How EarnRoom works",
+      caption: four.caption,
       seconds: 7,
     },
     {

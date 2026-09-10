@@ -114,6 +114,12 @@ export type OutreachChannelSignals = {
   termsStatus: "authorised" | "pending_review" | string;
   /** Whether a genuinely transmitting adapter is registered for the channel. */
   adapterTransmits: boolean;
+  /**
+   * The precise missing dependency, in the founder's language, when this
+   * channel has no provider configured at all. Reported ahead of "switched
+   * off", because switching it on would not make it able to deliver.
+   */
+  setupNote?: string | null;
   lastError?: string | null;
 };
 
@@ -127,19 +133,28 @@ export function outreachChannelStatus(signals: OutreachChannelSignals): ChannelD
   });
 
   if (signals.emergencyStop) return out("BLOCKED_BY_POLICY", "Emergency stop is engaged.");
+  // A channel with no delivery route and no credentials is not "switched off"
+  // by choice — it is not built or not configured, and saying so is the only
+  // honest answer. Turning it on would change nothing.
+  if (signals.deliveryMode === "none") {
+    return out(
+      "CONFIGURATION_REQUIRED",
+      signals.setupNote ?? "Setup required — no provider is configured for this channel.",
+    );
+  }
+  if (signals.deliveryMode === "live" && signals.credentialState !== "verified") {
+    return out(
+      "CONFIGURATION_REQUIRED",
+      signals.setupNote ?? "Setup required — provider credentials are not configured.",
+    );
+  }
   if (!signals.enabled) return out("BLOCKED_BY_POLICY", "This channel is switched off.");
   if (signals.paused) return out("BLOCKED_BY_POLICY", "This channel is paused.");
-  if (signals.deliveryMode === "none") {
-    return out("CONFIGURATION_REQUIRED", "No delivery route has been built for this channel.");
-  }
   if (signals.termsStatus !== "authorised") {
     return out("PLATFORM_APPROVAL_REQUIRED", "Terms and lawful basis have not been signed off.");
   }
   if (signals.deliveryMode === "mock" || !signals.adapterTransmits) {
-    return out("MOCK", "Test route only — this reaches nobody outside EarnRoom.");
-  }
-  if (signals.credentialState !== "verified") {
-    return out("AUTH_REQUIRED", "Credentials for this channel have not been verified.");
+    return out("MOCK", signals.setupNote ?? "Practice only — this reaches nobody outside EarnRoom.");
   }
   if (signals.lastError) return out("FAILED", signals.lastError);
   return out("LIVE", "Authorised to deliver to real people.");

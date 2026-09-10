@@ -571,7 +571,7 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
       workers,
       request: {
         seconds,
-        resolution: tier.resolution,
+        resolution: requestResolution,
         aspect: asset.aspect,
         voice: false,
         music: true,
@@ -605,9 +605,11 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
 
     const resolution =
       execution.route === "PAID_CLOUD"
-        ? data.tier === "draft"
-          ? "360p"
-          : "720p"
+        ? paidPreset
+          ? paidPreset.resolution
+          : data.tier === "draft"
+            ? "360p"
+            : "720p"
         : tier.resolution;
     const planned = {
       route: execution.route,

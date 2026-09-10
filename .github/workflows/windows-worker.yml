@@ -57,6 +57,20 @@ jobs:
         run: >
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\earnroom-worker.iss
 
+      # Proves the real installer exists before anything is uploaded or released.
+      - name: Verify the installer was produced
+        shell: pwsh
+        run: |
+          $path = "dist\EarnRoom-Video-Worker-Setup.exe"
+          if (-not (Test-Path $path)) {
+            Write-Host "Installer not found at $path. Files produced:"
+            Get-ChildItem -Recurse -Filter *.exe | ForEach-Object { Write-Host $_.FullName }
+            exit 1
+          }
+          $file = Get-Item $path
+          Write-Host "Installer: $($file.FullName)"
+          Write-Host "Size: $([math]::Round($file.Length / 1MB, 2)) MB ($($file.Length) bytes)"
+
       - uses: actions/upload-artifact@v4
         with:
           name: EarnRoom-Video-Worker-Setup

@@ -23,7 +23,9 @@ DefaultGroupName=EarnRoom
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputBaseFilename=EarnRoom-Video-Worker-Setup
-OutputDir=dist
+; Paths here resolve against this script's own folder (worker/desktop/installer),
+; so "..\dist" puts the installer in worker/desktop/dist alongside the app build.
+OutputDir=..\dist
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

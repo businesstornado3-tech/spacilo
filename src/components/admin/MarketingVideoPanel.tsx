@@ -13,6 +13,7 @@ import * as React from "react";
 
 import { Alert } from "@/components/common/Alert";
 import { useCampaignVideos } from "@/hooks/useMarketingVideos";
+import type { MarketingVideoRow } from "@/lib/marketing-video.functions";
 import { useVideoWorkers } from "@/hooks/useVideoWorkers";
 import { buildAnimatedPlan } from "@/lib/marketing/animation";
 import { ComputerSetup } from "@/components/admin/ComputerSetup";

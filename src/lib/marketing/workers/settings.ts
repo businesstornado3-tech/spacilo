@@ -6,7 +6,6 @@
  * explicit founder action.
  */
 import { DEFAULT_SPEND_CAPS, type SpendCaps } from "./cost";
-import { DEFAULT_USAGE_LIMITS, type UsageLimits } from "../usage";
 import type { WorkerPreference } from "./types";
 
 export type WorkerPreferences = {
@@ -17,7 +16,6 @@ export type WorkerPreferences = {
   /** Emergency switches. Either one stops work immediately. */
   generationPaused: boolean;
   publishingPaused: boolean;
-  usage: UsageLimits;
   spend: SpendCaps;
 };
 
@@ -28,7 +26,6 @@ export const DEFAULT_WORKER_PREFERENCES: WorkerPreferences = {
   autonomousPublishing: false,
   generationPaused: false,
   publishingPaused: false,
-  usage: DEFAULT_USAGE_LIMITS,
   spend: DEFAULT_SPEND_CAPS,
 };
 
@@ -68,19 +65,6 @@ export function readWorkerPreferences(settings: unknown): WorkerPreferences {
     autonomousPublishing: raw["autonomousPublishing"] === true,
     generationPaused: raw["generationPaused"] === true,
     publishingPaused: raw["publishingPaused"] === true,
-    usage: {
-      maxVideosPerDay: bounded(usage["maxVideosPerDay"], DEFAULT_USAGE_LIMITS.maxVideosPerDay, 50),
-      maxVariantsPerCampaign: bounded(
-        usage["maxVariantsPerCampaign"],
-        DEFAULT_USAGE_LIMITS.maxVariantsPerCampaign,
-        20,
-      ),
-      maxRegenerationsPerAsset: bounded(
-        usage["maxRegenerationsPerAsset"],
-        DEFAULT_USAGE_LIMITS.maxRegenerationsPerAsset,
-        20,
-      ),
-    },
     spend: {
       perVideoPence: bounded(spend["perVideoPence"], DEFAULT_SPEND_CAPS.perVideoPence, 20_000),
       perDayPence: bounded(spend["perDayPence"], DEFAULT_SPEND_CAPS.perDayPence, 100_000),
@@ -101,7 +85,6 @@ export type WorkerPreferencePatch = Partial<{
   autonomousPublishing: boolean;
   generationPaused: boolean;
   publishingPaused: boolean;
-  usage: Partial<UsageLimits>;
   spend: Partial<SpendCaps>;
 }>;
 
@@ -113,7 +96,6 @@ export function applyWorkerPreferences(
   const merged = {
     ...current,
     ...patch,
-    usage: { ...current.usage, ...(patch.usage ?? {}) },
     spend: { ...current.spend, ...(patch.spend ?? {}) },
   };
   // Turning paid compute off must also drop a paid default, never leave it armed.

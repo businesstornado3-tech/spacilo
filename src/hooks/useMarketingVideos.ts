@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import * as React from "react";
 
+import type { CompositionReceipt } from "@/lib/marketing/branding/composition";
 import {
   cancelCampaignVideo,
   disconnectPlatform,

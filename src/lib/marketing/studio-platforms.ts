@@ -114,7 +114,9 @@ export function studioPlatformRows(input: {
         state: "PUBLISHED" as const,
         detail: account ? `Published to ${account}` : "Published",
         action: publication.platformUrl ? ("WATCH" as const) : ("NONE" as const),
-        actionLabel: publication.platformUrl ? `Watch on ${label}` : "Published",
+        actionLabel: publication.platformUrl ? `Open on ${label}` : "Published",
+        canPublish: false,
+        publishing: "Published",
         watchUrl: publication.platformUrl,
         reason: null,
       };
@@ -130,6 +132,8 @@ export function studioPlatformRows(input: {
             : "Not connected",
         action: platform === "youtube_shorts" ? ("NONE" as const) : ("CONNECT" as const),
         actionLabel: platform === "youtube_shorts" ? "Connect YouTube first" : "Connect",
+        canPublish: false,
+        publishing: "Account connection required",
         reason: "Account connection required.",
       };
     }
@@ -145,51 +149,39 @@ export function studioPlatformRows(input: {
       return {
         ...base,
         state: "PUBLISHING" as const,
-        detail: `Publishing to ${label}…`,
+        detail: connectedDetail,
         action: "NONE" as const,
         actionLabel: "Publishing…",
+        canPublish: false,
+        publishing: "Publishing…",
         reason: null,
       };
     }
 
+    // The account stays CONNECTED whatever the campaign is doing. Only the
+    // publishing line changes.
     const blocked = ((): string | null => {
-      if (!connection?.publishingSupported) return `${label} publishing is not available yet.`;
+      if (!connection?.publishingSupported)
+        return `Publishing unavailable — ${label} publishing setup required.`;
       if (connection?.approvalNote) return connection.approvalNote;
       if (input.publishingPaused || connection?.paused) return "Publishing is paused.";
       if (!input.campaignApproved) return "Campaign approval required.";
-      if (!input.videoReady) return "Video is not ready.";
+      if (!input.videoReady) return "Campaign video required.";
       return null;
     })();
 
-    if (blocked) {
-      return {
-        ...base,
-        state: "NOT_READY" as const,
-        detail: connectedDetail,
-        action: "NONE" as const,
-        actionLabel: "Publish",
-        reason: blocked,
-      };
-    }
-
-    if (publication && publication.state !== "PUBLISHED" && publication.state.includes("FAIL")) {
-      return {
-        ...base,
-        state: "FAILED" as const,
-        detail: connectedDetail,
-        action: "PUBLISH" as const,
-        actionLabel: "Try again",
-        reason: `${label} publishing failed. Please try again.`,
-      };
-    }
+    const failed =
+      publication && publication.state !== "PUBLISHED" && publication.state.includes("FAIL");
 
     return {
       ...base,
-      state: "READY" as const,
+      state: failed ? ("FAILED" as const) : ("CONNECTED" as const),
       detail: connectedDetail,
       action: "PUBLISH" as const,
-      actionLabel: "Publish",
-      reason: null,
+      actionLabel: failed && !blocked ? "Try again" : "Publish",
+      canPublish: !blocked,
+      publishing: blocked ?? (failed ? "Last attempt failed" : "Ready"),
+      reason: blocked ?? (failed ? `${label} publishing failed. Please try again.` : null),
     };
   });
 }

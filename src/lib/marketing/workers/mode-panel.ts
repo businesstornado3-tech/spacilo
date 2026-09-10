@@ -26,18 +26,15 @@ export type SimpleModeStatus =
   | "SETUP REQUIRED"
   | "INSTALLER NOT AVAILABLE"
   | "NOT AVAILABLE"
-  | "DISABLED"
-  | "ENABLED — READY"
-  | "ENABLED — CONFIGURATION REQUIRED"
-  | "ENABLED — TEMPORARILY UNAVAILABLE";
+  | "CONFIGURATION REQUIRED"
+  | "TEMPORARILY UNAVAILABLE";
 
 /** The single action a card offers. Nothing technical is ever exposed. */
 export type SimpleModeAction =
   | "SELECT"
   | "INSTALL"
   | "START"
-  | "ENABLE_PAID"
-  | "DISABLE_PAID"
+  | "CONNECT_FREE"
   | "NONE";
 
 export type SimpleModeCard = {
@@ -85,8 +82,8 @@ const COPY: Record<
   },
   PAID_CLOUD: {
     title: "Paid Cloud",
-    description: "Higher-quality cloud video generation, switched on by you.",
-    cost: "May incur usage charges — the estimated cost is shown before you generate",
+    description: "High-quality cloud video generation.",
+    cost: "Standard £1.20 · Highest quality £2.40 — confirmed before anything is generated",
     limitation: null,
   },
 };
@@ -244,15 +241,17 @@ export function simpleModeCards(input: {
           status: "NOT AVAILABLE",
           statusNote: FREE_CLOUD_UNAVAILABLE_MESSAGE,
           available: false,
-          action: "NONE",
-          actionLabel: "Use Free Cloud",
+          // Real capacity can be connected from this card, so the founder is
+          // never left with a permanently dead option.
+          action: "CONNECT_FREE",
+          actionLabel: "Connect Free Cloud Worker",
           blockedMessage: `Free Cloud is currently unavailable. ${FREE_CLOUD_UNAVAILABLE_MESSAGE}`,
         });
       }
       return card({
         ...shell,
-        status: selected ? "ACTIVE" : "READY",
-        statusNote: "Connected",
+        status: selected ? "ACTIVE" : "AVAILABLE",
+        statusNote: "Free cloud capacity is available.",
         available: true,
         action: "SELECT",
         actionLabel: "Use Free Cloud",
@@ -260,26 +259,17 @@ export function simpleModeCards(input: {
       });
     }
 
-    // PAID_CLOUD — a hosted provider route, never a machine to plug in.
-    if (!input.paidComputeEnabled) {
-      return card({
-        ...shell,
-        status: "DISABLED",
-        statusNote: PAID_CLOUD_DISABLED_MESSAGE,
-        available: false,
-        action: "ENABLE_PAID",
-        actionLabel: "Enable Paid Cloud",
-        blockedMessage: "Paid Cloud is disabled. Enable Paid Cloud before using this mode.",
-      });
-    }
+    // PAID_CLOUD — a hosted provider route, never a machine to plug in. There
+    // is no separate enable switch: choosing the card and confirming the cost
+    // once is the founder's whole decision.
     if (!paidConfigured) {
       return card({
         ...shell,
-        status: "ENABLED — CONFIGURATION REQUIRED",
+        status: "CONFIGURATION REQUIRED",
         statusNote: PAID_CLOUD_CONFIGURATION_MESSAGE,
         available: false,
-        action: "DISABLE_PAID",
-        actionLabel: "Disable Paid Cloud",
+        action: "NONE",
+        actionLabel: "Use Paid Cloud",
         blockedMessage: PAID_CLOUD_CONFIGURATION_MESSAGE,
       });
     }
@@ -288,23 +278,21 @@ export function simpleModeCards(input: {
     if (worker && !ready(worker)) {
       return card({
         ...shell,
-        status: "ENABLED — TEMPORARILY UNAVAILABLE",
+        status: "TEMPORARILY UNAVAILABLE",
         statusNote: "Paid Cloud is temporarily unavailable.",
         available: false,
-        action: "DISABLE_PAID",
-        actionLabel: "Disable Paid Cloud",
+        action: "NONE",
+        actionLabel: "Use Paid Cloud",
         blockedMessage: "Paid Cloud is temporarily unavailable. Choose another mode or try later.",
       });
     }
-    // Switched on and ready: the single switch is the only paid control, and
-    // pressing Generate Paid Video is the confirmation.
     return card({
       ...shell,
-      status: "ACTIVE",
-      statusNote: "Generate Paid Video starts a paid generation.",
+      status: selected ? "ACTIVE" : "AVAILABLE",
+      statusNote: "You confirm the cost once before anything is generated.",
       available: true,
-      action: "DISABLE_PAID",
-      actionLabel: "Disable Paid Cloud",
+      action: "SELECT",
+      actionLabel: "Use Paid Cloud",
       blockedMessage: null,
     });
   });

@@ -350,8 +350,15 @@ function installerPublished(): boolean {
 
 export const beginComputerSetup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { label?: string }) =>
-    z.object({ label: z.string().trim().min(2).max(80).default("My computer") }).parse(input ?? {}),
+  .inputValidator((input: { label?: string; mode?: "LOCAL" | "FREE_CLOUD" }) =>
+    z
+      .object({
+        label: z.string().trim().min(2).max(80).default("My computer"),
+        // The same real pairing journey registers either a computer of your
+        // own or a machine that provides free cloud capacity.
+        mode: z.enum(["LOCAL", "FREE_CLOUD"]).default("LOCAL"),
+      })
+      .parse(input ?? {}),
   )
   .handler(async ({ data, context }): Promise<ComputerSetupSession> => {
     const { supabase, userId } = context;
@@ -366,7 +373,7 @@ export const beginComputerSetup = createServerFn({ method: "POST" })
     const { error } = await supabase.from("marketing_video_worker_pairings").insert({
       code,
       label: data.label,
-      mode: "LOCAL",
+      mode: data.mode,
       created_by: userId,
       expires_at: expiresAt,
     });

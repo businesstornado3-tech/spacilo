@@ -33,7 +33,7 @@ import {
   type PaidQuality,
 } from "@/lib/marketing/paid-presets";
 import { definition } from "@/lib/marketing/platforms";
-import { playerBox, versionRow } from "@/lib/marketing/review";
+import { playerBox } from "@/lib/marketing/review";
 import type {
   AspectRatio,
   CampaignStory,
@@ -134,6 +134,7 @@ export function MarketingVideoPanel({
   // free choice is never promoted to a paid one.
   const [choice, setChoice] = React.useState<WorkerChoice>(null);
   const [showSetup, setShowSetup] = React.useState(false);
+  const [setupMode, setSetupMode] = React.useState<"LOCAL" | "FREE_CLOUD">("LOCAL");
   const setupRef = React.useRef<HTMLDivElement | null>(null);
 
   const browser = workers.browser;
@@ -175,11 +176,6 @@ export function MarketingVideoPanel({
     estimatedPence,
   });
   const blocked = selection.ok ? null : selection.message;
-  const dailyLimit = snapshot?.preferences.usage.maxVideosPerDay ?? null;
-  const [limitDraft, setLimitDraft] = React.useState<string>("");
-  React.useEffect(() => {
-    if (dailyLimit !== null) setLimitDraft(String(dailyLimit));
-  }, [dailyLimit]);
 
   /**
    * The paid route, start to finish, in one place: choose Standard or Highest
@@ -219,18 +215,6 @@ export function MarketingVideoPanel({
       setNotice(error instanceof Error ? error.message : "The paid video could not be started.");
       setStage(null);
     }
-  };
-
-  const saveDailyLimit = () => {
-    const value = Number(limitDraft);
-    if (!Number.isFinite(value) || value < 1 || value > 50) {
-      setNotice("Choose a daily video limit between 1 and 50.");
-      return;
-    }
-    workers.preferences
-      .mutateAsync({ usage: { maxVideosPerDay: Math.round(value) } })
-      .then(() => setNotice(`Daily video limit is now ${Math.round(value)} videos a day.`))
-      .catch((error: Error) => setNotice(error.message));
   };
 
   // Pick the first available free mode once, so the page is usable straight
@@ -435,8 +419,7 @@ export function MarketingVideoPanel({
       <div>
         <h4 className="type-h5">Video generation mode</h4>
         <p className="mt-1 type-body-sm text-muted-foreground">
-          Choose how this video is made. Paid Cloud stays switched off until you enable it here —
-          that one switch is the only place it is turned on or off.
+          Choose how the video is made. You pick one mode, then press Generate Video.
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {modeCards.map((card) => (
@@ -488,6 +471,7 @@ export function MarketingVideoPanel({
                   <button
                     type="button"
                     onClick={() => {
+                      setSetupMode("LOCAL");
                       setShowSetup(true);
                       // Otherwise the panel opens below the fold and the
                       // button looks like it did nothing.
@@ -497,6 +481,22 @@ export function MarketingVideoPanel({
                       );
                     }}
                     className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground hover:opacity-90"
+                  >
+                    {card.actionLabel}
+                  </button>
+                ) : null}
+                {card.action === "CONNECT_FREE" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSetupMode("FREE_CLOUD");
+                      setShowSetup(true);
+                      window.setTimeout(
+                        () => setupRef.current?.scrollIntoView({ block: "center" }),
+                        0,
+                      );
+                    }}
+                    className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary"
                   >
                     {card.actionLabel}
                   </button>
@@ -511,83 +511,37 @@ export function MarketingVideoPanel({
                   </button>
                 ) : null}
               </div>
-              {card.mode === "PAID_CLOUD" ? (
+              {card.mode === "PAID_CLOUD" && card.available ? (
                 <div className="mt-3 space-y-2 border-t border-border pt-3">
-                  {snapshot?.paidProviderConfigured !== true ? (
-                    <p className="type-body-xs text-muted-foreground">
-                      The paid video service is not configured, so no paid video can be made.
-                    </p>
-                  ) : snapshot.preferences.generationPaused ? (
-                    <p className="type-body-xs text-warning-soft-foreground">
-                      Video generation is paused, so no paid video can be made.
-                    </p>
-                  ) : (
-                    <>
-                      {(["STANDARD", "HIGHEST"] as const).map((quality) => (
-                        <label
-                          key={quality}
-                          className={cn(
-                            "flex cursor-pointer gap-2 rounded-lg border p-2",
-                            paidQuality === quality ? "border-primary" : "border-border",
-                          )}
-                        >
-                          <input
-                            type="radio"
-                            name="paid-quality"
-                            className="mt-1"
-                            checked={paidQuality === quality}
-                            onChange={() => {
-                              setPaidQuality(quality);
-                              setConfirmingPaid(false);
-                            }}
-                          />
-                          <span>
-                            <span className="block type-body-xs font-semibold">
-                              {PAID_PRESETS[quality].title}
-                            </span>
-                            <span className="block type-body-xs text-muted-foreground">
-                              {PAID_PRESETS[quality].description}
-                            </span>
-                            <span className="block type-body-xs text-muted-foreground">
-                              {paidPresetSpecLine(quality)} · {paidPresetCostLine(quality)}
-                            </span>
-                          </span>
-                        </label>
-                      ))}
-                      <p className="type-body-xs font-medium">{paidPresetCostLine(paidQuality)}</p>
-                      {confirmingPaid ? (
-                        <div className="rounded-lg border border-border p-2">
-                          <p className="type-body-xs">{paidConfirmationMessage(paidQuality)}</p>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              disabled={working}
-                              onClick={() => void startPaid(paidQuality)}
-                              className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
-                            >
-                              Confirm and generate
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setConfirmingPaid(false)}
-                              className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={!core || working}
-                          onClick={() => setConfirmingPaid(true)}
-                          className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
-                        >
-                          Generate {PAID_PRESETS[paidQuality].title.toLowerCase()} video
-                        </button>
+                  {(["STANDARD", "HIGHEST"] as const).map((quality) => (
+                    <label
+                      key={quality}
+                      className={cn(
+                        "flex cursor-pointer gap-2 rounded-lg border p-2",
+                        paidQuality === quality ? "border-primary" : "border-border",
                       )}
-                    </>
-                  )}
+                    >
+                      <input
+                        type="radio"
+                        name="paid-quality"
+                        className="mt-1"
+                        checked={paidQuality === quality}
+                        onChange={() => {
+                          setPaidQuality(quality);
+                          setChoice("PAID_CLOUD");
+                          setConfirmingPaid(false);
+                        }}
+                      />
+                      <span>
+                        <span className="block type-body-xs font-semibold">
+                          {PAID_PRESETS[quality].title}
+                        </span>
+                        <span className="block type-body-xs text-muted-foreground">
+                          {paidPresetSpecLine(quality)} · {paidPresetCostLine(quality)}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
                 </div>
               ) : null}
               {card.blockedMessage ? (
@@ -600,7 +554,7 @@ export function MarketingVideoPanel({
         </div>
         {showSetup ? (
           <div ref={setupRef} className="mt-3 rounded-xl border border-border p-3">
-            <ComputerSetup onConnected={() => void workers.query.refetch()} />
+            <ComputerSetup mode={setupMode} onConnected={() => void workers.query.refetch()} />
           </div>
         ) : null}
       </div>
@@ -717,34 +671,6 @@ export function MarketingVideoPanel({
           </p>
         </div>
 
-        {/* The daily limit is a real safety control, so it is raised here
-            rather than on some other settings page. */}
-        <div className="mt-3 flex flex-wrap items-end gap-2 rounded-lg border border-border px-3 py-2">
-          <label className="type-body-xs text-muted-foreground" htmlFor="daily-video-limit">
-            Daily video limit
-            <input
-              id="daily-video-limit"
-              type="number"
-              min={1}
-              max={50}
-              value={limitDraft}
-              onChange={(event) => setLimitDraft(event.target.value)}
-              className="mt-1 block h-9 w-24 rounded-lg border border-border bg-background px-2 type-body-sm"
-            />
-          </label>
-          <button
-            type="button"
-            disabled={workers.preferences.isPending || limitDraft === String(dailyLimit ?? "")}
-            onClick={saveDailyLimit}
-            className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary disabled:opacity-60"
-          >
-            Save limit
-          </button>
-          <p className="type-body-xs text-muted-foreground">
-            Videos a day, across all campaigns. Paid Cloud does not raise this limit.
-          </p>
-        </div>
-
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
@@ -785,63 +711,6 @@ export function MarketingVideoPanel({
         </div>
       </div>
 
-      {versions.length > 0 ? (
-        <div className="rounded-xl border border-border p-4">
-          <h4 className="type-h5">Platform versions</h4>
-          <p className="mt-1 type-body-sm text-muted-foreground">
-            Each platform gets its own shape and length, made from the same campaign video.
-          </p>
-          <ul className="mt-3 grid gap-3 sm:grid-cols-2">
-            {versions.map((asset) => {
-              const video = rows.find((row) => row.assetId === asset.id) ?? null;
-              // The stored file is the only thing that can prove a version
-              // exists, so the row is built from it — never from the plan.
-              const row = versionRow(
-                {
-                  ...asset,
-                  videoUrl: video?.playbackUrl ?? null,
-                  videoStatus:
-                    video?.status === "GENERATING"
-                      ? "GENERATING"
-                      : video?.playbackUrl
-                        ? "GENERATED"
-                        : video
-                          ? "FAILED"
-                          : "NOT_REQUESTED",
-                },
-                definition(asset.platform).label,
-              );
-              return (
-                <li key={asset.id} className="rounded-xl border border-border p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="type-body-sm font-semibold">{row.label}</span>
-                    <span className="type-body-xs text-muted-foreground">{row.meta}</span>
-                  </div>
-                  <p
-                    className={cn(
-                      "mt-1 type-body-xs font-medium",
-                      row.tone === "good"
-                        ? "text-success-soft-foreground"
-                        : row.tone === "bad"
-                          ? "text-destructive"
-                          : "text-warning-soft-foreground",
-                    )}
-                  >
-                    {row.status}
-                  </p>
-                  {row.hasVideo && video?.playbackUrl ? (
-                    <CompactPlayer aspect={asset.aspect} src={video.playbackUrl} className="mt-2" />
-                  ) : (
-                    <p className="mt-1 type-body-xs text-muted-foreground">
-                      {video ? statusLabel(video.status) : row.detail}
-                    </p>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ) : null}
     </div>
   );
 }

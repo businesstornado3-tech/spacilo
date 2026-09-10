@@ -31,7 +31,14 @@ import {
 } from "@/lib/marketing/workers";
 import { cn } from "@/lib/utils";
 
-export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
+export function ComputerSetup({
+  onConnected,
+  mode = "LOCAL",
+}: {
+  onConnected?: () => void;
+  /** Register this machine as your own computer, or as free cloud capacity. */
+  mode?: "LOCAL" | "FREE_CLOUD";
+}) {
   const queryClient = useQueryClient();
   const begin = useServerFn(beginComputerSetup);
   const status = useServerFn(getComputerSetupStatus);
@@ -39,7 +46,7 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
   const [session, setSession] = React.useState<ComputerSetupSession | null>(null);
   const [downloadStarted, setDownloadStarted] = React.useState(false);
   const [problem, setProblem] = React.useState<string | null>(null);
-  const [label, setLabel] = React.useState("My computer");
+  const [label, setLabel] = React.useState(mode === "FREE_CLOUD" ? "Free cloud machine" : "My computer");
   // True when the founder says this machine already runs the worker, so we
   // pair the running worker instead of downloading anything again.
   const [alreadyInstalled, setAlreadyInstalled] = React.useState(false);
@@ -94,7 +101,7 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
 
   const start = useMutation({
     mutationFn: (installed: boolean) =>
-      begin({ data: { label: label.trim() || "My computer" } }).then((created) => ({
+      begin({ data: { label: label.trim() || "My computer", mode } }).then((created) => ({
         created,
         installed,
       })),
@@ -152,7 +159,9 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
     <div className="mt-3 rounded-lg border border-border bg-secondary/40 p-3">
       {!session ? (
         <>
-          <p className="type-body-sm font-semibold">Connect a Windows computer</p>
+          <p className="type-body-sm font-semibold">
+            {mode === "FREE_CLOUD" ? "Connect free cloud capacity" : "Connect a Windows computer"}
+          </p>
           <p className="mt-1 type-body-xs text-muted-foreground">
             EarnRoom downloads its Windows video worker, you open it once, and the computer connects
             itself. Nothing to copy, and no password or code to handle.

@@ -149,3 +149,107 @@ describe("connection versus publishing capability", () => {
     }
   });
 });
+
+describe("YouTube upload path", () => {
+  it("uploads with the requested visibility and only confirms with a real video id", async () => {
+    const { adapterFor } = await import("@/lib/marketing/adapters");
+    const { defaultMarketingSettings } = await import("@/lib/marketing/platforms");
+    const seen: { body: unknown; url: string }[] = [];
+    const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      seen.push({ url, body: init?.body ?? null });
+      if (url.includes("uploadType=resumable")) {
+        return new Response("{}", {
+          status: 200,
+          headers: { location: "https://upload.test/session" },
+        });
+      }
+      if (url === "https://upload.test/session") {
+        return new Response(JSON.stringify({ id: "VID123" }), { status: 200 });
+      }
+      return new Response(new Uint8Array([1, 2, 3]), { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const settings = defaultMarketingSettings();
+    const adapter = adapterFor("youtube_shorts", {
+      connection: {
+        platform: "youtube_shorts",
+        connection: "CONNECTED",
+        scopes: [],
+        expiresAt: null,
+        lastError: null,
+      },
+      accessToken: "token",
+      accountId: "UC123",
+      settings,
+      connections: [
+        {
+          platform: "youtube_shorts",
+          connection: "CONNECTED",
+          scopes: [],
+          expiresAt: null,
+          lastError: null,
+        },
+      ],
+      now: 1,
+      fetchImpl,
+      youtubePrivacy: "public",
+    });
+
+    const asset = {
+      id: "a1",
+      platform: "youtube_shorts",
+      aspect: "9:16",
+      hook: "",
+      title: "EarnRoom",
+      description: "Make space earn.",
+      caption: "",
+      hashtags: [],
+      cta: "",
+      seconds: 10,
+      state: "QUEUED",
+      videoUrl: "https://media.test/final-branded.mp4",
+      thumbnailUrl: null,
+    } as never;
+
+    const result = await adapter.publish(asset, { id: "c1", assets: [] } as never);
+    expect(result.ok).toBe(true);
+    const start = seen.find((entry) => entry.url.includes("uploadType=resumable"));
+    expect(String(start?.body)).toContain('"privacyStatus":"public"');
+    if (result.ok) expect(result.platformPostId).toBe("VID123");
+  });
+
+  it("never confirms a publication when YouTube returns no video id", async () => {
+    const { publishYoutubeVideo } = await import("@/lib/marketing/youtube");
+    const fetchImpl = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("uploadType=resumable")) {
+        return new Response("{}", { status: 200, headers: { location: "https://upload.test/s" } });
+      }
+      if (url === "https://upload.test/s") return new Response("{}", { status: 200 });
+      return new Response(new Uint8Array([1]), { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const result = await publishYoutubeVideo({
+      fetchImpl,
+      accessToken: "t",
+      videoUrl: "https://media.test/f.mp4",
+      title: "t",
+      description: "d",
+      tags: [],
+      privacyStatus: "unlisted",
+      now: 1,
+    });
+    expect(result.ok).toBe(false);
+  });
+
+  it("reads the real visibility back from YouTube rather than trusting the request", async () => {
+    const { fetchYoutubeVideoStatus } = await import("@/lib/marketing/youtube");
+    const fetchImpl = (async () =>
+      new Response(JSON.stringify({ items: [{ status: { privacyStatus: "private" } }] }), {
+        status: 200,
+      })) as unknown as typeof fetch;
+    const status = await fetchYoutubeVideoStatus(fetchImpl, "t", "VID123");
+    expect(status.privacyStatus).toBe("private");
+  });
+});

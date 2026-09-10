@@ -82,8 +82,8 @@ const COPY: Record<
   },
   PAID_CLOUD: {
     title: "Paid Cloud",
-    description: "Higher-quality cloud video generation, switched on by you.",
-    cost: "May incur usage charges — the estimated cost is shown before you generate",
+    description: "High-quality cloud video generation.",
+    cost: "Standard £1.20 · Highest quality £2.40 — confirmed before anything is generated",
     limitation: null,
   },
 };

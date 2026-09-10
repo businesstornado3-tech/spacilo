@@ -114,7 +114,7 @@ export function studioPlatformRows(input: {
         state: "PUBLISHED" as const,
         detail: account ? `Published to ${account}` : "Published",
         action: publication.platformUrl ? ("WATCH" as const) : ("NONE" as const),
-        actionLabel: publication.platformUrl ? `Open on ${label}` : "Published",
+        actionLabel: publication.platformUrl ? `Watch on ${label}` : "Published",
         canPublish: false,
         publishing: "Published",
         watchUrl: publication.platformUrl,

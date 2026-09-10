@@ -52,18 +52,18 @@ describe("simple video generation modes", () => {
     ]);
   });
 
-  it("makes Browser Preview selectable in one click and marks it ACTIVE once chosen", () => {
+  it("makes Browser selectable in one click and marks it ACTIVE once chosen", () => {
     const card = find(cards(), "BROWSER");
     expect(card.available).toBe(true);
-    expect(card.actionLabel).toBe("Use Browser Preview");
+    expect(card.actionLabel).toBe("Use Browser");
     expect(find(cards({ selected: "BROWSER" }), "BROWSER").status).toBe("ACTIVE");
   });
 
-  it("describes Browser Mode honestly as a free preview, not production video", () => {
+  it("describes Browser honestly as a free branded animation", () => {
     const card = find(cards(), "BROWSER");
-    expect(card.title).toBe("Browser Preview");
+    expect(card.title).toBe("Browser");
     expect(card.costLine).toBe("£0");
-    expect(card.limitation).toBe("Not intended for publication-quality cinematic video.");
+    expect(card.limitation).toBe("Animated EarnRoom film, not AI-generated live-action footage.");
     const words = `${card.title} ${card.description} ${card.limitation}`.toLowerCase();
     for (const banned of ["cinematic AI", "photorealistic", "production-quality", "high-quality"]) {
       expect(words).not.toContain(banned.toLowerCase());
@@ -205,11 +205,11 @@ describe("simple video generation modes", () => {
     expect(find(list, "PAID_CLOUD").selected).toBe(false);
   });
 
-  it("labels the generate button after the chosen mode", () => {
-    expect(generateButtonLabel("BROWSER")).toBe("Generate Preview");
-    expect(generateButtonLabel("LOCAL")).toBe("Generate with Computer");
-    expect(generateButtonLabel("FREE_CLOUD")).toBe("Generate with Free Cloud");
-    expect(generateButtonLabel("PAID_CLOUD")).toBe("Generate Paid Video");
+  it("uses one Generate Video button for every mode", () => {
+    expect(generateButtonLabel("BROWSER")).toBe("Generate Video");
+    expect(generateButtonLabel("LOCAL")).toBe("Generate Video");
+    expect(generateButtonLabel("FREE_CLOUD")).toBe("Generate Video");
+    expect(generateButtonLabel("PAID_CLOUD")).toBe("Generate Video");
   });
 
   it("shows the estimated cost in pounds, or says it is not known", () => {
@@ -224,7 +224,7 @@ describe("simple video generation modes", () => {
       selected: "BROWSER",
       paidComputeEnabled: false,
     });
-    expect(free.modeLine).toBe("Selected generation mode: Browser Preview");
+    expect(free.modeLine).toBe("Selected generation mode: Browser");
     expect(free.costLine).toBe("Cost: £0");
 
     const paid = generationSummary({

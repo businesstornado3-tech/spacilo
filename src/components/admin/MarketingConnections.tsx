@@ -170,6 +170,10 @@ export function MarketingConnections() {
                 />
               ) : null}
 
+              {platform.platform === "youtube" ? (
+                <YoutubeDestinationCard connected={connected} />
+              ) : null}
+
               {manage === platform.platform ? (
                 <div className="mt-3 space-y-2 rounded-lg border border-border bg-secondary/40 p-3">
                   <label className="flex items-center gap-2 type-body-sm">

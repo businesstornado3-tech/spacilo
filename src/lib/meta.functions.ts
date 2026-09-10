@@ -57,7 +57,7 @@ type MetaTokens = {
  * Reads the stored Meta authorisation. Either the Facebook or the Instagram
  * connection row may hold it — they are the same Meta sign-in.
  */
-async function readMetaTokens(): Promise<MetaTokens> {
+export async function readMetaTokens(): Promise<MetaTokens> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { decryptToken } = await import("@/lib/marketing/token-crypto.server");
   const { data: rows } = await (supabaseAdmin as any)
@@ -100,7 +100,7 @@ async function readMetaTokens(): Promise<MetaTokens> {
  * token stored under the `instagram` platform row; it is unrelated to the
  * Facebook Page token and is never returned to the browser.
  */
-async function readInstagramToken(): Promise<{ token: string | null; detail: string }> {
+export async function readInstagramToken(): Promise<{ token: string | null; detail: string }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { decryptToken } = await import("@/lib/marketing/token-crypto.server");
   const { data: row } = await (supabaseAdmin as any)

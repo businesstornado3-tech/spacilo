@@ -277,8 +277,8 @@ export function simpleModeCards(input: {
         status: "ENABLED — CONFIGURATION REQUIRED",
         statusNote: PAID_CLOUD_CONFIGURATION_MESSAGE,
         available: false,
-        action: "NONE",
-        actionLabel: "Use Paid Cloud",
+        action: "DISABLE_PAID",
+        actionLabel: "Disable Paid Cloud",
         blockedMessage: PAID_CLOUD_CONFIGURATION_MESSAGE,
       });
     }
@@ -290,18 +290,20 @@ export function simpleModeCards(input: {
         status: "ENABLED — TEMPORARILY UNAVAILABLE",
         statusNote: "Paid Cloud is temporarily unavailable.",
         available: false,
-        action: "NONE",
-        actionLabel: "Use Paid Cloud",
+        action: "DISABLE_PAID",
+        actionLabel: "Disable Paid Cloud",
         blockedMessage: "Paid Cloud is temporarily unavailable. Choose another mode or try later.",
       });
     }
+    // Switched on and ready: the single switch is the only paid control, and
+    // pressing Generate Paid Video is the confirmation.
     return card({
       ...shell,
-      status: selected ? "ACTIVE" : "ENABLED — READY",
-      statusNote: "Every paid video is still confirmed on its own.",
+      status: "ACTIVE",
+      statusNote: "Generate Paid Video starts a paid generation.",
       available: true,
-      action: "SELECT",
-      actionLabel: "Use Paid Cloud",
+      action: "DISABLE_PAID",
+      actionLabel: "Disable Paid Cloud",
       blockedMessage: null,
     });
   });

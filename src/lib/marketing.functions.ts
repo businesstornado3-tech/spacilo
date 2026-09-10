@@ -30,6 +30,7 @@ import type {
 import type { ContentHistoryEntry } from "@/lib/marketing/coverage";
 import type { PlatformConnectionRecord } from "@/lib/marketing/platforms";
 import type { GrowthOpportunitySummary } from "@/lib/marketing/market-intelligence";
+import { runtimeFetch } from "@/lib/marketing/runtime-fetch";
 
 const DAY = 86_400_000;
 
@@ -467,7 +468,7 @@ export const publishMarketingCampaign = createServerFn({ method: "POST" })
           settings,
           connections,
           now,
-          fetchImpl: fetch,
+          fetchImpl: runtimeFetch,
         });
       };
 

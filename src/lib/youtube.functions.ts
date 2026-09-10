@@ -19,6 +19,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { YoutubeChannel } from "@/lib/marketing/youtube";
+import { runtimeFetch } from "@/lib/marketing/runtime-fetch";
 
 export type YoutubeDestinationState = {
   /** Whether a stored YouTube authorisation exists at all. */
@@ -80,7 +81,7 @@ export const listYoutubeChannels = createServerFn({ method: "POST" })
 
       const { token, detail } = await youtubeAccessToken();
       if (!token) return { ok: false, detail, channels: [] };
-      return fetchYoutubeChannels(fetch, token);
+      return fetchYoutubeChannels(runtimeFetch, token);
     },
   );
 
@@ -106,7 +107,7 @@ export const selectYoutubeChannel = createServerFn({ method: "POST" })
 
       // The channel is confirmed against YouTube itself, so a destination can
       // never be stored for a channel the authorisation does not own.
-      const result = await fetchYoutubeChannels(fetch, token);
+      const result = await fetchYoutubeChannels(runtimeFetch, token);
       const channel = result.channels.find((entry) => entry.id === data.channelId);
       if (!channel) {
         return {

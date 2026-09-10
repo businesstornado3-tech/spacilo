@@ -198,6 +198,9 @@ export function defaultMarketingSettings(): MarketingSettings {
   return {
     dailyCampaignTarget: 1,
     maxDailyPublications: 4,
+    maxDailyAutonomousPublications: 5,
+    // Nothing is ever approved unattended until the founder turns this on.
+    autoApprove: false,
     // Nothing publishes unattended until the founder deliberately changes this.
     globalMode: "APPROVAL_REQUIRED",
     platformModes: {},

@@ -73,9 +73,6 @@ export type ValidationInput = {
   assets: readonly PlatformAsset[];
   history: readonly ContentHistoryEntry[];
   now: number;
-  /** Publications already made today, for frequency validation. */
-  publishedToday: number;
-  maxDailyPublications: number;
 };
 
 function text(input: ValidationInput): string {
@@ -159,15 +156,6 @@ export function validateContent(input: ValidationInput): ValidationReport {
     detail: duplication.blocked
       ? (duplication.reasons[0] ?? "Near-duplicate of recent content.")
       : `Duplication risk ${duplication.risk}.`,
-  });
-
-  const withinFrequency = input.publishedToday < input.maxDailyPublications;
-  checks.push({
-    id: "frequency",
-    passed: withinFrequency,
-    detail: withinFrequency
-      ? `${input.publishedToday}/${input.maxDailyPublications} publications used today.`
-      : "Daily publication limit reached.",
   });
 
   const everyAssetHasCta = input.assets.every((asset) => asset.cta.trim().length > 0);

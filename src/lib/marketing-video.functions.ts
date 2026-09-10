@@ -107,6 +107,8 @@ async function rowToVideo(supabase: any, row: any): Promise<MarketingVideoRow> {
     seed: row.seed ?? null,
     storagePath: row.storage_path ?? null,
     playbackUrl,
+    rawPlaybackUrl,
+    brandingPlan: (settings["brandingPlan"] ?? null) as BrandCompositionPlan | null,
     brandValidation: (row.brand_validation ?? null) as BrandValidationReport | null,
     mediaProbe: (row.media_probe ?? null) as MediaProbe | null,
     failureReason: row.failure_reason ?? null,

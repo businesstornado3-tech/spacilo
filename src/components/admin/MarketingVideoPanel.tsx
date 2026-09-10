@@ -134,6 +134,7 @@ export function MarketingVideoPanel({
   // free choice is never promoted to a paid one.
   const [choice, setChoice] = React.useState<WorkerChoice>(null);
   const [showSetup, setShowSetup] = React.useState(false);
+  const [setupMode, setSetupMode] = React.useState<"LOCAL" | "FREE_CLOUD">("LOCAL");
   const setupRef = React.useRef<HTMLDivElement | null>(null);
 
   const browser = workers.browser;
@@ -418,8 +419,7 @@ export function MarketingVideoPanel({
       <div>
         <h4 className="type-h5">Video generation mode</h4>
         <p className="mt-1 type-body-sm text-muted-foreground">
-          Choose how this video is made. Paid Cloud stays switched off until you enable it here —
-          that one switch is the only place it is turned on or off.
+          Choose how the video is made. You pick one mode, then press Generate Video.
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {modeCards.map((card) => (
@@ -471,6 +471,7 @@ export function MarketingVideoPanel({
                   <button
                     type="button"
                     onClick={() => {
+                      setSetupMode("LOCAL");
                       setShowSetup(true);
                       // Otherwise the panel opens below the fold and the
                       // button looks like it did nothing.
@@ -480,6 +481,22 @@ export function MarketingVideoPanel({
                       );
                     }}
                     className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground hover:opacity-90"
+                  >
+                    {card.actionLabel}
+                  </button>
+                ) : null}
+                {card.action === "CONNECT_FREE" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSetupMode("FREE_CLOUD");
+                      setShowSetup(true);
+                      window.setTimeout(
+                        () => setupRef.current?.scrollIntoView({ block: "center" }),
+                        0,
+                      );
+                    }}
+                    className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary"
                   >
                     {card.actionLabel}
                   </button>
@@ -494,83 +511,37 @@ export function MarketingVideoPanel({
                   </button>
                 ) : null}
               </div>
-              {card.mode === "PAID_CLOUD" ? (
+              {card.mode === "PAID_CLOUD" && card.available ? (
                 <div className="mt-3 space-y-2 border-t border-border pt-3">
-                  {snapshot?.paidProviderConfigured !== true ? (
-                    <p className="type-body-xs text-muted-foreground">
-                      The paid video service is not configured, so no paid video can be made.
-                    </p>
-                  ) : snapshot.preferences.generationPaused ? (
-                    <p className="type-body-xs text-warning-soft-foreground">
-                      Video generation is paused, so no paid video can be made.
-                    </p>
-                  ) : (
-                    <>
-                      {(["STANDARD", "HIGHEST"] as const).map((quality) => (
-                        <label
-                          key={quality}
-                          className={cn(
-                            "flex cursor-pointer gap-2 rounded-lg border p-2",
-                            paidQuality === quality ? "border-primary" : "border-border",
-                          )}
-                        >
-                          <input
-                            type="radio"
-                            name="paid-quality"
-                            className="mt-1"
-                            checked={paidQuality === quality}
-                            onChange={() => {
-                              setPaidQuality(quality);
-                              setConfirmingPaid(false);
-                            }}
-                          />
-                          <span>
-                            <span className="block type-body-xs font-semibold">
-                              {PAID_PRESETS[quality].title}
-                            </span>
-                            <span className="block type-body-xs text-muted-foreground">
-                              {PAID_PRESETS[quality].description}
-                            </span>
-                            <span className="block type-body-xs text-muted-foreground">
-                              {paidPresetSpecLine(quality)} · {paidPresetCostLine(quality)}
-                            </span>
-                          </span>
-                        </label>
-                      ))}
-                      <p className="type-body-xs font-medium">{paidPresetCostLine(paidQuality)}</p>
-                      {confirmingPaid ? (
-                        <div className="rounded-lg border border-border p-2">
-                          <p className="type-body-xs">{paidConfirmationMessage(paidQuality)}</p>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              disabled={working}
-                              onClick={() => void startPaid(paidQuality)}
-                              className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
-                            >
-                              Confirm and generate
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setConfirmingPaid(false)}
-                              className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={!core || working}
-                          onClick={() => setConfirmingPaid(true)}
-                          className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
-                        >
-                          Generate {PAID_PRESETS[paidQuality].title.toLowerCase()} video
-                        </button>
+                  {(["STANDARD", "HIGHEST"] as const).map((quality) => (
+                    <label
+                      key={quality}
+                      className={cn(
+                        "flex cursor-pointer gap-2 rounded-lg border p-2",
+                        paidQuality === quality ? "border-primary" : "border-border",
                       )}
-                    </>
-                  )}
+                    >
+                      <input
+                        type="radio"
+                        name="paid-quality"
+                        className="mt-1"
+                        checked={paidQuality === quality}
+                        onChange={() => {
+                          setPaidQuality(quality);
+                          setChoice("PAID_CLOUD");
+                          setConfirmingPaid(false);
+                        }}
+                      />
+                      <span>
+                        <span className="block type-body-xs font-semibold">
+                          {PAID_PRESETS[quality].title}
+                        </span>
+                        <span className="block type-body-xs text-muted-foreground">
+                          {paidPresetSpecLine(quality)} · {paidPresetCostLine(quality)}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
                 </div>
               ) : null}
               {card.blockedMessage ? (
@@ -583,7 +554,7 @@ export function MarketingVideoPanel({
         </div>
         {showSetup ? (
           <div ref={setupRef} className="mt-3 rounded-xl border border-border p-3">
-            <ComputerSetup onConnected={() => void workers.query.refetch()} />
+            <ComputerSetup mode={setupMode} onConnected={() => void workers.query.refetch()} />
           </div>
         ) : null}
       </div>

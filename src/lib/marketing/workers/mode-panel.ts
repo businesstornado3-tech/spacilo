@@ -360,7 +360,7 @@ export function generationSummary(input: {
     };
   }
   return {
-    modeLine: `Generation mode: ${chosen.title}`,
+    modeLine: `Selected generation mode: ${chosen.title}`,
     paidLine: null,
     costLine: "Cost protection: £0",
   };

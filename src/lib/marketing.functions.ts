@@ -308,15 +308,6 @@ export const planMarketingCampaign = createServerFn({ method: "POST" })
       history,
       insights,
       existingIds,
-      // The daily limit is about how much EarnRoom actually PUBLISHES today,
-      // not how many campaigns were drafted. Counting drafts made every extra
-      // campaign fail its own safety check once four had been written.
-      publishedToday: history.filter(
-        (entry) =>
-          entry.publishedAt !== null &&
-          new Date(entry.publishedAt).toISOString().slice(0, 10) ===
-            new Date(now).toISOString().slice(0, 10),
-      ).length,
       ...(data.forceOpportunityKey ? { forceOpportunityKey: data.forceOpportunityKey } : {}),
     });
 
@@ -406,18 +397,19 @@ export const decideMarketingCampaign = createServerFn({ method: "POST" })
  * Attempts publication for each queued asset. With no platform connected this
  * records an honest AUTH_REQUIRED state — it never fabricates a published post.
  */
-export const publishMarketingCampaign = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
-    z.object({ campaignId: z.string().min(3).max(64) }).parse(data),
-  )
-  .handler(
-    async ({
-      data,
-      context,
-    }): Promise<{ results: { platform: string; state: string; detail: string }[] }> => {
-      const supabase = context.supabase as any;
-      await assertAdmin(supabase);
+type PublishOutcome = { results: { platform: string; state: string; detail: string }[] };
+
+/**
+ * The one publishing routine. Manual publishing and autonomous publishing both
+ * run through it, so a campaign is only ever PUBLISHED when a platform itself
+ * confirms the post.
+ */
+async function publishCampaignAssets(
+  supabase: any,
+  userId: string,
+  data: { campaignId: string },
+): Promise<PublishOutcome> {
+    {
       const now = Date.now();
       const { attemptPublish, unconfiguredAdapter, adapterFor } = await import("@/lib/marketing");
       // Stored authorisations live in a table only the server can read, and
@@ -567,7 +559,7 @@ export const publishMarketingCampaign = createServerFn({ method: "POST" })
           action: attempt.record.state === "PUBLISHED" ? "published" : "publication_blocked",
           detail: attemptDetail(attempt),
           actor: "engine",
-          actor_id: context.userId,
+          actor_id: userId,
         });
 
         results.push({
@@ -587,13 +579,26 @@ export const publishMarketingCampaign = createServerFn({ method: "POST" })
       }
 
       return { results };
-    },
-  );
+    }
+}
+
+export const publishMarketingCampaign = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ campaignId: z.string().min(3).max(64) }).parse(data),
+  )
+  .handler(async ({ data, context }): Promise<PublishOutcome> => {
+    const supabase = context.supabase as any;
+    await assertAdmin(supabase);
+    return publishCampaignAssets(supabase, context.userId, data);
+  });
 
 const settingsSchema = z.object({
   globalMode: z.enum(["DRAFT", "APPROVAL_REQUIRED", "AUTONOMOUS"]).optional(),
   pauseAllPublishing: z.boolean().optional(),
   maxDailyPublications: z.number().int().min(0).max(20).optional(),
+  maxDailyAutonomousPublications: z.number().int().min(1).max(500).optional(),
+  autoApprove: z.boolean().optional(),
   pausedPlatforms: z.array(z.string().max(40)).max(20).optional(),
 });
 
@@ -613,7 +618,7 @@ export const updateMarketingSettings = createServerFn({ method: "POST" })
 
     await supabase.from("marketing_audit").insert({
       action: "settings_updated",
-      detail: `Mode ${next.globalMode}; publishing ${next.pauseAllPublishing ? "paused" : "active"}; max ${next.maxDailyPublications}/day.`,
+      detail: `Mode ${next.globalMode}; publishing ${next.pauseAllPublishing ? "paused" : "active"}; auto-approve ${next.autoApprove ? "on" : "off"}; autonomous limit ${next.maxDailyAutonomousPublications}/day.`,
       actor: "human",
       actor_id: context.userId,
     });

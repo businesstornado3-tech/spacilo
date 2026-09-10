@@ -124,6 +124,7 @@ export function MarketingVideoPanel({
   // free choice is never promoted to a paid one.
   const [choice, setChoice] = React.useState<WorkerChoice>(null);
   const [showSetup, setShowSetup] = React.useState(false);
+  const setupRef = React.useRef<HTMLDivElement | null>(null);
 
   const browser = workers.browser;
   const snapshot = workers.query.data;

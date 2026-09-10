@@ -65,20 +65,21 @@ const COPY: Record<
   { title: string; description: string; cost: string; limitation: string | null }
 > = {
   BROWSER: {
-    title: "Browser Preview",
-    description: "Free browser-based preview generation. Best for testing campaigns and layouts.",
+    title: "Browser",
+    description:
+      "Generate directly in your browser. Branded EarnRoom animation, made at no cost.",
     cost: "£0",
-    limitation: "Not intended for publication-quality cinematic video.",
+    limitation: "Animated EarnRoom film, not AI-generated live-action footage.",
   },
   LOCAL: {
-    title: "Computer Mode",
-    description: "Make videos on your own computer with the EarnRoom Video Worker.",
+    title: "Computer",
+    description: "Generate using your computer with the EarnRoom Video Worker.",
     cost: "£0",
     limitation: null,
   },
   FREE_CLOUD: {
     title: "Free Cloud",
-    description: "Make videos using a connected free cloud worker.",
+    description: "Generate using available free cloud capacity.",
     cost: "£0",
     limitation: null,
   },
@@ -91,7 +92,7 @@ const COPY: Record<
 };
 
 export const BROWSER_UNAVAILABLE_MESSAGE =
-  "Browser Preview isn't available in this browser. Try Computer Mode or Free Cloud.";
+  "Browser generation isn't available in this browser. Try Computer Mode or Free Cloud.";
 export const FREE_CLOUD_UNAVAILABLE_MESSAGE =
   "No free cloud video worker is currently connected.";
 export const PAID_CLOUD_DISABLED_MESSAGE = "Paid generation is switched off.";
@@ -153,7 +154,7 @@ export function simpleModeCards(input: {
           status: "NOT AVAILABLE",
           available: false,
           action: "NONE",
-          actionLabel: "Use Browser Preview",
+          actionLabel: "Use Browser",
           blockedMessage: BROWSER_UNAVAILABLE_MESSAGE,
         });
       }
@@ -162,7 +163,7 @@ export function simpleModeCards(input: {
         status: selected ? "ACTIVE" : "AVAILABLE",
         available: true,
         action: "SELECT",
-        actionLabel: "Use Browser Preview",
+        actionLabel: "Use Browser",
         blockedMessage: null,
       });
     }
@@ -199,7 +200,7 @@ export function simpleModeCards(input: {
           statusNote: "Your computer is finishing another video",
           available: false,
           action: "NONE",
-          actionLabel: "Use Computer Mode",
+          actionLabel: "Use Computer",
           blockedMessage:
             "Computer Mode is busy right now. Wait for it to finish, or choose another mode.",
         });
@@ -221,7 +222,7 @@ export function simpleModeCards(input: {
         statusNote: "Your computer is connected",
         available: true,
         action: "SELECT",
-        actionLabel: "Use Computer Mode",
+        actionLabel: "Use Computer",
         blockedMessage: null,
       });
     }
@@ -309,20 +310,12 @@ export function simpleModeCards(input: {
   });
 }
 
-/** The label on the main generate button for the chosen mode. */
-export function generateButtonLabel(selected: WorkerMode | null): string {
-  switch (selected) {
-    case "BROWSER":
-      return "Generate Preview";
-    case "LOCAL":
-      return "Generate with Computer";
-    case "FREE_CLOUD":
-      return "Generate with Free Cloud";
-    case "PAID_CLOUD":
-      return "Generate Paid Video";
-    default:
-      return "Generate video";
-  }
+/**
+ * One button for every mode. There is exactly one Generate Video action in the
+ * studio, whichever route is chosen.
+ */
+export function generateButtonLabel(_selected: WorkerMode | null): string {
+  return "Generate Video";
 }
 
 /**

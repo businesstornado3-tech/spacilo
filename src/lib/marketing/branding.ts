@@ -142,6 +142,8 @@ export function buildBrandOverlay(input: {
 export type BrandCheckId =
   | "logo_asset"
   | "logo_source"
+  | "logo_persistent"
+  | "tagline_persistent"
   | "tagline_approved"
   | "website_present"
   | "cta_present"
@@ -175,7 +177,17 @@ export function validateBranding(input: {
     (layer) => layer.kind === "logo" && layer.position === "centre",
   );
   const tagline = input.overlay.layers.find(
-    (layer) => layer.kind === "text" && layer.role === "tagline",
+    (layer) => layer.kind === "text" && layer.role === "tagline" && layer.toSeconds === null,
+  );
+  const persistentTagline = input.overlay.layers.find(
+    (layer) =>
+      layer.kind === "text" &&
+      layer.role === "tagline" &&
+      layer.fromSeconds === 0 &&
+      layer.value === PRIMARY_TAGLINE,
+  );
+  const watermark = input.overlay.layers.find(
+    (layer) => layer.kind === "logo" && layer.position === "bottom-right",
   );
   const website = input.overlay.layers.find(
     (layer) => layer.kind === "text" && layer.role === "website",
@@ -196,6 +208,23 @@ export function validateBranding(input: {
       logo && logo.kind === "logo" && logo.asset === profile.logoAsset
         ? "The approved artwork file is used, not a generated logo."
         : "The end card does not reference the approved EarnRoom artwork.",
+  });
+
+  checks.push({
+    id: "logo_persistent",
+    passed: Boolean(
+      watermark && watermark.kind === "logo" && watermark.asset === profile.watermark.asset,
+    ),
+    detail: watermark
+      ? "The approved EarnRoom wordmark is held throughout the video."
+      : "The EarnRoom wordmark is not carried through the body of the video.",
+  });
+  checks.push({
+    id: "tagline_persistent",
+    passed: Boolean(persistentTagline),
+    detail: persistentTagline
+      ? `"${PRIMARY_TAGLINE}" is held throughout the video.`
+      : `"${PRIMARY_TAGLINE}" is not carried through the body of the video.`,
   });
 
   const taglineValue = tagline && tagline.kind === "text" ? tagline.value : "";

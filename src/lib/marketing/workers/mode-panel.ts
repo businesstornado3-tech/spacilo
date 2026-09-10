@@ -26,18 +26,15 @@ export type SimpleModeStatus =
   | "SETUP REQUIRED"
   | "INSTALLER NOT AVAILABLE"
   | "NOT AVAILABLE"
-  | "DISABLED"
-  | "ENABLED — READY"
-  | "ENABLED — CONFIGURATION REQUIRED"
-  | "ENABLED — TEMPORARILY UNAVAILABLE";
+  | "CONFIGURATION REQUIRED"
+  | "TEMPORARILY UNAVAILABLE";
 
 /** The single action a card offers. Nothing technical is ever exposed. */
 export type SimpleModeAction =
   | "SELECT"
   | "INSTALL"
   | "START"
-  | "ENABLE_PAID"
-  | "DISABLE_PAID"
+  | "CONNECT_FREE"
   | "NONE";
 
 export type SimpleModeCard = {

@@ -373,7 +373,7 @@ export const beginComputerSetup = createServerFn({ method: "POST" })
     const { error } = await supabase.from("marketing_video_worker_pairings").insert({
       code,
       label: data.label,
-      mode: "LOCAL",
+      mode: data.mode,
       created_by: userId,
       expires_at: expiresAt,
     });

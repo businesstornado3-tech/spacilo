@@ -27,12 +27,15 @@ function json(body: unknown, status: number): Response {
 export const Route = createFileRoute("/api/public/video-worker/setup/$file")({
   server: {
     handlers: {
-      GET: async ({ params }) => {
-        const code = pairingCodeFromFileName(String(params.file ?? ""));
+      GET: async ({ params, request }) => {
+        const name = String(params.file ?? "");
+        const pairOnly = pairingCodeFromPairFileName(name);
+        const code = pairOnly ?? pairingCodeFromFileName(name);
         if (!code) return json({ error: "Unknown download." }, 404);
 
         const upstream = process.env["EARNROOM_WORKER_INSTALLER_URL"];
-        if (!upstream) {
+        // A computer that already has the worker never needs the installer.
+        if (!upstream && !pairOnly) {
           return json(
             {
               error:
@@ -45,16 +48,38 @@ export const Route = createFileRoute("/api/public/video-worker/setup/$file")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data } = await supabaseAdmin
           .from("marketing_video_worker_pairings" as never)
-          .select("claimed_at, expires_at")
+          .select("claimed_at, expires_at, label")
           .eq("code" as never, code)
           .maybeSingle();
 
-        const row = data as { claimed_at: string | null; expires_at: string } | null;
+        const row = data as {
+          claimed_at: string | null;
+          expires_at: string;
+          label: string | null;
+        } | null;
         if (!row) return json({ error: "This setup link is not recognised." }, 404);
         if (row.claimed_at) return json({ error: "This setup link has already been used." }, 409);
         if (Date.parse(row.expires_at) < Date.now()) {
           return json({ error: "This setup link has expired. Start setup again." }, 410);
         }
+
+        if (pairOnly) {
+          const site = new URL(request.url).origin;
+          const script = pairingScript({
+            code,
+            site,
+            label: row.label ?? "My computer",
+          });
+          return new Response(script, {
+            status: 200,
+            headers: {
+              "Content-Type": "application/octet-stream",
+              "Content-Disposition": `attachment; filename="${name}"`,
+              "Cache-Control": "no-store",
+            },
+          });
+        }
+
 
         const file = await fetch(upstream, { redirect: "follow" });
         if (!file.ok || !file.body) {

@@ -151,9 +151,15 @@ def installed_models() -> list[str]:
 # ------------------------------------------------------------------ http
 
 
+# EarnRoom's edge protection refuses Python's default "Python-urllib/x.y"
+# caller name with HTTP 403 before the request ever reaches EarnRoom, so the
+# worker always identifies itself by its own name instead.
+USER_AGENT = "EarnRoom-Video-Worker/1.0"
+
+
 def post(url: str, body: dict, token: str | None = None) -> dict:
     payload = json.dumps(body).encode("utf-8")
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT}
     if token:
         headers["Authorization"] = f"Bearer {token}"
     req = request.Request(url, data=payload, headers=headers, method="POST")

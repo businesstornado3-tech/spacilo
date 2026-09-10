@@ -152,7 +152,13 @@ export function planDailyCampaign(input: PlanInput): DailyPlan {
     audience: chosen.opportunity.audience,
     history: input.recentCreative ?? [],
   });
-  const story = buildStory(chosen.opportunity, { creative: creative.treatment });
+  const plannedStory = buildStory(chosen.opportunity, { creative: creative.treatment });
+  const story = {
+    ...plannedStory,
+    ...(plannedStory.creative
+      ? { creative: { ...plannedStory.creative, avoided: creative.summary.avoided } }
+      : {}),
+  };
   const platforms = input.platforms ?? suggestedPlatforms(chosen.opportunity);
   const assets = buildAssets(campaignId, chosen.opportunity, story, platforms);
 

@@ -88,9 +88,9 @@ describe("simple video generation modes", () => {
 
   it("offers a real download only once an installer exists", () => {
     const card = find(cards({ installerAvailable: true }), "LOCAL");
-    expect(card.status).toBe("NOT INSTALLED");
+    expect(card.status).toBe("SETUP REQUIRED");
     expect(card.action).toBe("INSTALL");
-    expect(card.actionLabel).toBe("Download & Install");
+    expect(card.actionLabel).toBe("Set up my computer");
   });
 
   it("asks the founder to start an offline computer worker rather than pretending", () => {

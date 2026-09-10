@@ -23,6 +23,7 @@ export type SimpleModeStatus =
   | "BUSY"
   | "OFFLINE"
   | "NOT INSTALLED"
+  | "SETUP REQUIRED"
   | "INSTALLER NOT AVAILABLE"
   | "NOT AVAILABLE"
   | "DISABLED"
@@ -175,13 +176,14 @@ export function simpleModeCards(input: {
         }
         return card({
           ...shell,
-          status: "NOT INSTALLED",
-          statusNote: "The EarnRoom Video Worker is not installed on this computer yet.",
+          status: "SETUP REQUIRED",
+          statusNote:
+            "No computer has been paired yet. Install the EarnRoom Video Worker, or pair a computer that already has it.",
           available: false,
           action: "INSTALL",
-          actionLabel: "Download & Install",
+          actionLabel: "Set up my computer",
           blockedMessage:
-            "Computer Mode is currently unavailable. Install the EarnRoom Video Worker or choose another mode.",
+            "Computer Mode is currently unavailable. Set up your computer, or choose another mode.",
         });
       }
       if (worker.status === "BUSY") {

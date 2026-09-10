@@ -347,14 +347,14 @@ export function generationSummary(input: {
   const chosen = input.cards.find((entry) => entry.mode === input.selected) ?? null;
   if (!chosen) {
     return {
-      modeLine: "Generation mode: none selected",
+      modeLine: "Selected generation mode: none selected",
       paidLine: null,
       costLine: "Cost protection: no generation can start",
     };
   }
   if (chosen.mode === "PAID_CLOUD") {
     return {
-      modeLine: "Generation mode: Paid Cloud",
+      modeLine: "Selected generation mode: Paid Cloud",
       paidLine: `Paid Cloud: ${input.paidComputeEnabled ? "ENABLED" : "DISABLED"}`,
       costLine: "Cost protection: Confirmation required",
     };

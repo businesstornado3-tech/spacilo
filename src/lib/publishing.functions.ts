@@ -614,7 +614,7 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       action: published ? "published" : "publication_blocked",
       detail: published
         ? `${LABEL[platform]} confirmed publication ${attempt.record.platformPostId}.${visibilityNote}`
-        : `${LABEL[platform]}: ${attempt.record.error ?? attempt.record.state}`,
+        : `${LABEL[platform]} [ref ${attemptRef}]: ${attempt.record.error ?? attempt.record.state}`,
       actor: "human",
       actor_id: context.userId,
     });
@@ -629,5 +629,7 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       platformUrl: attempt.record.platformUrl,
       visibility,
       alreadyPublished: false,
+      attemptRef,
+      retryable: retryableState(attempt.record.state),
     };
   });

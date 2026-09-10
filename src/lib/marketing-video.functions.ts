@@ -1084,7 +1084,7 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
      * publish it, until the approved EarnRoom branding has been composed onto
      * it and checked.
      */
-    if ((row.provider_kind ?? "") === "PAID_HOSTED") {
+    if ((row.provider_kind ?? "") === "PAID_HOSTED" || row.execution_mode === "PAID_CLOUD") {
       const { buildCompositionPlan } = await import("@/lib/marketing/branding/composition");
       const rawPath = `${row.campaign_id}/${row.asset_id}-${row.id}-raw.mp4`;
       const { error: rawError } = await supabase.storage

@@ -255,7 +255,8 @@ export function MarketingVideoPanel({
       if (result.status === "CONFIRMATION_REQUIRED") {
         setNotice(result.detail);
         setStage(null);
-        if (window.confirm(`${result.detail}\n\nGo ahead with the paid video?`)) {
+        // Every paid video is confirmed on its own, however the mode was set.
+        if (window.confirm(`${PAID_GENERATION_CONFIRMATION}\n\nGenerate Paid Video?`)) {
           return run(asset, tier, true);
         }
         return false;

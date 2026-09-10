@@ -45,7 +45,7 @@ type WorkerChoice = "BROWSER" | "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD" | null;
 
 function statusTone(status: string): "good" | "warn" | "bad" {
   if (status === "RENDERED") return "good";
-  if (status === "GENERATING") return "warn";
+  if (status === "GENERATING" || status === "AWAITING_BRANDING") return "warn";
   return "bad";
 }
 
@@ -55,6 +55,8 @@ function statusLabel(status: string): string {
       return "Making your video — usually one to three minutes";
     case "RENDERED":
       return "Ready to review";
+    case "AWAITING_BRANDING":
+      return "Adding the EarnRoom logo and tagline — held back until that is done";
     case "BRAND_VALIDATION_FAILED":
       return "The EarnRoom branding check did not pass";
     case "MEDIA_VALIDATION_FAILED":

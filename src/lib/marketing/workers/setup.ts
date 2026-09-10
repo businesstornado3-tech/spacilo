@@ -51,6 +51,10 @@ export const SETUP_WINDOW_MINUTES = 30;
 
 const CODE_PATTERN = /^EarnRoom-Video-Worker-Setup-([A-Z0-9]{6,16})\.exe$/;
 const PAIR_PATTERN = /^EarnRoom-Pair-This-Computer-([A-Z0-9]{6,16})\.cmd$/;
+const FREE_PATTERN = /^EarnRoom-Free-Cloud-Worker-([A-Z0-9]{6,16})\.cmd$/;
+
+/** Which kind of machine a setup file registers. */
+export type PairingMode = "LOCAL" | "FREE_CLOUD";
 
 /**
  * The download is named after the setup session, so the installer can pair
@@ -69,33 +73,75 @@ export function pairingCodeFromFileName(fileName: string): string | null {
 
 /**
  * A computer that already has the worker installed does not need another
- * download. It needs the setup session handed to the worker that is already
- * running, which is exactly what this tiny file does when opened: it writes
- * the session where the worker already looks for it, every few seconds.
+ * download. It needs a tiny setup file that connects this machine to EarnRoom
+ * itself. Free cloud capacity uses the same journey under its own name, so the
+ * founder always knows which one they are connecting.
  */
-export function pairingFileName(code: string): string {
-  return `EarnRoom-Pair-This-Computer-${code.toUpperCase().replace(/[^A-Z0-9]/g, "")}.cmd`;
+export function pairingFileName(code: string, mode: PairingMode = "LOCAL"): string {
+  const id = code.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return mode === "FREE_CLOUD"
+    ? `EarnRoom-Free-Cloud-Worker-${id}.cmd`
+    : `EarnRoom-Pair-This-Computer-${id}.cmd`;
 }
 
-/** Reads the setup code back out of a pairing filename. */
+/** Reads the setup code back out of either pairing filename. */
 export function pairingCodeFromPairFileName(fileName: string): string | null {
-  const match = PAIR_PATTERN.exec(fileName.trim());
+  const name = fileName.trim();
+  const match = PAIR_PATTERN.exec(name) ?? FREE_PATTERN.exec(name);
   return match ? match[1]! : null;
 }
 
-/** The contents of that file. It carries the session only — never a token. */
-export function pairingScript(input: { code: string; site: string; label: string }): string {
+/** True when the filename is the free cloud capacity variant. */
+export function isFreeCloudPairFileName(fileName: string): boolean {
+  return FREE_PATTERN.test(fileName.trim());
+}
+
+/**
+ * The contents of that file.
+ *
+ * It connects the machine itself: it exchanges the one-time session for this
+ * computer's own key, stores that key on the machine only, and reports in once
+ * so EarnRoom knows the machine is real. The file carries no key of its own,
+ * and the session dies the moment it is used.
+ *
+ * Windows' own PowerShell makes the request, so the connection does not depend
+ * on any library inside an already-installed worker.
+ */
+export function pairingScript(input: {
+  code: string;
+  site: string;
+  label: string;
+  mode?: PairingMode;
+}): string {
   const code = input.code.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  const site = input.site.replace(/[^A-Za-z0-9:/._-]/g, "");
+  const site = input.site.replace(/[^A-Za-z0-9:/._-]/g, "").replace(/\/+$/, "");
   const label = input.label.replace(/[^A-Za-z0-9 ._-]/g, "").slice(0, 80) || "My computer";
+  const kind = input.mode === "FREE_CLOUD" ? "free cloud capacity" : "this computer";
+
+  const ps = [
+    "$ErrorActionPreference='Stop'",
+    "$d=Join-Path $env:USERPROFILE '.earnroom-worker'",
+    "New-Item -ItemType Directory -Force -Path $d | Out-Null",
+    `Set-Content -Path (Join-Path $d 'setup.json') -Encoding utf8 -Value '{\\"code\\":\\"${code}\\",\\"site\\":\\"${site}\\",\\"label\\":\\"${label}\\"}'`,
+    "$hw=@{operatingSystem=(Get-CimInstance Win32_OperatingSystem).Caption;cpuThreads=[int]$env:NUMBER_OF_PROCESSORS;ramGb=[math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1GB,1)}",
+    `$body=@{code='${code}';label='${label}';hardware=$hw} | ConvertTo-Json -Depth 4`,
+    `$r=Invoke-RestMethod -Method Post -Uri '${site}/api/public/video-worker/pair' -ContentType 'application/json' -UserAgent 'EarnRoom-Video-Worker/1.0' -Body $body`,
+    `@{site='${site}';workerId=$r.workerId;heartbeatUrl=$r.heartbeatUrl;label='${label}'} + @{} | Out-Null`,
+    `$state=[ordered]@{site='${site}';workerId=$r.workerId;heartbeatUrl=$r.heartbeatUrl;label='${label}'}`,
+    "$state['token']=$r.token",
+    "($state | ConvertTo-Json) | Set-Content -Path (Join-Path $d 'worker.json') -Encoding utf8",
+    "$hb=@{status='IDLE';detail='Connected from the EarnRoom setup file.';queued=0;hardware=$hw} | ConvertTo-Json -Depth 4",
+    "Invoke-RestMethod -Method Post -Uri $r.heartbeatUrl -ContentType 'application/json' -UserAgent 'EarnRoom-Video-Worker/1.0' -Headers @{Authorization=('Bearer '+$r.token)} -Body $hb | Out-Null",
+    `Write-Host 'EarnRoom: ${kind} is now connected.'`,
+  ].join("; ");
+
   return [
     "@echo off",
-    'set "ERDIR=%USERPROFILE%\\.earnroom-worker"',
-    'if not exist "%ERDIR%" mkdir "%ERDIR%"',
-    `> "%ERDIR%\\setup.json" echo {"code":"${code}","site":"${site}","label":"${label}"}`,
-    "echo EarnRoom Video Worker: this computer is connecting.",
+    `echo Connecting ${kind} to EarnRoom...`,
+    `powershell -NoProfile -ExecutionPolicy Bypass -Command "${ps}"`,
+    "if errorlevel 1 echo EarnRoom could not connect this computer. Start setup again in the console.",
     "echo You can close this window.",
-    "timeout /t 5 >nul",
+    "timeout /t 8 >nul",
     "",
   ].join("\r\n");
 }

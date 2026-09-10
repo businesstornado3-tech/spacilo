@@ -35,6 +35,9 @@ export const APPROVED_HOST_CTAS = [
   "List your space on EarnRoom.",
 ] as const;
 
+/** The one permanent campaign tagline. Never model output, never replaced. */
+export const PRIMARY_TAGLINE = brand.tagline;
+
 export const BRAND_WEBSITE = "earnroom.co.uk";
 export const BRAND_URL = "https://earnroom.co.uk";
 

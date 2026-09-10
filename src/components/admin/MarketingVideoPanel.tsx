@@ -15,7 +15,12 @@ import { Alert } from "@/components/common/Alert";
 import { useCampaignVideos } from "@/hooks/useMarketingVideos";
 import { useVideoWorkers } from "@/hooks/useVideoWorkers";
 import { buildAnimatedPlan } from "@/lib/marketing/animation";
-import { founderCards, type FounderCard } from "@/lib/marketing/workers/founder-view";
+import { ComputerSetup } from "@/components/admin/ComputerSetup";
+import {
+  generationSummary,
+  simpleModeCards,
+  validateModeSelection,
+} from "@/lib/marketing/workers/mode-panel";
 import { definition } from "@/lib/marketing/platforms";
 import { playerBox, versionRow } from "@/lib/marketing/review";
 import type {
@@ -26,7 +31,7 @@ import type {
 } from "@/lib/marketing/types";
 import { cn } from "@/lib/utils";
 
-type WorkerChoice = "AUTO" | "BROWSER" | "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD";
+type WorkerChoice = "BROWSER" | "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD" | null;
 
 function statusTone(status: string): "good" | "warn" | "bad" {
   if (status === "RENDERED") return "good";
@@ -88,23 +93,6 @@ function CompactPlayer({
   );
 }
 
-function StatusChip({ card }: { card: FounderCard }) {
-  const good = card.status === "READY" || card.status === "CONNECTED" || card.status === "ENABLED";
-  const warn = card.status === "BUSY" || card.status === "LIMITED" || card.status === "PAUSED";
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 type-body-xs font-medium",
-        good && "border-success/30 bg-success-soft text-success-soft-foreground",
-        warn && "border-warning/30 bg-warning-soft text-warning-soft-foreground",
-        !good && !warn && "border-border bg-secondary text-muted-foreground",
-      )}
-    >
-      {card.status.toLowerCase().replace(/^./, (letter) => letter.toUpperCase())}
-    </span>
-  );
-}
-
 export function MarketingVideoPanel({
   campaignId,
   assets,
@@ -129,29 +117,39 @@ export function MarketingVideoPanel({
   const [busy, setBusy] = React.useState<string | null>(null);
   const [stage, setStage] = React.useState<string | null>(null);
   const [progress, setProgress] = React.useState(0);
-  // "AUTO" is "choose for me", which never reaches a paid route.
-  const [choice, setChoice] = React.useState<WorkerChoice>("AUTO");
+  // Exactly one mode is ever active. Nothing is chosen for the founder, and a
+  // free choice is never promoted to a paid one.
+  const [choice, setChoice] = React.useState<WorkerChoice>(null);
+  const [showSetup, setShowSetup] = React.useState(false);
 
   const browser = workers.browser;
   const snapshot = workers.query.data;
-  const cards = React.useMemo(
+  const paidEnabled = snapshot?.preferences.paidComputeEnabled ?? false;
+  const modeCards = React.useMemo(
     () =>
-      founderCards({
+      simpleModeCards({
         workers: snapshot?.workers ?? [],
-        paidComputeEnabled: snapshot?.preferences.paidComputeEnabled ?? false,
-        costLines: snapshot?.costLines ?? [],
+        paidComputeEnabled: paidEnabled,
+        selected: choice,
+        browserSupported: support ? support.supported : null,
       }),
-    [snapshot],
+    [snapshot, paidEnabled, choice, support],
   );
-  const chosenCard =
-    choice === "AUTO" ? null : (cards.find((card) => card.mode === choice) ?? null);
-  const autoReady = cards.some((card) => card.mode !== "PAID_CLOUD" && card.selectable);
-  const blocked =
-    choice === "AUTO"
-      ? autoReady
-        ? null
-        : "No free route is ready yet. Set up one of the options above, or enable paid cloud."
-      : (chosenCard?.blockedMessage ?? null);
+  const selection = validateModeSelection(modeCards, choice);
+  const summary = generationSummary({
+    cards: modeCards,
+    selected: choice,
+    paidComputeEnabled: paidEnabled,
+  });
+  const blocked = selection.ok ? null : selection.message;
+
+  // Pick the first available free mode once, so the page is usable straight
+  // away — never a paid one, and never after the founder has chosen.
+  React.useEffect(() => {
+    if (choice !== null) return;
+    const firstFree = modeCards.find((card) => card.mode !== "PAID_CLOUD" && card.available);
+    if (firstFree) setChoice(firstFree.mode);
+  }, [choice, modeCards]);
 
   // The renderer is browser-only, so it is loaded after the page is interactive.
   React.useEffect(() => {
@@ -175,9 +173,8 @@ export function MarketingVideoPanel({
     setStage("Drawing the scenes");
     try {
       const { renderAnimatedPlan } = await import("@/lib/marketing/animation/render.browser");
-      const { validatePlan, validateRender, qualityStatus } = await import(
-        "@/lib/marketing/animation/validation"
-      );
+      const { validatePlan, validateRender, qualityStatus } =
+        await import("@/lib/marketing/animation/validation");
       const plan = buildAnimatedPlan({ campaignId, asset, story, audience, topic });
       // Check the plan before a single frame is drawn: a bad plan costs nothing.
       const planCheck = validatePlan(plan);
@@ -233,6 +230,13 @@ export function MarketingVideoPanel({
     tier: "draft" | "final",
     confirmPaid = false,
   ): Promise<boolean> => {
+    // The chosen mode must be genuinely available; nothing is switched
+    // silently, and no generation starts on an unavailable route.
+    const gate = validateModeSelection(modeCards, choice);
+    if (!gate.ok || choice === null) {
+      setNotice(gate.message ?? "Choose a video generation mode first.");
+      return false;
+    }
     try {
       setStage("Choosing where to make it");
       const result = await videos.generate.mutateAsync({
@@ -287,63 +291,102 @@ export function MarketingVideoPanel({
   return (
     <div className="space-y-4">
       <div>
-        <h4 className="type-h5">Where should this video be made?</h4>
+        <h4 className="type-h5">Video generation mode</h4>
         <p className="mt-1 type-body-sm text-muted-foreground">
-          Pick an option, or let EarnRoom choose the best free one for you. Paid video making stays
-          switched off until you turn it on, and every paid video is confirmed on its own.
+          Choose how this video is made. Paid Cloud stays switched off until you enable it, and
+          every paid video is still confirmed on its own.
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => setChoice("AUTO")}
-            aria-pressed={choice === "AUTO"}
-            className={cn(
-              "rounded-xl border p-3 text-left",
-              choice === "AUTO" ? "border-primary bg-primary-soft" : "border-border",
-            )}
-          >
-            <span className="type-body-sm font-semibold">Choose for me</span>
-            <p className="mt-1 type-body-xs text-muted-foreground">
-              EarnRoom picks the best free option that is ready. It never picks a paid one.
-            </p>
-            <p className="mt-2 type-body-xs text-muted-foreground">
-              {autoReady ? "A free option is ready." : "No free option is ready yet."}
-            </p>
-          </button>
-
-          {cards.map((card) => (
-            <button
+          {modeCards.map((card) => (
+            <div
               key={card.mode}
-              type="button"
-              onClick={() => setChoice(card.mode)}
-              aria-pressed={choice === card.mode}
               className={cn(
-                "rounded-xl border p-3 text-left",
-                choice === card.mode ? "border-primary bg-primary-soft" : "border-border",
-                !card.selectable && "opacity-90",
+                "rounded-xl border p-3",
+                card.selected ? "border-primary bg-primary-soft" : "border-border",
               )}
             >
-              <span className="flex flex-wrap items-center gap-2">
-                <span className="type-body-sm font-semibold">{card.title}</span>
-                <span className="type-body-xs text-muted-foreground">{card.badge}</span>
-                <StatusChip card={card} />
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="type-body-sm font-semibold">
+                  {card.selected ? "✓ " : ""}
+                  {card.title}
+                </span>
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-full border px-2 py-0.5 type-body-xs font-medium",
+                    card.status === "ACTIVE"
+                      ? "border-success/30 bg-success-soft text-success-soft-foreground"
+                      : card.available
+                        ? "border-border bg-secondary text-muted-foreground"
+                        : "border-border bg-secondary text-muted-foreground",
+                  )}
+                >
+                  {card.status}
+                </span>
+              </div>
               <p className="mt-1 type-body-xs text-muted-foreground">{card.description}</p>
-              <p className="mt-2 type-body-xs text-muted-foreground">{card.costLine}</p>
+              <p className="mt-1 type-body-xs text-muted-foreground">{card.costLine}</p>
+              {card.statusNote ? (
+                <p className="mt-1 type-body-xs text-muted-foreground">{card.statusNote}</p>
+              ) : null}
+              <div className="mt-2 flex flex-wrap gap-2">
+                {card.action === "SELECT" ? (
+                  <button
+                    type="button"
+                    aria-pressed={card.selected}
+                    onClick={() => setChoice(card.mode)}
+                    className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary"
+                  >
+                    {card.actionLabel}
+                  </button>
+                ) : null}
+                {card.action === "INSTALL" || card.action === "START" ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowSetup(true)}
+                    className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground hover:opacity-90"
+                  >
+                    {card.actionLabel}
+                  </button>
+                ) : null}
+                {card.mode === "PAID_CLOUD" ? (
+                  <button
+                    type="button"
+                    disabled={workers.preferences.isPending}
+                    onClick={() => {
+                      // Enabling only authorises the route. It never starts a
+                      // generation and never spends anything by itself.
+                      const next = !paidEnabled;
+                      if (!next && choice === "PAID_CLOUD") setChoice(null);
+                      workers.preferences
+                        .mutateAsync({ paidComputeEnabled: next })
+                        .then(() =>
+                          setNotice(
+                            next
+                              ? "Paid Cloud is enabled. Nothing has been generated and nothing has been charged — each paid video is still confirmed separately."
+                              : "Paid Cloud is disabled. No paid generation can be requested.",
+                          ),
+                        )
+                        .catch((error: Error) => setNotice(error.message));
+                    }}
+                    className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary disabled:opacity-60"
+                  >
+                    {paidEnabled ? "Disable Paid Cloud" : "Enable Paid Cloud"}
+                  </button>
+                ) : null}
+              </div>
               {card.blockedMessage ? (
                 <p className="mt-2 type-body-xs text-warning-soft-foreground">
                   {card.blockedMessage}
                 </p>
-              ) : card.capabilityNote ? (
-                <p className="mt-2 type-body-xs text-muted-foreground">{card.capabilityNote}</p>
               ) : null}
-            </button>
+            </div>
           ))}
         </div>
-        <p className="mt-2 type-body-xs text-muted-foreground">
-          Setting up “My computer”, “Free cloud” or “Paid cloud” is done in Advanced administration
-          at the bottom of this page.
-        </p>
+        {showSetup ? (
+          <div className="mt-3 rounded-xl border border-border p-3">
+            <ComputerSetup onConnected={() => void workers.query.refetch()} />
+          </div>
+        ) : null}
       </div>
 
       {support && !support.supported ? (
@@ -416,6 +459,14 @@ export function MarketingVideoPanel({
             ))}
           </ul>
         ) : null}
+
+        <div className="mt-3 rounded-lg bg-secondary px-3 py-2">
+          <p className="type-body-xs font-medium">{summary.modeLine}</p>
+          {summary.paidLine ? (
+            <p className="type-body-xs text-muted-foreground">{summary.paidLine}</p>
+          ) : null}
+          <p className="type-body-xs text-muted-foreground">{summary.costLine}</p>
+        </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
           <button
@@ -506,11 +557,7 @@ export function MarketingVideoPanel({
                     {row.status}
                   </p>
                   {row.hasVideo && video?.playbackUrl ? (
-                    <CompactPlayer
-                      aspect={asset.aspect}
-                      src={video.playbackUrl}
-                      className="mt-2"
-                    />
+                    <CompactPlayer aspect={asset.aspect} src={video.playbackUrl} className="mt-2" />
                   ) : (
                     <p className="mt-1 type-body-xs text-muted-foreground">
                       {video ? statusLabel(video.status) : row.detail}

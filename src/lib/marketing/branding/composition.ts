@@ -245,8 +245,7 @@ export function validateComposition(
   );
 
   if (plan.watermark) {
-    const passed =
-      receipt.watermarkFrames > 0 && receipt.artworkUrls.includes(plan.watermark.url);
+    const passed = receipt.watermarkFrames > 0 && receipt.artworkUrls.includes(plan.watermark.url);
     add(
       "watermark",
       passed,

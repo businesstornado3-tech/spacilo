@@ -1140,7 +1140,6 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
       .upload(path, poll.bytes, { contentType: poll.contentType, upsert: true });
     if (uploadError) return fail("RENDER_FAILED", uploadError.message);
 
-
     const overlay = buildBrandOverlay({
       platform: row.platform as PlatformId,
       aspect: row.aspect,
@@ -1743,13 +1742,17 @@ export const storeBrandedVideo = createServerFn({ method: "POST" })
     const compositionPlan = settings["brandingPlan"] as BrandCompositionPlan | undefined;
     if (!compositionPlan) throw new Error("That video has no branding plan to check against.");
 
-    const [{ validateMedia }, { validateComposition }, { buildBrandOverlay, validateBranding }, { taglineFor }] =
-      await Promise.all([
-        import("@/lib/marketing/media-probe"),
-        import("@/lib/marketing/branding/composition"),
-        import("@/lib/marketing/branding"),
-        import("@/lib/marketing/brand"),
-      ]);
+    const [
+      { validateMedia },
+      { validateComposition },
+      { buildBrandOverlay, validateBranding },
+      { taglineFor },
+    ] = await Promise.all([
+      import("@/lib/marketing/media-probe"),
+      import("@/lib/marketing/branding/composition"),
+      import("@/lib/marketing/branding"),
+      import("@/lib/marketing/brand"),
+    ]);
 
     const binary = Buffer.from(data.mp4Base64, "base64");
     const bytes = binary.buffer.slice(
@@ -1819,7 +1822,8 @@ export const storeBrandedVideo = createServerFn({ method: "POST" })
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
       .upload(path, binary, { contentType: "video/mp4", upsert: true });
-    if (uploadError) throw new Error(`The branded video could not be saved: ${uploadError.message}`);
+    if (uploadError)
+      throw new Error(`The branded video could not be saved: ${uploadError.message}`);
 
     const { data: done } = await supabase
       .from("marketing_videos")

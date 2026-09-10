@@ -121,11 +121,8 @@ export function useCampaignVideos(campaignId: string | null) {
     // The paid route returns unbranded pixels: the browser composes the
     // approved EarnRoom branding onto them and the server stores that file.
     storeBranded: useMutation({
-      mutationFn: (input: {
-        videoId: string;
-        receipt: CompositionReceipt;
-        mp4Base64: string;
-      }) => storeBranded({ data: input }),
+      mutationFn: (input: { videoId: string; receipt: CompositionReceipt; mp4Base64: string }) =>
+        storeBranded({ data: input }),
       onSuccess: invalidate,
     }),
   };

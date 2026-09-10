@@ -167,8 +167,7 @@ export function MarketingVideoPanel({
     }
     return total;
   }, [assets]);
-  const estimatedPence =
-    choice === "PAID_CLOUD" ? paidPresetCostPence(paidQuality) : freeRunPence;
+  const estimatedPence = choice === "PAID_CLOUD" ? paidPresetCostPence(paidQuality) : freeRunPence;
   const summary = generationSummary({
     cards: modeCards,
     selected: choice,
@@ -398,7 +397,6 @@ export function MarketingVideoPanel({
         setStage(null);
         return false;
       }
-
 
       const route = result.workerLabel ? `Using ${result.workerLabel}. ` : "";
       if (result.status === "BROWSER_RENDER_REQUIRED") {
@@ -746,7 +744,6 @@ export function MarketingVideoPanel({
             Videos a day, across all campaigns. Paid Cloud does not raise this limit.
           </p>
         </div>
-
 
         <div className="mt-3 flex flex-wrap gap-2">
           <button

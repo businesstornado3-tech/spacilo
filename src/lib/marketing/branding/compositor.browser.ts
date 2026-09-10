@@ -35,12 +35,7 @@ export function compositionSupport(): CompositionSupport {
   return { supported: true, reason: "This browser can add the EarnRoom branding locally." };
 }
 
-const CODECS = [
-  "avc1.640028",
-  "avc1.4d0032",
-  "avc1.42003c",
-  "avc1.42001f",
-] as const;
+const CODECS = ["avc1.640028", "avc1.4d0032", "avc1.42003c", "avc1.42001f"] as const;
 
 async function pickCodec(width: number, height: number, fps: number): Promise<string | null> {
   for (const codec of CODECS) {
@@ -66,11 +61,7 @@ async function loadBitmap(url: string): Promise<ImageBitmap> {
   return createImageBitmap(await response.blob());
 }
 
-function wrapLines(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  maxWidth: number,
-): string[] {
+function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const words = text.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let current = "";

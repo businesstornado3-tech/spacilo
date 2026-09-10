@@ -43,6 +43,12 @@ export type AdapterContext = {
   fetchImpl: typeof fetch;
   /** Injected delay, so processing polls can be exercised without waiting. */
   sleep?: (ms: number) => Promise<void>;
+  /**
+   * YouTube only: the visibility the founder asked for. Defaults to `unlisted`
+   * — real, on the real channel, but not pushed at an audience. YouTube itself
+   * decides what it grants; the stored visibility is read back afterwards.
+   */
+  youtubePrivacy?: "private" | "unlisted" | "public";
 };
 
 export interface PublishingChannelAdapter {
@@ -130,7 +136,10 @@ function youtubeAdapter(
   capability: PlatformCapability,
   accessToken: string,
 ): PublishingChannelAdapter {
-  const call = async (asset: PlatformAsset, _campaign: MarketingCampaign): Promise<PublishResult> => {
+  const call = async (
+    asset: PlatformAsset,
+    _campaign: MarketingCampaign,
+  ): Promise<PublishResult> => {
     void _campaign;
     const check = validateAssetForPlatform(asset);
     if (!check.ok) {
@@ -156,9 +165,7 @@ function youtubeAdapter(
       title: asset.title,
       description: asset.description,
       tags: asset.hashtags,
-      // Uploaded unlisted: real, on the real channel, and not pushed at an
-      // audience until the founder makes it public on YouTube.
-      privacyStatus: "unlisted",
+      privacyStatus: context.youtubePrivacy ?? "unlisted",
       now: context.now,
     });
   };

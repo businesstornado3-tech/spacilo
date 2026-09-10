@@ -29,6 +29,7 @@ import {
   instagramStatusWord,
   type InstagramStatusWord,
 } from "@/lib/marketing/instagram-login";
+import { runtimeFetch } from "@/lib/marketing/runtime-fetch";
 
 const BUCKET = "marketing-videos";
 /** Meta must be able to fetch the file for the whole processing window. */
@@ -56,7 +57,7 @@ type MetaTokens = {
  * Reads the stored Meta authorisation. Either the Facebook or the Instagram
  * connection row may hold it — they are the same Meta sign-in.
  */
-async function readMetaTokens(): Promise<MetaTokens> {
+export async function readMetaTokens(): Promise<MetaTokens> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { decryptToken } = await import("@/lib/marketing/token-crypto.server");
   const { data: rows } = await (supabaseAdmin as any)
@@ -99,7 +100,7 @@ async function readMetaTokens(): Promise<MetaTokens> {
  * token stored under the `instagram` platform row; it is unrelated to the
  * Facebook Page token and is never returned to the browser.
  */
-async function readInstagramToken(): Promise<{ token: string | null; detail: string }> {
+export async function readInstagramToken(): Promise<{ token: string | null; detail: string }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { decryptToken } = await import("@/lib/marketing/token-crypto.server");
   const { data: row } = await (supabaseAdmin as any)
@@ -285,7 +286,7 @@ export const listMetaPages = createServerFn({ method: "POST" })
       if (!userToken) return { ok: false, detail, pages: [] };
 
       const { discoverPages } = await import("@/lib/marketing/meta");
-      const result = await discoverPages(fetch, userToken);
+      const result = await discoverPages(runtimeFetch, userToken);
       if (!result.ok) {
         await supabase
           .from("marketing_platform_connections")
@@ -340,7 +341,7 @@ export const selectMetaPage = createServerFn({ method: "POST" })
       const { encryptToken } = await import("@/lib/marketing/token-crypto.server");
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-      const pages = await discoverPages(fetch, userToken);
+      const pages = await discoverPages(runtimeFetch, userToken);
       if (!pages.ok) {
         return { ok: false, detail: pages.error, state: await buildState(supabase) };
       }
@@ -389,7 +390,7 @@ export const selectMetaPage = createServerFn({ method: "POST" })
        * Instagram connection row. Instagram is established solely by the
        * Instagram Login callback.
        */
-      const instagram = await discoverInstagramAccount(fetch, page.id, page.accessToken);
+      const instagram = await discoverInstagramAccount(runtimeFetch, page.id, page.accessToken);
       let instagramDetail: string;
       if (!instagram.ok) {
         instagramDetail = `Instagram relationship could not be checked: ${instagram.error}`;
@@ -572,7 +573,7 @@ export const publishMetaVideo = createServerFn({ method: "POST" })
       settings: mergedSettings,
       connections: connections as any,
       now,
-      fetchImpl: fetch,
+      fetchImpl: runtimeFetch,
     });
 
     const attempt = await attemptPublish({
@@ -732,7 +733,7 @@ export const getInstagramInsights = createServerFn({ method: "POST" })
     if (!stored.token) return empty(stored.detail);
 
     const { fetchInstagramMediaInsights } = await import("@/lib/marketing/instagram-login");
-    const result = await fetchInstagramMediaInsights(fetch, {
+    const result = await fetchInstagramMediaInsights(runtimeFetch, {
       mediaId: data.mediaId,
       accessToken: stored.token,
     });

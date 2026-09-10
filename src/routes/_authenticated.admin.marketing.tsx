@@ -11,6 +11,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AcquisitionStatus } from "@/components/admin/AcquisitionStatus";
 import { AdminShell, AdminSectionBlock } from "@/components/admin/AdminShell";
 import { CampaignDecision } from "@/components/admin/CampaignDecision";
+import { CampaignPublishing } from "@/components/admin/CampaignPublishing";
 import { MarketingConnections } from "@/components/admin/MarketingConnections";
 import { MarketingVideoPanel } from "@/components/admin/MarketingVideoPanel";
 import { VideoWorkers } from "@/components/admin/VideoWorkers";
@@ -270,6 +271,10 @@ function MarketingStudioRoute() {
                   />
                 </div>
 
+                <div className="rounded-xl border border-border p-4">
+                  <CampaignPublishing campaignId={snapshot.today.id} />
+                </div>
+
                 <CampaignDecision
                   campaign={snapshot.today}
                   decision={snapshot.todayDecision}
@@ -313,7 +318,6 @@ function MarketingStudioRoute() {
           >
             <AcquisitionStatus />
           </AdminSectionBlock>
-
 
           <AdminSectionBlock
             id="demand"

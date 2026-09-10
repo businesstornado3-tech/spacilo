@@ -66,15 +66,24 @@ async function readJson(response: Response): Promise<Record<string, unknown>> {
   return (await response.json().catch(() => ({}))) as Record<string, unknown>;
 }
 
-function transportFailure(error: unknown): { ok: false; error: string; retryable: true } {
-  return {
-    ok: false,
-    error:
-      error instanceof Error && error.message
-        ? `Could not reach Meta (${error.message.slice(0, 120)}).`
-        : "Could not reach Meta.",
-    retryable: true,
-  };
+/**
+ * A transport failure never reached Meta at all. The runtime reason is kept
+ * verbatim (it separates a worker-runtime fault from DNS/network), so the
+ * console never has to describe a real fault as an unknown one.
+ */
+export function metaTransportDetail(stage: string, error: unknown): string {
+  const reason =
+    error instanceof Error && error.message
+      ? error.message.replace(/\s+/g, " ").slice(0, 160)
+      : "no error detail was reported by the runtime";
+  return `${stage}: the request to Meta was not completed (${reason}). Meta never received it.`;
+}
+
+function transportFailure(
+  error: unknown,
+  stage = "META_REQUEST",
+): { ok: false; error: string; retryable: true } {
+  return { ok: false, error: metaTransportDetail(stage, error), retryable: true };
 }
 
 /* --------------------------------------------------------- page discovery */
@@ -213,7 +222,7 @@ export async function publishFacebookPageVideo(
       body: new URLSearchParams(body).toString(),
     });
   } catch (error) {
-    const failure = transportFailure(error);
+    const failure = transportFailure(error, "FACEBOOK_PAGE_VIDEO");
     return { ok: false, state: "UPLOAD_FAILED", error: failure.error, retryable: true };
   }
   const payload = await readJson(response);

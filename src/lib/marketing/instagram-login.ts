@@ -127,7 +127,18 @@ export function publicationStateFor(
   }
 }
 
-
+/**
+ * A transport failure never reached Instagram at all. The exact runtime reason
+ * is kept (it distinguishes a worker-runtime fault from DNS/network), and the
+ * publishing stage is named so the console does not have to guess.
+ */
+export function instagramTransportDetail(stage: string, error: unknown): string {
+  const reason =
+    error instanceof Error && error.message
+      ? error.message.replace(/\s+/g, " ").slice(0, 160)
+      : "no error detail was reported by the runtime";
+  return `${stage}: the request to Instagram was not completed (${reason}). Instagram never received it.`;
+}
 
 async function readJson(response: Response): Promise<Record<string, unknown>> {
   return (await response.json().catch(() => ({}))) as Record<string, unknown>;
@@ -383,9 +394,7 @@ const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(r
  * create container → poll processing → media_publish → permalink.
  * Only the id returned by `media_publish` becomes the published media id.
  */
-export async function publishInstagramLoginReel(
-  input: InstagramReelInput,
-): Promise<PublishResult> {
+export async function publishInstagramLoginReel(input: InstagramReelInput): Promise<PublishResult> {
   const sleep = input.sleep ?? defaultSleep;
   const interval = input.pollIntervalMs ?? 5_000;
   const attempts = input.maxPollAttempts ?? 24;
@@ -415,11 +424,11 @@ export async function publishInstagramLoginReel(
         }).toString(),
       },
     );
-  } catch {
+  } catch (error) {
     return {
       ok: false,
       state: "UPLOAD_FAILED",
-      error: "UPLOAD_FAILED: Could not reach Instagram to create the media container.",
+      error: instagramTransportDetail("CREATE_REEL_CONTAINER", error),
       retryable: true,
     };
   }
@@ -459,11 +468,11 @@ export async function publishInstagramLoginReel(
           access_token: input.accessToken,
         }),
       );
-    } catch {
+    } catch (error) {
       return {
         ok: false,
         state: "UPLOAD_FAILED",
-        error: "Could not reach Instagram while the video was processing.",
+        error: instagramTransportDetail("POLL_CONTAINER_STATUS", error),
         retryable: true,
       };
     }
@@ -515,11 +524,11 @@ export async function publishInstagramLoginReel(
         }).toString(),
       },
     );
-  } catch {
+  } catch (error) {
     return {
       ok: false,
       state: "UPLOAD_FAILED",
-      error: "PUBLISH_FAILED: Could not reach Instagram to publish the media.",
+      error: instagramTransportDetail("MEDIA_PUBLISH", error),
       retryable: true,
     };
   }
@@ -546,7 +555,6 @@ export async function publishInstagramLoginReel(
       retryable: true,
     };
   }
-
 
   /* 4. Permalink — best effort; never blocks a confirmed publication */
   let permalink: string | null = null;

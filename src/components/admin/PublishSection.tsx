@@ -34,7 +34,8 @@ const surfaceKey = (campaignId: string | null) =>
   ["marketing", "publishing", campaignId ?? "none"] as const;
 
 function toneFor(state: string): string {
-  if (state === "PUBLISHED") return "border-success/30 bg-success-soft text-success-soft-foreground";
+  if (state === "PUBLISHED")
+    return "border-success/30 bg-success-soft text-success-soft-foreground";
   if (state === "CONNECTED" || state === "FAILED" || state === "PUBLISHING")
     return "border-success/30 bg-success-soft text-success-soft-foreground";
   return "border-border bg-secondary text-muted-foreground";
@@ -181,9 +182,7 @@ export function PublishSection({
               </span>
             </div>
             <p className="mt-1 type-body-sm text-muted-foreground">{row.detail}</p>
-            <p className="mt-1 type-body-xs text-muted-foreground">
-              Publishing: {row.publishing}
-            </p>
+            <p className="mt-1 type-body-xs text-muted-foreground">Publishing: {row.publishing}</p>
 
             {row.action === "WATCH" && row.watchUrl ? (
               <a

@@ -52,8 +52,7 @@ function MarketingStudioRoute() {
   // The live decision lives in its own columns, not inside the stored plan, so
   // an approval taken a moment ago is visible on the very next read.
   const decision = snapshot?.todayDecision?.status ?? null;
-  const approved =
-    decision === "APPROVED" || decision === "SCHEDULED" || decision === "PUBLISHED";
+  const approved = decision === "APPROVED" || decision === "SCHEDULED" || decision === "PUBLISHED";
   const rejected = decision === "REJECTED";
   const safetyFailed = today ? !today.validation.passed : false;
   // Only a genuine emergency stop blocks the whole studio.

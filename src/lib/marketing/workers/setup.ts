@@ -257,7 +257,8 @@ export type CapabilityVerdict = {
  * described as ready for cinematic generation.
  */
 export function capabilityVerdict(profile: HardwareProfile): CapabilityVerdict {
-  const ready = CAPABILITY_ORDER[profile.capability] >= CAPABILITY_ORDER["MEDIUM" as CapabilityClass];
+  const ready =
+    CAPABILITY_ORDER[profile.capability] >= CAPABILITY_ORDER["MEDIUM" as CapabilityClass];
   return {
     word: ready ? "READY" : "LIMITED",
     headline: ready ? "Capability: READY" : "Capability: LIMITED",

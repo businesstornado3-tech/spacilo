@@ -494,11 +494,7 @@ export function MarketingVideoPanel({
             onClick={() => void generateEverything()}
             className="min-h-11 rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
           >
-            {working
-              ? (stage ?? "Making your video…")
-              : coreVideo
-                ? "Make it again"
-                : "Generate video"}
+            {working ? (stage ?? "Making your video…") : generateButtonLabel(choice)}
           </button>
           {coreVideo && !working ? (
             <button

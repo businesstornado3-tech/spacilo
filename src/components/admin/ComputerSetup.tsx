@@ -105,7 +105,7 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
       setSession(created);
       if (installed) {
         // Already installed: hand the running worker its setup session only.
-        await deliver(created.pairingPath);
+        await deliverPairing(created.pairingPath);
         return;
       }
       if (!created.installerAvailable) return;

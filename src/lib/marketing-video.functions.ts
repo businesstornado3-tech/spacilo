@@ -520,44 +520,29 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
     const asset = campaign.assets.find((entry) => entry.id === data.assetId);
     if (!asset) throw new Error("That platform asset no longer exists.");
 
-    /* ---- usage limits ---- */
+    /* ---- counts, for reporting only ----
+     * There is deliberately NO daily video-generation cap. Manual generation is
+     * unlimited; the only real safety on generation is the money spend cap
+     * (paid routes only), enforced in planExecution below. The autonomous daily
+     * limit is a PUBLISHING limit and is enforced elsewhere. */
     const dayStart = new Date();
     dayStart.setUTCHours(0, 0, 0, 0);
-    const [
-      { count: videosToday },
-      { count: videosForCampaign },
-      { count: attemptsForAsset },
-      { data: activeRows },
-    ] = await Promise.all([
-      supabase
-        .from("marketing_videos")
-        .select("id", { count: "exact", head: true })
-        .gte("created_at", dayStart.toISOString()),
-      supabase
-        .from("marketing_videos")
-        .select("id", { count: "exact", head: true })
-        .eq("campaign_id", data.campaignId),
-      supabase
-        .from("marketing_videos")
-        .select("id", { count: "exact", head: true })
-        .eq("asset_id", data.assetId),
-      supabase
-        .from("marketing_videos")
-        .select("queue_state")
-        .in("queue_state", ["QUEUED", "GENERATING", "RENDERING", "VALIDATING"]),
-    ]);
+    const [{ count: videosToday }, { count: attemptsForAsset }, { data: activeRows }] =
+      await Promise.all([
+        supabase
+          .from("marketing_videos")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", dayStart.toISOString()),
+        supabase
+          .from("marketing_videos")
+          .select("id", { count: "exact", head: true })
+          .eq("asset_id", data.assetId),
+        supabase
+          .from("marketing_videos")
+          .select("queue_state")
+          .in("queue_state", ["QUEUED", "GENERATING", "RENDERING", "VALIDATING"]),
+      ]);
 
-    const decision = usage.checkUsage(
-      {
-        videosToday: videosToday ?? 0,
-        videosForCampaign: videosForCampaign ?? 0,
-        attemptsForAsset: attemptsForAsset ?? 0,
-      },
-      preferences.usage,
-    );
-    if (!decision.allowed) {
-      return { ...NO_PLAN, detail: decision.reason, status: decision.state, offerPaid: false };
-    }
 
     const spec = buildVideoPrompt(campaign, asset);
     const tier = workerCfg.selfHostedTier(data.tier);

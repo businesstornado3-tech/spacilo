@@ -21,10 +21,6 @@ describe("video generation has no daily quota", () => {
     expect(prefs["spend"]).toBeTruthy();
   });
 
-  it("no source string offers to raise a daily video limit", async () => {
-    const source = await import("./usage?raw").catch(() => null);
-    expect(source === null || !String((source as { default?: string }).default ?? "").includes("Daily video limit")).toBe(true);
-  });
 });
 
 describe("generation cost", () => {

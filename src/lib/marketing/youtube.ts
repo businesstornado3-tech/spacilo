@@ -245,3 +245,58 @@ export async function publishYoutubeVideo(request: YoutubeUploadRequest): Promis
     publishedAt: request.now,
   };
 }
+
+export type YoutubeVideoStatus = {
+  /** What YouTube itself says the video's privacy is, after the upload. */
+  privacyStatus: string | null;
+  uploadStatus: string | null;
+  rejectionReason: string | null;
+  detail: string;
+};
+
+/**
+ * Reads back the real status of an uploaded video.
+ *
+ * Google silently locks uploads from an unverified API project to `private`.
+ * Reading the status back is the only honest way to tell the founder what the
+ * visibility of their video actually is, rather than what was requested.
+ */
+export async function fetchYoutubeVideoStatus(
+  fetchImpl: typeof fetch,
+  accessToken: string,
+  videoId: string,
+): Promise<YoutubeVideoStatus> {
+  try {
+    const response = await fetchImpl(
+      `https://www.googleapis.com/youtube/v3/videos?part=status&id=${encodeURIComponent(videoId)}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!response.ok) {
+      return {
+        privacyStatus: null,
+        uploadStatus: null,
+        rejectionReason: null,
+        detail: googleMessage(payload) ?? `YouTube did not return the video status (HTTP ${response.status}).`,
+      };
+    }
+    const items = Array.isArray(payload["items"])
+      ? (payload["items"] as Record<string, unknown>[])
+      : [];
+    const status = (items[0]?.["status"] ?? {}) as Record<string, unknown>;
+    return {
+      privacyStatus: typeof status["privacyStatus"] === "string" ? status["privacyStatus"] : null,
+      uploadStatus: typeof status["uploadStatus"] === "string" ? status["uploadStatus"] : null,
+      rejectionReason:
+        typeof status["rejectionReason"] === "string" ? status["rejectionReason"] : null,
+      detail: "Status read from YouTube.",
+    };
+  } catch {
+    return {
+      privacyStatus: null,
+      uploadStatus: null,
+      rejectionReason: null,
+      detail: "The status request to YouTube was not completed.",
+    };
+  }
+}

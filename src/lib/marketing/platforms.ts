@@ -31,7 +31,9 @@ export const PLATFORMS: readonly PlatformDefinition[] = [
   {
     id: "youtube",
     label: "YouTube",
-    aspects: ["16:9"],
+    // YouTube accepts vertical uploads as well; a 9:16 upload of 60s or less
+    // is what YouTube itself classifies as a Short.
+    aspects: ["16:9", "9:16"],
     maxSeconds: 900,
     apiPublishingSupported: true,
     apiAutonomousSupported: true,

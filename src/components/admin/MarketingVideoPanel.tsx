@@ -629,6 +629,32 @@ export function MarketingVideoPanel({
         </Alert>
       ) : null}
 
+      {awaitingBranding.length > 0 ? (
+        <div className="rounded-xl border border-warning/40 bg-warning-soft p-4">
+          <h4 className="type-h5">Adding the EarnRoom branding</h4>
+          <p className="mt-1 type-body-sm">
+            {awaitingBranding.length} paid {awaitingBranding.length === 1 ? "film" : "films"} came
+            back without the EarnRoom logo or tagline. They stay unpublishable until the branding
+            has been put on them here. Keep this tab open while it works.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {awaitingBranding.map((video) => (
+              <button
+                key={video.id}
+                type="button"
+                disabled={busy !== null || videos.storeBranded.isPending}
+                onClick={() => void addBranding(video)}
+                className="min-h-9 rounded-lg border border-border bg-background px-3 type-body-xs font-medium hover:bg-secondary disabled:opacity-60"
+              >
+                {busy !== null
+                  ? `Adding branding${progress > 0 ? ` — ${Math.round(progress * 100)}%` : "…"}`
+                  : `Add branding to the ${definition(video.platform).label} film`}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="rounded-xl border border-border p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h4 className="type-h5">Your campaign video</h4>

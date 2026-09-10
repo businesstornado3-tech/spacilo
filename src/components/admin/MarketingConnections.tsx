@@ -11,6 +11,7 @@ import * as React from "react";
 
 import { Alert } from "@/components/common/Alert";
 import { MetaCardExtras, useMetaConnection } from "@/components/admin/MetaPublishing";
+import { YoutubeDestinationCard } from "@/components/admin/YoutubeDestination";
 import { usePublishingConnections } from "@/hooks/useMarketingVideos";
 import { definition } from "@/lib/marketing/platforms";
 import { workerStatusLabel } from "@/lib/marketing/worker-status";
@@ -168,6 +169,10 @@ export function MarketingConnections() {
                   platform={platform.platform as "facebook" | "instagram"}
                   meta={meta}
                 />
+              ) : null}
+
+              {platform.platform === "youtube" ? (
+                <YoutubeDestinationCard connected={connected} />
               ) : null}
 
               {manage === platform.platform ? (

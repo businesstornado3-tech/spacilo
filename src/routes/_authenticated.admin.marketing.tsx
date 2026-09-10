@@ -140,7 +140,7 @@ function MarketingStudioRoute() {
                   </div>
                   <div>
                     <dt className="type-body-xs text-muted-foreground">Call to action</dt>
-                    <dd className="type-body-sm">{today.story.callToAction}</dd>
+                    <dd className="type-body-sm">{today.story.renterCta}</dd>
                   </div>
                 </dl>
 

@@ -46,13 +46,28 @@ export type VideoWorkerSnapshot = {
   /** Plain-English note for the founder about the current route. */
   routeSummary: string;
   costLines: { mode: WorkerMode; label: string; line: string }[];
+  /** True when the hosted video provider is configured server-side. */
+  paidProviderConfigured: boolean;
+  /** True only when a real Windows worker installer can be downloaded. */
+  installerAvailable: boolean;
 };
 
 async function snapshot(supabase: any, browser: BrowserProbe | null): Promise<VideoWorkerSnapshot> {
   const settings = await loadSettings(supabase);
   const preferences = readWorkerPreferences(settings);
-  const { loadWorkers } = await import("@/lib/marketing/workers/registry.server");
-  const { workers } = await loadWorkers(supabase, browser);
+  const [{ loadWorkers }, hosted, provider] = await Promise.all([
+    import("@/lib/marketing/workers/registry.server"),
+    import("@/lib/marketing/workers/hosted"),
+    import("@/lib/marketing/video.server"),
+  ]);
+  const loaded = await loadWorkers(supabase, browser);
+  // Reading configuration is a local check — it never calls the provider.
+  const configuration = provider.videoProviderConfiguration();
+  const paidProviderConfigured = configuration.state === "CONFIGURED";
+  const workers = hosted.withHostedPaidCloud(loaded.workers, {
+    providerConfigured: paidProviderConfigured,
+    provider: configuration.name,
+  });
 
   const selection = selectWorker({
     preference: preferences.defaultWorker,
@@ -70,6 +85,8 @@ async function snapshot(supabase: any, browser: BrowserProbe | null): Promise<Vi
       label: worker.label,
       line: costReport({ mode: worker.mode, resolution: "720p", seconds: 8 }).line,
     })),
+    paidProviderConfigured,
+    installerAvailable: installerPublished(),
   };
 }
 

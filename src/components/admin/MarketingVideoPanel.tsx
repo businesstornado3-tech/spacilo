@@ -17,9 +17,12 @@ import { useVideoWorkers } from "@/hooks/useVideoWorkers";
 import { buildAnimatedPlan } from "@/lib/marketing/animation";
 import { ComputerSetup } from "@/components/admin/ComputerSetup";
 import {
+  generateButtonLabel,
   generationSummary,
   simpleModeCards,
   validateModeSelection,
+  PAID_ENABLE_CONFIRMATION,
+  PAID_GENERATION_CONFIRMATION,
 } from "@/lib/marketing/workers/mode-panel";
 import { definition } from "@/lib/marketing/platforms";
 import { playerBox, versionRow } from "@/lib/marketing/review";
@@ -132,6 +135,8 @@ export function MarketingVideoPanel({
         paidComputeEnabled: paidEnabled,
         selected: choice,
         browserSupported: support ? support.supported : null,
+        paidProviderConfigured: snapshot?.paidProviderConfigured ?? false,
+        installerAvailable: snapshot?.installerAvailable ?? false,
       }),
     [snapshot, paidEnabled, choice, support],
   );
@@ -250,7 +255,8 @@ export function MarketingVideoPanel({
       if (result.status === "CONFIRMATION_REQUIRED") {
         setNotice(result.detail);
         setStage(null);
-        if (window.confirm(`${result.detail}\n\nGo ahead with the paid video?`)) {
+        // Every paid video is confirmed on its own, however the mode was set.
+        if (window.confirm(`${PAID_GENERATION_CONFIRMATION}\n\nGenerate Paid Video?`)) {
           return run(asset, tier, true);
         }
         return false;
@@ -325,6 +331,9 @@ export function MarketingVideoPanel({
               </div>
               <p className="mt-1 type-body-xs text-muted-foreground">{card.description}</p>
               <p className="mt-1 type-body-xs text-muted-foreground">{card.costLine}</p>
+              {card.limitation ? (
+                <p className="mt-1 type-body-xs text-muted-foreground">{card.limitation}</p>
+              ) : null}
               {card.statusNote ? (
                 <p className="mt-1 type-body-xs text-muted-foreground">{card.statusNote}</p>
               ) : null}
@@ -339,11 +348,20 @@ export function MarketingVideoPanel({
                     {card.actionLabel}
                   </button>
                 ) : null}
-                {card.action === "INSTALL" || card.action === "START" ? (
+                {card.action === "INSTALL" ? (
                   <button
                     type="button"
                     onClick={() => setShowSetup(true)}
                     className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground hover:opacity-90"
+                  >
+                    {card.actionLabel}
+                  </button>
+                ) : null}
+                {card.action === "START" ? (
+                  <button
+                    type="button"
+                    onClick={() => void workers.query.refetch()}
+                    className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary"
                   >
                     {card.actionLabel}
                   </button>
@@ -356,6 +374,7 @@ export function MarketingVideoPanel({
                       // Enabling only authorises the route. It never starts a
                       // generation and never spends anything by itself.
                       const next = !paidEnabled;
+                      if (next && !window.confirm(PAID_ENABLE_CONFIRMATION)) return;
                       if (!next && choice === "PAID_CLOUD") setChoice(null);
                       workers.preferences
                         .mutateAsync({ paidComputeEnabled: next })
@@ -475,11 +494,7 @@ export function MarketingVideoPanel({
             onClick={() => void generateEverything()}
             className="min-h-11 rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
           >
-            {working
-              ? (stage ?? "Making your video…")
-              : coreVideo
-                ? "Make it again"
-                : "Generate video"}
+            {working ? (stage ?? "Making your video…") : generateButtonLabel(choice)}
           </button>
           {coreVideo && !working ? (
             <button

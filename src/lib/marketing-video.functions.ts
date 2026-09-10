@@ -293,12 +293,20 @@ const NO_PLAN = {
  * been registered, so the route that already worked keeps working.
  */
 async function candidateWorkers(supabase: any, browser: unknown) {
-  const [{ loadWorkers }, selfHosted] = await Promise.all([
+  const [{ loadWorkers }, selfHosted, hosted, paid] = await Promise.all([
     import("@/lib/marketing/workers/registry.server"),
     import("@/lib/marketing/self-hosted.server"),
+    import("@/lib/marketing/workers/hosted"),
+    import("@/lib/marketing/video.server"),
   ]);
   const snapshot = await loadWorkers(supabase, (browser ?? null) as never);
-  const workers = [...snapshot.workers];
+  // The paid hosted service is a real execution route with no registry row.
+  // Reading its configuration is local: no provider call, no charge.
+  const configuration = paid.videoProviderConfiguration();
+  const workers = hosted.withHostedPaidCloud(snapshot.workers, {
+    providerConfigured: configuration.state === "CONFIGURED",
+    provider: configuration.name,
+  });
 
   if (!workers.some((worker) => worker.mode === "LOCAL")) {
     const config = selfHosted.selfHostedConfig();

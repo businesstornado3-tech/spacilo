@@ -18,12 +18,17 @@ import type { WorkerDescriptor, WorkerMode } from "./types";
 export type SimpleModeStatus =
   | "ACTIVE"
   | "AVAILABLE"
+  | "READY"
   | "CONNECTED"
   | "BUSY"
   | "OFFLINE"
   | "NOT INSTALLED"
+  | "INSTALLER NOT AVAILABLE"
   | "NOT AVAILABLE"
-  | "DISABLED";
+  | "DISABLED"
+  | "ENABLED — READY"
+  | "ENABLED — CONFIGURATION REQUIRED"
+  | "ENABLED — TEMPORARILY UNAVAILABLE";
 
 /** The single action a card offers. Nothing technical is ever exposed. */
 export type SimpleModeAction = "SELECT" | "INSTALL" | "START" | "ENABLE_PAID" | "NONE";
@@ -36,6 +41,8 @@ export type SimpleModeCard = {
   /** Extra plain sentence under the status. Null when nothing to say. */
   statusNote: string | null;
   costLine: string;
+  /** Honest note about what this mode is not suitable for. */
+  limitation: string | null;
   available: boolean;
   selected: boolean;
   actionLabel: string;
@@ -46,34 +53,45 @@ export type SimpleModeCard = {
 
 export const SIMPLE_MODES: readonly WorkerMode[] = ["BROWSER", "LOCAL", "FREE_CLOUD", "PAID_CLOUD"];
 
-const COPY: Record<WorkerMode, { title: string; description: string; cost: string }> = {
+const COPY: Record<
+  WorkerMode,
+  { title: string; description: string; cost: string; limitation: string | null }
+> = {
   BROWSER: {
-    title: "Browser Mode",
-    description: "Generate directly in this browser at no cloud cost.",
-    cost: "£0 generation cost",
+    title: "Browser Preview",
+    description: "Free browser-based preview generation. Best for testing campaigns and layouts.",
+    cost: "£0",
+    limitation: "Not intended for publication-quality cinematic video.",
   },
   LOCAL: {
     title: "Computer Mode",
-    description:
-      "Use the EarnRoom Video Worker on your computer for higher-quality local generation.",
-    cost: "£0 generation cost",
+    description: "Make videos on your own computer with the EarnRoom Video Worker.",
+    cost: "£0",
+    limitation: null,
   },
   FREE_CLOUD: {
     title: "Free Cloud",
-    description: "Generate using an available free cloud worker. No paid generation.",
-    cost: "£0 generation cost",
+    description: "Make videos using a connected free cloud worker.",
+    cost: "£0",
+    limitation: null,
   },
   PAID_CLOUD: {
     title: "Paid Cloud",
-    description: "Use higher-performance cloud generation when enabled.",
-    cost: "Confirmation required before every paid video",
+    description: "Higher-quality cloud video generation, switched on by you.",
+    cost: "May incur usage charges — confirmed for every video",
+    limitation: null,
   },
 };
 
 export const BROWSER_UNAVAILABLE_MESSAGE =
-  "Browser Mode isn't available in this browser. Try Computer Mode or Free Cloud.";
-export const FREE_CLOUD_UNAVAILABLE_MESSAGE = "Free Cloud is currently unavailable.";
-export const PAID_CLOUD_DISABLED_MESSAGE = "Paid cloud generation is currently disabled.";
+  "Browser Preview isn't available in this browser. Try Computer Mode or Free Cloud.";
+export const FREE_CLOUD_UNAVAILABLE_MESSAGE =
+  "No free cloud video worker is currently connected.";
+export const PAID_CLOUD_DISABLED_MESSAGE = "Paid generation is switched off.";
+export const PAID_CLOUD_CONFIGURATION_MESSAGE =
+  "Paid Cloud is enabled, but the video provider is not configured.";
+export const INSTALLER_UNAVAILABLE_MESSAGE =
+  "The EarnRoom Video Worker installer has not been published yet.";
 export const COMPUTER_START_MESSAGE = "Start the EarnRoom Video Worker on your computer.";
 
 function ready(worker: WorkerDescriptor | null): boolean {
@@ -87,14 +105,24 @@ function card(base: SimpleModeCard): SimpleModeCard {
 /**
  * Builds the four cards. `browserSupported` comes from the device itself; a
  * missing probe is treated as "not yet known", never as supported.
+ *
+ * Paid Cloud is deliberately NOT tied to a registered worker: it is a hosted
+ * provider route, so it is ready when the founder has switched it on and the
+ * provider is configured server-side. Checking that costs nothing.
  */
 export function simpleModeCards(input: {
   workers: readonly WorkerDescriptor[];
   paidComputeEnabled: boolean;
   selected: WorkerMode | null;
   browserSupported: boolean | null;
+  /** Server-side video provider configuration state. */
+  paidProviderConfigured?: boolean;
+  /** True only when a real Windows installer can be downloaded. */
+  installerAvailable?: boolean;
 }): SimpleModeCard[] {
   const find = (mode: WorkerMode) => input.workers.find((worker) => worker.mode === mode) ?? null;
+  const paidConfigured = input.paidProviderConfigured === true;
+  const installerAvailable = input.installerAvailable !== false;
 
   return SIMPLE_MODES.map((mode) => {
     const worker = find(mode);
@@ -105,6 +133,7 @@ export function simpleModeCards(input: {
       title: copy.title,
       description: copy.description,
       costLine: copy.cost,
+      limitation: copy.limitation,
       selected,
       statusNote: null as string | null,
     };
@@ -117,7 +146,7 @@ export function simpleModeCards(input: {
           status: "NOT AVAILABLE",
           available: false,
           action: "NONE",
-          actionLabel: "Use Browser Mode",
+          actionLabel: "Use Browser Preview",
           blockedMessage: BROWSER_UNAVAILABLE_MESSAGE,
         });
       }
@@ -126,20 +155,31 @@ export function simpleModeCards(input: {
         status: selected ? "ACTIVE" : "AVAILABLE",
         available: true,
         action: "SELECT",
-        actionLabel: "Use Browser Mode",
+        actionLabel: "Use Browser Preview",
         blockedMessage: null,
       });
     }
 
     if (mode === "LOCAL") {
       if (!worker) {
+        if (!installerAvailable) {
+          return card({
+            ...shell,
+            status: "INSTALLER NOT AVAILABLE",
+            statusNote: INSTALLER_UNAVAILABLE_MESSAGE,
+            available: false,
+            action: "NONE",
+            actionLabel: "Download & Install",
+            blockedMessage: `Computer Mode is currently unavailable. ${INSTALLER_UNAVAILABLE_MESSAGE}`,
+          });
+        }
         return card({
           ...shell,
           status: "NOT INSTALLED",
-          statusNote: "Computer Worker not installed",
+          statusNote: "The EarnRoom Video Worker is not installed on this computer yet.",
           available: false,
           action: "INSTALL",
-          actionLabel: "Install Computer Worker",
+          actionLabel: "Download & Install",
           blockedMessage:
             "Computer Mode is currently unavailable. Install the EarnRoom Video Worker or choose another mode.",
         });
@@ -148,7 +188,7 @@ export function simpleModeCards(input: {
         return card({
           ...shell,
           status: "BUSY",
-          statusNote: "Computer Worker is finishing another video",
+          statusNote: "Your computer is finishing another video",
           available: false,
           action: "NONE",
           actionLabel: "Use Computer Mode",
@@ -160,17 +200,17 @@ export function simpleModeCards(input: {
         return card({
           ...shell,
           status: "OFFLINE",
-          statusNote: "Computer Worker offline",
+          statusNote: "Your computer is not connected",
           available: false,
           action: "START",
-          actionLabel: "Start Computer Worker",
+          actionLabel: "Check Connection",
           blockedMessage: `Computer Mode is currently unavailable. ${COMPUTER_START_MESSAGE}`,
         });
       }
       return card({
         ...shell,
         status: selected ? "ACTIVE" : "CONNECTED",
-        statusNote: "Computer Worker connected",
+        statusNote: "Your computer is connected",
         available: true,
         action: "SELECT",
         actionLabel: "Use Computer Mode",
@@ -192,18 +232,17 @@ export function simpleModeCards(input: {
       if (!ready(worker)) {
         return card({
           ...shell,
-          status: worker ? "NOT AVAILABLE" : "NOT AVAILABLE",
+          status: "NOT AVAILABLE",
           statusNote: FREE_CLOUD_UNAVAILABLE_MESSAGE,
           available: false,
           action: "NONE",
           actionLabel: "Use Free Cloud",
-          blockedMessage:
-            "Free Cloud is currently unavailable. Choose Browser Mode, Computer Mode, or enable Paid Cloud.",
+          blockedMessage: `Free Cloud is currently unavailable. ${FREE_CLOUD_UNAVAILABLE_MESSAGE}`,
         });
       }
       return card({
         ...shell,
-        status: selected ? "ACTIVE" : "AVAILABLE",
+        status: selected ? "ACTIVE" : "READY",
         statusNote: "Connected",
         available: true,
         action: "SELECT",
@@ -212,7 +251,7 @@ export function simpleModeCards(input: {
       });
     }
 
-    // PAID_CLOUD
+    // PAID_CLOUD — a hosted provider route, never a machine to plug in.
     if (!input.paidComputeEnabled) {
       return card({
         ...shell,
@@ -224,22 +263,34 @@ export function simpleModeCards(input: {
         blockedMessage: "Paid Cloud is disabled. Enable Paid Cloud before using this mode.",
       });
     }
-    if (!ready(worker)) {
+    if (!paidConfigured) {
       return card({
         ...shell,
-        status: "NOT AVAILABLE",
-        statusNote:
-          "High-performance cloud generation is available once a paid worker is connected.",
+        status: "ENABLED — CONFIGURATION REQUIRED",
+        statusNote: PAID_CLOUD_CONFIGURATION_MESSAGE,
         available: false,
         action: "NONE",
         actionLabel: "Use Paid Cloud",
-        blockedMessage: "Paid Cloud is currently unavailable. Choose another mode.",
+        blockedMessage: PAID_CLOUD_CONFIGURATION_MESSAGE,
+      });
+    }
+    // A registered paid worker overrides the hosted route: if one exists and it
+    // is not ready, the paid route really is unavailable right now.
+    if (worker && !ready(worker)) {
+      return card({
+        ...shell,
+        status: "ENABLED — TEMPORARILY UNAVAILABLE",
+        statusNote: "Paid Cloud is temporarily unavailable.",
+        available: false,
+        action: "NONE",
+        actionLabel: "Use Paid Cloud",
+        blockedMessage: "Paid Cloud is temporarily unavailable. Choose another mode or try later.",
       });
     }
     return card({
       ...shell,
-      status: selected ? "ACTIVE" : "AVAILABLE",
-      statusNote: "High-performance cloud generation is available.",
+      status: selected ? "ACTIVE" : "ENABLED — READY",
+      statusNote: "Every paid video is still confirmed on its own.",
       available: true,
       action: "SELECT",
       actionLabel: "Use Paid Cloud",
@@ -247,6 +298,30 @@ export function simpleModeCards(input: {
     });
   });
 }
+
+/** The label on the main generate button for the chosen mode. */
+export function generateButtonLabel(selected: WorkerMode | null): string {
+  switch (selected) {
+    case "BROWSER":
+      return "Generate Preview";
+    case "LOCAL":
+      return "Generate with Computer";
+    case "FREE_CLOUD":
+      return "Generate with Free Cloud";
+    case "PAID_CLOUD":
+      return "Generate Paid Video";
+    default:
+      return "Generate video";
+  }
+}
+
+/** The one-line confirmation shown before any paid generation starts. */
+export const PAID_GENERATION_CONFIRMATION =
+  "This video will use Paid Cloud generation and may incur usage charges.";
+
+/** The confirmation shown before Paid Cloud is switched on at all. */
+export const PAID_ENABLE_CONFIRMATION =
+  "Paid Cloud generation can incur usage charges. Enable Paid Cloud?";
 
 /**
  * Gate run before a generation starts. It never switches mode on the founder's
@@ -272,20 +347,20 @@ export function generationSummary(input: {
   const chosen = input.cards.find((entry) => entry.mode === input.selected) ?? null;
   if (!chosen) {
     return {
-      modeLine: "Generation mode: none selected",
+      modeLine: "Selected generation mode: none selected",
       paidLine: null,
       costLine: "Cost protection: no generation can start",
     };
   }
   if (chosen.mode === "PAID_CLOUD") {
     return {
-      modeLine: "Generation mode: Paid Cloud",
+      modeLine: "Selected generation mode: Paid Cloud",
       paidLine: `Paid Cloud: ${input.paidComputeEnabled ? "ENABLED" : "DISABLED"}`,
       costLine: "Cost protection: Confirmation required",
     };
   }
   return {
-    modeLine: `Generation mode: ${chosen.title}`,
+    modeLine: `Selected generation mode: ${chosen.title}`,
     paidLine: null,
     costLine: "Cost protection: £0",
   };

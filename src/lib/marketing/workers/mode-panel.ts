@@ -92,7 +92,7 @@ const COPY: Record<
 };
 
 export const BROWSER_UNAVAILABLE_MESSAGE =
-  "Browser Preview isn't available in this browser. Try Computer Mode or Free Cloud.";
+  "Browser generation isn't available in this browser. Try Computer Mode or Free Cloud.";
 export const FREE_CLOUD_UNAVAILABLE_MESSAGE =
   "No free cloud video worker is currently connected.";
 export const PAID_CLOUD_DISABLED_MESSAGE = "Paid generation is switched off.";
@@ -154,7 +154,7 @@ export function simpleModeCards(input: {
           status: "NOT AVAILABLE",
           available: false,
           action: "NONE",
-          actionLabel: "Use Browser Preview",
+          actionLabel: "Use Browser",
           blockedMessage: BROWSER_UNAVAILABLE_MESSAGE,
         });
       }
@@ -163,7 +163,7 @@ export function simpleModeCards(input: {
         status: selected ? "ACTIVE" : "AVAILABLE",
         available: true,
         action: "SELECT",
-        actionLabel: "Use Browser Preview",
+        actionLabel: "Use Browser",
         blockedMessage: null,
       });
     }
@@ -200,7 +200,7 @@ export function simpleModeCards(input: {
           statusNote: "Your computer is finishing another video",
           available: false,
           action: "NONE",
-          actionLabel: "Use Computer Mode",
+          actionLabel: "Use Computer",
           blockedMessage:
             "Computer Mode is busy right now. Wait for it to finish, or choose another mode.",
         });
@@ -222,7 +222,7 @@ export function simpleModeCards(input: {
         statusNote: "Your computer is connected",
         available: true,
         action: "SELECT",
-        actionLabel: "Use Computer Mode",
+        actionLabel: "Use Computer",
         blockedMessage: null,
       });
     }

@@ -149,9 +149,13 @@ export function MarketingVideoPanel({
     [snapshot, paidEnabled, choice, support],
   );
   const selection = validateModeSelection(modeCards, choice);
-  // The estimate covers the whole run — the campaign video and every platform
-  // version — so the Generate button carries the real number.
-  const estimatedPence = React.useMemo(() => {
+  // Which paid preset is chosen, and whether its one confirmation is showing.
+  const [paidQuality, setPaidQuality] = React.useState<PaidQuality>("STANDARD");
+  const [confirmingPaid, setConfirmingPaid] = React.useState(false);
+  // On the paid route the estimate is the chosen preset's own cost — one paid
+  // video, at the configuration that will actually be sent. On the free routes
+  // it is the whole run, which costs nothing anyway.
+  const freeRunPence = React.useMemo(() => {
     let total = 0;
     for (const asset of assets) {
       const pence = estimatedCostPence("720p", asset.seconds);
@@ -160,6 +164,8 @@ export function MarketingVideoPanel({
     }
     return total;
   }, [assets]);
+  const estimatedPence =
+    choice === "PAID_CLOUD" ? paidPresetCostPence(paidQuality) : freeRunPence;
   const summary = generationSummary({
     cards: modeCards,
     selected: choice,

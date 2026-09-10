@@ -671,25 +671,41 @@ export function MarketingVideoPanel({
           </p>
         </div>
 
+        {/* Paid work is confirmed exactly once, right where it is started. */}
+        {confirmingPaid && choice === "PAID_CLOUD" ? (
+          <div className="mt-3 rounded-lg border border-border p-3">
+            <p className="type-body-sm">{paidConfirmationMessage(paidQuality)}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={working}
+                onClick={() => void startPaid(paidQuality)}
+                className="min-h-11 rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+              >
+                Confirm and generate
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingPaid(false)}
+                className="min-h-11 rounded-lg border border-border px-4 type-nav text-muted-foreground hover:bg-secondary"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
             disabled={!core || working || Boolean(blocked)}
-            onClick={() => void generateEverything()}
+            onClick={() =>
+              choice === "PAID_CLOUD" ? setConfirmingPaid(true) : void generateEverything()
+            }
             className="min-h-11 rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
           >
             {working ? (stage ?? "Making your video…") : generateButtonLabel(choice)}
           </button>
-          {coreVideo && !working ? (
-            <button
-              type="button"
-              disabled={Boolean(blocked)}
-              onClick={() => core && void run(core, "final")}
-              className="min-h-11 rounded-lg border border-border px-4 type-nav text-muted-foreground hover:bg-secondary disabled:opacity-60"
-            >
-              Make a higher quality version
-            </button>
-          ) : null}
           {coreVideo &&
           !["RENDERED", "BRAND_VALIDATION_FAILED"].includes(coreVideo.status) &&
           coreVideo.queueState !== "CANCELLED" &&
@@ -710,7 +726,6 @@ export function MarketingVideoPanel({
           ) : null}
         </div>
       </div>
-
     </div>
   );
 }

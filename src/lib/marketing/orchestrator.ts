@@ -145,7 +145,14 @@ export function planDailyCampaign(input: PlanInput): DailyPlan {
 
   const year = Number(planDate.slice(0, 4));
   const campaignId = registryId("CAMP", year, nextSequence("CAMP", year, input.existingIds));
-  const story = buildStory(chosen.opportunity);
+  // Creative variety is decided here, before anything is written or rendered,
+  // so a different film costs nothing extra.
+  const creative = selectCreativeTreatment({
+    seed: `${chosen.opportunity.key}|${planDate}`,
+    audience: chosen.opportunity.audience,
+    history: input.recentCreative ?? [],
+  });
+  const story = buildStory(chosen.opportunity, { creative: creative.treatment });
   const platforms = input.platforms ?? suggestedPlatforms(chosen.opportunity);
   const assets = buildAssets(campaignId, chosen.opportunity, story, platforms);
 

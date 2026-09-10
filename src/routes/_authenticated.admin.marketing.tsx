@@ -49,10 +49,30 @@ function MarketingStudioRoute() {
       ? video.paid.configured
       : Boolean(video?.selfHosted.configured);
 
-  const approved = today
-    ? today.status === "APPROVED" || today.status === "SCHEDULED" || today.status === "PUBLISHED"
-    : false;
-  const blockedBySafety = today ? !today.validation.passed : false;
+  // The live decision lives in its own columns, not inside the stored plan, so
+  // an approval taken a moment ago is visible on the very next read.
+  const decision = snapshot?.todayDecision?.status ?? null;
+  const approved =
+    decision === "APPROVED" || decision === "SCHEDULED" || decision === "PUBLISHED";
+  const rejected = decision === "REJECTED";
+  const safetyFailed = today ? !today.validation.passed : false;
+  // Only a genuine emergency stop blocks the whole studio.
+  const globallyPaused = snapshot?.settings.pauseAllPublishing ?? false;
+
+  const generateButton = (label: string, primary: boolean) => (
+    <button
+      type="button"
+      onClick={() => studio.generate.mutate({})}
+      disabled={studio.generate.isPending}
+      className={
+        primary
+          ? "inline-flex min-h-11 items-center rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground disabled:opacity-60"
+          : "inline-flex min-h-11 items-center rounded-lg border border-border px-3 type-nav text-muted-foreground hover:bg-secondary disabled:opacity-60"
+      }
+    >
+      {studio.generate.isPending ? "Generating today's campaign…" : label}
+    </button>
+  );
 
   return (
     <AdminShell
@@ -68,23 +88,20 @@ function MarketingStudioRoute() {
 
       {snapshot ? (
         <div className="space-y-8">
+          {globallyPaused ? (
+            <Alert tone="error" title="Publishing paused">
+              All publishing is paused for EarnRoom. Turn publishing back on to publish anything.
+            </Alert>
+          ) : null}
+
           {/* 1 — Today's campaign */}
           <AdminSectionBlock id="today" title="Today's campaign">
             {!today ? (
               <div className="space-y-4">
-                <button
-                  type="button"
-                  onClick={() => studio.generate.mutate({})}
-                  disabled={studio.generate.isPending}
-                  className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground disabled:opacity-60"
-                >
-                  {studio.generate.isPending
-                    ? "Generating today's campaign…"
-                    : "Generate Today's Campaign"}
-                </button>
+                {generateButton("Generate Today's Campaign", true)}
                 {!studio.generate.isPending ? (
                   <EmptyState
-                    title="No campaign yet today"
+                    title="Ready to create today's campaign"
                     description="Generate today's campaign to see the story and make the video."
                   />
                 ) : null}
@@ -104,7 +121,7 @@ function MarketingStudioRoute() {
 
                 <dl className="grid gap-2 sm:grid-cols-2">
                   <div>
-                    <dt className="type-body-xs text-muted-foreground">Campaign title</dt>
+                    <dt className="type-body-xs text-muted-foreground">Why this story</dt>
                     <dd className="type-body-sm">{today.opportunity.title}</dd>
                   </div>
                   <div>
@@ -121,39 +138,13 @@ function MarketingStudioRoute() {
                     <dt className="type-body-xs text-muted-foreground">Core message</dt>
                     <dd className="type-body-sm">{today.opportunity.problem}</dd>
                   </div>
+                  <div>
+                    <dt className="type-body-xs text-muted-foreground">Call to action</dt>
+                    <dd className="type-body-sm">{today.story.callToAction}</dd>
+                  </div>
                 </dl>
 
-                {blockedBySafety ? (
-                  <Alert tone="error" title="Publishing blocked">
-                    This campaign did not pass EarnRoom's safety checks. Generate today's campaign
-                    again.
-                  </Alert>
-                ) : !approved ? (
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="type-body-sm text-muted-foreground">Approval required</span>
-                    <button
-                      type="button"
-                      disabled={studio.decide.isPending}
-                      onClick={() =>
-                        studio.decide.mutate({ campaignId: today.id, decision: "APPROVE" })
-                      }
-                      className="min-h-11 rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground disabled:opacity-60"
-                    >
-                      {studio.decide.isPending ? "Approving…" : "Approve"}
-                    </button>
-                  </div>
-                ) : (
-                  <p className="type-body-sm text-success-soft-foreground">Approved</p>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => studio.generate.mutate({})}
-                  disabled={studio.generate.isPending}
-                  className="min-h-11 rounded-lg border border-border px-3 type-nav text-muted-foreground hover:bg-secondary disabled:opacity-60"
-                >
-                  {studio.generate.isPending ? "Generating…" : "Generate a new campaign"}
-                </button>
+                {generateButton("Generate a new campaign", false)}
               </div>
             )}
           </AdminSectionBlock>
@@ -172,11 +163,48 @@ function MarketingStudioRoute() {
             </AdminSectionBlock>
           ) : null}
 
-          {/* 4 — one card per platform: connect, publish, watch */}
+          {/* 4 — approval, on this page, with one clear action */}
+          {today ? (
+            <AdminSectionBlock id="approval" title="Campaign approval">
+              {safetyFailed ? (
+                <div className="space-y-3">
+                  <p className="type-body-sm font-semibold">Approval unavailable</p>
+                  <p className="type-body-sm text-muted-foreground">
+                    This campaign did not pass EarnRoom's safety and accuracy checks.
+                  </p>
+                  {generateButton("Generate Today's Campaign", true)}
+                </div>
+              ) : approved ? (
+                <p className="type-body-sm text-success-soft-foreground">Approved ✓</p>
+              ) : (
+                <div className="space-y-3">
+                  <p className="type-body-sm text-muted-foreground">
+                    {rejected ? "Campaign needs a new approved version" : "Ready for approval"}
+                  </p>
+                  {rejected ? (
+                    generateButton("Generate Today's Campaign", true)
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={studio.decide.isPending}
+                      onClick={() =>
+                        studio.decide.mutate({ campaignId: today.id, decision: "APPROVE" })
+                      }
+                      className="min-h-11 rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground disabled:opacity-60"
+                    >
+                      {studio.decide.isPending ? "Approving…" : "Approve Campaign"}
+                    </button>
+                  )}
+                </div>
+              )}
+            </AdminSectionBlock>
+          ) : null}
+
+          {/* 5 — one card per platform: connect, publish, watch */}
           <AdminSectionBlock id="publish" title="Publish">
             <PublishSection
               campaignId={today?.id ?? null}
-              campaignApproved={approved && !blockedBySafety}
+              campaignApproved={approved && !safetyFailed}
             />
           </AdminSectionBlock>
         </div>

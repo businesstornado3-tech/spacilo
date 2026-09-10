@@ -70,6 +70,17 @@ export interface MarketingStudioSnapshot {
     priority: number;
   }[];
   publications: PublicationRecord[];
+  /**
+   * Autonomous publishing usage for the current calendar day. This counts
+   * confirmed autonomous publications only — never drafts, generated videos,
+   * failures or manual publishing.
+   */
+  autonomous: {
+    enabled: boolean;
+    autoApprove: boolean;
+    limit: number;
+    publishedToday: number;
+  };
   coverage: {
     slug: string;
     name: string;
@@ -182,6 +193,21 @@ async function readPerformanceInsights(supabase: any, history: ContentHistoryEnt
   return learningInsights({ records: records as any, history });
 }
 
+/** Start of the current London calendar day, as an ISO timestamp. */
+function dayStartIso(planDate: string): string {
+  return new Date(`${planDate}T00:00:00.000Z`).toISOString();
+}
+
+/** Confirmed autonomous publications recorded today. One per campaign. */
+async function autonomousPublishedToday(supabase: any, planDate: string): Promise<number> {
+  const { data } = await supabase
+    .from("marketing_audit")
+    .select("id")
+    .eq("action", "autonomous_published")
+    .gte("created_at", dayStartIso(planDate));
+  return ((data ?? []) as any[]).length;
+}
+
 export const getMarketingStudio = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<MarketingStudioSnapshot> => {
@@ -221,8 +247,16 @@ export const getMarketingStudio = createServerFn({ method: "GET" })
       .order("updated_at", { ascending: false })
       .limit(60);
 
+    const autonomousUsed = await autonomousPublishedToday(supabase, planDate);
+
     return {
       settings,
+      autonomous: {
+        enabled: settings.globalMode === "AUTONOMOUS",
+        autoApprove: settings.autoApprove === true,
+        limit: settings.maxDailyAutonomousPublications ?? 5,
+        publishedToday: autonomousUsed,
+      },
       capabilities: allCapabilities(connections, settings, now),
       today: (todayRow?.campaign ?? null) as MarketingCampaign | null,
       // The live decision, read from its own columns rather than the stored
@@ -592,6 +626,122 @@ export const publishMarketingCampaign = createServerFn({ method: "POST" })
     await assertAdmin(supabase);
     return publishCampaignAssets(supabase, context.userId, data);
   });
+
+/**
+ * One autonomous cycle: auto-approve (only when every mandatory check passed)
+ * and then publish, stopping at the founder's autonomous daily limit. Manual
+ * generation, approval and publishing are never affected by this limit.
+ */
+export const runAutonomousPublishing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(
+    async ({
+      context,
+    }): Promise<{
+      ran: boolean;
+      detail: string;
+      publishedToday: number;
+      limit: number;
+      results: { platform: string; state: string; detail: string }[];
+    }> => {
+      const supabase = context.supabase as any;
+      await assertAdmin(supabase);
+      const now = Date.now();
+      const { londonDate } = await import("@/lib/marketing");
+      const planDate = londonDate(now);
+      const settings = await readSettings(supabase);
+      const limit = settings.maxDailyAutonomousPublications ?? 5;
+      const used = await autonomousPublishedToday(supabase, planDate);
+      const idle = (detail: string) => ({
+        ran: false,
+        detail,
+        publishedToday: used,
+        limit,
+        results: [],
+      });
+
+      if (settings.globalMode !== "AUTONOMOUS") return idle("Autonomous publishing is off.");
+      if (settings.pauseAllPublishing) return idle("Publishing is paused.");
+      if (used >= limit) return idle("Autonomous daily publishing limit reached.");
+
+      const { data: row } = await supabase
+        .from("marketing_campaigns")
+        .select("id, campaign, status")
+        .eq("plan_date", planDate)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!row?.campaign) return idle("No campaign for today yet.");
+      const campaign = row.campaign as MarketingCampaign;
+      const campaignId = String(row.id);
+
+      // Auto-approve NEVER approves a campaign that failed a mandatory check.
+      if (!campaign.validation.passed) return idle("Today's campaign did not pass validation.");
+      if (row.status === "PUBLISHED") return idle("Today's campaign is already published.");
+      if (row.status === "REJECTED") return idle("Today's campaign was rejected.");
+
+      // Only a stored, branded EarnRoom video is ever publishable.
+      const { data: videoRows } = await supabase
+        .from("marketing_videos")
+        .select("asset_id, storage_path")
+        .eq("campaign_id", campaignId)
+        .not("storage_path", "is", null)
+        .limit(1);
+      if (((videoRows ?? []) as any[]).length === 0)
+        return idle("The branded video for today's campaign is not ready yet.");
+
+      if (row.status !== "APPROVED") {
+        if (!settings.autoApprove) return idle("Waiting for your approval.");
+        const decidedAt = new Date(now).toISOString();
+        await supabase
+          .from("marketing_campaigns")
+          .update({
+            status: "APPROVED",
+            approved_by: context.userId,
+            approved_at: decidedAt,
+            decided_at: decidedAt,
+            decision_note: "Auto-approved: every mandatory EarnRoom validation check passed.",
+          })
+          .eq("id", campaignId);
+        await supabase
+          .from("marketing_publications")
+          .update({ state: "QUEUED" })
+          .eq("campaign_id", campaignId)
+          .in("state", ["APPROVAL_REQUIRED", "VALIDATED", "QUEUED"]);
+        await supabase.from("marketing_audit").insert({
+          campaign_id: campaignId,
+          action: "auto_approved",
+          detail: "Auto-approved by EarnRoom after all mandatory validation checks passed.",
+          actor: "engine",
+          actor_id: context.userId,
+        });
+      }
+
+      const outcome = await publishCampaignAssets(supabase, context.userId, { campaignId });
+      const confirmed = outcome.results.filter((result) => result.state === "PUBLISHED");
+      // Quota is only ever consumed by a publication a platform confirmed.
+      if (confirmed.length > 0) {
+        await supabase.from("marketing_audit").insert({
+          campaign_id: campaignId,
+          action: "autonomous_published",
+          detail: `Autonomous publication confirmed on ${confirmed.map((entry) => entry.platform).join(", ")}.`,
+          actor: "engine",
+          actor_id: context.userId,
+        });
+      }
+
+      return {
+        ran: true,
+        detail:
+          confirmed.length > 0
+            ? `Published to ${confirmed.map((entry) => entry.platform).join(", ")}.`
+            : "No platform confirmed a publication this cycle.",
+        publishedToday: used + (confirmed.length > 0 ? 1 : 0),
+        limit,
+        results: outcome.results,
+      };
+    },
+  );
 
 const settingsSchema = z.object({
   globalMode: z.enum(["DRAFT", "APPROVAL_REQUIRED", "AUTONOMOUS"]).optional(),

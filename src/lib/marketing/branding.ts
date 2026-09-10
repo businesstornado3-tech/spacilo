@@ -8,7 +8,7 @@
  *
  * Pure module: no clock, no network, no file system.
  */
-import { brandMisspellings, brandProfile, isApprovedMessage } from "./brand";
+import { brandMisspellings, brandProfile, isApprovedMessage, PRIMARY_TAGLINE } from "./brand";
 import type { AspectRatio, PlatformId } from "./types";
 
 export type OverlayLayer =

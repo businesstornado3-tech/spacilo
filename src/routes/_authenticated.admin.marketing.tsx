@@ -70,11 +70,7 @@ function MarketingStudioRoute() {
       disabled={studio.generate.isPending}
       className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground disabled:opacity-60"
     >
-      {studio.generate.isPending
-        ? "Generating today's campaign…"
-        : today
-          ? "Generate Today's Campaign"
-          : "Generate Today's Campaign"}
+      {studio.generate.isPending ? "Generating today's campaign…" : "Generate Today's Campaign"}
     </button>
   );
 

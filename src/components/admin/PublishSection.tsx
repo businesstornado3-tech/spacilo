@@ -181,9 +181,9 @@ export function PublishSection({
               </span>
             </div>
             <p className="mt-1 type-body-sm text-muted-foreground">{row.detail}</p>
-            {row.reason ? (
-              <p className="mt-1 type-body-xs text-muted-foreground">Reason: {row.reason}</p>
-            ) : null}
+            <p className="mt-1 type-body-xs text-muted-foreground">
+              Publishing: {row.publishing}
+            </p>
 
             {row.action === "WATCH" && row.watchUrl ? (
               <a
@@ -209,7 +209,8 @@ export function PublishSection({
             {row.action === "PUBLISH" ? (
               <button
                 type="button"
-                disabled={busy !== null}
+                disabled={busy !== null || !row.canPublish}
+                title={row.reason ?? undefined}
                 onClick={() => startPublish(row.platform)}
                 className="mt-3 min-h-11 rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground disabled:opacity-60"
               >

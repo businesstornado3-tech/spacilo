@@ -343,8 +343,8 @@ export function MarketingVideoPanel({
       <div>
         <h4 className="type-h5">Video generation mode</h4>
         <p className="mt-1 type-body-sm text-muted-foreground">
-          Choose how this video is made. Paid Cloud stays switched off until you enable it, and
-          every paid video is still confirmed on its own.
+          Choose how this video is made. Paid Cloud stays switched off until you enable it here —
+          that one switch is the only place it is turned on or off.
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {modeCards.map((card) => (

@@ -75,6 +75,8 @@ export function useCampaignVideos(campaignId: string | null) {
         confirmPaid?: boolean;
         /** Founder's worker choice for this generation. */
         worker?: "AUTO" | "BROWSER" | "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD";
+        /** Which paid preset the founder chose, on the paid route only. */
+        quality?: "STANDARD" | "HIGHEST";
         browser?: unknown;
       }) =>
         generate({

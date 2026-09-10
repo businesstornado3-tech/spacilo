@@ -882,7 +882,7 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
       prompt: spec.prompt,
       aspect: asset.aspect,
       seconds,
-      resolution: resolution as "360p" | "720p",
+      resolution: resolution as "360p" | "720p" | "1080p",
     });
     if (!job.ok) return failNow(job.status, job.reason, false);
 

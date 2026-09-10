@@ -135,3 +135,64 @@ describe("brand name spelling in campaign copy", () => {
     }
   });
 });
+
+describe("brand identity survives every generation mode", () => {
+  it("carries the official wordmark and the primary tagline throughout, not just the end card", () => {
+    const spec = overlay();
+    const watermark = spec.layers.find(
+      (layer) => layer.kind === "logo" && layer.position === "bottom-right",
+    );
+    const persistent = spec.layers.find(
+      (layer) => layer.kind === "text" && layer.role === "tagline" && layer.fromSeconds === 0,
+    );
+    expect(watermark && watermark.kind === "logo" ? watermark.asset : null).toBe(
+      brandProfile().watermark.asset,
+    );
+    expect(persistent && persistent.kind === "text" ? persistent.value : null).toBe(
+      "Make space earn.",
+    );
+  });
+
+  it("fails validation when the persistent logo and tagline are stripped out", () => {
+    const spec = overlay();
+    const stripped = {
+      ...spec,
+      layers: spec.layers.filter(
+        (layer) => !(layer.kind === "logo" && layer.position === "bottom-right") &&
+          !(layer.kind === "text" && layer.role === "tagline" && layer.fromSeconds === 0),
+      ),
+    };
+    const report = validateBranding({
+      overlay: stripped,
+      expectedAspect: "9:16",
+      rendered: { aspect: "9:16", seconds: 15 },
+      copy,
+    });
+    expect(report.passed).toBe(false);
+    expect(report.checks.find((check) => check.id === "logo_persistent")!.passed).toBe(false);
+    expect(report.checks.find((check) => check.id === "tagline_persistent")!.passed).toBe(false);
+  });
+
+  it("applies the same branding to every aspect and platform, without redrawing the logo", () => {
+    for (const [platform, aspect] of [
+      ["tiktok", "9:16"],
+      ["youtube", "16:9"],
+      ["instagram", "1:1"],
+    ] as const) {
+      const spec = buildBrandOverlay({
+        platform,
+        aspect,
+        seconds: 20,
+        tagline: "Make space earn.",
+        cta: copy.cta,
+      });
+      const report = validateBranding({
+        overlay: spec,
+        expectedAspect: aspect,
+        rendered: { aspect, seconds: 20 },
+        copy,
+      });
+      expect(report.passed).toBe(true);
+    }
+  });
+});

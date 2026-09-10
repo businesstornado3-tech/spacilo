@@ -544,7 +544,16 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
 
     const spec = buildVideoPrompt(campaign, asset);
     const tier = workerCfg.selfHostedTier(data.tier);
-    const seconds = Math.min(tier.secondsCap, Math.max(3, spec.seconds));
+    // A paid preset fixes the configuration exactly; the free routes keep
+    // their own tier settings untouched.
+    const paidPreset =
+      data.quality && (data.worker ?? preferences.defaultWorker) === "PAID_CLOUD"
+        ? PAID_PRESETS[data.quality]
+        : null;
+    const seconds = paidPreset
+      ? paidPreset.seconds
+      : Math.min(tier.secondsCap, Math.max(3, spec.seconds));
+    const requestResolution = paidPreset ? paidPreset.resolution : tier.resolution;
     const config = worker.selfHostedConfig();
 
     /* ---- which worker actually runs this ---- */

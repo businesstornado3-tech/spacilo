@@ -17,9 +17,12 @@ import { useVideoWorkers } from "@/hooks/useVideoWorkers";
 import { buildAnimatedPlan } from "@/lib/marketing/animation";
 import { ComputerSetup } from "@/components/admin/ComputerSetup";
 import {
+  generateButtonLabel,
   generationSummary,
   simpleModeCards,
   validateModeSelection,
+  PAID_ENABLE_CONFIRMATION,
+  PAID_GENERATION_CONFIRMATION,
 } from "@/lib/marketing/workers/mode-panel";
 import { definition } from "@/lib/marketing/platforms";
 import { playerBox, versionRow } from "@/lib/marketing/review";

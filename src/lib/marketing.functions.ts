@@ -334,6 +334,21 @@ export const planMarketingCampaign = createServerFn({ method: "POST" })
     const { data: idRows } = await supabase.from("marketing_campaigns").select("id").limit(1000);
     const existingIds = ((idRows ?? []) as any[]).map((row) => row.id as string);
 
+    /* Creative memory: what the last campaigns actually filmed, so today's
+     * campaign is not a near-duplicate of them. Read-only, and it never blocks. */
+    const { data: recentRows } = await supabase
+      .from("marketing_campaigns")
+      .select("campaign, created_at")
+      .order("created_at", { ascending: false })
+      .limit(12);
+    const recentCreative = ((recentRows ?? []) as any[])
+      .map((row) => row.campaign?.story?.creative)
+      .filter((entry: any) => entry && typeof entry.treatmentId === "string")
+      .map((entry: any) => ({
+        treatmentId: entry.treatmentId as string,
+        family: (entry.family ?? null) as string | null,
+      }));
+
     const plan = planDailyCampaign({
       now,
       settings,
@@ -342,6 +357,7 @@ export const planMarketingCampaign = createServerFn({ method: "POST" })
       history,
       insights,
       existingIds,
+      recentCreative,
       ...(data.forceOpportunityKey ? { forceOpportunityKey: data.forceOpportunityKey } : {}),
     });
 

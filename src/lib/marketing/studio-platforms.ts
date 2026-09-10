@@ -63,6 +63,12 @@ export type StudioPlatformRow = {
   watchUrl: string | null;
   /** One concise reason when publishing cannot run. Null otherwise. */
   reason: string | null;
+  /**
+   * The real provider failure from the last attempt, when there was one. Kept
+   * separate from `reason` so a blocked-but-never-attempted platform never
+   * looks like a failure.
+   */
+  failureReason?: string | null;
 };
 
 export type StudioConnectionInput = {

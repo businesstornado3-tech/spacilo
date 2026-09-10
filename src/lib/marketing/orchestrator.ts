@@ -179,6 +179,16 @@ export function planDailyCampaign(input: PlanInput): DailyPlan {
     },
     {
       at: input.now,
+      action: "content_generated",
+      detail:
+        `Creative treatment: ${creative.summary.name} — ${creative.summary.setting}` +
+        (creative.summary.avoided.length > 0
+          ? ` Skipped ${creative.summary.avoided.length} recently used treatment(s) to avoid a near-duplicate video.`
+          : ""),
+      actor: "engine",
+    },
+    {
+      at: input.now,
       action: validation.passed ? "validated" : "validation_failed",
       detail: validation.passed ? "All content checks passed." : validation.failures.join(" "),
       actor: "engine",

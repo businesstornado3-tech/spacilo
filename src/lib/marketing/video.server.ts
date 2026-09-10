@@ -37,7 +37,7 @@ export function videoProviderConfiguration(): {
       ? "Configured server-side. A video only exists once a job completes and the file is stored."
       : "Video generation provider requires configuration.",
     model: configured ? MODEL : null,
-    resolutions: ["360p", "720p"],
+    resolutions: ["360p", "720p", "1080p"],
     aspects: ["9:16", "16:9", "1:1"],
   };
 }
@@ -60,7 +60,7 @@ export async function createVideoJob(input: {
   prompt: string;
   aspect: AspectRatio;
   seconds: number;
-  resolution: "360p" | "720p";
+  resolution: "360p" | "720p" | "1080p";
   fetchImpl?: typeof fetch;
 }): Promise<VideoJobCreate> {
   const key = apiKey();

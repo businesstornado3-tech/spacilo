@@ -97,6 +97,21 @@ describe("outreach channel diagnostic", () => {
     );
   });
 
+  it("says setup is needed rather than 'switched off' when nothing could be delivered", () => {
+    const diagnostic = outreachChannelStatus(
+      outreach({
+        enabled: false,
+        deliveryMode: "none",
+        credentialState: "missing",
+        setupNote: "Setup required — no email sending provider is configured.",
+      }),
+    );
+
+    expect(diagnostic.status).toBe("CONFIGURATION_REQUIRED");
+    expect(diagnostic.detail).toContain("no email sending provider");
+    expect(diagnostic.live).toBe(false);
+  });
+
   it("blocks everything under emergency stop", () => {
     expect(outreachChannelStatus(outreach({ emergencyStop: true })).status).toBe(
       "BLOCKED_BY_POLICY",
@@ -112,7 +127,7 @@ describe("outreach channel diagnostic", () => {
   it("is LIVE only with verified credentials and a transmitting adapter", () => {
     expect(outreachChannelStatus(outreach()).status).toBe("LIVE");
     expect(outreachChannelStatus(outreach({ credentialState: "missing" })).status).toBe(
-      "AUTH_REQUIRED",
+      "CONFIGURATION_REQUIRED",
     );
   });
 });

@@ -137,7 +137,21 @@ export function buildStory(
 
   return {
     format: formatFor(opportunity),
-    hook: hookFor(opportunity),
+    hook: openHook,
+    ...(creative
+      ? {
+          creative: {
+            treatmentId: creative.id,
+            name: creative.name,
+            family: creative.family,
+            hook: creative.hook,
+            setting: creative.setting,
+            openingShot: creative.openingShot,
+            ending: creative.ending,
+            avoided: [],
+          },
+        }
+      : {}),
     scenes,
     renterCta,
     hostCta: opportunity.secondaryAudience === "hosts" || hostSide ? hostCta : null,

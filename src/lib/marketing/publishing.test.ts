@@ -126,9 +126,18 @@ describe("publication state machine", () => {
     expect(stateAfterValidation(true, "youtube", { ...settings, globalMode: "DRAFT" })).toBe(
       "VALIDATED",
     );
+    // Autonomous alone still waits for an approval; auto-approve is a
+    // separate founder setting.
     expect(stateAfterValidation(true, "youtube", { ...settings, globalMode: "AUTONOMOUS" })).toBe(
-      "QUEUED",
+      "APPROVAL_REQUIRED",
     );
+    expect(
+      stateAfterValidation(true, "youtube", {
+        ...settings,
+        globalMode: "AUTONOMOUS",
+        autoApprove: true,
+      }),
+    ).toBe("QUEUED");
     expect(
       stateAfterValidation(true, "youtube", {
         ...settings,

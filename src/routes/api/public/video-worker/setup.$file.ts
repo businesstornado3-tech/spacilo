@@ -70,12 +70,17 @@ export const Route = createFileRoute("/api/public/video-worker/setup/$file")({
             site,
             label: row.label ?? "My computer",
           });
-          return new Response(script, {
+          // Send the exact byte count. Without it Chrome can leave the
+          // download sitting as an unfinished .crdownload file.
+          const body = new TextEncoder().encode(script);
+          return new Response(body, {
             status: 200,
             headers: {
               "Content-Type": "application/octet-stream",
               "Content-Disposition": `attachment; filename="${name}"`,
+              "Content-Length": String(body.byteLength),
               "Cache-Control": "no-store",
+              "X-Content-Type-Options": "nosniff",
             },
           });
         }

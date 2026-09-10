@@ -169,3 +169,51 @@ describe("a computer that already has the worker", () => {
     expect(computerSetupState(BASE)).toBe("NOT_INSTALLED");
   });
 });
+
+describe("the pairing file a Windows computer downloads", () => {
+  const code = "ABCD2345";
+
+  it("has a deterministic filename that maps back to the session", () => {
+    const name = pairingFileName(code);
+    expect(name).toBe("EarnRoom-Pair-This-Computer-ABCD2345.cmd");
+    expect(pairingCodeFromPairFileName(name)).toBe(code);
+  });
+
+  it("refuses a filename that is not a pairing file", () => {
+    expect(pairingCodeFromPairFileName("something-else.cmd")).toBeNull();
+    expect(pairingCodeFromPairFileName("EarnRoom-Pair-This-Computer-.cmd")).toBeNull();
+  });
+
+  it("is a small, complete file with a knowable byte length", () => {
+    const script = pairingScript({ code, site: "https://earnroom.co.uk", label: "My computer" });
+    const bytes = new TextEncoder().encode(script);
+    expect(bytes.byteLength).toBe(script.length);
+    expect(bytes.byteLength).toBeGreaterThan(0);
+    expect(bytes.byteLength).toBeLessThan(2_000);
+    expect(script.endsWith("\r\n")).toBe(true);
+  });
+
+  it("writes the session where the already-installed worker looks for it", () => {
+    const script = pairingScript({ code, site: "https://earnroom.co.uk", label: "My computer" });
+    expect(script).toContain(".earnroom-worker");
+    expect(script).toContain("setup.json");
+    expect(script).toContain(`"code":"${code}"`);
+  });
+
+  it("carries no lasting credential of any kind", () => {
+    const script = pairingScript({ code, site: "https://earnroom.co.uk", label: "My computer" });
+    expect(script.toLowerCase()).not.toContain("token");
+    expect(script.toLowerCase()).not.toContain("secret");
+    expect(script.toLowerCase()).not.toContain("key");
+  });
+
+  it("keeps anything odd in the computer name out of the file", () => {
+    const script = pairingScript({
+      code,
+      site: "https://earnroom.co.uk",
+      label: 'evil" & del /q *',
+    });
+    expect(script).not.toContain("del /q");
+    expect(script).not.toContain("&");
+  });
+});

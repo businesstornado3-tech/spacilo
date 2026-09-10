@@ -70,6 +70,28 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
     return true;
   };
 
+  /**
+   * The pairing file is tiny, so we check the server's answer first and then
+   * let the browser download it straight from our own address. Handing Chrome
+   * a blob instead is what left half-finished ".crdownload" files behind.
+   */
+  const deliverPairing = async (path: string): Promise<boolean> => {
+    const response = await fetch(path, { credentials: "same-origin" });
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      setProblem(body.error ?? `The pairing file could not be prepared (${response.status}).`);
+      return false;
+    }
+    const anchor = document.createElement("a");
+    anchor.href = path;
+    anchor.download = path.split("/").pop()!;
+    anchor.rel = "noopener";
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    return true;
+  };
+
   const start = useMutation({
     mutationFn: (installed: boolean) =>
       begin({ data: { label: label.trim() || "My computer" } }).then((created) => ({
@@ -83,7 +105,7 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
       setSession(created);
       if (installed) {
         // Already installed: hand the running worker its setup session only.
-        await deliver(created.pairingPath);
+        await deliverPairing(created.pairingPath);
         return;
       }
       if (!created.installerAvailable) return;
@@ -165,7 +187,8 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
           <p className="mt-2 type-body-xs text-muted-foreground">
             Already installed and showing “Needs setup”? Choose “Pair this computer”. EarnRoom sends
             a small file — open it once on that computer and the worker connects itself. Nothing is
-            downloaded again.
+            downloaded again. Chrome may first ask whether to keep the file: choose “Keep”, then open
+            it.
           </p>
         </>
       ) : (
@@ -178,7 +201,7 @@ export function ComputerSetup({ onConnected }: { onConnected?: () => void }) {
           </p>
           <p className="mt-1 type-body-xs text-muted-foreground">
             {alreadyInstalled && !view.connected
-              ? "Open the small pairing file EarnRoom just sent on that computer. The worker checks for it every few seconds and will connect by itself."
+              ? "Open the small pairing file EarnRoom just sent on that computer. If Chrome asks, choose “Keep” first. The worker checks for it every few seconds and will connect by itself."
               : view.detail}
           </p>
 

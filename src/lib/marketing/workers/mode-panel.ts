@@ -32,7 +32,13 @@ export type SimpleModeStatus =
   | "ENABLED — TEMPORARILY UNAVAILABLE";
 
 /** The single action a card offers. Nothing technical is ever exposed. */
-export type SimpleModeAction = "SELECT" | "INSTALL" | "START" | "ENABLE_PAID" | "NONE";
+export type SimpleModeAction =
+  | "SELECT"
+  | "INSTALL"
+  | "START"
+  | "ENABLE_PAID"
+  | "DISABLE_PAID"
+  | "NONE";
 
 export type SimpleModeCard = {
   mode: WorkerMode;

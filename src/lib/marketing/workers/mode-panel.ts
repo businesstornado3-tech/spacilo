@@ -325,13 +325,16 @@ export function generateButtonLabel(selected: WorkerMode | null): string {
   }
 }
 
-/** The one-line confirmation shown before any paid generation starts. */
-export const PAID_GENERATION_CONFIRMATION =
-  "This video will use Paid Cloud generation and may incur usage charges.";
-
-/** The confirmation shown before Paid Cloud is switched on at all. */
-export const PAID_ENABLE_CONFIRMATION =
-  "Paid Cloud generation can incur usage charges. Enable Paid Cloud?";
+/**
+ * The estimated cost line shown immediately before Generate Paid Video, so the
+ * button itself is informed consent. There is no second confirmation step.
+ */
+export function estimatedCostLine(pence: number | null): string {
+  if (pence === null || !Number.isFinite(pence)) {
+    return "Estimated cost: not known for this video";
+  }
+  return `Estimated cost: £${(Math.max(0, Math.round(pence)) / 100).toFixed(2)}`;
+}
 
 /**
  * Gate run before a generation starts. It never switches mode on the founder's

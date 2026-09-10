@@ -12,6 +12,7 @@
  */
 import { buildAssets, suggestedPlatforms } from "./assets";
 import { coverageRows, type ContentHistoryEntry } from "./coverage";
+import { selectCreativeTreatment, type CreativeHistoryEntry } from "./creative";
 import { demandCreationOpportunities } from "./demand-creation";
 import {
   geographyOpportunities,

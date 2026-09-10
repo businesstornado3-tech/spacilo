@@ -207,9 +207,9 @@ export function studioPlatformRows(input: {
     // published — including the platform refusing the sign-in or the file.
     const failed = Boolean(
       publication &&
-        publication.state !== "PUBLISHED" &&
-        ((FAILED_PUBLICATION_STATES as readonly string[]).includes(publication.state) ||
-          Boolean(publication.error)),
+      publication.state !== "PUBLISHED" &&
+      ((FAILED_PUBLICATION_STATES as readonly string[]).includes(publication.state) ||
+        Boolean(publication.error)),
     );
     // The founder sees the platform's own words, never a "please try again".
     const failureReason = failed

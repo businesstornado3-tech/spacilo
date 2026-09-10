@@ -590,7 +590,9 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       platform_url: attempt.record.platformUrl,
       // The REAL provider reason is stored verbatim (already sanitised of any
       // token by the adapter), with a short reference the founder can quote.
-      error: published ? null : `${attempt.record.error ?? attempt.record.state} [ref ${attemptRef}]`,
+      error: published
+        ? null
+        : `${attempt.record.error ?? attempt.record.state} [ref ${attemptRef}]`,
       published_at: published ? nowIso : null,
       updated_at: nowIso,
     };

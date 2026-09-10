@@ -64,10 +64,19 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "The van drives off empty; the pavement is clear.",
     ctaTreatment: "Spoken over the empty pavement.",
     beats: [
-      { visual: "A hired van outside a terraced house, doors open, rain just stopping.", caption: "Moving day" },
-      { visual: "Boxes stacked on the pavement while a completion call goes unanswered.", caption: "The dates don't line up" },
+      {
+        visual: "A hired van outside a terraced house, doors open, rain just stopping.",
+        caption: "Moving day",
+      },
+      {
+        visual: "Boxes stacked on the pavement while a completion call goes unanswered.",
+        caption: "The dates don't line up",
+      },
       { visual: "A nearby garage door rolling up on a dry, swept bay.", caption: "Space nearby" },
-      { visual: "The last box carried in; the two people shake hands at the door.", caption: "Sorted for now" },
+      {
+        visual: "The last box carried in; the two people shake hands at the door.",
+        caption: "Sorted for now",
+      },
     ],
   },
   {
@@ -89,10 +98,23 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "The finished room, empty and light.",
     ctaTreatment: "On-screen only, over the finished room.",
     beats: [
-      { visual: "A half-stripped living room where furniture is shoved into the middle under sheets.", caption: "Nowhere to work" },
-      { visual: "A plasterer edging around a wrapped sofa, shaking his head.", caption: "The job takes twice as long" },
-      { visual: "The same furniture, wrapped and stacked neatly in a dry lock-up two streets away.", caption: "Out of the way" },
-      { visual: "The finished room: bare, bright, floor clear, ready to be lived in.", caption: "Done properly" },
+      {
+        visual:
+          "A half-stripped living room where furniture is shoved into the middle under sheets.",
+        caption: "Nowhere to work",
+      },
+      {
+        visual: "A plasterer edging around a wrapped sofa, shaking his head.",
+        caption: "The job takes twice as long",
+      },
+      {
+        visual: "The same furniture, wrapped and stacked neatly in a dry lock-up two streets away.",
+        caption: "Out of the way",
+      },
+      {
+        visual: "The finished room: bare, bright, floor clear, ready to be lived in.",
+        caption: "Done properly",
+      },
     ],
   },
   {
@@ -114,9 +136,18 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "The same room with a cot and nothing else.",
     ctaTreatment: "Whispered voiceover over the finished nursery.",
     beats: [
-      { visual: "A box room so full the door only opens halfway.", caption: "The room that has to change" },
-      { visual: "Hands lifting an old amplifier and a rail of coats with nowhere to put them.", caption: "None of it can go" },
-      { visual: "The same items on shelving in a clean, dry spare room elsewhere.", caption: "Kept, just not here" },
+      {
+        visual: "A box room so full the door only opens halfway.",
+        caption: "The room that has to change",
+      },
+      {
+        visual: "Hands lifting an old amplifier and a rail of coats with nowhere to put them.",
+        caption: "None of it can go",
+      },
+      {
+        visual: "The same items on shelving in a clean, dry spare room elsewhere.",
+        caption: "Kept, just not here",
+      },
       { visual: "A cot against a fresh wall, everything else gone.", caption: "Ready" },
     ],
   },
@@ -139,9 +170,19 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "A bike wheeled into a neighbour's garage.",
     ctaTreatment: "Fast on-screen line, no voiceover.",
     beats: [
-      { visual: "A hall corridor on the last day of term: propped doors, bin bags, a mini fridge in the way.", caption: "Halls close" },
-      { visual: "A boot that will not take a bike, a fridge and three laundry bags.", caption: "It doesn't all fit" },
-      { visual: "A nearby garage taking the fridge and the bike, labelled and stacked.", caption: "Leave it locally" },
+      {
+        visual:
+          "A hall corridor on the last day of term: propped doors, bin bags, a mini fridge in the way.",
+        caption: "Halls close",
+      },
+      {
+        visual: "A boot that will not take a bike, a fridge and three laundry bags.",
+        caption: "It doesn't all fit",
+      },
+      {
+        visual: "A nearby garage taking the fridge and the bike, labelled and stacked.",
+        caption: "Leave it locally",
+      },
       { visual: "An empty room, keys handed to the porter.", caption: "Come back in September" },
     ],
   },
@@ -164,10 +205,22 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "A clear shed with just tools in it.",
     ctaTreatment: "Quiet closing line.",
     beats: [
-      { visual: "Garden furniture stacked under a soaked cover in October drizzle.", caption: "Out of season" },
-      { visual: "A shed door that will not close behind a parasol and a paddling pool.", caption: "Six months in the way" },
-      { visual: "The same furniture dry and stacked in a neighbour's outbuilding.", caption: "Somewhere dry, nearby" },
-      { visual: "A tidy shed with a mower, a spade and floor to stand on.", caption: "Room to use it again" },
+      {
+        visual: "Garden furniture stacked under a soaked cover in October drizzle.",
+        caption: "Out of season",
+      },
+      {
+        visual: "A shed door that will not close behind a parasol and a paddling pool.",
+        caption: "Six months in the way",
+      },
+      {
+        visual: "The same furniture dry and stacked in a neighbour's outbuilding.",
+        caption: "Somewhere dry, nearby",
+      },
+      {
+        visual: "A tidy shed with a mower, a spade and floor to stand on.",
+        caption: "Room to use it again",
+      },
     ],
   },
   {
@@ -189,10 +242,22 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "A photograph album kept out on the new coffee table.",
     ctaTreatment: "Spoken, calm.",
     beats: [
-      { visual: "A dining room half empty, a china cabinet still against the wall.", caption: "Time to move on" },
-      { visual: "Two people looking at a table that will not fit in the new flat.", caption: "Some of it can't come" },
-      { visual: "The table wrapped and stored in a dry local space, labelled clearly.", caption: "Not decided yet" },
-      { visual: "A small flat, comfortable, one album out on the table.", caption: "Keep what matters" },
+      {
+        visual: "A dining room half empty, a china cabinet still against the wall.",
+        caption: "Time to move on",
+      },
+      {
+        visual: "Two people looking at a table that will not fit in the new flat.",
+        caption: "Some of it can't come",
+      },
+      {
+        visual: "The table wrapped and stored in a dry local space, labelled clearly.",
+        caption: "Not decided yet",
+      },
+      {
+        visual: "A small flat, comfortable, one album out on the table.",
+        caption: "Keep what matters",
+      },
     ],
   },
   {
@@ -214,10 +279,22 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "The boxes gone, the hall usable again.",
     ctaTreatment: "On-screen, over the empty hall.",
     beats: [
-      { visual: "A hall of packed boxes with a SOLD board visible through the door glass.", caption: "Packed and waiting" },
-      { visual: "A phone call taken standing between two towers of cartons.", caption: "The chain slipped" },
-      { visual: "The same cartons in a clean, dry local space; the hall is clear.", caption: "Somewhere to put it" },
-      { visual: "Someone sitting down in a normal, uncluttered hallway.", caption: "Live normally meanwhile" },
+      {
+        visual: "A hall of packed boxes with a SOLD board visible through the door glass.",
+        caption: "Packed and waiting",
+      },
+      {
+        visual: "A phone call taken standing between two towers of cartons.",
+        caption: "The chain slipped",
+      },
+      {
+        visual: "The same cartons in a clean, dry local space; the hall is clear.",
+        caption: "Somewhere to put it",
+      },
+      {
+        visual: "Someone sitting down in a normal, uncluttered hallway.",
+        caption: "Live normally meanwhile",
+      },
     ],
   },
   {
@@ -240,7 +317,10 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ctaTreatment: "One line on screen at the end.",
     beats: [
       { visual: "A spare room filled corner to corner, shot straight on.", caption: "Before" },
-      { visual: "Hands labelling boxes; a rowing machine tipped on its side.", caption: "Nothing here is rubbish" },
+      {
+        visual: "Hands labelling boxes; a rowing machine tipped on its side.",
+        caption: "Nothing here is rubbish",
+      },
       { visual: "The same boxes on racking in a dry local unit.", caption: "Stored nearby" },
       { visual: "The identical frame of the room: empty, light, usable.", caption: "After" },
     ],
@@ -264,9 +344,18 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "The sofa in a new flat, a year later.",
     ctaTreatment: "Spoken over the new flat.",
     beats: [
-      { visual: "A sofa being wrapped in moving blankets in a small flat.", caption: "Furnished rental, own sofa" },
-      { visual: "Two people looking at a van and a sofa that has nowhere to go.", caption: "Sell it or store it" },
-      { visual: "The wrapped sofa upright in a dry garage bay, breathable cover on.", caption: "Kept safe" },
+      {
+        visual: "A sofa being wrapped in moving blankets in a small flat.",
+        caption: "Furnished rental, own sofa",
+      },
+      {
+        visual: "Two people looking at a van and a sofa that has nowhere to go.",
+        caption: "Sell it or store it",
+      },
+      {
+        visual: "The wrapped sofa upright in a dry garage bay, breathable cover on.",
+        caption: "Kept safe",
+      },
       { visual: "The same sofa in a new flat with the cover coming off.", caption: "Still yours" },
     ],
   },
@@ -289,9 +378,18 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "The kitchen back to being a kitchen.",
     ctaTreatment: "Direct, businesslike.",
     beats: [
-      { visual: "A kitchen table buried under mailing bags and a label printer.", caption: "Orders are good" },
-      { visual: "A hallway lined both sides with stock cartons.", caption: "The house is the warehouse" },
-      { visual: "The same cartons on shelving in a nearby lock-up, picked to order.", caption: "Stock stored locally" },
+      {
+        visual: "A kitchen table buried under mailing bags and a label printer.",
+        caption: "Orders are good",
+      },
+      {
+        visual: "A hallway lined both sides with stock cartons.",
+        caption: "The house is the warehouse",
+      },
+      {
+        visual: "The same cartons on shelving in a nearby lock-up, picked to order.",
+        caption: "Stock stored locally",
+      },
       { visual: "A cleared kitchen table with a cup of tea on it.", caption: "Home is home again" },
     ],
   },
@@ -314,10 +412,22 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "Two riders leaving a garage together.",
     ctaTreatment: "On-screen over the ride away.",
     beats: [
-      { visual: "A narrow hallway with a bike wedged against the front door.", caption: "Three bikes, one hallway" },
-      { visual: "A turbo trainer and kit bags stacked against the stairs.", caption: "And everything else" },
-      { visual: "A nearby garage with bikes on wall hooks and kit on a shelf.", caption: "Stored near the ride" },
-      { visual: "Two riders wheeling out of the garage onto a canal path.", caption: "Out before work" },
+      {
+        visual: "A narrow hallway with a bike wedged against the front door.",
+        caption: "Three bikes, one hallway",
+      },
+      {
+        visual: "A turbo trainer and kit bags stacked against the stairs.",
+        caption: "And everything else",
+      },
+      {
+        visual: "A nearby garage with bikes on wall hooks and kit on a shelf.",
+        caption: "Stored near the ride",
+      },
+      {
+        visual: "Two riders wheeling out of the garage onto a canal path.",
+        caption: "Out before work",
+      },
     ],
   },
   {
@@ -339,10 +449,22 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "The finished piece on the bench.",
     ctaTreatment: "Quiet on-screen line.",
     beats: [
-      { visual: "A model half built on a bedroom desk, tools balanced on books.", caption: "No room to work" },
-      { visual: "Timber and a tool chest stacked beside the bed.", caption: "The hobby has outgrown the house" },
-      { visual: "A dry, lit bay in a local outbuilding with a bench set up.", caption: "A place for it" },
-      { visual: "The finished model on a clean bench, tools racked behind.", caption: "Finished properly" },
+      {
+        visual: "A model half built on a bedroom desk, tools balanced on books.",
+        caption: "No room to work",
+      },
+      {
+        visual: "Timber and a tool chest stacked beside the bed.",
+        caption: "The hobby has outgrown the house",
+      },
+      {
+        visual: "A dry, lit bay in a local outbuilding with a bench set up.",
+        caption: "A place for it",
+      },
+      {
+        visual: "The finished model on a clean bench, tools racked behind.",
+        caption: "Finished properly",
+      },
     ],
   },
   {
@@ -364,10 +486,22 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "A swept, half-let bay with labelled boxes on one side.",
     ctaTreatment: "Host-facing spoken line.",
     beats: [
-      { visual: "A garage door rolling up on paint tins, an exercise bike and a broken mower.", caption: "Never held a car" },
-      { visual: "A hand switching on a strip light over a swept concrete floor.", caption: "It's a real room" },
-      { visual: "Shelving up one wall and clean floor marked out in one bay.", caption: "Half of it could earn" },
-      { visual: "Labelled boxes neatly in the marked bay, owner locking up.", caption: "Space that pays" },
+      {
+        visual: "A garage door rolling up on paint tins, an exercise bike and a broken mower.",
+        caption: "Never held a car",
+      },
+      {
+        visual: "A hand switching on a strip light over a swept concrete floor.",
+        caption: "It's a real room",
+      },
+      {
+        visual: "Shelving up one wall and clean floor marked out in one bay.",
+        caption: "Half of it could earn",
+      },
+      {
+        visual: "Labelled boxes neatly in the marked bay, owner locking up.",
+        caption: "Space that pays",
+      },
     ],
   },
   {
@@ -389,10 +523,22 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "The same room, half of it neatly in use.",
     ctaTreatment: "Host-facing on-screen line.",
     beats: [
-      { visual: "A spare bedroom, tidy and completely unused, door ajar.", caption: "Used twice a year" },
-      { visual: "An ironing board and empty shelves in a room nobody enters.", caption: "Heated, cleaned, paid for" },
-      { visual: "Neatly labelled boxes filling one half of the room.", caption: "Space someone nearby needs" },
-      { visual: "The owner closing the door on a tidy, half-used room.", caption: "Make space earn" },
+      {
+        visual: "A spare bedroom, tidy and completely unused, door ajar.",
+        caption: "Used twice a year",
+      },
+      {
+        visual: "An ironing board and empty shelves in a room nobody enters.",
+        caption: "Heated, cleaned, paid for",
+      },
+      {
+        visual: "Neatly labelled boxes filling one half of the room.",
+        caption: "Space someone nearby needs",
+      },
+      {
+        visual: "The owner closing the door on a tidy, half-used room.",
+        caption: "Make space earn",
+      },
     ],
   },
   {
@@ -415,7 +561,10 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ctaTreatment: "Spoken host line.",
     beats: [
       { visual: "A torch beam sweeping across an empty boarded loft.", caption: "Boarded and dry" },
-      { visual: "A strip light coming on to show clean boards and eaves shelving.", caption: "Already usable" },
+      {
+        visual: "A strip light coming on to show clean boards and eaves shelving.",
+        caption: "Already usable",
+      },
       { visual: "A few labelled crates set neatly along one side.", caption: "Room to spare" },
       { visual: "The hatch closing on a tidy, useful loft.", caption: "Space that earns" },
     ],
@@ -439,10 +588,22 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "A short walk to a nearby garage instead of a drive to a park.",
     ctaTreatment: "Spoken, plain.",
     beats: [
-      { visual: "A laptop on a kitchen table showing a storage quote, a mug beside it.", caption: "The quote came back high" },
-      { visual: "A hand drawing a line under a monthly figure on a notepad.", caption: "Every month, indefinitely" },
-      { visual: "A short walk down an ordinary street to a neighbour's garage.", caption: "Space nearby instead" },
-      { visual: "Boxes going in through a garage side door, keys in hand.", caption: "Local, and less" },
+      {
+        visual: "A laptop on a kitchen table showing a storage quote, a mug beside it.",
+        caption: "The quote came back high",
+      },
+      {
+        visual: "A hand drawing a line under a monthly figure on a notepad.",
+        caption: "Every month, indefinitely",
+      },
+      {
+        visual: "A short walk down an ordinary street to a neighbour's garage.",
+        caption: "Space nearby instead",
+      },
+      {
+        visual: "Boxes going in through a garage side door, keys in hand.",
+        caption: "Local, and less",
+      },
     ],
   },
   {
@@ -465,9 +626,18 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ctaTreatment: "One line over the clear frame.",
     beats: [
       { visual: "A locked-off wide of a full room, absolutely still.", caption: "Tuesday" },
-      { visual: "The same frame as a person carries the first box out.", caption: "One trip at a time" },
-      { visual: "The same frame, half clear, boxes stacked outside the door.", caption: "Stored nearby" },
-      { visual: "The identical frame, completely clear, held still.", caption: "Two Tuesdays later" },
+      {
+        visual: "The same frame as a person carries the first box out.",
+        caption: "One trip at a time",
+      },
+      {
+        visual: "The same frame, half clear, boxes stacked outside the door.",
+        caption: "Stored nearby",
+      },
+      {
+        visual: "The identical frame, completely clear, held still.",
+        caption: "Two Tuesdays later",
+      },
     ],
   },
   {
@@ -490,8 +660,14 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ctaTreatment: "Single spoken line over the last door.",
     beats: [
       { visual: "A landing door stopping against a stack of crates.", caption: "It builds up" },
-      { visual: "Intercut: a porch and an under-stairs, both full to the ceiling.", caption: "Every house has one" },
-      { visual: "Boxes carried out to a neighbour's dry garage across three houses.", caption: "Space someone already has" },
+      {
+        visual: "Intercut: a porch and an under-stairs, both full to the ceiling.",
+        caption: "Every house has one",
+      },
+      {
+        visual: "Boxes carried out to a neighbour's dry garage across three houses.",
+        caption: "Space someone already has",
+      },
       { visual: "Three doors, all swinging fully open.", caption: "Room to breathe" },
     ],
   },
@@ -514,9 +690,18 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "Point-of-view walking into a clear hallway.",
     ctaTreatment: "Said to camera, informally.",
     beats: [
-      { visual: "Point-of-view looking down a hallway you have to turn sideways to pass.", caption: "This morning" },
-      { visual: "Point-of-view lifting a box to find three more behind it.", caption: "It's all still here" },
-      { visual: "Point-of-view walking two streets and opening a garage side door.", caption: "Five minutes away" },
+      {
+        visual: "Point-of-view looking down a hallway you have to turn sideways to pass.",
+        caption: "This morning",
+      },
+      {
+        visual: "Point-of-view lifting a box to find three more behind it.",
+        caption: "It's all still here",
+      },
+      {
+        visual: "Point-of-view walking two streets and opening a garage side door.",
+        caption: "Five minutes away",
+      },
       { visual: "Point-of-view stepping into a clear, wide hallway.", caption: "This evening" },
     ],
   },
@@ -539,10 +724,22 @@ export const CREATIVE_TREATMENTS: readonly CreativeTreatment[] = [
     ending: "Two doors, one exchange, both people going back inside.",
     ctaTreatment: "Spoken over the street wide.",
     beats: [
-      { visual: "A wide of an ordinary British street in late afternoon light.", caption: "One street" },
-      { visual: "One house with a full porch; opposite, a garage with an empty bay.", caption: "Two problems, one answer" },
-      { visual: "Boxes crossing the road on a sack barrow between the two houses.", caption: "Neighbours, not warehouses" },
-      { visual: "Both front doors closing; the street quiet again.", caption: "Space where you live" },
+      {
+        visual: "A wide of an ordinary British street in late afternoon light.",
+        caption: "One street",
+      },
+      {
+        visual: "One house with a full porch; opposite, a garage with an empty bay.",
+        caption: "Two problems, one answer",
+      },
+      {
+        visual: "Boxes crossing the road on a sack barrow between the two houses.",
+        caption: "Neighbours, not warehouses",
+      },
+      {
+        visual: "Both front doors closing; the street quiet again.",
+        caption: "Space where you live",
+      },
     ],
   },
 ];

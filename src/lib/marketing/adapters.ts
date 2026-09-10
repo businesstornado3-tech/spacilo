@@ -340,6 +340,13 @@ export function adapterFor(
     return metaAdapter(platform, context, capability, accountId);
   }
 
+  // YouTube is a two-step resumable upload: a JSON request only opens the
+  // session, so the file bytes must actually be sent before anything may be
+  // called published. Shorts use the same channel and the same upload.
+  if (platform === "youtube" || platform === "youtube_shorts") {
+    return youtubeAdapter(platform, context, capability, token);
+  }
+
   const call = async (
     asset: PlatformAsset,
     campaign: MarketingCampaign,

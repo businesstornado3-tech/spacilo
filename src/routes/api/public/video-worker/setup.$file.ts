@@ -11,7 +11,11 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 
-import { pairingCodeFromFileName } from "@/lib/marketing/workers/setup";
+import {
+  pairingCodeFromFileName,
+  pairingCodeFromPairFileName,
+  pairingScript,
+} from "@/lib/marketing/workers/setup";
 
 function json(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {

@@ -58,7 +58,9 @@ describe("youtube verification demo", () => {
   });
 
   it("claims readonly evidence only once a real channel came back", () => {
-    const steps = evidencedSteps(run({ channel: { id: "UC1", title: "EarnRoom", customUrl: null } }));
+    const steps = evidencedSteps(
+      run({ channel: { id: "UC1", title: "EarnRoom", customUrl: null } }),
+    );
     expect(steps).toContain("readonly_demo");
     expect(steps).not.toContain("real_upload");
   });
@@ -73,7 +75,11 @@ describe("youtube verification demo", () => {
   });
 
   it("marks the final publishing state once YouTube confirmed the upload", () => {
-    const confirmed = run({ marketingVideoId: "v1", youtubeVideoId: "w8a12T4jhxc", status: "UPLOADED" });
+    const confirmed = run({
+      marketingVideoId: "v1",
+      youtubeVideoId: "w8a12T4jhxc",
+      status: "UPLOADED",
+    });
     expect(uploadConfirmed(confirmed)).toBe(true);
     expect(evidencedSteps(confirmed)).toContain("final_state");
     expect(publishingStateLabel(confirmed)).toMatch(/published/i);
@@ -90,7 +96,6 @@ describe("youtube verification demo", () => {
     expect(RECORDING_CHECKLIST.length).toBeGreaterThan(5);
     expect(RECORDING_CHECKLIST.join(" ")).toMatch(/unverified-app/i);
   });
-
 
   it("redacts access tokens, refresh tokens, client secrets and passwords", () => {
     const text = redactSensitive(

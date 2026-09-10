@@ -45,8 +45,11 @@ export function useMarketingStudio(enabled: boolean) {
       onSuccess: invalidate,
     }),
     decide: useMutation({
-      mutationFn: (input: { campaignId: string; decision: "APPROVE" | "REJECT"; note?: string | undefined }) =>
-        decide({ data: input }),
+      mutationFn: (input: {
+        campaignId: string;
+        decision: "APPROVE" | "REJECT";
+        note?: string | undefined;
+      }) => decide({ data: input }),
       onSuccess: invalidate,
     }),
     publish: useMutation({

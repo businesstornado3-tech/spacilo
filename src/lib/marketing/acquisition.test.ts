@@ -66,7 +66,12 @@ describe("social channel diagnostic", () => {
 
   it("reports platform approval when public posting is not permitted yet", () => {
     const result = socialChannelStatus(
-      social({ platform: "tiktok", label: "TikTok", publicPublishingApproved: false, approvalNote: "Audit pending." }),
+      social({
+        platform: "tiktok",
+        label: "TikTok",
+        publicPublishingApproved: false,
+        approvalNote: "Audit pending.",
+      }),
     );
     expect(result.status).toBe("PLATFORM_APPROVAL_REQUIRED");
     expect(result.detail).toContain("Audit");
@@ -75,8 +80,9 @@ describe("social channel diagnostic", () => {
 
   it("surfaces the last failure rather than a stale live badge", () => {
     expect(
-      socialChannelStatus(social({ lastPublicationState: "PLATFORM_REJECTED", lastError: "Rejected." }))
-        .status,
+      socialChannelStatus(
+        social({ lastPublicationState: "PLATFORM_REJECTED", lastError: "Rejected." }),
+      ).status,
     ).toBe("FAILED");
   });
 
@@ -166,7 +172,9 @@ describe("totals", () => {
     const totals = acquisitionTotals([
       socialChannelStatus(social()),
       outreachChannelStatus(outreach({ adapterTransmits: false })),
-      socialChannelStatus(social({ platform: "instagram", label: "Instagram", credentialsConfigured: false })),
+      socialChannelStatus(
+        social({ platform: "instagram", label: "Instagram", credentialsConfigured: false }),
+      ),
     ]);
     expect(totals.live).toBe(1);
     expect(totals.mock).toBe(1);

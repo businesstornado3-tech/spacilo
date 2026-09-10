@@ -443,177 +443,176 @@ async function publishCampaignAssets(
   userId: string,
   data: { campaignId: string },
 ): Promise<PublishOutcome> {
-    {
-      const now = Date.now();
-      const { attemptPublish, unconfiguredAdapter, adapterFor } = await import("@/lib/marketing");
-      // Stored authorisations live in a table only the server can read, and
-      // are decrypted here, per publish, and never returned to the browser.
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { decryptToken } = await import("@/lib/marketing/token-crypto.server");
-      const { data: tokenRows } = await supabaseAdmin
-        .from("marketing_platform_tokens")
-        .select("platform, access_token_cipher, page_token_cipher, account_id, expires_at");
-      const { data: accountRows } = await supabase
-        .from("marketing_platform_connections")
-        .select("platform, account_id");
+  {
+    const now = Date.now();
+    const { attemptPublish, unconfiguredAdapter, adapterFor } = await import("@/lib/marketing");
+    // Stored authorisations live in a table only the server can read, and
+    // are decrypted here, per publish, and never returned to the browser.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { decryptToken } = await import("@/lib/marketing/token-crypto.server");
+    const { data: tokenRows } = await supabaseAdmin
+      .from("marketing_platform_tokens")
+      .select("platform, access_token_cipher, page_token_cipher, account_id, expires_at");
+    const { data: accountRows } = await supabase
+      .from("marketing_platform_connections")
+      .select("platform, account_id");
 
-      const resolveAdapter = async (platform: PlatformId) => {
-        const tokenRow = ((tokenRows ?? []) as any[]).find(
-          (row) =>
-            row.platform === platform ||
-            (platform === "youtube_shorts" && row.platform === "youtube"),
+    const resolveAdapter = async (platform: PlatformId) => {
+      const tokenRow = ((tokenRows ?? []) as any[]).find(
+        (row) =>
+          row.platform === platform ||
+          (platform === "youtube_shorts" && row.platform === "youtube"),
+      );
+      const accountId =
+        ((accountRows ?? []) as any[]).find((row) => row.platform === platform)?.account_id ??
+        tokenRow?.account_id ??
+        null;
+      if (!tokenRow || (tokenRow.expires_at && Date.parse(tokenRow.expires_at) <= now)) {
+        return unconfiguredAdapter(platform, settings);
+      }
+      let accessToken: string | null = null;
+      try {
+        accessToken = await decryptToken(tokenRow.access_token_cipher);
+      } catch {
+        accessToken = null;
+      }
+      if (!accessToken || !accountId) return unconfiguredAdapter(platform, settings);
+      // Facebook publishes with the Facebook Page token, never the user
+      // token. Instagram uses Instagram Login and needs no Page token.
+      let pageAccessToken: string | null = null;
+      if (platform === "facebook") {
+        const metaRow = ((tokenRows ?? []) as any[]).find(
+          (row) => row.page_token_cipher && row.platform === "facebook",
         );
-        const accountId =
-          ((accountRows ?? []) as any[]).find((row) => row.platform === platform)?.account_id ??
-          tokenRow?.account_id ??
-          null;
-        if (!tokenRow || (tokenRow.expires_at && Date.parse(tokenRow.expires_at) <= now)) {
-          return unconfiguredAdapter(platform, settings);
-        }
-        let accessToken: string | null = null;
-        try {
-          accessToken = await decryptToken(tokenRow.access_token_cipher);
-        } catch {
-          accessToken = null;
-        }
-        if (!accessToken || !accountId) return unconfiguredAdapter(platform, settings);
-        // Facebook publishes with the Facebook Page token, never the user
-        // token. Instagram uses Instagram Login and needs no Page token.
-        let pageAccessToken: string | null = null;
-        if (platform === "facebook") {
-          const metaRow = ((tokenRows ?? []) as any[]).find(
-            (row) => row.page_token_cipher && row.platform === "facebook",
-          );
-          if (metaRow) {
-            try {
-              pageAccessToken = await decryptToken(metaRow.page_token_cipher);
-            } catch {
-              pageAccessToken = null;
-            }
+        if (metaRow) {
+          try {
+            pageAccessToken = await decryptToken(metaRow.page_token_cipher);
+          } catch {
+            pageAccessToken = null;
           }
         }
-        return adapterFor(platform, {
-          connection: connections.find((entry) => entry.platform === platform) ?? null,
-          accessToken,
-          accountId,
-          pageAccessToken,
-          settings,
-          connections,
-          now,
-          fetchImpl: runtimeFetch,
-        });
-      };
+      }
+      return adapterFor(platform, {
+        connection: connections.find((entry) => entry.platform === platform) ?? null,
+        accessToken,
+        accountId,
+        pageAccessToken,
+        settings,
+        connections,
+        now,
+        fetchImpl: runtimeFetch,
+      });
+    };
 
-      /**
-       * Meta fetches the media itself, so a Meta asset is handed a temporary
-       * signed link to that one stored object. Nothing else is exposed and the
-       * link expires shortly after the processing window.
-       */
-      const metaMediaUrl = async (assetId: string): Promise<string | null> => {
-        const { data: video } = await supabase
-          .from("marketing_videos")
-          .select("storage_path")
-          .eq("campaign_id", data.campaignId)
-          .eq("asset_id", assetId)
-          .not("storage_path", "is", null)
-          .maybeSingle();
-        if (!video?.storage_path) return null;
-        const { data: signed } = await (supabaseAdmin as any).storage
-          .from("marketing-videos")
-          .createSignedUrl(video.storage_path, 3600);
-        return signed?.signedUrl ?? null;
-      };
-
-      const [settings, connections] = await Promise.all([
-        readSettings(supabase),
-        readConnections(supabase),
-      ]);
-      const { data: row } = await supabase
-        .from("marketing_campaigns")
-        .select("campaign, status")
-        .eq("id", data.campaignId)
+    /**
+     * Meta fetches the media itself, so a Meta asset is handed a temporary
+     * signed link to that one stored object. Nothing else is exposed and the
+     * link expires shortly after the processing window.
+     */
+    const metaMediaUrl = async (assetId: string): Promise<string | null> => {
+      const { data: video } = await supabase
+        .from("marketing_videos")
+        .select("storage_path")
+        .eq("campaign_id", data.campaignId)
+        .eq("asset_id", assetId)
+        .not("storage_path", "is", null)
         .maybeSingle();
-      if (!row?.campaign) throw new Error("That campaign no longer exists.");
-      const campaign = row.campaign as MarketingCampaign;
-      if (row.status !== "APPROVED") throw new Error("Approve the campaign before publishing it.");
+      if (!video?.storage_path) return null;
+      const { data: signed } = await (supabaseAdmin as any).storage
+        .from("marketing-videos")
+        .createSignedUrl(video.storage_path, 3600);
+      return signed?.signedUrl ?? null;
+    };
 
-      const { data: pubRows } = await supabase
+    const [settings, connections] = await Promise.all([
+      readSettings(supabase),
+      readConnections(supabase),
+    ]);
+    const { data: row } = await supabase
+      .from("marketing_campaigns")
+      .select("campaign, status")
+      .eq("id", data.campaignId)
+      .maybeSingle();
+    if (!row?.campaign) throw new Error("That campaign no longer exists.");
+    const campaign = row.campaign as MarketingCampaign;
+    if (row.status !== "APPROVED") throw new Error("Approve the campaign before publishing it.");
+
+    const { data: pubRows } = await supabase
+      .from("marketing_publications")
+      .select(
+        "campaign_id, asset_id, platform, state, platform_post_id, platform_url, error, retry_count, updated_at",
+      )
+      .eq("campaign_id", data.campaignId);
+
+    const results: { platform: string; state: string; detail: string }[] = [];
+    for (const asset of campaign.assets) {
+      const existing = ((pubRows ?? []) as any[]).find((entry) => entry.asset_id === asset.id);
+      const record: PublicationRecord = {
+        campaignId: campaign.id,
+        assetId: asset.id,
+        platform: asset.platform,
+        state: existing?.state ?? "QUEUED",
+        platformPostId: existing?.platform_post_id ?? null,
+        platformUrl: existing?.platform_url ?? null,
+        error: existing?.error ?? null,
+        retryCount: existing?.retry_count ?? 0,
+        updatedAt: now,
+      };
+      if (record.state === "PUBLISHED") continue;
+
+      const isMeta = asset.platform === "facebook" || asset.platform === "instagram";
+      const publishAsset = isMeta
+        ? { ...asset, videoUrl: (await metaMediaUrl(asset.id)) ?? asset.videoUrl }
+        : asset;
+
+      const attempt = await attemptPublish({
+        adapter: await resolveAdapter(asset.platform),
+        asset: publishAsset,
+        campaign,
+        connections,
+        settings,
+        record,
+        now,
+      });
+
+      await supabase
         .from("marketing_publications")
-        .select(
-          "campaign_id, asset_id, platform, state, platform_post_id, platform_url, error, retry_count, updated_at",
-        )
-        .eq("campaign_id", data.campaignId);
-
-      const results: { platform: string; state: string; detail: string }[] = [];
-      for (const asset of campaign.assets) {
-        const existing = ((pubRows ?? []) as any[]).find((entry) => entry.asset_id === asset.id);
-        const record: PublicationRecord = {
-          campaignId: campaign.id,
-          assetId: asset.id,
-          platform: asset.platform,
-          state: existing?.state ?? "QUEUED",
-          platformPostId: existing?.platform_post_id ?? null,
-          platformUrl: existing?.platform_url ?? null,
-          error: existing?.error ?? null,
-          retryCount: existing?.retry_count ?? 0,
-          updatedAt: now,
-        };
-        if (record.state === "PUBLISHED") continue;
-
-        const isMeta = asset.platform === "facebook" || asset.platform === "instagram";
-        const publishAsset = isMeta
-          ? { ...asset, videoUrl: (await metaMediaUrl(asset.id)) ?? asset.videoUrl }
-          : asset;
-
-        const attempt = await attemptPublish({
-          adapter: await resolveAdapter(asset.platform),
-          asset: publishAsset,
-          campaign,
-          connections,
-          settings,
-          record,
-          now,
-        });
-
-        await supabase
-          .from("marketing_publications")
-          .update({
-            state: attempt.record.state,
-            platform_post_id: attempt.record.platformPostId,
-            platform_url: attempt.record.platformUrl,
-            error: attempt.record.error,
-            retry_count: attempt.record.retryCount,
-            published_at: attempt.record.state === "PUBLISHED" ? new Date(now).toISOString() : null,
-          })
-          .eq("campaign_id", campaign.id)
-          .eq("asset_id", asset.id);
-
-        await supabase.from("marketing_audit").insert({
-          campaign_id: campaign.id,
-          action: attempt.record.state === "PUBLISHED" ? "published" : "publication_blocked",
-          detail: attemptDetail(attempt),
-          actor: "engine",
-          actor_id: userId,
-        });
-
-        results.push({
-          platform: asset.platform,
+        .update({
           state: attempt.record.state,
-          detail: attemptDetail(attempt),
-        });
-      }
+          platform_post_id: attempt.record.platformPostId,
+          platform_url: attempt.record.platformUrl,
+          error: attempt.record.error,
+          retry_count: attempt.record.retryCount,
+          published_at: attempt.record.state === "PUBLISHED" ? new Date(now).toISOString() : null,
+        })
+        .eq("campaign_id", campaign.id)
+        .eq("asset_id", asset.id);
 
-      const published =
-        results.every((result) => result.state === "PUBLISHED") && results.length > 0;
-      if (published) {
-        await supabase
-          .from("marketing_campaigns")
-          .update({ status: "PUBLISHED", published_at: new Date(now).toISOString() })
-          .eq("id", campaign.id);
-      }
+      await supabase.from("marketing_audit").insert({
+        campaign_id: campaign.id,
+        action: attempt.record.state === "PUBLISHED" ? "published" : "publication_blocked",
+        detail: attemptDetail(attempt),
+        actor: "engine",
+        actor_id: userId,
+      });
 
-      return { results };
+      results.push({
+        platform: asset.platform,
+        state: attempt.record.state,
+        detail: attemptDetail(attempt),
+      });
     }
+
+    const published = results.every((result) => result.state === "PUBLISHED") && results.length > 0;
+    if (published) {
+      await supabase
+        .from("marketing_campaigns")
+        .update({ status: "PUBLISHED", published_at: new Date(now).toISOString() })
+        .eq("id", campaign.id);
+    }
+
+    return { results };
+  }
 }
 
 export const publishMarketingCampaign = createServerFn({ method: "POST" })

@@ -82,5 +82,4 @@ describe("content validation", () => {
     expect(result.passed).toBe(false);
     expect(result.failures.join(" ")).toContain("Same opportunity already ran");
   });
-
 });

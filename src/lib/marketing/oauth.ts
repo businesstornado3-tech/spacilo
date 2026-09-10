@@ -161,9 +161,9 @@ export function oauthConfigState(
   const def = oauthDefinition(platform);
   const overridePresent = Boolean(
     def.overrideClientIdSecret &&
-      def.overrideClientSecretSecret &&
-      configuredSecrets.includes(def.overrideClientIdSecret) &&
-      configuredSecrets.includes(def.overrideClientSecretSecret),
+    def.overrideClientSecretSecret &&
+    configuredSecrets.includes(def.overrideClientIdSecret) &&
+    configuredSecrets.includes(def.overrideClientSecretSecret),
   );
   const missing = overridePresent
     ? []

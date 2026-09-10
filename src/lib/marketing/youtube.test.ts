@@ -21,7 +21,9 @@ describe("fetchYoutubeChannels", () => {
   });
 
   it("reports no channels rather than inventing one", async () => {
-    const fetchImpl = vi.fn(async () => jsonResponse(200, { items: [] })) as unknown as typeof fetch;
+    const fetchImpl = vi.fn(async () =>
+      jsonResponse(200, { items: [] }),
+    ) as unknown as typeof fetch;
 
     const result = await fetchYoutubeChannels(fetchImpl, "token");
 
@@ -101,7 +103,9 @@ describe("publishYoutubeVideo", () => {
   });
 
   it("fails clearly when the rendered file cannot be read", async () => {
-    const fetchImpl = vi.fn(async () => new Response("", { status: 404 })) as unknown as typeof fetch;
+    const fetchImpl = vi.fn(
+      async () => new Response("", { status: 404 }),
+    ) as unknown as typeof fetch;
 
     const result = await publishYoutubeVideo({ ...base, fetchImpl });
 

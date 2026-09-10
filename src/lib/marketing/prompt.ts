@@ -92,6 +92,8 @@ export function buildVideoPrompt(
     `Visual style: ${profile.visualStyle} Real UK homes, garages, lofts and spare rooms. British people, British streets, British weather. No American signage, no dollar signs, no imperial units.`,
     "Scenes:",
     ...timedScenes(asset, campaign),
+    "Do not generate any logo, company logo, brand mark, watermark, or textual brand identity. EarnRoom branding is applied separately by the deterministic post-production branding layer.",
+    "Never write the word EarnRoom, a web address, or any invented company name into the picture.",
     `Final 3 seconds: hold a clean, uncluttered end card area on a warm neutral background with space at the centre for a logo and two lines of text. Do not draw any logo, wordmark, emblem or brand symbol yourself — leave that area empty.`,
     `Spoken closing line — ${asset.cta}`,
     "Every person shown is a general illustration, not a named or real customer. No testimonials, no on-screen statistics, no prices, no earnings figures.",

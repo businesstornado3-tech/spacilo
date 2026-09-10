@@ -310,20 +310,12 @@ export function simpleModeCards(input: {
   });
 }
 
-/** The label on the main generate button for the chosen mode. */
-export function generateButtonLabel(selected: WorkerMode | null): string {
-  switch (selected) {
-    case "BROWSER":
-      return "Generate Preview";
-    case "LOCAL":
-      return "Generate with Computer";
-    case "FREE_CLOUD":
-      return "Generate with Free Cloud";
-    case "PAID_CLOUD":
-      return "Generate Paid Video";
-    default:
-      return "Generate video";
-  }
+/**
+ * One button for every mode. There is exactly one Generate Video action in the
+ * studio, whichever route is chosen.
+ */
+export function generateButtonLabel(_selected: WorkerMode | null): string {
+  return "Generate Video";
 }
 
 /**

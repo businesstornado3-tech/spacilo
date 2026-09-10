@@ -65,20 +65,21 @@ const COPY: Record<
   { title: string; description: string; cost: string; limitation: string | null }
 > = {
   BROWSER: {
-    title: "Browser Preview",
-    description: "Free browser-based preview generation. Best for testing campaigns and layouts.",
+    title: "Browser",
+    description:
+      "Generate directly in your browser. Branded EarnRoom animation, made at no cost.",
     cost: "£0",
-    limitation: "Not intended for publication-quality cinematic video.",
+    limitation: "Animated EarnRoom film, not AI-generated live-action footage.",
   },
   LOCAL: {
-    title: "Computer Mode",
-    description: "Make videos on your own computer with the EarnRoom Video Worker.",
+    title: "Computer",
+    description: "Generate using your computer with the EarnRoom Video Worker.",
     cost: "£0",
     limitation: null,
   },
   FREE_CLOUD: {
     title: "Free Cloud",
-    description: "Make videos using a connected free cloud worker.",
+    description: "Generate using available free cloud capacity.",
     cost: "£0",
     limitation: null,
   },

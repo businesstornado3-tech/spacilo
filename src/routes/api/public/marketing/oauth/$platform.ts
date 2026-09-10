@@ -32,11 +32,13 @@ const PLATFORMS = [
  * server-side; redirecting immediately means it is never left on screen. The
  * destination carries a plain-language outcome only — never a code or token.
  */
+export const OAUTH_RETURN_PATH = "/admin/marketing";
+
 function back(platform: string, outcome: { ok: boolean; message: string }): Response {
-  const base =
-    platform === "youtube" || platform === "youtube_shorts"
-      ? "/admin/youtube-verification-demo"
-      : "/admin/marketing";
+  // Every platform, YouTube included, returns to the Marketing Studio. The
+  // Google verification recording page is a separate compliance tool and is
+  // never a normal connection destination.
+  const base = OAUTH_RETURN_PATH;
   const query = outcome.ok
     ? "connected=1"
     : `connect_error=${encodeURIComponent(outcome.message)}`;

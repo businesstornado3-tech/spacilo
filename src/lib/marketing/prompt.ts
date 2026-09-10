@@ -12,6 +12,7 @@
  * Pure module: no clock, no network, no vendor SDK.
  */
 import { brandProfile, taglineFor } from "./brand";
+import { CREATIVE_TREATMENTS, treatmentDirectives } from "./creative";
 import { definition } from "./platforms";
 import type { AspectRatio, MarketingCampaign, PlatformAsset, PlatformId } from "./types";
 
@@ -75,6 +76,16 @@ function situation(campaign: MarketingCampaign): string {
   }
 }
 
+/**
+ * The creative-treatment directives for this campaign, when the campaign
+ * recorded one. Older campaigns simply have none and film as before.
+ */
+function creativeLines(campaign: MarketingCampaign): string[] {
+  const id = campaign.story.creative?.treatmentId;
+  const treatment = CREATIVE_TREATMENTS.find((entry) => entry.id === id);
+  return treatment ? treatmentDirectives(treatment) : [];
+}
+
 export function buildVideoPrompt(
   campaign: MarketingCampaign,
   asset: PlatformAsset,
@@ -89,6 +100,7 @@ export function buildVideoPrompt(
     `Situation: ${situation(campaign)}`,
     `Audience: ${campaign.opportunity.audience.replace(/_/g, " ")}. Objective: ${campaign.opportunity.objective.replace(/_/g, " ").toLowerCase()}.`,
     `Platform treatment: ${TREATMENT[asset.platform]}`,
+    ...creativeLines(campaign),
     `Visual style: ${profile.visualStyle} Real UK homes, garages, lofts and spare rooms. British people, British streets, British weather. No American signage, no dollar signs, no imperial units.`,
     "Scenes:",
     ...timedScenes(asset, campaign),

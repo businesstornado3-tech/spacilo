@@ -12,6 +12,7 @@
  */
 import { buildAssets, suggestedPlatforms } from "./assets";
 import { coverageRows, type ContentHistoryEntry } from "./coverage";
+import { selectCreativeTreatment, type CreativeHistoryEntry } from "./creative";
 import { demandCreationOpportunities } from "./demand-creation";
 import {
   geographyOpportunities,
@@ -49,6 +50,11 @@ export type PlanInput = {
   /** Force a specific opportunity (founder override). */
   forceOpportunityKey?: string;
   platforms?: readonly PlatformId[];
+  /**
+   * Creative treatments used by recent campaigns, most recent first. Used only
+   * to avoid filming the same story twice; it never blocks a campaign.
+   */
+  recentCreative?: readonly CreativeHistoryEntry[];
 };
 
 export type DailyPlan = {
@@ -139,7 +145,20 @@ export function planDailyCampaign(input: PlanInput): DailyPlan {
 
   const year = Number(planDate.slice(0, 4));
   const campaignId = registryId("CAMP", year, nextSequence("CAMP", year, input.existingIds));
-  const story = buildStory(chosen.opportunity);
+  // Creative variety is decided here, before anything is written or rendered,
+  // so a different film costs nothing extra.
+  const creative = selectCreativeTreatment({
+    seed: `${chosen.opportunity.key}|${planDate}`,
+    audience: chosen.opportunity.audience,
+    history: input.recentCreative ?? [],
+  });
+  const plannedStory = buildStory(chosen.opportunity, { creative: creative.treatment });
+  const story = {
+    ...plannedStory,
+    ...(plannedStory.creative
+      ? { creative: { ...plannedStory.creative, avoided: creative.summary.avoided } }
+      : {}),
+  };
   const platforms = input.platforms ?? suggestedPlatforms(chosen.opportunity);
   const assets = buildAssets(campaignId, chosen.opportunity, story, platforms);
 
@@ -162,6 +181,16 @@ export function planDailyCampaign(input: PlanInput): DailyPlan {
       at: input.now,
       action: "content_generated",
       detail: `${statedAssets.length} platform asset(s) generated from a ${story.format.replace(/_/g, " ").toLowerCase()} story.`,
+      actor: "engine",
+    },
+    {
+      at: input.now,
+      action: "content_generated",
+      detail:
+        `Creative treatment: ${creative.summary.name} — ${creative.summary.setting}` +
+        (creative.summary.avoided.length > 0
+          ? ` Skipped ${creative.summary.avoided.length} recently used treatment(s) to avoid a near-duplicate video.`
+          : ""),
       actor: "engine",
     },
     {

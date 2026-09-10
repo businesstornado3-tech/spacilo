@@ -63,6 +63,12 @@ export type StudioPlatformRow = {
   watchUrl: string | null;
   /** One concise reason when publishing cannot run. Null otherwise. */
   reason: string | null;
+  /**
+   * The real provider failure from the last attempt, when there was one. Kept
+   * separate from `reason` so a blocked-but-never-attempted platform never
+   * looks like a failure.
+   */
+  failureReason?: string | null;
 };
 
 export type StudioConnectionInput = {
@@ -81,7 +87,34 @@ export type StudioPublicationInput = {
   state: string;
   platformUrl: string | null;
   platformPostId: string | null;
+  /** The real, already-sanitised reason the platform gave. Never a token. */
+  error?: string | null;
 };
+
+/** Publication states that mean the last attempt did not succeed. */
+export const FAILED_PUBLICATION_STATES = [
+  "UPLOAD_FAILED",
+  "PLATFORM_REJECTED",
+  "VALIDATION_FAILED",
+  "AUTH_REQUIRED",
+  "FAILED",
+] as const;
+
+/** Turns a stored publication state into one plain founder-facing sentence. */
+export function failureHeadline(state: string, label: string): string {
+  switch (state) {
+    case "AUTH_REQUIRED":
+      return `${label} did not accept the stored sign-in.`;
+    case "PLATFORM_REJECTED":
+      return `${label} rejected the video.`;
+    case "VALIDATION_FAILED":
+      return `The video did not meet ${label}'s requirements.`;
+    case "UPLOAD_FAILED":
+      return `The upload to ${label} did not finish.`;
+    default:
+      return `${label} did not confirm a publication.`;
+  }
+}
 
 /**
  * Builds all seven rows. `videoReady` is the canonical final-branded-artifact
@@ -170,8 +203,23 @@ export function studioPlatformRows(input: {
       return null;
     })();
 
-    const failed =
-      publication && publication.state !== "PUBLISHED" && publication.state.includes("FAIL");
+    // A failed attempt is any stored state that is neither queued nor
+    // published — including the platform refusing the sign-in or the file.
+    const failed = Boolean(
+      publication &&
+      publication.state !== "PUBLISHED" &&
+      ((FAILED_PUBLICATION_STATES as readonly string[]).includes(publication.state) ||
+        Boolean(publication.error)),
+    );
+    // The founder sees the platform's own words, never a "please try again".
+    const failureReason = failed
+      ? [
+          failureHeadline(publication!.state, label),
+          publication!.error ? `Reason: ${publication!.error}` : null,
+        ]
+          .filter(Boolean)
+          .join(" ")
+      : null;
 
     return {
       ...base,
@@ -181,7 +229,8 @@ export function studioPlatformRows(input: {
       actionLabel: failed && !blocked ? "Try again" : "Publish",
       canPublish: !blocked,
       publishing: blocked ?? (failed ? "Last attempt failed" : "Ready"),
-      reason: blocked ?? (failed ? `${label} publishing failed. Please try again.` : null),
+      reason: blocked ?? failureReason,
+      failureReason,
     };
   });
 }

@@ -317,7 +317,25 @@ export type PublishOutcome = {
   /** What the platform itself reports the visibility to be (YouTube). */
   visibility: string | null;
   alreadyPublished: boolean;
+  /** Short reference for this attempt, also stored with the failure record. */
+  attemptRef: string;
+  /** True when trying again unchanged could plausibly work. */
+  retryable: boolean;
 };
+
+/** A short, non-secret reference so a founder can quote one attempt. */
+export function attemptReference(platform: string, at: number): string {
+  return `${platform.slice(0, 2).toUpperCase()}-${at.toString(36).toUpperCase().slice(-6)}`;
+}
+
+/**
+ * Whether an unchanged retry could plausibly succeed. Authorisation and
+ * platform-rejection failures need a fix first, so the console must not invite
+ * the founder to hammer the same request.
+ */
+export function retryableState(state: string): boolean {
+  return state === "UPLOAD_FAILED" || state === "PAUSED";
+}
 
 /**
  * Publishes ONE stored, branded video to ONE platform, through the existing
@@ -343,6 +361,8 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
     const now = Date.now();
     const nowIso = new Date(now).toISOString();
 
+    const attemptRef = attemptReference(platform, now);
+
     const refuse = (detail: string, state = "AUTH_REQUIRED"): PublishOutcome => ({
       ok: false,
       state,
@@ -351,6 +371,8 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       platformUrl: null,
       visibility: null,
       alreadyPublished: false,
+      attemptRef,
+      retryable: retryableState(state),
     });
 
     /* Settings and pause control. */
@@ -395,6 +417,8 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
         platformUrl: existingPub.platform_url ?? null,
         visibility: null,
         alreadyPublished: true,
+        attemptRef,
+        retryable: false,
       };
     }
 
@@ -564,7 +588,11 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       state: attempt.record.state,
       platform_post_id: attempt.record.platformPostId,
       platform_url: attempt.record.platformUrl,
-      error: attempt.record.error,
+      // The REAL provider reason is stored verbatim (already sanitised of any
+      // token by the adapter), with a short reference the founder can quote.
+      error: published
+        ? null
+        : `${attempt.record.error ?? attempt.record.state} [ref ${attemptRef}]`,
       published_at: published ? nowIso : null,
       updated_at: nowIso,
     };
@@ -588,7 +616,7 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       action: published ? "published" : "publication_blocked",
       detail: published
         ? `${LABEL[platform]} confirmed publication ${attempt.record.platformPostId}.${visibilityNote}`
-        : `${LABEL[platform]}: ${attempt.record.error ?? attempt.record.state}`,
+        : `${LABEL[platform]} [ref ${attemptRef}]: ${attempt.record.error ?? attempt.record.state}`,
       actor: "human",
       actor_id: context.userId,
     });
@@ -603,5 +631,7 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       platformUrl: attempt.record.platformUrl,
       visibility,
       alreadyPublished: false,
+      attemptRef,
+      retryable: retryableState(attempt.record.state),
     };
   });

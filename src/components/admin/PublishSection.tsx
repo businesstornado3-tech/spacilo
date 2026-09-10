@@ -105,6 +105,7 @@ export function PublishSection({
       state: entry.state,
       platformUrl: entry.platformUrl,
       platformPostId: entry.platformPostId,
+      error: entry.error,
     })),
   );
 
@@ -143,17 +144,25 @@ export function PublishSection({
     mutation.mutate(
       { videoId: asset.videoId, platform: platform as PublishablePlatform },
       {
+        // The platform's own reason is shown, never a generic apology. The
+        // reference is a short, non-secret handle for this one attempt.
         onSuccess: (result) =>
           setNotice({
             ok: result.ok,
             text: result.ok
-              ? `Published to ${STUDIO_PLATFORM_LABEL[platform]}.`
-              : `${STUDIO_PLATFORM_LABEL[platform]} publishing did not complete. Please try again.`,
+              ? `Published to ${STUDIO_PLATFORM_LABEL[platform]}. ${result.detail}`
+              : `${STUDIO_PLATFORM_LABEL[platform]} did not publish. Reason: ${result.detail} ${
+                  result.retryable
+                    ? "This can be tried again."
+                    : "Trying again unchanged will not help — the reason above needs fixing first."
+                } Reference: ${result.attemptRef}`,
           }),
-        onError: () =>
+        onError: (error) =>
           setNotice({
             ok: false,
-            text: `${STUDIO_PLATFORM_LABEL[platform]} publishing failed. Please try again.`,
+            text: `${STUDIO_PLATFORM_LABEL[platform]} publishing could not be attempted: ${
+              error instanceof Error ? error.message : "the request did not reach EarnRoom."
+            }`,
           }),
       },
     );

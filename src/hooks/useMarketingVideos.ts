@@ -37,6 +37,7 @@ export function useCampaignVideos(campaignId: string | null) {
   const poll = useServerFn(pollCampaignVideo);
   const cancel = useServerFn(cancelCampaignVideo);
   const storeAnimated = useServerFn(storeAnimatedVideo);
+  const storeBranded = useServerFn(storeBrandedVideo);
 
   const query = useQuery<{ videos: MarketingVideoRow[] }>({
     queryKey: marketingVideoKeys.videos(campaignId ?? "none"),

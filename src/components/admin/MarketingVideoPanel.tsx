@@ -331,6 +331,9 @@ export function MarketingVideoPanel({
               </div>
               <p className="mt-1 type-body-xs text-muted-foreground">{card.description}</p>
               <p className="mt-1 type-body-xs text-muted-foreground">{card.costLine}</p>
+              {card.limitation ? (
+                <p className="mt-1 type-body-xs text-muted-foreground">{card.limitation}</p>
+              ) : null}
               {card.statusNote ? (
                 <p className="mt-1 type-body-xs text-muted-foreground">{card.statusNote}</p>
               ) : null}
@@ -345,11 +348,20 @@ export function MarketingVideoPanel({
                     {card.actionLabel}
                   </button>
                 ) : null}
-                {card.action === "INSTALL" || card.action === "START" ? (
+                {card.action === "INSTALL" ? (
                   <button
                     type="button"
                     onClick={() => setShowSetup(true)}
                     className="min-h-9 rounded-lg bg-primary px-3 type-body-xs font-semibold text-primary-foreground hover:opacity-90"
+                  >
+                    {card.actionLabel}
+                  </button>
+                ) : null}
+                {card.action === "START" ? (
+                  <button
+                    type="button"
+                    onClick={() => void workers.query.refetch()}
+                    className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary"
                   >
                     {card.actionLabel}
                   </button>
@@ -362,6 +374,7 @@ export function MarketingVideoPanel({
                       // Enabling only authorises the route. It never starts a
                       // generation and never spends anything by itself.
                       const next = !paidEnabled;
+                      if (next && !window.confirm(PAID_ENABLE_CONFIRMATION)) return;
                       if (!next && choice === "PAID_CLOUD") setChoice(null);
                       workers.preferences
                         .mutateAsync({ paidComputeEnabled: next })

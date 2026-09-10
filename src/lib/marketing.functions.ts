@@ -308,8 +308,14 @@ export const planMarketingCampaign = createServerFn({ method: "POST" })
       history,
       insights,
       existingIds,
+      // The daily limit is about how much EarnRoom actually PUBLISHES today,
+      // not how many campaigns were drafted. Counting drafts made every extra
+      // campaign fail its own safety check once four had been written.
       publishedToday: history.filter(
-        (entry) => entry.planDate === new Date(now).toISOString().slice(0, 10),
+        (entry) =>
+          entry.publishedAt !== null &&
+          new Date(entry.publishedAt).toISOString().slice(0, 10) ===
+            new Date(now).toISOString().slice(0, 10),
       ).length,
       ...(data.forceOpportunityKey ? { forceOpportunityKey: data.forceOpportunityKey } : {}),
     });

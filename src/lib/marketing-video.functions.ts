@@ -255,6 +255,8 @@ const generateSchema = z.object({
   browser: z.any().nullable().optional(),
   /** Explicit founder confirmation that a paid generation may be charged. */
   confirmPaid: z.boolean().default(false),
+  /** Which paid preset to use. Only read on the paid route. */
+  quality: z.enum(["STANDARD", "HIGHEST"]).optional(),
 });
 
 export type GenerateVideoResult = {

@@ -138,8 +138,36 @@ describe("marketing studio platform rows", () => {
       ],
     }).find((row) => row.platform === "youtube")!;
     expect(youtube.state).toBe("FAILED");
-    expect(youtube.reason).toBe("YouTube publishing failed. Please try again.");
+    expect(youtube.reason).toBe("The upload to YouTube did not finish.");
     expect(youtube.actionLabel).toBe("Try again");
+  });
+
+  it("shows the platform's own reason rather than a generic apology", () => {
+    const instagram = rows({
+      connections: [connection(), connection({ platform: "instagram", accountLabel: "@earnroom" })],
+      publications: [
+        {
+          platform: "instagram",
+          state: "PLATFORM_REJECTED",
+          platformUrl: null,
+          platformPostId: null,
+          error: "The media file is not a supported Reel format. [ref IN-ABC123]",
+        },
+      ],
+    }).find((row) => row.platform === "instagram")!;
+    expect(instagram.state).toBe("FAILED");
+    expect(instagram.reason).toContain("not a supported Reel format");
+    expect(instagram.reason).toContain("IN-ABC123");
+    expect(instagram.failureReason).toBe(instagram.reason);
+  });
+
+  it("does not turn a connected-but-unattempted platform into a failure", () => {
+    const facebook = rows({
+      connections: [connection(), connection({ platform: "facebook", accountLabel: "EarnRoom" })],
+      publications: [],
+    }).find((row) => row.platform === "facebook")!;
+    expect(facebook.state).toBe("CONNECTED");
+    expect(facebook.failureReason).toBeNull();
   });
 
   it("shows the in-flight platform as publishing, with no duplicate action", () => {

@@ -85,7 +85,7 @@ const COPY: Record<
   PAID_CLOUD: {
     title: "Paid Cloud",
     description: "Higher-quality cloud video generation, switched on by you.",
-    cost: "May incur usage charges — confirmed for every video",
+    cost: "May incur usage charges — the estimated cost is shown before you generate",
     limitation: null,
   },
 };

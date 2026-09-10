@@ -142,7 +142,12 @@ export function capabilityFor(
   now: number,
 ): PlatformCapability {
   const def = definition(platform);
-  const record = connections.find((candidate) => candidate.platform === platform);
+  // Shorts are a format of the connected YouTube channel, not a second
+  // account: they share one authorisation and one destination channel.
+  const connectionKey: PlatformId = platform === "youtube_shorts" ? "youtube" : platform;
+  const record =
+    connections.find((candidate) => candidate.platform === platform) ??
+    connections.find((candidate) => candidate.platform === connectionKey);
   const expired = Boolean(record?.expiresAt && record.expiresAt <= now);
   const connection: ConnectionState = !record
     ? "REQUIRES_CONFIGURATION"

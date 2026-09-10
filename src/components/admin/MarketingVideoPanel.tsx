@@ -23,6 +23,14 @@ import {
   validateModeSelection,
 } from "@/lib/marketing/workers/mode-panel";
 import { estimatedCostPence } from "@/lib/marketing/usage";
+import {
+  PAID_PRESETS,
+  paidConfirmationMessage,
+  paidPresetCostLine,
+  paidPresetCostPence,
+  paidPresetSpecLine,
+  type PaidQuality,
+} from "@/lib/marketing/paid-presets";
 import { definition } from "@/lib/marketing/platforms";
 import { playerBox, versionRow } from "@/lib/marketing/review";
 import type {

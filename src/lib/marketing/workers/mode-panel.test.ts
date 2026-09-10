@@ -110,7 +110,7 @@ describe("simple video generation modes", () => {
 
   it("reflects real free cloud availability instead of a permanent not connected", () => {
     const ready = find(cards({ workers: [worker("BROWSER"), worker("FREE_CLOUD")] }), "FREE_CLOUD");
-    expect(ready.status).toBe("READY");
+    expect(ready.status).toBe("AVAILABLE");
     expect(ready.available).toBe(true);
 
     const busy = find(
@@ -122,6 +122,8 @@ describe("simple video generation modes", () => {
     const gone = find(cards(), "FREE_CLOUD");
     expect(gone.status).toBe("NOT AVAILABLE");
     expect(gone.statusNote).toBe("No free cloud video worker is currently connected.");
+    expect(gone.action).toBe("CONNECT_FREE");
+    expect(gone.actionLabel).toBe("Connect Free Cloud Worker");
   });
 
   it("offers Paid Cloud with no separate switch, just one cost confirmation", () => {

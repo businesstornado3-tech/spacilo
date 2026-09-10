@@ -5,7 +5,7 @@ import {
   generationSummary,
   simpleModeCards,
   validateModeSelection,
-  PAID_GENERATION_CONFIRMATION,
+  estimatedCostLine,
   type SimpleModeCard,
 } from "./mode-panel";
 import { withHostedPaidCloud } from "./hosted";

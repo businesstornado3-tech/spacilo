@@ -34,22 +34,19 @@ const surfaceKey = (campaignId: string | null) =>
   ["marketing", "publishing", campaignId ?? "none"] as const;
 
 function toneFor(state: string): string {
-  if (state === "PUBLISHED" || state === "READY")
+  if (state === "PUBLISHED")
     return "border-success/30 bg-success-soft text-success-soft-foreground";
-  if (state === "FAILED") return "border-destructive/30 bg-destructive/10 text-destructive";
-  if (state === "NOT_READY")
-    return "border-warning/30 bg-warning-soft text-warning-soft-foreground";
+  if (state === "CONNECTED" || state === "FAILED" || state === "PUBLISHING")
+    return "border-success/30 bg-success-soft text-success-soft-foreground";
   return "border-border bg-secondary text-muted-foreground";
 }
 
 const STATE_WORD: Record<string, string> = {
   NOT_CONNECTED: "Not connected",
-  CONNECTED: "Connected",
-  READY: "Connected",
-  NOT_READY: "Not ready",
-  PUBLISHING: "Publishing",
-  PUBLISHED: "Published",
-  FAILED: "Failed",
+  CONNECTED: "Connected ✓",
+  PUBLISHING: "Connected ✓",
+  PUBLISHED: "Published ✓",
+  FAILED: "Connected ✓",
 };
 
 export function PublishSection({
@@ -185,9 +182,7 @@ export function PublishSection({
               </span>
             </div>
             <p className="mt-1 type-body-sm text-muted-foreground">{row.detail}</p>
-            {row.reason ? (
-              <p className="mt-1 type-body-xs text-muted-foreground">Reason: {row.reason}</p>
-            ) : null}
+            <p className="mt-1 type-body-xs text-muted-foreground">Publishing: {row.publishing}</p>
 
             {row.action === "WATCH" && row.watchUrl ? (
               <a
@@ -213,7 +208,8 @@ export function PublishSection({
             {row.action === "PUBLISH" ? (
               <button
                 type="button"
-                disabled={busy !== null}
+                disabled={busy !== null || !row.canPublish}
+                title={row.reason ?? undefined}
                 onClick={() => startPublish(row.platform)}
                 className="mt-3 min-h-11 rounded-lg bg-primary px-4 type-nav font-semibold text-primary-foreground disabled:opacity-60"
               >

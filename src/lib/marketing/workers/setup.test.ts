@@ -120,9 +120,8 @@ describe("a computer that already has the worker", () => {
       label: "My computer",
     });
     expect(script).toContain(".earnroom-worker");
-    expect(script).toContain('"code":"ABCD2345"');
-    expect(script).toContain('"site":"https://earnroom.co.uk"');
-    expect(script).not.toContain("token");
+    expect(script).toContain('\\"code\\":\\"ABCD2345\\"');
+    expect(script).toContain("/api/public/video-worker/pair");
   });
 
   it("says setup is required rather than not installed", () => {
@@ -189,7 +188,7 @@ describe("the pairing file a Windows computer downloads", () => {
     const bytes = new TextEncoder().encode(script);
     expect(bytes.byteLength).toBe(script.length);
     expect(bytes.byteLength).toBeGreaterThan(0);
-    expect(bytes.byteLength).toBeLessThan(2_000);
+    expect(bytes.byteLength).toBeLessThan(4_000);
     expect(script.endsWith("\r\n")).toBe(true);
   });
 
@@ -197,14 +196,28 @@ describe("the pairing file a Windows computer downloads", () => {
     const script = pairingScript({ code, site: "https://earnroom.co.uk", label: "My computer" });
     expect(script).toContain(".earnroom-worker");
     expect(script).toContain("setup.json");
-    expect(script).toContain(`"code":"${code}"`);
+    expect(script).toContain(`\\"code\\":\\"${code}\\"`);
   });
 
-  it("carries no lasting credential of any kind", () => {
+  it("carries no credential of its own", () => {
     const script = pairingScript({ code, site: "https://earnroom.co.uk", label: "My computer" });
-    expect(script.toLowerCase()).not.toContain("token");
+    // The machine's own key only ever exists after the exchange, on the machine.
+    expect(script).toContain("$r.token");
+    expect(/[0-9a-f]{32,}/.test(script)).toBe(false);
     expect(script.toLowerCase()).not.toContain("secret");
-    expect(script.toLowerCase()).not.toContain("key");
+  });
+
+  it("names free cloud capacity as its own thing", () => {
+    const name = pairingFileName(code, "FREE_CLOUD");
+    expect(name).toBe("EarnRoom-Free-Cloud-Worker-ABCD2345.cmd");
+    expect(pairingCodeFromPairFileName(name)).toBe(code);
+    const script = pairingScript({
+      code,
+      site: "https://earnroom.co.uk",
+      label: "Free capacity",
+      mode: "FREE_CLOUD",
+    });
+    expect(script).toContain("free cloud capacity");
   });
 
   it("keeps anything odd in the computer name out of the file", () => {

@@ -44,13 +44,14 @@ describe("marketing studio platform rows", () => {
 
   it("shows the real account name once connected", () => {
     expect(find("youtube").detail).toBe("EarnRoom (@earnroom)");
-    expect(find("youtube").state).toBe("READY");
+    expect(find("youtube").state).toBe("CONNECTED");
+    expect(find("youtube").canPublish).toBe(true);
     expect(find("youtube").action).toBe("PUBLISH");
   });
 
   it("derives YouTube Shorts from the YouTube connection and never offers a second sign-in", () => {
     const shorts = find("youtube_shorts");
-    expect(shorts.state).toBe("READY");
+    expect(shorts.state).toBe("CONNECTED");
     expect(shorts.detail).toBe("Uses YouTube channel: EarnRoom (@earnroom)");
     expect(shorts.action).toBe("PUBLISH");
     const none = studioPlatformRows({
@@ -67,9 +68,11 @@ describe("marketing studio platform rows", () => {
   it("gives one reason when the video is not ready, and no publish action", () => {
     const list = rows({ videoReady: false });
     const youtube = list.find((row) => row.platform === "youtube")!;
-    expect(youtube.state).toBe("NOT_READY");
-    expect(youtube.reason).toBe("Video is not ready.");
-    expect(youtube.action).toBe("NONE");
+    // The account stays connected; only publishing waits.
+    expect(youtube.state).toBe("CONNECTED");
+    expect(youtube.reason).toBe("Campaign video required.");
+    expect(youtube.canPublish).toBe(false);
+    expect(youtube.action).toBe("PUBLISH");
   });
 
   it("gives one reason when the campaign still needs approval", () => {
@@ -79,7 +82,8 @@ describe("marketing studio platform rows", () => {
 
   it("blocks everything while publishing is paused", () => {
     const youtube = rows({ publishingPaused: true }).find((row) => row.platform === "youtube")!;
-    expect(youtube.action).toBe("NONE");
+    expect(youtube.state).toBe("CONNECTED");
+    expect(youtube.canPublish).toBe(false);
     expect(youtube.reason).toBe("Publishing is paused.");
   });
 
@@ -94,9 +98,9 @@ describe("marketing studio platform rows", () => {
         }),
       ],
     }).find((row) => row.platform === "tiktok")!;
-    expect(tiktok.state).toBe("NOT_READY");
+    expect(tiktok.state).toBe("CONNECTED");
     expect(tiktok.reason).toBe("Publishing approval required.");
-    expect(tiktok.action).toBe("NONE");
+    expect(tiktok.canPublish).toBe(false);
   });
 
   it("only shows Published with the platform's own confirmed URL, and no second Publish", () => {

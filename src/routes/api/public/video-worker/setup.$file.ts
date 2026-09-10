@@ -12,6 +12,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import {
+  isFreeCloudPairFileName,
   pairingCodeFromFileName,
   pairingCodeFromPairFileName,
   pairingScript,
@@ -69,6 +70,7 @@ export const Route = createFileRoute("/api/public/video-worker/setup/$file")({
             code,
             site,
             label: row.label ?? "My computer",
+            mode: isFreeCloudPairFileName(name) ? "FREE_CLOUD" : "LOCAL",
           });
           // Send the exact byte count. Without it Chrome can leave the
           // download sitting as an unfinished .crdownload file.

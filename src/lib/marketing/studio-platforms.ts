@@ -35,24 +35,33 @@ export const STUDIO_PLATFORM_LABEL: Record<StudioPlatform, string> = {
   pinterest: "Pinterest",
 };
 
+/**
+ * The account state only. Whether today's campaign can be published is a
+ * separate fact and must never turn a connected account into "not ready".
+ */
 export type StudioPlatformState =
-  "NOT_CONNECTED" | "CONNECTED" | "READY" | "NOT_READY" | "PUBLISHING" | "PUBLISHED" | "FAILED";
+  "NOT_CONNECTED" | "CONNECTED" | "PUBLISHING" | "PUBLISHED" | "FAILED";
 
 export type StudioPlatformAction = "CONNECT" | "PUBLISH" | "WATCH" | "NONE";
 
 export type StudioPlatformRow = {
   platform: StudioPlatform;
   label: string;
+  /** Connection only. */
   state: StudioPlatformState;
-  /** One short line under the name: the account, or why it is not ready. */
+  /** One short line under the name: the account. */
   detail: string;
   /** The real account/page/channel name, never an id. */
   account: string | null;
   action: StudioPlatformAction;
   actionLabel: string;
+  /** False when the Publish button must be visible but not usable yet. */
+  canPublish: boolean;
+  /** The publishing line: READY, or the plain reason it cannot run yet. */
+  publishing: string;
   /** The real platform URL, only ever the one the platform returned. */
   watchUrl: string | null;
-  /** One concise reason when the row is NOT_READY. Null otherwise. */
+  /** One concise reason when publishing cannot run. Null otherwise. */
   reason: string | null;
 };
 

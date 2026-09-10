@@ -19,6 +19,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { MarketingCampaign, PlatformAsset, PlatformId } from "@/lib/marketing/types";
 import type { BrandValidationReport } from "@/lib/marketing/branding";
+import type { BrandCompositionPlan } from "@/lib/marketing/branding/composition";
 import type { MediaProbe } from "@/lib/marketing/media-probe";
 import type { OAuthConfigState } from "@/lib/marketing/oauth";
 import { PAID_PRESETS } from "@/lib/marketing/paid-presets";
@@ -81,6 +82,14 @@ async function rowToVideo(supabase: any, row: any): Promise<MarketingVideoRow> {
   if (row.storage_path) {
     const { data } = await supabase.storage.from(BUCKET).createSignedUrl(row.storage_path, 3600);
     playbackUrl = data?.signedUrl ?? null;
+  }
+  const settings = (row.generation_settings ?? {}) as Record<string, unknown>;
+  let rawPlaybackUrl: string | null = null;
+  if (typeof settings["rawStoragePath"] === "string" && !row.storage_path) {
+    const { data } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrl(settings["rawStoragePath"] as string, 3600);
+    rawPlaybackUrl = data?.signedUrl ?? null;
   }
   return {
     id: row.id,

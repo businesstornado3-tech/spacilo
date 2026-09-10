@@ -56,7 +56,12 @@ export type MarketingVideoRow = {
   seed: number | null;
   storagePath: string | null;
   playbackUrl: string | null;
+  /** The unbranded provider file, only while it is waiting to be branded. */
+  rawPlaybackUrl: string | null;
+  /** The branding EarnRoom will burn into the finished film. */
+  brandingPlan: BrandCompositionPlan | null;
   brandValidation: BrandValidationReport | null;
+
   mediaProbe: MediaProbe | null;
   failureReason: string | null;
   apiCostPence: number;

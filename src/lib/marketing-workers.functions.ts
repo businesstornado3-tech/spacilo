@@ -386,7 +386,7 @@ export const beginComputerSetup = createServerFn({ method: "POST" })
 
     return {
       downloadPath: `/api/public/video-worker/setup/${installerFileName(code)}`,
-      pairingPath: `/api/public/video-worker/setup/${pairingFileName(code)}`,
+      pairingPath: `/api/public/video-worker/setup/${pairingFileName(code, data.mode)}`,
       expiresAt,
       installerAvailable: installerPublished(),
       handle: code,

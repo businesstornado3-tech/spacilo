@@ -21,6 +21,7 @@ import type { MarketingCampaign, PlatformAsset, PlatformId } from "@/lib/marketi
 import type { BrandValidationReport } from "@/lib/marketing/branding";
 import type { MediaProbe } from "@/lib/marketing/media-probe";
 import type { OAuthConfigState } from "@/lib/marketing/oauth";
+import { PAID_PRESETS } from "@/lib/marketing/paid-presets";
 
 const BUCKET = "marketing-videos";
 

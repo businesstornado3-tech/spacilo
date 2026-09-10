@@ -12,6 +12,7 @@ import {
   getMarketingStudio,
   planMarketingCampaign,
   publishMarketingCampaign,
+  runAutonomousPublishing,
   updateMarketingSettings,
   type MarketingStudioSnapshot,
 } from "@/lib/marketing.functions";
@@ -27,6 +28,7 @@ export function useMarketingStudio(enabled: boolean) {
   const decide = useServerFn(decideMarketingCampaign);
   const publish = useServerFn(publishMarketingCampaign);
   const saveSettings = useServerFn(updateMarketingSettings);
+  const runAutonomous = useServerFn(runAutonomousPublishing);
 
   const query = useQuery<MarketingStudioSnapshot>({
     queryKey: marketingKeys.studio(),
@@ -55,9 +57,15 @@ export function useMarketingStudio(enabled: boolean) {
       mutationFn: (input: {
         globalMode?: "DRAFT" | "APPROVAL_REQUIRED" | "AUTONOMOUS";
         pauseAllPublishing?: boolean;
-        maxDailyPublications?: number;
+        maxDailyAutonomousPublications?: number;
+        autoApprove?: boolean;
         pausedPlatforms?: string[];
       }) => saveSettings({ data: input }),
+      onSuccess: invalidate,
+    }),
+    /** One autonomous cycle: auto-approve where allowed, then publish. */
+    autonomous: useMutation({
+      mutationFn: () => runAutonomous({}),
       onSuccess: invalidate,
     }),
   };

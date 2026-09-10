@@ -1069,12 +1069,6 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
       return { video: await rowToVideo(supabase, failed) };
     }
 
-    const path = `${row.campaign_id}/${row.asset_id}-${row.id}.mp4`;
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET)
-      .upload(path, poll.bytes, { contentType: poll.contentType, upsert: true });
-    if (uploadError) return fail("RENDER_FAILED", uploadError.message);
-
     const { data: campaignRow } = await supabase
       .from("marketing_campaigns")
       .select("campaign")
@@ -1082,6 +1076,70 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
       .maybeSingle();
     const campaign = campaignRow?.campaign as MarketingCampaign | undefined;
     const asset = campaign?.assets.find((entry: PlatformAsset) => entry.id === row.asset_id);
+
+    /*
+     * The paid hosted provider returns unbranded pixels — it is a generative
+     * video model, never EarnRoom's design system. Its file is kept as the raw
+     * source only: `storage_path` stays empty, so nothing downstream can
+     * publish it, until the approved EarnRoom branding has been composed onto
+     * it and checked.
+     */
+    if ((row.provider_kind ?? "") === "PAID_HOSTED") {
+      const { buildCompositionPlan } = await import("@/lib/marketing/branding/composition");
+      const rawPath = `${row.campaign_id}/${row.asset_id}-${row.id}-raw.mp4`;
+      const { error: rawError } = await supabase.storage
+        .from(BUCKET)
+        .upload(rawPath, poll.bytes, { contentType: poll.contentType, upsert: true });
+      if (rawError) return fail("RENDER_FAILED", rawError.message);
+
+      const compositionPlan = buildCompositionPlan({
+        platform: row.platform as PlatformId,
+        aspect: row.aspect,
+        width: media.probe.width ?? 720,
+        height: media.probe.height ?? 1280,
+        fps: media.probe.fps && media.probe.fps > 0 ? media.probe.fps : 30,
+        seconds: Math.round(media.probe.durationSeconds ?? row.seconds),
+        tagline: taglineFor(campaign?.opportunity.key ?? row.campaign_id),
+        cta: asset?.cta ?? "",
+      });
+
+      const { data: awaiting } = await supabase
+        .from("marketing_videos")
+        .update({
+          status: "AWAITING_BRANDING",
+          queue_state: "RENDERING",
+          job_phase: "BRANDING",
+          storage_path: null,
+          duration_seconds: media.probe.durationSeconds ?? row.seconds,
+          media_probe: media.probe,
+          failure_reason: null,
+          generation_settings: {
+            ...((row.generation_settings ?? {}) as object),
+            rawStoragePath: rawPath,
+            brandingPlan: compositionPlan,
+          },
+        })
+        .eq("id", row.id)
+        .select("*")
+        .single();
+
+      await supabase.from("marketing_audit").insert({
+        campaign_id: row.campaign_id,
+        action: "video_awaiting_branding",
+        detail: `Paid generation finished unbranded (${media.probe.width}×${media.probe.height}, ${media.probe.durationSeconds?.toFixed(1)}s). It is held until the approved EarnRoom branding has been composed onto it.`,
+        actor: "engine",
+        actor_id: context.userId,
+      });
+
+      return { video: await rowToVideo(supabase, awaiting ?? row) };
+    }
+
+    const path = `${row.campaign_id}/${row.asset_id}-${row.id}.mp4`;
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, poll.bytes, { contentType: poll.contentType, upsert: true });
+    if (uploadError) return fail("RENDER_FAILED", uploadError.message);
+
 
     const overlay = buildBrandOverlay({
       platform: row.platform as PlatformId,

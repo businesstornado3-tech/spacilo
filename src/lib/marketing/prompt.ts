@@ -89,6 +89,7 @@ export function buildVideoPrompt(
     `Situation: ${situation(campaign)}`,
     `Audience: ${campaign.opportunity.audience.replace(/_/g, " ")}. Objective: ${campaign.opportunity.objective.replace(/_/g, " ").toLowerCase()}.`,
     `Platform treatment: ${TREATMENT[asset.platform]}`,
+    ...creativeLines(campaign),
     `Visual style: ${profile.visualStyle} Real UK homes, garages, lofts and spare rooms. British people, British streets, British weather. No American signage, no dollar signs, no imperial units.`,
     "Scenes:",
     ...timedScenes(asset, campaign),

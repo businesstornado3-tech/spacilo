@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import * as React from "react";
 
+import type { CompositionReceipt } from "@/lib/marketing/branding/composition";
 import {
   cancelCampaignVideo,
   disconnectPlatform,
@@ -17,6 +18,7 @@ import {
   pollCampaignVideo,
   startPlatformConnection,
   storeAnimatedVideo,
+  storeBrandedVideo,
   testPlatformConnection,
   updatePlatformPublishing,
   updateVideoProviderSettings,
@@ -36,6 +38,7 @@ export function useCampaignVideos(campaignId: string | null) {
   const poll = useServerFn(pollCampaignVideo);
   const cancel = useServerFn(cancelCampaignVideo);
   const storeAnimated = useServerFn(storeAnimatedVideo);
+  const storeBranded = useServerFn(storeBrandedVideo);
 
   const query = useQuery<{ videos: MarketingVideoRow[] }>({
     queryKey: marketingVideoKeys.videos(campaignId ?? "none"),
@@ -113,6 +116,13 @@ export function useCampaignVideos(campaignId: string | null) {
         qualityFailures: string[];
         mp4Base64: string;
       }) => storeAnimated({ data: { campaignId: campaignId!, ...input } }),
+      onSuccess: invalidate,
+    }),
+    // The paid route returns unbranded pixels: the browser composes the
+    // approved EarnRoom branding onto them and the server stores that file.
+    storeBranded: useMutation({
+      mutationFn: (input: { videoId: string; receipt: CompositionReceipt; mp4Base64: string }) =>
+        storeBranded({ data: input }),
       onSuccess: invalidate,
     }),
   };

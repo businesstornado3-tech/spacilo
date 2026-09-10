@@ -13,6 +13,7 @@ import * as React from "react";
 
 import { Alert } from "@/components/common/Alert";
 import { useCampaignVideos } from "@/hooks/useMarketingVideos";
+import type { MarketingVideoRow } from "@/lib/marketing-video.functions";
 import { useVideoWorkers } from "@/hooks/useVideoWorkers";
 import { buildAnimatedPlan } from "@/lib/marketing/animation";
 import { ComputerSetup } from "@/components/admin/ComputerSetup";
@@ -45,7 +46,7 @@ type WorkerChoice = "BROWSER" | "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD" | null;
 
 function statusTone(status: string): "good" | "warn" | "bad" {
   if (status === "RENDERED") return "good";
-  if (status === "GENERATING") return "warn";
+  if (status === "GENERATING" || status === "AWAITING_BRANDING") return "warn";
   return "bad";
 }
 
@@ -55,6 +56,8 @@ function statusLabel(status: string): string {
       return "Making your video — usually one to three minutes";
     case "RENDERED":
       return "Ready to review";
+    case "AWAITING_BRANDING":
+      return "Adding the EarnRoom logo and tagline — held back until that is done";
     case "BRAND_VALIDATION_FAILED":
       return "The EarnRoom branding check did not pass";
     case "MEDIA_VALIDATION_FAILED":
@@ -164,8 +167,7 @@ export function MarketingVideoPanel({
     }
     return total;
   }, [assets]);
-  const estimatedPence =
-    choice === "PAID_CLOUD" ? paidPresetCostPence(paidQuality) : freeRunPence;
+  const estimatedPence = choice === "PAID_CLOUD" ? paidPresetCostPence(paidQuality) : freeRunPence;
   const summary = generationSummary({
     cards: modeCards,
     selected: choice,
@@ -311,6 +313,61 @@ export function MarketingVideoPanel({
     }
   };
 
+  /*
+   * The paid route returns a beautiful but completely unbranded film. It is
+   * held by the server with no stored path — so nothing can publish it — until
+   * the approved EarnRoom lock-up, wordmark and tagline have actually been
+   * composed onto the pixels here and checked frame by frame.
+   */
+  const brandingStarted = React.useRef<Set<string>>(new Set());
+  const addBranding = React.useCallback(
+    async (video: MarketingVideoRow) => {
+      if (!video.rawPlaybackUrl || !video.brandingPlan) return;
+      brandingStarted.current.add(video.id);
+      setBusy(video.assetId);
+      setProgress(0);
+      setStage("Adding the EarnRoom branding");
+      try {
+        const { composeBranding } = await import("@/lib/marketing/branding/compositor.browser");
+        const result = await composeBranding(video.rawPlaybackUrl, video.brandingPlan, {
+          onProgress: (value) => setProgress(value),
+        });
+        setStage("Checking the branding");
+        const stored = await videos.storeBranded.mutateAsync({
+          videoId: video.id,
+          receipt: result.receipt,
+          mp4Base64: await toBase64(result.blob),
+        });
+        setNotice(
+          stored.video.status === "RENDERED"
+            ? `EarnRoom branding added — the logo is on the closing card and "Make space earn." runs through the film.`
+            : `The branding was refused: ${stored.video.failureReason ?? "unknown reason"}`,
+        );
+      } catch (error) {
+        setNotice(
+          error instanceof Error
+            ? `The EarnRoom branding could not be added: ${error.message}`
+            : "The EarnRoom branding could not be added.",
+        );
+      } finally {
+        setBusy(null);
+        setProgress(0);
+        setStage(null);
+      }
+    },
+    [videos],
+  );
+
+  const awaitingBranding = rows.filter(
+    (row) => row.status === "AWAITING_BRANDING" && row.rawPlaybackUrl && row.brandingPlan,
+  );
+  const firstAwaiting = awaitingBranding[0] ?? null;
+  React.useEffect(() => {
+    if (!firstAwaiting) return;
+    if (brandingStarted.current.has(firstAwaiting.id)) return;
+    void addBranding(firstAwaiting);
+  }, [firstAwaiting, addBranding]);
+
   // Everything goes through the orchestrator: the server resolves the route,
   // and only tells this page to draw when the browser is the chosen route.
   const run = async (asset: PlatformAsset, tier: "draft" | "final"): Promise<boolean> => {
@@ -340,7 +397,6 @@ export function MarketingVideoPanel({
         setStage(null);
         return false;
       }
-
 
       const route = result.workerLabel ? `Using ${result.workerLabel}. ` : "";
       if (result.status === "BROWSER_RENDER_REQUIRED") {
@@ -571,6 +627,32 @@ export function MarketingVideoPanel({
         </Alert>
       ) : null}
 
+      {awaitingBranding.length > 0 ? (
+        <div className="rounded-xl border border-warning/40 bg-warning-soft p-4">
+          <h4 className="type-h5">Adding the EarnRoom branding</h4>
+          <p className="mt-1 type-body-sm">
+            {awaitingBranding.length} paid {awaitingBranding.length === 1 ? "film" : "films"} came
+            back without the EarnRoom logo or tagline. They stay unpublishable until the branding
+            has been put on them here. Keep this tab open while it works.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {awaitingBranding.map((video) => (
+              <button
+                key={video.id}
+                type="button"
+                disabled={busy !== null || videos.storeBranded.isPending}
+                onClick={() => void addBranding(video)}
+                className="min-h-9 rounded-lg border border-border bg-background px-3 type-body-xs font-medium hover:bg-secondary disabled:opacity-60"
+              >
+                {busy !== null
+                  ? `Adding branding${progress > 0 ? ` — ${Math.round(progress * 100)}%` : "…"}`
+                  : `Add branding to the ${definition(video.platform).label} film`}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="rounded-xl border border-border p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h4 className="type-h5">Your campaign video</h4>
@@ -662,7 +744,6 @@ export function MarketingVideoPanel({
             Videos a day, across all campaigns. Paid Cloud does not raise this limit.
           </p>
         </div>
-
 
         <div className="mt-3 flex flex-wrap gap-2">
           <button

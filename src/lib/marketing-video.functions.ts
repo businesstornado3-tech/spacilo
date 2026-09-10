@@ -19,6 +19,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { MarketingCampaign, PlatformAsset, PlatformId } from "@/lib/marketing/types";
 import type { BrandValidationReport } from "@/lib/marketing/branding";
+import type { BrandCompositionPlan } from "@/lib/marketing/branding/composition";
 import type { MediaProbe } from "@/lib/marketing/media-probe";
 import type { OAuthConfigState } from "@/lib/marketing/oauth";
 import { PAID_PRESETS } from "@/lib/marketing/paid-presets";
@@ -56,7 +57,12 @@ export type MarketingVideoRow = {
   seed: number | null;
   storagePath: string | null;
   playbackUrl: string | null;
+  /** The unbranded provider file, only while it is waiting to be branded. */
+  rawPlaybackUrl: string | null;
+  /** The branding EarnRoom will burn into the finished film. */
+  brandingPlan: BrandCompositionPlan | null;
   brandValidation: BrandValidationReport | null;
+
   mediaProbe: MediaProbe | null;
   failureReason: string | null;
   apiCostPence: number;
@@ -77,6 +83,14 @@ async function rowToVideo(supabase: any, row: any): Promise<MarketingVideoRow> {
     const { data } = await supabase.storage.from(BUCKET).createSignedUrl(row.storage_path, 3600);
     playbackUrl = data?.signedUrl ?? null;
   }
+  const settings = (row.generation_settings ?? {}) as Record<string, unknown>;
+  let rawPlaybackUrl: string | null = null;
+  if (typeof settings["rawStoragePath"] === "string" && !row.storage_path) {
+    const { data } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrl(settings["rawStoragePath"] as string, 3600);
+    rawPlaybackUrl = data?.signedUrl ?? null;
+  }
   return {
     id: row.id,
     campaignId: row.campaign_id,
@@ -93,6 +107,8 @@ async function rowToVideo(supabase: any, row: any): Promise<MarketingVideoRow> {
     seed: row.seed ?? null,
     storagePath: row.storage_path ?? null,
     playbackUrl,
+    rawPlaybackUrl,
+    brandingPlan: (settings["brandingPlan"] ?? null) as BrandCompositionPlan | null,
     brandValidation: (row.brand_validation ?? null) as BrandValidationReport | null,
     mediaProbe: (row.media_probe ?? null) as MediaProbe | null,
     failureReason: row.failure_reason ?? null,
@@ -1053,12 +1069,6 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
       return { video: await rowToVideo(supabase, failed) };
     }
 
-    const path = `${row.campaign_id}/${row.asset_id}-${row.id}.mp4`;
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET)
-      .upload(path, poll.bytes, { contentType: poll.contentType, upsert: true });
-    if (uploadError) return fail("RENDER_FAILED", uploadError.message);
-
     const { data: campaignRow } = await supabase
       .from("marketing_campaigns")
       .select("campaign")
@@ -1066,6 +1076,69 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
       .maybeSingle();
     const campaign = campaignRow?.campaign as MarketingCampaign | undefined;
     const asset = campaign?.assets.find((entry: PlatformAsset) => entry.id === row.asset_id);
+
+    /*
+     * The paid hosted provider returns unbranded pixels — it is a generative
+     * video model, never EarnRoom's design system. Its file is kept as the raw
+     * source only: `storage_path` stays empty, so nothing downstream can
+     * publish it, until the approved EarnRoom branding has been composed onto
+     * it and checked.
+     */
+    if ((row.provider_kind ?? "") === "PAID_HOSTED" || row.execution_mode === "PAID_CLOUD") {
+      const { buildCompositionPlan } = await import("@/lib/marketing/branding/composition");
+      const rawPath = `${row.campaign_id}/${row.asset_id}-${row.id}-raw.mp4`;
+      const { error: rawError } = await supabase.storage
+        .from(BUCKET)
+        .upload(rawPath, poll.bytes, { contentType: poll.contentType, upsert: true });
+      if (rawError) return fail("RENDER_FAILED", rawError.message);
+
+      const compositionPlan = buildCompositionPlan({
+        platform: row.platform as PlatformId,
+        aspect: row.aspect,
+        width: media.probe.width ?? 720,
+        height: media.probe.height ?? 1280,
+        fps: media.probe.fps && media.probe.fps > 0 ? media.probe.fps : 30,
+        seconds: Math.round(media.probe.durationSeconds ?? row.seconds),
+        tagline: taglineFor(campaign?.opportunity.key ?? row.campaign_id),
+        cta: asset?.cta ?? "",
+      });
+
+      const { data: awaiting } = await supabase
+        .from("marketing_videos")
+        .update({
+          status: "AWAITING_BRANDING",
+          queue_state: "RENDERING",
+          job_phase: "BRANDING",
+          storage_path: null,
+          duration_seconds: media.probe.durationSeconds ?? row.seconds,
+          media_probe: media.probe,
+          failure_reason: null,
+          generation_settings: {
+            ...((row.generation_settings ?? {}) as object),
+            rawStoragePath: rawPath,
+            brandingPlan: compositionPlan,
+          },
+        })
+        .eq("id", row.id)
+        .select("*")
+        .single();
+
+      await supabase.from("marketing_audit").insert({
+        campaign_id: row.campaign_id,
+        action: "video_awaiting_branding",
+        detail: `Paid generation finished unbranded (${media.probe.width}×${media.probe.height}, ${media.probe.durationSeconds?.toFixed(1)}s). It is held until the approved EarnRoom branding has been composed onto it.`,
+        actor: "engine",
+        actor_id: context.userId,
+      });
+
+      return { video: await rowToVideo(supabase, awaiting ?? row) };
+    }
+
+    const path = `${row.campaign_id}/${row.asset_id}-${row.id}.mp4`;
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, poll.bytes, { contentType: poll.contentType, upsert: true });
+    if (uploadError) return fail("RENDER_FAILED", uploadError.message);
 
     const overlay = buildBrandOverlay({
       platform: row.platform as PlatformId,
@@ -1611,4 +1684,170 @@ export const storeAnimatedVideo = createServerFn({ method: "POST" })
     });
 
     return { video: await rowToVideo(supabase, stored) };
+  });
+
+/* --------------------------------------------------- branded final artifact */
+
+/**
+ * Stores the branded final film for a paid generation.
+ *
+ * The paid provider's own output is unbranded and is never published. The
+ * founder's browser composes the approved EarnRoom artwork and approved
+ * wording onto it, and hands the finished file here. This is the only place a
+ * paid video is given a `storage_path`, and only after the real file has been
+ * probed and the composition receipt checked against the branding plan — so a
+ * video with no logo and no tagline can never reach a platform.
+ */
+export const storeBrandedVideo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        videoId: z.string().uuid(),
+        receipt: z.object({
+          planDigest: z.string().min(4).max(64),
+          width: z.number().int().min(160).max(4096),
+          height: z.number().int().min(160).max(4096),
+          fps: z.number().int().min(8).max(60),
+          seconds: z.number().min(1).max(200),
+          framesDrawn: z.number().int().min(0).max(20_000),
+          watermarkFrames: z.number().int().min(0).max(20_000),
+          taglineFrames: z.number().int().min(0).max(20_000),
+          ctaFrames: z.number().int().min(0).max(20_000),
+          endCardFrames: z.number().int().min(0).max(20_000),
+          artworkUrls: z.array(z.string().max(400)).max(6),
+          audio: z.enum(["copied", "none"]),
+          bytes: z.number().int().min(0),
+        }),
+        mp4Base64: z.string().min(100).max(60_000_000),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }): Promise<{ video: MarketingVideoRow }> => {
+    const supabase = context.supabase as any;
+    await assertAdmin(supabase);
+
+    const { data: row } = await supabase
+      .from("marketing_videos")
+      .select("*")
+      .eq("id", data.videoId)
+      .maybeSingle();
+    if (!row) throw new Error("That video no longer exists.");
+    if (row.storage_path) return { video: await rowToVideo(supabase, row) };
+    if (row.status !== "AWAITING_BRANDING") {
+      throw new Error("That video is not waiting for EarnRoom branding.");
+    }
+
+    const settings = (row.generation_settings ?? {}) as Record<string, unknown>;
+    const compositionPlan = settings["brandingPlan"] as BrandCompositionPlan | undefined;
+    if (!compositionPlan) throw new Error("That video has no branding plan to check against.");
+
+    const [
+      { validateMedia },
+      { validateComposition },
+      { buildBrandOverlay, validateBranding },
+      { taglineFor },
+    ] = await Promise.all([
+      import("@/lib/marketing/media-probe"),
+      import("@/lib/marketing/branding/composition"),
+      import("@/lib/marketing/branding"),
+      import("@/lib/marketing/brand"),
+    ]);
+
+    const binary = Buffer.from(data.mp4Base64, "base64");
+    const bytes = binary.buffer.slice(
+      binary.byteOffset,
+      binary.byteOffset + binary.byteLength,
+    ) as ArrayBuffer;
+
+    const media = validateMedia(bytes, {
+      aspect: row.aspect as "9:16" | "16:9" | "1:1",
+      seconds: row.seconds,
+    });
+    const composition = validateComposition(compositionPlan, data.receipt);
+
+    const { data: campaignRow } = await supabase
+      .from("marketing_campaigns")
+      .select("campaign")
+      .eq("id", row.campaign_id)
+      .maybeSingle();
+    const campaign = campaignRow?.campaign as MarketingCampaign | undefined;
+    const asset = campaign?.assets.find((entry: PlatformAsset) => entry.id === row.asset_id);
+
+    const overlay = buildBrandOverlay({
+      platform: row.platform as PlatformId,
+      aspect: row.aspect,
+      seconds: row.seconds,
+      tagline: taglineFor(campaign?.opportunity.key ?? row.campaign_id),
+      cta: asset?.cta ?? "",
+    });
+    const brand = validateBranding({
+      overlay,
+      expectedAspect: row.aspect,
+      rendered: { aspect: row.aspect, seconds: media.probe.durationSeconds ?? row.seconds },
+      copy: {
+        title: asset?.title ?? "",
+        description: asset?.description ?? "",
+        caption: asset?.caption ?? "",
+        cta: asset?.cta ?? "",
+      },
+    });
+
+    const failures = [...media.failures, ...composition.failures, ...brand.failures];
+    if (failures.length > 0) {
+      const { data: failed } = await supabase
+        .from("marketing_videos")
+        .update({
+          status: "BRAND_VALIDATION_FAILED",
+          queue_state: "FAILED",
+          job_phase: "BRANDING_FAILED",
+          media_probe: media.probe,
+          brand_validation: { ...brand, composition, receipt: data.receipt },
+          failure_reason: failures.join(" "),
+        })
+        .eq("id", row.id)
+        .select("*")
+        .single();
+      await supabase.from("marketing_audit").insert({
+        campaign_id: row.campaign_id,
+        action: "brand_validation_failed",
+        detail: `The branded film was refused: ${failures.join(" ")}`,
+        actor: "engine",
+        actor_id: context.userId,
+      });
+      return { video: await rowToVideo(supabase, failed) };
+    }
+
+    const path = `${row.campaign_id}/${row.asset_id}-${row.id}-branded.mp4`;
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, binary, { contentType: "video/mp4", upsert: true });
+    if (uploadError)
+      throw new Error(`The branded video could not be saved: ${uploadError.message}`);
+
+    const { data: done } = await supabase
+      .from("marketing_videos")
+      .update({
+        status: "RENDERED",
+        queue_state: "READY",
+        job_phase: "READY",
+        storage_path: path,
+        duration_seconds: media.probe.durationSeconds ?? row.seconds,
+        media_probe: media.probe,
+        brand_validation: { ...brand, composition, receipt: data.receipt },
+        failure_reason: null,
+      })
+      .eq("id", row.id)
+      .select("*")
+      .single();
+
+    await supabase.from("marketing_audit").insert({
+      campaign_id: row.campaign_id,
+      action: "video_branded",
+      detail: `EarnRoom branding composed onto the paid film (${media.probe.width}×${media.probe.height}, ${media.probe.durationSeconds?.toFixed(1)}s, sound ${data.receipt.audio === "copied" ? "kept" : "not carried"}) and stored for ${row.platform}.`,
+      actor: "human",
+      actor_id: context.userId,
+    });
+
+    return { video: await rowToVideo(supabase, done) };
   });

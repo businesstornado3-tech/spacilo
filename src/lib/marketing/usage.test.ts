@@ -20,7 +20,6 @@ describe("video generation has no daily quota", () => {
     // Money caps remain: they are the only real safety on paid generation.
     expect(prefs["spend"]).toBeTruthy();
   });
-
 });
 
 describe("generation cost", () => {

@@ -543,7 +543,6 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
           .in("queue_state", ["QUEUED", "GENERATING", "RENDERING", "VALIDATING"]),
       ]);
 
-
     const spec = buildVideoPrompt(campaign, asset);
     const tier = workerCfg.selfHostedTier(data.tier);
     // A paid preset fixes the configuration exactly; the free routes keep

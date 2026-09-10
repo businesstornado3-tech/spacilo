@@ -11,7 +11,6 @@
  * Pure module.
  */
 
-
 /** Indicative PAID-provider cost in pence per second, by resolution tier. */
 const PENCE_PER_SECOND: Record<string, number> = { "360p": 4, "720p": 12, "1080p": 24 };
 

@@ -15,7 +15,12 @@ import { Alert } from "@/components/common/Alert";
 import { useCampaignVideos } from "@/hooks/useMarketingVideos";
 import { useVideoWorkers } from "@/hooks/useVideoWorkers";
 import { buildAnimatedPlan } from "@/lib/marketing/animation";
-import { founderCards, type FounderCard } from "@/lib/marketing/workers/founder-view";
+import { ComputerSetup } from "@/components/admin/ComputerSetup";
+import {
+  generationSummary,
+  simpleModeCards,
+  validateModeSelection,
+} from "@/lib/marketing/workers/mode-panel";
 import { definition } from "@/lib/marketing/platforms";
 import { playerBox, versionRow } from "@/lib/marketing/review";
 import type {
@@ -26,7 +31,7 @@ import type {
 } from "@/lib/marketing/types";
 import { cn } from "@/lib/utils";
 
-type WorkerChoice = "AUTO" | "BROWSER" | "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD";
+type WorkerChoice = "BROWSER" | "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD" | null;
 
 function statusTone(status: string): "good" | "warn" | "bad" {
   if (status === "RENDERED") return "good";

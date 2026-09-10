@@ -33,7 +33,7 @@ import {
   type PaidQuality,
 } from "@/lib/marketing/paid-presets";
 import { definition } from "@/lib/marketing/platforms";
-import { playerBox, versionRow } from "@/lib/marketing/review";
+import { playerBox } from "@/lib/marketing/review";
 import type {
   AspectRatio,
   CampaignStory,
@@ -175,11 +175,6 @@ export function MarketingVideoPanel({
     estimatedPence,
   });
   const blocked = selection.ok ? null : selection.message;
-  const dailyLimit = snapshot?.preferences.usage.maxVideosPerDay ?? null;
-  const [limitDraft, setLimitDraft] = React.useState<string>("");
-  React.useEffect(() => {
-    if (dailyLimit !== null) setLimitDraft(String(dailyLimit));
-  }, [dailyLimit]);
 
   /**
    * The paid route, start to finish, in one place: choose Standard or Highest
@@ -219,18 +214,6 @@ export function MarketingVideoPanel({
       setNotice(error instanceof Error ? error.message : "The paid video could not be started.");
       setStage(null);
     }
-  };
-
-  const saveDailyLimit = () => {
-    const value = Number(limitDraft);
-    if (!Number.isFinite(value) || value < 1 || value > 50) {
-      setNotice("Choose a daily video limit between 1 and 50.");
-      return;
-    }
-    workers.preferences
-      .mutateAsync({ usage: { maxVideosPerDay: Math.round(value) } })
-      .then(() => setNotice(`Daily video limit is now ${Math.round(value)} videos a day.`))
-      .catch((error: Error) => setNotice(error.message));
   };
 
   // Pick the first available free mode once, so the page is usable straight
@@ -717,34 +700,6 @@ export function MarketingVideoPanel({
           </p>
         </div>
 
-        {/* The daily limit is a real safety control, so it is raised here
-            rather than on some other settings page. */}
-        <div className="mt-3 flex flex-wrap items-end gap-2 rounded-lg border border-border px-3 py-2">
-          <label className="type-body-xs text-muted-foreground" htmlFor="daily-video-limit">
-            Daily video limit
-            <input
-              id="daily-video-limit"
-              type="number"
-              min={1}
-              max={50}
-              value={limitDraft}
-              onChange={(event) => setLimitDraft(event.target.value)}
-              className="mt-1 block h-9 w-24 rounded-lg border border-border bg-background px-2 type-body-sm"
-            />
-          </label>
-          <button
-            type="button"
-            disabled={workers.preferences.isPending || limitDraft === String(dailyLimit ?? "")}
-            onClick={saveDailyLimit}
-            className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary disabled:opacity-60"
-          >
-            Save limit
-          </button>
-          <p className="type-body-xs text-muted-foreground">
-            Videos a day, across all campaigns. Paid Cloud does not raise this limit.
-          </p>
-        </div>
-
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
@@ -785,63 +740,6 @@ export function MarketingVideoPanel({
         </div>
       </div>
 
-      {versions.length > 0 ? (
-        <div className="rounded-xl border border-border p-4">
-          <h4 className="type-h5">Platform versions</h4>
-          <p className="mt-1 type-body-sm text-muted-foreground">
-            Each platform gets its own shape and length, made from the same campaign video.
-          </p>
-          <ul className="mt-3 grid gap-3 sm:grid-cols-2">
-            {versions.map((asset) => {
-              const video = rows.find((row) => row.assetId === asset.id) ?? null;
-              // The stored file is the only thing that can prove a version
-              // exists, so the row is built from it — never from the plan.
-              const row = versionRow(
-                {
-                  ...asset,
-                  videoUrl: video?.playbackUrl ?? null,
-                  videoStatus:
-                    video?.status === "GENERATING"
-                      ? "GENERATING"
-                      : video?.playbackUrl
-                        ? "GENERATED"
-                        : video
-                          ? "FAILED"
-                          : "NOT_REQUESTED",
-                },
-                definition(asset.platform).label,
-              );
-              return (
-                <li key={asset.id} className="rounded-xl border border-border p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="type-body-sm font-semibold">{row.label}</span>
-                    <span className="type-body-xs text-muted-foreground">{row.meta}</span>
-                  </div>
-                  <p
-                    className={cn(
-                      "mt-1 type-body-xs font-medium",
-                      row.tone === "good"
-                        ? "text-success-soft-foreground"
-                        : row.tone === "bad"
-                          ? "text-destructive"
-                          : "text-warning-soft-foreground",
-                    )}
-                  >
-                    {row.status}
-                  </p>
-                  {row.hasVideo && video?.playbackUrl ? (
-                    <CompactPlayer aspect={asset.aspect} src={video.playbackUrl} className="mt-2" />
-                  ) : (
-                    <p className="mt-1 type-body-xs text-muted-foreground">
-                      {video ? statusLabel(video.status) : row.detail}
-                    </p>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ) : null}
     </div>
   );
 }

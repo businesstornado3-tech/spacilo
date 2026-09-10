@@ -105,6 +105,7 @@ export function PublishSection({
       state: entry.state,
       platformUrl: entry.platformUrl,
       platformPostId: entry.platformPostId,
+      error: entry.error,
     })),
   );
 

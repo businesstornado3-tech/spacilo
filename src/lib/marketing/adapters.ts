@@ -12,6 +12,7 @@
 import { capabilityFor, definition, type PlatformConnectionRecord } from "./platforms";
 import { publishFacebookPageVideo } from "./meta";
 import { publishInstagramLoginReel } from "./instagram-login";
+import { publishYoutubeVideo } from "./youtube";
 import { oauthDefinition } from "./oauth";
 import type {
   MarketingCampaign,
@@ -114,6 +115,64 @@ export function unavailableAdapter(
     upload: blocked,
     publish: blocked,
     getPublicationStatus: async () => ({ state: "UNKNOWN", url: null }),
+    getAnalytics: async () => null,
+  };
+}
+
+/**
+ * The connected YouTube channel, through the official YouTube Data API v3
+ * resumable upload. Shorts are the same channel and the same authorisation,
+ * validated against the Shorts shape and length limits.
+ */
+function youtubeAdapter(
+  platform: "youtube" | "youtube_shorts",
+  context: AdapterContext,
+  capability: PlatformCapability,
+  accessToken: string,
+): PublishingChannelAdapter {
+  const call = async (asset: PlatformAsset, _campaign: MarketingCampaign): Promise<PublishResult> => {
+    void _campaign;
+    const check = validateAssetForPlatform(asset);
+    if (!check.ok) {
+      return {
+        ok: false,
+        state: "VALIDATION_FAILED",
+        error: check.problems.join(" "),
+        retryable: false,
+      };
+    }
+    if (!asset.videoUrl) {
+      return {
+        ok: false,
+        state: "UPLOAD_FAILED",
+        error: "No rendered video file is available to upload to YouTube.",
+        retryable: true,
+      };
+    }
+    return publishYoutubeVideo({
+      fetchImpl: context.fetchImpl,
+      accessToken,
+      videoUrl: asset.videoUrl,
+      title: asset.title,
+      description: asset.description,
+      tags: asset.hashtags,
+      // Uploaded unlisted: real, on the real channel, and not pushed at an
+      // audience until the founder makes it public on YouTube.
+      privacyStatus: "unlisted",
+      now: context.now,
+    });
+  };
+
+  return {
+    platform,
+    capability: () => capability,
+    validateAsset: validateAssetForPlatform,
+    upload: call,
+    publish: call,
+    getPublicationStatus: async (platformPostId) => ({
+      state: "PUBLISHED",
+      url: `https://www.youtube.com/watch?v=${platformPostId}`,
+    }),
     getAnalytics: async () => null,
   };
 }

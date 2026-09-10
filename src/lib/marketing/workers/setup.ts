@@ -50,6 +50,7 @@ export const SETUP_JOURNEY: readonly SetupStage[] = [
 export const SETUP_WINDOW_MINUTES = 30;
 
 const CODE_PATTERN = /^EarnRoom-Video-Worker-Setup-([A-Z0-9]{6,16})\.exe$/;
+const PAIR_PATTERN = /^EarnRoom-Pair-This-Computer-([A-Z0-9]{6,16})\.cmd$/;
 
 /**
  * The download is named after the setup session, so the installer can pair

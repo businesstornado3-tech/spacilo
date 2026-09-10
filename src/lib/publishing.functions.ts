@@ -417,6 +417,8 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
         platformUrl: existingPub.platform_url ?? null,
         visibility: null,
         alreadyPublished: true,
+        attemptRef,
+        retryable: false,
       };
     }
 

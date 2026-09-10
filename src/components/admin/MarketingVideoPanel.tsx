@@ -422,23 +422,8 @@ export function MarketingVideoPanel({
                   <button
                     type="button"
                     disabled={workers.preferences.isPending}
-                    onClick={() => {
-                      // Enabling only authorises the route. It never starts a
-                      // generation and never spends anything by itself.
-                      const next = !paidEnabled;
-                      if (next && !window.confirm(PAID_ENABLE_CONFIRMATION)) return;
-                      if (!next && choice === "PAID_CLOUD") setChoice(null);
-                      workers.preferences
-                        .mutateAsync({ paidComputeEnabled: next })
-                        .then(() =>
-                          setNotice(
-                            next
-                              ? "Paid Cloud is enabled. Nothing has been generated and nothing has been charged — each paid video is still confirmed separately."
-                              : "Paid Cloud is disabled. No paid generation can be requested.",
-                          ),
-                        )
-                        .catch((error: Error) => setNotice(error.message));
-                    }}
+                    aria-pressed={paidEnabled}
+                    onClick={() => togglePaid(!paidEnabled)}
                     className="min-h-9 rounded-lg border border-border px-3 type-body-xs font-medium hover:bg-secondary disabled:opacity-60"
                   >
                     {paidEnabled ? "Disable Paid Cloud" : "Enable Paid Cloud"}

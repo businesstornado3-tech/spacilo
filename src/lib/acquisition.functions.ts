@@ -119,6 +119,18 @@ export const getAcquisitionStatus = createServerFn({ method: "GET" })
     });
 
     const config = growthConfig();
+    // What each outreach channel is actually missing today. Stated plainly so
+    // the console never implies a channel is merely switched off when in fact
+    // nothing could be delivered through it.
+    const outreachSetupNotes: Record<string, string> = {
+      email:
+        "Setup required — no email sending provider or verified sending domain is configured, so nothing can be delivered.",
+      sms: "Setup required — no SMS provider is configured, so nothing can be delivered.",
+      platform_message:
+        "Setup required — no official platform messaging integration is connected, so nothing can be delivered.",
+      earnroom_internal:
+        "Practice only — this runs inside EarnRoom's test route and reaches nobody outside the product.",
+    };
     for (const channel of defaultChannels()) {
       channels.push(
         outreachChannelStatus({
@@ -131,6 +143,7 @@ export const getAcquisitionStatus = createServerFn({ method: "GET" })
           credentialState: channel.credentialState,
           termsStatus: channel.termsStatus,
           adapterTransmits: Boolean(getAdapter(channel.id)?.transmits),
+          setupNote: outreachSetupNotes[channel.id] ?? null,
         }),
       );
     }

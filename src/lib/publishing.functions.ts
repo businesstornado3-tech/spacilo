@@ -317,7 +317,25 @@ export type PublishOutcome = {
   /** What the platform itself reports the visibility to be (YouTube). */
   visibility: string | null;
   alreadyPublished: boolean;
+  /** Short reference for this attempt, also stored with the failure record. */
+  attemptRef: string;
+  /** True when trying again unchanged could plausibly work. */
+  retryable: boolean;
 };
+
+/** A short, non-secret reference so a founder can quote one attempt. */
+export function attemptReference(platform: string, at: number): string {
+  return `${platform.slice(0, 2).toUpperCase()}-${at.toString(36).toUpperCase().slice(-6)}`;
+}
+
+/**
+ * Whether an unchanged retry could plausibly succeed. Authorisation and
+ * platform-rejection failures need a fix first, so the console must not invite
+ * the founder to hammer the same request.
+ */
+export function retryableState(state: string): boolean {
+  return state === "UPLOAD_FAILED" || state === "PAUSED";
+}
 
 /**
  * Publishes ONE stored, branded video to ONE platform, through the existing

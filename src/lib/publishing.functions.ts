@@ -637,6 +637,11 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       now,
       fetchImpl: runtimeFetch,
       ...(data.visibility ? { youtubePrivacy: data.visibility } : {}),
+      // The founder's own choice: the Pinterest board or the LinkedIn author.
+      destinationId: connection.destination_id ?? null,
+      // TikTok's privacy choice, when the founder has recorded one. TikTok
+      // itself decides whether that value is actually available.
+      tiktokPrivacy: platform === "tiktok" ? (connection.destination_id ?? null) : null,
     });
 
     const attempt = await attemptPublish({

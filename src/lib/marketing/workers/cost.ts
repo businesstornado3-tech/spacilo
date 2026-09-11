@@ -128,45 +128,55 @@ export function costReport(input: {
   };
 }
 
-/** Spending caps. All of them must pass before a paid generation may run. */
+/**
+ * Who asked for this generation.
+ *
+ * MANUAL — the founder pressed Generate and confirmed the exact cost. It is
+ * authorised individually, so no daily budget applies to it, ever.
+ * AUTONOMOUS — EarnRoom started it by itself. Only these spend against the
+ * founder-set autonomous daily budget.
+ */
+export type GenerationInitiator = "MANUAL" | "AUTONOMOUS";
+
+/** Spending controls. Only autonomous generation has a budget. */
 export type SpendCaps = {
-  perVideoPence: number;
-  perDayPence: number;
-  perCampaignPence: number;
-  perMonthPence: number;
+  /** Daily budget for AUTONOMOUS generations only, in pence. */
+  autonomousDailyPence: number;
 };
 
-/**
- * The most expensive paid preset the founder can actually choose, in pence.
- * No cap may ever sit below it: a selectable option that can never run is a
- * false choice, and that is exactly what blocked the 30-second video.
- */
+/** The most expensive paid preset the founder can actually choose, in pence. */
 export const MOST_EXPENSIVE_PAID_PENCE = 720;
 
-export const DEFAULT_SPEND_CAPS: SpendCaps = {
-  perVideoPence: MOST_EXPENSIVE_PAID_PENCE,
-  perDayPence: 2160,
-  perCampaignPence: 2160,
-  perMonthPence: 21_600,
-};
+/** Founder presets for the autonomous daily budget, in pence. */
+export const AUTONOMOUS_BUDGET_PRESETS: readonly number[] = [720, 2000, 5000, 10_000];
 
-/** No stored preference may sink a cap below what a real option costs. */
-export const MINIMUM_SPEND_CAPS: SpendCaps = {
-  perVideoPence: MOST_EXPENSIVE_PAID_PENCE,
-  perDayPence: MOST_EXPENSIVE_PAID_PENCE,
-  perCampaignPence: MOST_EXPENSIVE_PAID_PENCE,
-  perMonthPence: MOST_EXPENSIVE_PAID_PENCE,
+/** Upper bound on what may be stored, so a typo cannot commit a fortune. */
+export const MAX_AUTONOMOUS_DAILY_PENCE = 100_000;
+
+export const DEFAULT_SPEND_CAPS: SpendCaps = {
+  autonomousDailyPence: MOST_EXPENSIVE_PAID_PENCE,
 };
 
 export type SpendCounts = {
-  spentTodayPence: number;
-  spentThisCampaignPence: number;
-  spentThisMonthPence: number;
+  /** Founder-initiated paid spend today. Reporting only — never a limit. */
+  manualSpentTodayPence: number;
+  /** Autonomous paid spend today. This is what the budget measures. */
+  autonomousSpentTodayPence: number;
 };
 
 export type SpendDecision = { allowed: true } | { allowed: false; reason: string };
 
-export function checkSpend(cost: CostReport, counts: SpendCounts, caps: SpendCaps): SpendDecision {
+/** Pence of autonomous budget still available today. Never negative. */
+export function autonomousRemainingPence(counts: SpendCounts, caps: SpendCaps): number {
+  return Math.max(0, caps.autonomousDailyPence - counts.autonomousSpentTodayPence);
+}
+
+export function checkSpend(
+  cost: CostReport,
+  counts: SpendCounts,
+  caps: SpendCaps,
+  initiator: GenerationInitiator = "MANUAL",
+): SpendDecision {
   if (!cost.chargeable) return { allowed: true };
   const amount = cost.pence;
   if (amount === null) {
@@ -175,29 +185,17 @@ export function checkSpend(cost: CostReport, counts: SpendCounts, caps: SpendCap
       reason: "The provider has not confirmed a price for this generation, so it cannot be run.",
     };
   }
-  if (amount > caps.perVideoPence) {
+  // A founder-initiated video is authorised by its own cost confirmation.
+  // No daily, campaign or monthly cap may ever stand in its way.
+  if (initiator === "MANUAL") return { allowed: true };
+
+  const remaining = autonomousRemainingPence(counts, caps);
+  if (amount > remaining) {
     return {
       allowed: false,
-      reason: `This video would cost ${pounds(amount)}, above the ${pounds(caps.perVideoPence)} limit for a single video.`,
-    };
-  }
-  if (counts.spentTodayPence + amount > caps.perDayPence) {
-    return {
-      allowed: false,
-      reason: `This would take today's paid spend past the ${pounds(caps.perDayPence)} daily limit.`,
-    };
-  }
-  if (counts.spentThisCampaignPence + amount > caps.perCampaignPence) {
-    return {
-      allowed: false,
-      reason: `This would take the campaign past its ${pounds(caps.perCampaignPence)} limit.`,
-    };
-  }
-  if (counts.spentThisMonthPence + amount > caps.perMonthPence) {
-    return {
-      allowed: false,
-      reason: `This would take the month past its ${pounds(caps.perMonthPence)} limit.`,
+      reason: `Automatic video making has ${pounds(remaining)} left of its ${pounds(caps.autonomousDailyPence)} daily budget, and this video would cost ${pounds(amount)}. You can still make this video yourself.`,
     };
   }
   return { allowed: true };
 }
+

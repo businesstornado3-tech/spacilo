@@ -17,3 +17,12 @@
 - [ ] Diagnose Computer and Free Cloud pairing/heartbeat truth without rebuilding a worker unless proven necessary
 - [ ] Add or maintain Gmail OAuth outreach only through an official connector and preserve compliance gates
 - [ ] Verify focused tests, type safety, and the live Founder Console without generation, credits, or publication
+
+## Gmail outreach delivery channel (requested 11 Sep)
+- [ ] Audit Gmail connector scopes; report whether broad permissions are connector-imposed
+- [ ] Connect Gmail with minimum scope (gmail.send only) for businesstornado3@gmail.com
+- [ ] Server-side send helper + safe self-test (no prospect email)
+- [ ] Outreach eligibility gates reuse existing market-intelligence signals (no new intelligence system)
+- [ ] Outreach attempt records: campaign, source, intent, prospect type, location, channel, recipient, sender, timestamp, content version, result, failure reason, message id
+- [ ] Founder Console "Gmail outreach" section with status/sending/last test/last outreach/sent today/errors + Connect/Reconnect
+- [ ] No real prospect email sent until founder approves the first one

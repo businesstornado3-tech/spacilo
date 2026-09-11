@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildVideoPrompt } from "./prompt";
+import { PROHIBITION_LINE, findBrandTerms } from "./prompt-safety";
 import type { MarketingCampaign, PlatformAsset } from "./types";
 
 const asset: PlatformAsset = {

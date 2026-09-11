@@ -23,15 +23,21 @@ const rows = [
   },
 ];
 
-/** The filter the publishing surface applies to publication records. */
+/**
+ * The filter the publishing surface applies to publication records: a record
+ * belongs to its own video, and a pre-identity record with no video belongs to
+ * the oldest video of that asset — never to a newly made one.
+ */
 function publicationsFor(
   video: { id: string; assetId: string },
-  currentVideoId: string | null,
-  records: { videoId: string | null; assetId: string; state: string }[],
+  legacyOwnerVideoId: string | null,
+  records: { videoId: string | null; assetId: string; state: string; platform?: string }[],
 ) {
   return records
     .filter((entry) =>
-      entry.videoId ? entry.videoId === video.id : entry.assetId === video.assetId && video.id === currentVideoId,
+      entry.videoId
+        ? entry.videoId === video.id
+        : entry.assetId === video.assetId && video.id === legacyOwnerVideoId,
     )
     .map((entry) => ({ ...entry, historical: !entry.videoId }));
 }

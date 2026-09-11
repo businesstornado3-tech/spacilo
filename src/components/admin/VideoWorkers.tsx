@@ -462,7 +462,6 @@ export function VideoWorkers() {
             </p>
           </div>
 
-
           <div className="rounded-lg border border-border p-3">
             <h5 className="type-body-sm font-semibold">Generation controls</h5>
             <div className="mt-2 space-y-2">

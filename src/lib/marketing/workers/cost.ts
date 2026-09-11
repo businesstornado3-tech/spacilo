@@ -198,4 +198,3 @@ export function checkSpend(
   }
   return { allowed: true };
 }
-

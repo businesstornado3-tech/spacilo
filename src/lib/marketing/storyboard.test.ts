@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { PROVIDER_MAX_SEGMENT_SECONDS } from "./paid-presets";
+import { PROHIBITION_LINE, findBrandTerms } from "./prompt-safety";
 import { buildStoryboard, validateStoryboard, shortLine, MAX_CAPTION_CHARS } from "./storyboard";
 import type { MarketingCampaign, PlatformAsset } from "./types";
 

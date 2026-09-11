@@ -534,6 +534,13 @@ export function validateStoryboard(
     if (leaked.length > 0) {
       failures.push(`A generation part still mentions ${leaked.join(", ")}.`);
     }
+    // Numbered instalments make the service start a new little film each time.
+    if (/\bpart\s*\d/i.test(segment.prompt) || /\bsegment\s*\d/i.test(segment.prompt)) {
+      failures.push("A generation request describes itself as a numbered part of a film.");
+    }
+    if (segment.index > 0 && !/continu/i.test(segment.prompt)) {
+      failures.push("A later stretch of the film does not ask for the same take to continue.");
+    }
   }
 
   return { passed: failures.length === 0, failures };

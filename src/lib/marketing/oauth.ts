@@ -112,7 +112,17 @@ export const OAUTH_DEFINITIONS: readonly OAuthDefinition[] = [
     label: "LinkedIn",
     authorizeUrl: "https://www.linkedin.com/oauth/v2/authorization",
     tokenUrl: "https://www.linkedin.com/oauth/v2/accessToken",
-    scopes: ["w_organization_social", "r_organization_social", "rw_organization_admin"],
+    // Posting as the signed-in member needs only these three. The organisation
+    // permissions are additionally requested so a Company Page can be chosen
+    // when LinkedIn has granted the app Community Management access.
+    scopes: [
+      "openid",
+      "profile",
+      "w_member_social",
+      "w_organization_social",
+      "r_organization_social",
+      "rw_organization_admin",
+    ],
     clientIdSecret: "LINKEDIN_CLIENT_ID",
     clientSecretSecret: "LINKEDIN_CLIENT_SECRET",
     approvalNote:
@@ -124,7 +134,7 @@ export const OAUTH_DEFINITIONS: readonly OAuthDefinition[] = [
     label: "Pinterest",
     authorizeUrl: "https://www.pinterest.com/oauth/",
     tokenUrl: "https://api.pinterest.com/v5/oauth/token",
-    scopes: ["boards:read", "pins:read", "pins:write"],
+    scopes: ["user_accounts:read", "boards:read", "pins:read", "pins:write"],
     clientIdSecret: "PINTEREST_APP_ID",
     clientSecretSecret: "PINTEREST_APP_SECRET",
     approvalNote: "Standard API access must be granted before pins can be created from an app.",

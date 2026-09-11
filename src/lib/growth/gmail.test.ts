@@ -4,6 +4,7 @@ import {
   OUTREACH_SENDER,
   buildOutreachMessage,
   buildRawEmail,
+  extractEmailAddress,
   gmailStatusView,
   looksLikeEmailAddress,
   type GmailStatusInput,
@@ -126,5 +127,17 @@ describe("provider errors never carry credentials", () => {
     );
     expect(text).toContain("[redacted]");
     expect(text).not.toContain("ya29.A0ARrdaM9abcdefghijklmnopqrstuvwxyz0123456789");
+  });
+});
+
+describe("reading the verified account out of an audit sentence", () => {
+  it("drops the sentence's full stop so the account still matches", () => {
+    expect(
+      extractEmailAddress("Gmail confirmed the authorised account is businesstornado3@gmail.com."),
+    ).toBe(OUTREACH_SENDER);
+  });
+
+  it("returns nothing when there is no address", () => {
+    expect(extractEmailAddress("Gmail refused the stored authorisation.")).toBeNull();
   });
 });

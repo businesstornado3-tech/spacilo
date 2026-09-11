@@ -521,22 +521,32 @@ async function publishCampaignAssets(
     };
 
     /**
-     * Meta fetches the media itself, so a Meta asset is handed a temporary
-     * signed link to that one stored object. Nothing else is exposed and the
-     * link expires shortly after the processing window.
+     * Every platform of this campaign publishes the SAME production video —
+     * the one `resolveProductionVideo` picks. Instagram once received an old
+     * Browser Preview while Facebook received the paid film, because each
+     * platform looked up its own asset row; that can no longer happen, and
+     * there is no fallback to a stale link on the asset.
      */
-    const metaMediaUrl = async (assetId: string): Promise<string | null> => {
-      const { data: video } = await supabase
-        .from("marketing_videos")
-        .select("storage_path")
-        .eq("campaign_id", data.campaignId)
-        .eq("asset_id", assetId)
-        .not("storage_path", "is", null)
-        .maybeSingle();
-      if (!video?.storage_path) return null;
+    const { resolveProductionVideo } = await import("@/lib/marketing/production-asset");
+    const { data: campaignVideoRows } = await supabase
+      .from("marketing_videos")
+      .select("id, asset_id, storage_path, execution_mode, created_at")
+      .eq("campaign_id", data.campaignId);
+    const production = resolveProductionVideo(
+      ((campaignVideoRows ?? []) as any[]).map((entry) => ({
+        id: String(entry.id),
+        assetId: String(entry.asset_id),
+        storagePath: entry.storage_path ?? null,
+        executionMode: entry.execution_mode ?? null,
+        createdAt: String(entry.created_at),
+      })),
+    );
+
+    const productionMediaUrl = async (): Promise<string | null> => {
+      if (!production.ok) return null;
       const { data: signed } = await (supabaseAdmin as any).storage
         .from("marketing-videos")
-        .createSignedUrl(video.storage_path, 3600);
+        .createSignedUrl(production.video.storagePath, 3600);
       return signed?.signedUrl ?? null;
     };
 
@@ -577,9 +587,31 @@ async function publishCampaignAssets(
       if (record.state === "PUBLISHED") continue;
 
       const isMeta = asset.platform === "facebook" || asset.platform === "instagram";
-      const publishAsset = isMeta
-        ? { ...asset, videoUrl: (await metaMediaUrl(asset.id)) ?? asset.videoUrl }
-        : asset;
+      let publishAsset = asset;
+      if (isMeta) {
+        // No fallback: Meta either gets this campaign's production video or
+        // nothing is published for it.
+        const mediaUrl = await productionMediaUrl();
+        if (!production.ok || !mediaUrl) {
+          const detail = production.ok
+            ? "The production video could not be prepared for upload, so nothing was published."
+            : production.reason;
+          await supabase
+            .from("marketing_publications")
+            .update({ state: "VALIDATION_FAILED", error: detail })
+            .eq("campaign_id", campaign.id)
+            .eq("asset_id", asset.id);
+          await supabase.from("marketing_audit").insert({
+            campaign_id: campaign.id,
+            action: "publication_blocked",
+            detail: `${asset.platform}: ${detail}`,
+            actor: "engine",
+          });
+          results.push({ platform: asset.platform, state: "VALIDATION_FAILED", detail });
+          continue;
+        }
+        publishAsset = { ...asset, videoUrl: mediaUrl };
+      }
 
       const attempt = await attemptPublish({
         adapter: await resolveAdapter(asset.platform),
@@ -607,7 +639,10 @@ async function publishCampaignAssets(
       await supabase.from("marketing_audit").insert({
         campaign_id: campaign.id,
         action: attempt.record.state === "PUBLISHED" ? "published" : "publication_blocked",
-        detail: attemptDetail(attempt),
+        detail:
+          isMeta && production.ok
+            ? `${attemptDetail(attempt)} ${production.video.provenance}`
+            : attemptDetail(attempt),
         actor: "engine",
         actor_id: userId,
       });

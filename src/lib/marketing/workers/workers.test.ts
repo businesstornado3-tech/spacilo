@@ -242,7 +242,11 @@ describe("cost transparency", () => {
     });
     const decision = checkSpend(
       report,
-      { spentTodayPence: 450, spentThisCampaignPence: 0, spentThisMonthPence: 0 },
+      {
+        spentTodayPence: DEFAULT_SPEND_CAPS.perDayPence - 50,
+        spentThisCampaignPence: 0,
+        spentThisMonthPence: 0,
+      },
       DEFAULT_SPEND_CAPS,
     );
     expect(decision.allowed).toBe(false);

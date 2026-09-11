@@ -46,8 +46,7 @@ export type ProductionVideo = {
 };
 
 export type ProductionVideoResult =
-  | { ok: true; video: ProductionVideo }
-  | { ok: false; reason: string };
+  { ok: true; video: ProductionVideo } | { ok: false; reason: string };
 
 function rank(mode: string | null): number {
   return ROUTE_RANK[mode ?? ""] ?? 0;

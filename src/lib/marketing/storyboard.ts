@@ -38,6 +38,36 @@ export type StoryboardBeat = {
 
 export type CaptionCue = { text: string; fromSeconds: number; toSeconds: number };
 
+/** One spoken line of the film's narrative, timed against the beat it belongs to. */
+export type NarrationCue = {
+  role: BeatRole;
+  text: string;
+  fromSeconds: number;
+  toSeconds: number;
+};
+
+/**
+ * Whether the generation service can actually speak the narrative.
+ *
+ * The hosted video models EarnRoom uses produce pictures and ambient sound, not
+ * speech. That is stated here rather than quietly implied: a film whose story
+ * is carried by on-screen wording is never described as narrated.
+ */
+export type NarrationCapability = {
+  /** True only when a service that genuinely speaks the script is in use. */
+  spoken: boolean;
+  detail: string;
+};
+
+export const NARRATION_CAPABILITY: NarrationCapability = {
+  spoken: false,
+  detail:
+    "The video service EarnRoom uses makes pictures and ambient sound only — it cannot speak. The story is written first and then carried on screen, one readable line at a time. No voice is added and none is claimed.",
+};
+
+/** Words a viewer comfortably takes in per second of film. */
+export const NARRATION_WORDS_PER_SECOND = 2.4;
+
 export type StoryboardSegment = {
   index: number;
   fromSeconds: number;
@@ -53,6 +83,10 @@ export type VideoStoryboard = {
   /** The closing EarnRoom card, always the last stretch of the film. */
   endCardFromSeconds: number;
   beats: readonly StoryboardBeat[];
+  /** The written story, beat by beat. The captions are drawn from these lines. */
+  narration: readonly NarrationCue[];
+  /** Whether the film is actually spoken. Stated, never assumed. */
+  narrationCapability: NarrationCapability;
   captions: readonly CaptionCue[];
   segments: readonly StoryboardSegment[];
   /** The creative treatment this film was built from, when one was chosen. */
@@ -178,32 +212,53 @@ function directions(campaign: MarketingCampaign, asset: PlatformAsset): Record<B
 }
 
 /**
- * The major on-screen lines, drawn from the campaign's own copy. One line per
- * beat at most, never the same line twice, and the closing call to action gets
- * a beat of its own.
+ * The written story, one line per beat.
+ *
+ * This is the single source of the film's words: the on-screen captions are cut
+ * from these very lines, so what a viewer reads is the story being told and
+ * never a second, competing script. Each line is trimmed to what the beat has
+ * time for at a comfortable reading pace.
  */
-function captionLines(
+function narrationLines(
   campaign: MarketingCampaign,
   asset: PlatformAsset,
 ): Record<BeatRole, string | null> {
   const scenes = campaign.story.scenes;
   const used = new Set<string>();
+  const scene = (index: number) => {
+    const entry = scenes[Math.max(0, Math.min(index, scenes.length - 1))];
+    const record = (entry ?? {}) as Record<string, unknown>;
+    const voice = typeof record["voiceover"] === "string" ? record["voiceover"] : null;
+    const caption = typeof record["caption"] === "string" ? record["caption"] : null;
+    return voice ?? caption;
+  };
   const take = (candidate: string | undefined | null): string | null => {
     if (!candidate) return null;
-    const line = shortLine(candidate);
-    const key = line.toLowerCase();
-    if (!line || used.has(key)) return null;
+    const line = candidate.replace(/\s+/g, " ").trim();
+    const key = shortLine(line).toLowerCase();
+    if (!line || !key || used.has(key)) return null;
     used.add(key);
     return line;
   };
   return {
     HOOK: take(asset.hook ?? campaign.story.hook),
-    PERSON: take(scenes[1]?.caption ?? scenes[0]?.caption),
-    PROBLEM: take(scenes[Math.max(0, scenes.length - 3)]?.caption),
-    SOLUTION: take(scenes[Math.max(0, scenes.length - 2)]?.caption),
+    PERSON: take(scene(1)),
+    PROBLEM: take(scene(scenes.length - 3)),
+    SOLUTION: take(scene(scenes.length - 2)),
     PAYOFF: take(asset.cta ?? campaign.story.renterCta),
     END_CARD: null,
   };
+}
+
+/** Trims a spoken line to the number of words the beat has room for. */
+function pacedLine(text: string, seconds: number): string {
+  const words = text.split(" ").filter(Boolean);
+  const room = Math.max(3, Math.floor(seconds * NARRATION_WORDS_PER_SECOND));
+  if (words.length <= room) return words.join(" ");
+  return words
+    .slice(0, room)
+    .join(" ")
+    .replace(/[,;:]$/, "");
 }
 
 /**
@@ -234,25 +289,36 @@ function segmentPrompt(input: {
   treatmentLines: string[];
 }): string {
   const { campaign, asset, beats, index, fromSeconds, seconds } = input;
+  /*
+   * The service is never told it is filming an instalment: numbered parts
+   * invite a fresh establishing shot and a new mini-story every time. It is
+   * told it is filming one continuous take, and where in that take it is.
+   */
   const opening =
     index === 0
-      ? `Part 1 of ${Math.ceil(input.total / PROVIDER_MAX_SEGMENT_SECONDS)} of a single ${input.total}-second ${asset.aspect} cinematic film. Establish the setting, the person and the situation.`
-      : `Part ${index + 1} of ${Math.ceil(input.total / PROVIDER_MAX_SEGMENT_SECONDS)}. The scene continues, unbroken, from the previous part of the same ${input.total}-second film: the same people, the same place, the same light, the same lens and the same grade, carrying straight on from the final frame. Do not restart the story, do not repeat the opening shot, and do not cut to an unrelated location.`;
+      ? `The opening of one single continuous ${input.total}-second ${asset.aspect} cinematic film, filmed as one unbroken take. Establish the place, the person and the situation calmly.`
+      : `The same single continuous ${input.total}-second film, already ${fromSeconds} seconds in and still running. Carry straight on from the final frame of the footage supplied: do not restart, do not re-establish, do not repeat the opening shot and do not cut to an unrelated place.`;
+
+  const continuity =
+    index === 0
+      ? "Keep one cast and one location: whoever appears in the first seconds stays for the whole film."
+      : "Continuity is absolute: the same person, the same face, the same clothes and hair, the same rooms and street, the same objects, the same weather and time of day, the same lens, the same colour grade and the same unhurried mood as the supplied footage.";
 
   const timed = beats.map((beat) => {
     const from = Math.max(0, Math.round(beat.fromSeconds - fromSeconds));
     const to = Math.min(seconds, Math.round(beat.toSeconds - fromSeconds));
-    return `[${from}-${to}s] ${beat.role.replace("_", " ").toLowerCase()}: ${beat.direction}`;
+    return `[${from}-${to}s] ${beat.direction}`;
   });
 
   const prompt = [
     opening,
+    continuity,
     `Situation: ${sanitizeProviderText(campaign.opportunity.problem)}`,
     `Audience: ${sanitizeProviderText(campaign.opportunity.audience.replace(/_/g, " "))}.`,
     ...input.treatmentLines.map(sanitizeProviderText),
-    "Shot plan for this part, timed from its own start:",
+    "What happens in these seconds, timed from the first frame of this footage:",
     ...timed,
-    "One continuous, coherent piece of filmmaking with a small number of deliberate shots. Give each shot room to breathe; do not cram the whole story into the first seconds.",
+    "One coherent piece of filmmaking with two or three deliberate shots at most. Give each shot room to breathe, move the camera slowly, and do not cram the whole story into the first seconds.",
     ...guardrails(asset),
   ].join("\n");
 
@@ -287,18 +353,19 @@ export function buildStoryboard(input: {
   const shares = seconds >= 20 ? LONG_SHARES : SHORT_SHARES;
   const lengths = beatLengths(shares, seconds, seed);
   const direction = directions(campaign, asset);
-  const captionFor = captionLines(campaign, asset);
+  const narrativeFor = narrationLines(campaign, asset);
 
   let cursor = 0;
   const beats: StoryboardBeat[] = lengths.map((entry) => {
     const from = cursor;
     cursor += entry.seconds;
+    const line = entry.role === "END_CARD" ? null : (narrativeFor[entry.role] ?? null);
     return {
       role: entry.role,
       fromSeconds: from,
       toSeconds: Math.min(seconds, cursor),
       direction: direction[entry.role],
-      caption: entry.role === "END_CARD" ? null : (captionFor[entry.role] ?? null),
+      caption: line ? shortLine(pacedLine(line, entry.seconds)) : null,
     };
   });
 
@@ -307,16 +374,21 @@ export function buildStoryboard(input: {
   const endCardFromSeconds =
     beats.find((beat) => beat.role === "END_CARD")?.fromSeconds ?? seconds - END_CARD_SECONDS;
   const captions: CaptionCue[] = [];
+  const narration: NarrationCue[] = [];
   for (const beat of beats) {
     if (!beat.caption) continue;
     const to = Math.min(beat.toSeconds, endCardFromSeconds) - CAPTION_GAP_SECONDS;
     const from = beat.fromSeconds + (beat.fromSeconds === 0 ? 0.3 : CAPTION_GAP_SECONDS / 2);
-    if (to - from < 1) continue;
-    captions.push({
+    // A line that cannot be read comfortably in the time it has is not shown.
+    const readable = beat.caption.split(" ").filter(Boolean).length / NARRATION_WORDS_PER_SECOND;
+    if (to - from < Math.max(1.2, readable)) continue;
+    const cue = {
       text: beat.caption,
       fromSeconds: Number(from.toFixed(2)),
       toSeconds: Number(to.toFixed(2)),
-    });
+    };
+    captions.push(cue);
+    narration.push({ role: beat.role, ...cue });
   }
 
   const treatment = CREATIVE_TREATMENTS.find(
@@ -352,6 +424,8 @@ export function buildStoryboard(input: {
     seconds,
     endCardFromSeconds,
     beats,
+    narration,
+    narrationCapability: NARRATION_CAPABILITY,
     captions,
     segments,
     treatmentId: treatment?.id ?? null,
@@ -425,7 +499,25 @@ export function validateStoryboard(
     const key = caption.text.toLowerCase();
     if (seen.has(key)) failures.push(`"${caption.text}" is repeated across scenes.`);
     seen.add(key);
+    const words = caption.text.split(" ").filter(Boolean).length;
+    if (caption.toSeconds - caption.fromSeconds < words / NARRATION_WORDS_PER_SECOND - 0.01) {
+      failures.push(`"${caption.text}" is on screen for less time than it takes to read.`);
+    }
   });
+
+  /* The words on screen ARE the story: one written line, one caption. */
+  if (storyboard.narration.length !== storyboard.captions.length) {
+    failures.push("The on-screen wording does not match the story that was written.");
+  }
+  storyboard.narration.forEach((cue, index) => {
+    const caption = storyboard.captions[index];
+    if (!caption || caption.text !== cue.text || caption.fromSeconds !== cue.fromSeconds) {
+      failures.push("A line of the story is not the line shown on screen.");
+    }
+  });
+  if (storyboard.narrationCapability.spoken) {
+    failures.push("This film is described as spoken, but the video service cannot speak.");
+  }
 
   const segmentTotal = storyboard.segments.reduce((sum, segment) => sum + segment.seconds, 0);
   if (segmentTotal !== storyboard.seconds) {
@@ -443,6 +535,13 @@ export function validateStoryboard(
     const leaked = findBrandTerms(segment.prompt);
     if (leaked.length > 0) {
       failures.push(`A generation part still mentions ${leaked.join(", ")}.`);
+    }
+    // Numbered instalments make the service start a new little film each time.
+    if (/\bpart\s*\d/i.test(segment.prompt) || /\bsegment\s*\d/i.test(segment.prompt)) {
+      failures.push("A generation request describes itself as a numbered part of a film.");
+    }
+    if (segment.index > 0 && !/continu/i.test(segment.prompt)) {
+      failures.push("A later stretch of the film does not ask for the same take to continue.");
     }
   }
 

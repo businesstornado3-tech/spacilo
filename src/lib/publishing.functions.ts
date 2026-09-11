@@ -283,8 +283,8 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
         .eq("campaign_id", campaignId),
     ]);
 
-    // One campaign publishes ONE production video: the newest file from the
-    // highest production route. Everything older is history.
+    // A campaign can hold several videos and each is published in its own
+    // right. This is only the one the Studio opens on: the newest stored file.
     const { resolveProductionVideo } = await import("@/lib/marketing/production-asset");
     const production = resolveProductionVideo(
       ((videoRows ?? []) as any[]).map((row) => ({
@@ -299,6 +299,11 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
     const currentVideoId = production.ok ? production.video.id : null;
 
     const campaign = (campaignRow?.campaign ?? null) as any;
+    /** The first video ever made for an asset — where pre-identity history sits. */
+    const oldestVideoForAsset = (assetId: string): string | null =>
+      ((videoRows ?? []) as any[])
+        .filter((row) => row.asset_id === assetId)
+        .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at))[0]?.id ?? null;
     const assets: PublishableAsset[] = [];
     for (const video of (videoRows ?? []) as any[]) {
       const source = ((campaign?.assets ?? []) as any[]).find(
@@ -323,13 +328,18 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
         createdAt: video.created_at,
         executionMode: video.execution_mode ?? "UNKNOWN",
         isCurrent: video.id === currentVideoId,
-        // A publication belongs to the exact video that produced it. Records
-        // written before per-video identity existed are kept, but flagged.
+        /*
+         * A publication belongs to the exact video that produced it, and to no
+         * other. Records written before per-video identity existed carry no
+         * video: they are attached to the OLDEST video of that asset and
+         * flagged as history, so a newly made video can never inherit them.
+         */
         publications: ((pubRows ?? []) as any[])
           .filter((entry) =>
             entry.video_id
               ? entry.video_id === video.id
-              : entry.asset_id === video.asset_id && video.id === currentVideoId,
+              : entry.asset_id === video.asset_id &&
+                video.id === oldestVideoForAsset(video.asset_id),
           )
           .map((entry) => ({
             platform: entry.platform,
@@ -454,12 +464,14 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       .eq("campaign_id", video.campaign_id)
       .eq("platform", platform);
     const rows = (videoPubRows ?? []) as any[];
-    const existingPub =
-      rows.find((row) => row.video_id === video.id) ??
-      // Adopt a pre-identity record for this asset rather than duplicating it.
-      rows.find((row) => !row.video_id && row.asset_id === video.asset_id) ??
-      null;
-    if (existingPub?.state === "PUBLISHED" && existingPub.video_id === video.id) {
+    /*
+     * Only this video's own record counts. A record belonging to another video
+     * of the same campaign — including a pre-identity record with no video on
+     * it — is history and is never reused, never updated and never allowed to
+     * make this video look published.
+     */
+    const existingPub = rows.find((row) => row.video_id === video.id) ?? null;
+    if (existingPub?.state === "PUBLISHED") {
       return {
         ok: true,
         state: "PUBLISHED",

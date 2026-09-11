@@ -61,6 +61,8 @@ export function PublishSection({
   const fetchSurface = useServerFn(getPublishingSurface);
   const publish = useServerFn(publishVideoToPlatform);
   const [busy, setBusy] = React.useState<StudioPlatform | null>(null);
+  /** Which video the founder is looking at. Null means "the newest one". */
+  const [selectedVideoId, setSelectedVideoId] = React.useState<string | null>(null);
   const [notice, setNotice] = React.useState<{ ok: boolean; text: string } | null>(null);
 
   const surfaceQuery = useQuery<PublishingSurface>({
@@ -84,10 +86,13 @@ export function PublishSection({
   }
 
   const branded = surface.assets.filter((asset) => asset.brandedArtifactReady);
-  // Exactly one video is publishable at a time: the campaign's current
-  // production video. An older video's result never speaks for this one.
+  // Every video in this campaign can be published in its own right. The
+  // founder chooses which one; the newest is simply where the page opens.
   const current =
-    branded.find((asset) => asset.videoId === surface.currentVideoId) ?? branded[0] ?? null;
+    branded.find((asset) => asset.videoId === selectedVideoId) ??
+    branded.find((asset) => asset.videoId === surface.currentVideoId) ??
+    branded[0] ??
+    null;
   const assetFor = (_platform: StudioPlatform) => current;
 
   const connectionInputs: StudioConnectionInput[] = snapshot.platforms.map((entry) => ({
@@ -119,6 +124,19 @@ export function PublishSection({
       .filter((entry) => entry.historical && entry.state === "PUBLISHED")
       .map((entry) => ({ ...entry, videoId: asset.videoId })),
   );
+
+  /** Where each video of this campaign has been published, in its own right. */
+  const videoHistory = surface.assets.map((asset) => ({
+    videoId: asset.videoId,
+    title: asset.title,
+    seconds: asset.seconds,
+    createdAt: asset.createdAt,
+    ready: asset.brandedArtifactReady,
+    readyDetail: asset.artifactDetail,
+    publishedOn: asset.publications
+      .filter((entry) => entry.state === "PUBLISHED" && !entry.historical)
+      .map((entry) => STUDIO_PLATFORM_LABEL[entry.platform as StudioPlatform] ?? entry.platform),
+  }));
 
   const rows = studioPlatformRows({
     connections: connectionInputs,
@@ -193,6 +211,50 @@ export function PublishSection({
         <Alert tone={notice.ok ? "success" : "error"} title={notice.ok ? "Published" : "Not done"}>
           {notice.text}
         </Alert>
+      ) : null}
+
+      {videoHistory.length > 1 ? (
+        <div className="rounded-xl border border-border p-4">
+          <p className="type-body-sm font-semibold">Videos in this campaign</p>
+          <p className="mt-1 type-body-xs text-muted-foreground">
+            Each video is published on its own. Choose the one you want to work with — the newest is
+            selected to begin with.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {videoHistory.map((entry, index) => {
+              const chosen = current?.videoId === entry.videoId;
+              return (
+                <li key={entry.videoId}>
+                  <button
+                    type="button"
+                    disabled={!entry.ready}
+                    onClick={() => setSelectedVideoId(entry.videoId)}
+                    className={cn(
+                      "w-full rounded-lg border p-3 text-left disabled:opacity-60",
+                      chosen ? "border-primary bg-secondary" : "border-border",
+                    )}
+                  >
+                    <span className="type-body-sm font-medium">
+                      Video {videoHistory.length - index}: “{entry.title}”
+                      {chosen ? " · selected" : ""}
+                    </span>
+                    <span className="mt-1 block type-body-xs text-muted-foreground">
+                      {entry.seconds} seconds · made{" "}
+                      {new Date(entry.createdAt).toLocaleString("en-GB")}
+                    </span>
+                    <span className="mt-1 block type-body-xs text-muted-foreground">
+                      {entry.ready
+                        ? entry.publishedOn.length > 0
+                          ? `Published to ${entry.publishedOn.join(", ")}.`
+                          : "Not published anywhere yet."
+                        : entry.readyDetail}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       ) : null}
 
       {current ? (

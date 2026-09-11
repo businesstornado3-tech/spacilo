@@ -7,10 +7,15 @@
  * Preview while Facebook got the paid production film — the same campaign,
  * two different videos.
  *
- * The rule here is deterministic and shared by every platform: one campaign
- * publishes ONE production video, the newest stored file from the highest
- * production route present. A Browser Preview is only ever published when the
- * campaign genuinely has nothing else.
+ * A campaign may now hold many videos and each one is published in its own
+ * right, so this module answers two separate questions:
+ *
+ *   - which video the Studio should have selected when it opens: the newest
+ *     stored file (the one just made), with the production route only breaking
+ *     a tie between files made at the same moment;
+ *   - `resolveSelectedVideo`: whether the exact video the founder chose can be
+ *     published. There is no substitution here — if that video has no stored
+ *     file, publishing refuses rather than sending a different one.
  *
  * Pure module: no network, no database.
  */
@@ -52,25 +57,7 @@ function rank(mode: string | null): number {
   return ROUTE_RANK[mode ?? ""] ?? 0;
 }
 
-/** Picks the one video every platform of this campaign must publish. */
-export function resolveProductionVideo(rows: readonly StoredVideoRow[]): ProductionVideoResult {
-  const stored = rows.filter((row) => Boolean(row.storagePath));
-  if (stored.length === 0) {
-    return {
-      ok: false,
-      reason:
-        "No final branded EarnRoom video is stored for this campaign yet, so nothing can be published.",
-    };
-  }
-
-  const best = [...stored].sort((a, b) => {
-    const byRoute = rank(b.executionMode) - rank(a.executionMode);
-    if (byRoute !== 0) return byRoute;
-    const byTime = Date.parse(b.createdAt) - Date.parse(a.createdAt);
-    if (byTime !== 0) return byTime;
-    return a.id.localeCompare(b.id);
-  })[0]!;
-
+function describe(best: StoredVideoRow): ProductionVideoResult {
   const mode = best.executionMode ?? "UNKNOWN";
   const previewOnly = rank(best.executionMode) <= ROUTE_RANK["BROWSER"]!;
   return {
@@ -82,7 +69,56 @@ export function resolveProductionVideo(rows: readonly StoredVideoRow[]): Product
       executionMode: mode,
       createdAt: best.createdAt,
       previewOnly,
-      provenance: `Published the campaign's production video ${best.id} (${mode}, asset ${best.assetId}).`,
+      provenance: `Published video ${best.id} (${mode}, asset ${best.assetId}), the exact stored file chosen for this publication.`,
     },
   };
+}
+
+/**
+ * The video the Studio opens on: the newest stored file in the campaign.
+ *
+ * This is a starting selection for the founder, not a rule about what may be
+ * published — every stored video in the campaign can be published on its own.
+ */
+export function resolveProductionVideo(rows: readonly StoredVideoRow[]): ProductionVideoResult {
+  const stored = rows.filter((row) => Boolean(row.storagePath));
+  if (stored.length === 0) {
+    return {
+      ok: false,
+      reason:
+        "No final branded EarnRoom video is stored for this campaign yet, so nothing can be published.",
+    };
+  }
+
+  const newest = [...stored].sort((a, b) => {
+    const byTime = Date.parse(b.createdAt) - Date.parse(a.createdAt);
+    if (byTime !== 0) return byTime;
+    const byRoute = rank(b.executionMode) - rank(a.executionMode);
+    if (byRoute !== 0) return byRoute;
+    return a.id.localeCompare(b.id);
+  })[0]!;
+
+  return describe(newest);
+}
+
+/**
+ * The exact video the founder chose. Nothing is ever substituted: an unknown
+ * id, or a video with no stored file, refuses instead of falling back.
+ */
+export function resolveSelectedVideo(
+  rows: readonly StoredVideoRow[],
+  videoId: string,
+): ProductionVideoResult {
+  const row = rows.find((entry) => entry.id === videoId);
+  if (!row) {
+    return { ok: false, reason: "That video is not part of this campaign." };
+  }
+  if (!row.storagePath) {
+    return {
+      ok: false,
+      reason:
+        "This video has no finished, branded file stored yet, so there is nothing to publish. Nothing else will be sent in its place.",
+    };
+  }
+  return describe(row);
 }

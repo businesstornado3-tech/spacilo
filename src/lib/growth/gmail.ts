@@ -43,6 +43,13 @@ export type GmailStatusInput = {
   authorisationFailed: boolean;
   /** The outreach channel is authorised to transmit right now. */
   channelMayTransmit: boolean;
+  /** Why the channel cannot transmit, in plain words, when it cannot. */
+  channelBlockReason?: string | null;
+  /**
+   * Gmail has actually accepted a message from EarnRoom and returned a
+   * message id. Identity alone never proves the send action works.
+   */
+  sendVerified: boolean;
   /** Founder pause / emergency stop. */
   outboundHalted: boolean;
 };
@@ -52,6 +59,8 @@ export type GmailStatusView = {
   detail: string;
   /** True only when a real outreach email could genuinely be sent now. */
   sendingReady: boolean;
+  /** Whether a founder-only test send may be attempted now. */
+  canTestSend: boolean;
   /** Whether the founder should be offered Connect/Reconnect. */
   action: "CONNECT" | "RECONNECT" | "NONE";
 };
@@ -63,6 +72,7 @@ export function gmailStatusView(input: GmailStatusInput): GmailStatusView {
       status: "NOT_CONNECTED",
       detail: "No Gmail account is connected, so no outreach email can be sent.",
       sendingReady: false,
+      canTestSend: false,
       action: "CONNECT",
     };
   }
@@ -71,6 +81,7 @@ export function gmailStatusView(input: GmailStatusInput): GmailStatusView {
       status: "REAUTHORIZATION_REQUIRED",
       detail: "Gmail refused the stored authorisation. Reconnect the account.",
       sendingReady: false,
+      canTestSend: false,
       action: "RECONNECT",
     };
   }
@@ -79,6 +90,7 @@ export function gmailStatusView(input: GmailStatusInput): GmailStatusView {
       status: "CONNECTION_REQUIRED",
       detail: "The Gmail account has not been checked yet. Run the connection test.",
       sendingReady: false,
+      canTestSend: false,
       action: "NONE",
     };
   }
@@ -87,6 +99,7 @@ export function gmailStatusView(input: GmailStatusInput): GmailStatusView {
       status: "SENDING_UNAVAILABLE",
       detail: `Connected to ${input.verifiedAccount ?? "an unknown account"}, but outreach may only be sent from ${OUTREACH_SENDER}.`,
       sendingReady: false,
+      canTestSend: false,
       action: "RECONNECT",
     };
   }
@@ -95,22 +108,49 @@ export function gmailStatusView(input: GmailStatusInput): GmailStatusView {
       status: "SENDING_UNAVAILABLE",
       detail: "Outbound sending is paused, so nothing will be delivered.",
       sendingReady: false,
+      canTestSend: false,
       action: "NONE",
     };
   }
   if (!input.channelMayTransmit) {
     return {
       status: "SENDING_UNAVAILABLE",
-      detail: "The email channel is not authorised to transmit yet.",
+      detail:
+        input.channelBlockReason ??
+        "The email channel is not authorised to transmit yet.",
       sendingReady: false,
+      canTestSend: false,
+      action: "NONE",
+    };
+  }
+  if (!input.sendVerified) {
+    return {
+      status: "CONNECTED",
+      detail: `Connected for account verification as ${OUTREACH_SENDER}, but Gmail sending has not been proven yet. Run Test send to prove it.`,
+      sendingReady: false,
+      canTestSend: true,
       action: "NONE",
     };
   }
   return {
     status: "SENDING_READY",
-    detail: `Connected as ${OUTREACH_SENDER} and ready to send approved outreach.`,
+    detail: `Ready — Gmail accepted a message from ${OUTREACH_SENDER} and returned a message id.`,
     sendingReady: true,
+    canTestSend: true,
     action: "NONE",
+  };
+}
+
+/** The subject and body of the founder-only test message. */
+export function buildTestSendMessage(): { subject: string; body: string } {
+  return {
+    subject: "EarnRoom Gmail outreach test",
+    body: [
+      "EarnRoom Gmail outreach test — no prospect email was sent.",
+      "This message was sent by the founder from the EarnRoom Marketing Studio to prove that Gmail accepts messages from this account.",
+      `Sender: ${OUTREACH_SENDER}`,
+      "https://earnroom.co.uk",
+    ].join("\n\n"),
   };
 }
 

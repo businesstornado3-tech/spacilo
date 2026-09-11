@@ -13,6 +13,7 @@ import { Alert } from "@/components/common/Alert";
 import {
   getGmailOutreachStatus,
   testGmailOutreachConnection,
+  testGmailSendCapability,
   type GmailOutreachSnapshot,
 } from "@/lib/gmail-outreach.functions";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ export function GmailOutreach() {
   const queryClient = useQueryClient();
   const fetchStatus = useServerFn(getGmailOutreachStatus);
   const runTest = useServerFn(testGmailOutreachConnection);
+  const runSendTest = useServerFn(testGmailSendCapability);
   const [notice, setNotice] = React.useState<string | null>(null);
 
   const query = useQuery<GmailOutreachSnapshot>({
@@ -44,6 +46,15 @@ export function GmailOutreach() {
   });
   const test = useMutation({
     mutationFn: () => runTest({}),
+    onSuccess: (result) => {
+      setNotice(result.detail);
+      void queryClient.invalidateQueries({ queryKey: ["gmail", "outreach"] });
+    },
+    onError: (error: Error) => setNotice(error.message),
+  });
+
+  const sendTest = useMutation({
+    mutationFn: () => runSendTest({ data: { confirm: true } }),
     onSuccess: (result) => {
       setNotice(result.detail);
       void queryClient.invalidateQueries({ queryKey: ["gmail", "outreach"] });
@@ -81,6 +92,7 @@ export function GmailOutreach() {
         <div>Sending: {snapshot.view.sendingReady ? "Ready" : "Not ready"}</div>
         <div>Verified account: {snapshot.verifiedAccount ?? "not checked yet"}</div>
         <div>Last test: {when(snapshot.lastTestAt)}</div>
+        <div>Last test send: {when(snapshot.lastTestSendAt)}</div>
         <div>Last outreach: {when(snapshot.lastOutreachAt)}</div>
         <div>Emails sent today: {snapshot.sentToday}</div>
         <div>Errors: {snapshot.errors.length}</div>
@@ -104,6 +116,24 @@ export function GmailOutreach() {
           className="min-h-11 rounded-lg border border-border px-3 type-nav text-muted-foreground hover:bg-secondary disabled:opacity-50"
         >
           {test.isPending ? "Checking…" : "Test connection"}
+        </button>
+        <button
+          type="button"
+          disabled={sendTest.isPending || !snapshot.view.canTestSend}
+          onClick={() => {
+            if (
+              window.confirm(
+                "Send one clearly labelled test email to " +
+                  snapshot.account +
+                  "? No prospect will be contacted.",
+              )
+            ) {
+              sendTest.mutate();
+            }
+          }}
+          className="min-h-11 rounded-lg border border-border px-3 type-nav text-muted-foreground hover:bg-secondary disabled:opacity-50"
+        >
+          {sendTest.isPending ? "Sending test…" : "Test send"}
         </button>
       </div>
 

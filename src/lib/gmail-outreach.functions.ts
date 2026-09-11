@@ -37,6 +37,10 @@ export type GmailOutreachSnapshot = {
   verifiedAccount: string | null;
   view: GmailStatusView;
   lastTestAt: string | null;
+  /** When Gmail last actually accepted a founder test message. */
+  lastTestSendAt: string | null;
+  /** The last test-send outcome, in plain words. */
+  lastTestSendDetail: string | null;
   lastOutreachAt: string | null;
   sentToday: number;
   errors: { at: string; detail: string }[];
@@ -61,18 +65,38 @@ async function readChecks(admin: any) {
   return (data ?? []) as { action: string; detail: string; created_at: string }[];
 }
 
-async function buildSnapshot(admin: any): Promise<GmailOutreachSnapshot> {
-  const [{ gmailCredentialsPresent }, { channelMayTransmit }, { outboundHalted }] =
-    await Promise.all([
-      import("@/lib/growth/gmail.server"),
-      import("@/lib/growth/channels"),
-      import("@/lib/growth/config"),
-    ]);
+/** The last founder test send Gmail actually accepted. */
+async function readSendProof(admin: any) {
+  const { data } = await admin
+    .from("marketing_audit")
+    .select("action, detail, created_at")
+    .in("action", ["gmail_send_verified", "gmail_send_failed"])
+    .order("created_at", { ascending: false })
+    .limit(5);
+  return (data ?? []) as { action: string; detail: string; created_at: string }[];
+}
 
-  const checks = await readChecks(admin);
+async function buildSnapshot(admin: any): Promise<GmailOutreachSnapshot> {
+  const [
+    { gmailCredentialsPresent },
+    { channelMayTransmit, channelBlockReason },
+    { outboundHalted },
+    { activateGmailEmailChannel },
+  ] = await Promise.all([
+    import("@/lib/growth/gmail.server"),
+    import("@/lib/growth/channels"),
+    import("@/lib/growth/config"),
+    import("@/lib/growth/gmail-channel.server"),
+  ]);
+
+  const [checks, sendProofs] = await Promise.all([readChecks(admin), readSendProof(admin)]);
   const lastCheck = checks[0] ?? null;
   const lastGood = checks.find((row) => row.action === "gmail_connection_verified") ?? null;
   const verifiedAccount = lastGood ? (lastGood.detail.match(/[^\s<]+@[^\s>]+/)?.[0] ?? null) : null;
+  const lastSendProof = sendProofs.find((row) => row.action === "gmail_send_verified") ?? null;
+
+  // Authorise the existing email channel from the facts, before it is read.
+  activateGmailEmailChannel({ verifiedAccount, sendVerified: Boolean(lastSendProof) });
 
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
@@ -90,12 +114,16 @@ async function buildSnapshot(admin: any): Promise<GmailOutreachSnapshot> {
   return {
     account: OUTREACH_SENDER,
     verifiedAccount,
+    lastTestSendAt: lastSendProof?.created_at ?? null,
+    lastTestSendDetail: sendProofs[0]?.detail ?? null,
     view: gmailStatusView({
       credentialsPresent: gmailCredentialsPresent(),
       accountVerified: Boolean(lastGood),
       verifiedAccount,
       authorisationFailed: lastCheck?.action === "gmail_connection_failed",
       channelMayTransmit: channelMayTransmit("email"),
+      channelBlockReason: channelBlockReason("email"),
+      sendVerified: Boolean(lastSendProof),
       outboundHalted: outboundHalted(),
     }),
     lastTestAt: lastCheck?.created_at ?? null,
@@ -323,3 +351,64 @@ export const sendOutreachEmail = createServerFn({ method: "POST" })
       messageId: result.value.id,
     };
   });
+
+/**
+ * The founder-only test send.
+ *
+ * This proves the Gmail *send* action really works, which an identity check
+ * can never do. The message goes to the connected outreach mailbox itself, so
+ * no prospect and no third party can be reached, and success is claimed only
+ * when Gmail returns a real message id.
+ */
+export const testGmailSendCapability = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ confirm: z.literal(true) }).parse(data))
+  .handler(
+    async ({
+      context,
+    }): Promise<{
+      ok: boolean;
+      detail: string;
+      messageId: string | null;
+      snapshot: GmailOutreachSnapshot;
+    }> => {
+      const supabase = context.supabase as any;
+      await assertAdmin(supabase);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { gmailSend } = await import("@/lib/growth/gmail.server");
+      const { buildTestSendMessage } = await import("@/lib/growth/gmail");
+
+      const before = await buildSnapshot(supabaseAdmin as any);
+      if (!before.view.canTestSend) {
+        return { ok: false, detail: before.view.detail, messageId: null, snapshot: before };
+      }
+
+      const test = buildTestSendMessage();
+      const result = await gmailSend(
+        buildRawEmail({
+          to: OUTREACH_SENDER,
+          from: OUTREACH_SENDER,
+          subject: test.subject,
+          body: test.body,
+        }),
+      );
+
+      const detail = result.ok
+        ? `Gmail accepted the test message and returned message id ${result.value.id}. No prospect email was sent.`
+        : `Gmail send action returned an error: ${result.error}`;
+
+      await (supabaseAdmin as any).from("marketing_audit").insert({
+        action: result.ok ? "gmail_send_verified" : "gmail_send_failed",
+        detail,
+        actor: "human",
+        actor_id: context.userId,
+      });
+
+      return {
+        ok: result.ok,
+        detail,
+        messageId: result.ok ? result.value.id : null,
+        snapshot: await buildSnapshot(supabaseAdmin as any),
+      };
+    },
+  );

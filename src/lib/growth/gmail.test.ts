@@ -17,6 +17,7 @@ const READY: GmailStatusInput = {
   verifiedAccount: OUTREACH_SENDER,
   authorisationFailed: false,
   channelMayTransmit: true,
+  sendVerified: true,
   outboundHalted: false,
 };
 
@@ -33,6 +34,9 @@ describe("Gmail connection status is never optimistic", () => {
     expect(gmailStatusView({ ...READY, channelMayTransmit: false }).status).toBe(
       "SENDING_UNAVAILABLE",
     );
+    expect(gmailStatusView({ ...READY, sendVerified: false }).status).toBe("CONNECTED");
+    expect(gmailStatusView({ ...READY, sendVerified: false }).sendingReady).toBe(false);
+    expect(gmailStatusView({ ...READY, sendVerified: false }).canTestSend).toBe(true);
     expect(gmailStatusView(READY).status).toBe("SENDING_READY");
   });
 

@@ -283,8 +283,8 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
         .eq("campaign_id", campaignId),
     ]);
 
-    // One campaign publishes ONE production video: the newest file from the
-    // highest production route. Everything older is history.
+    // A campaign can hold several videos and each is published in its own
+    // right. This is only the one the Studio opens on: the newest stored file.
     const { resolveProductionVideo } = await import("@/lib/marketing/production-asset");
     const production = resolveProductionVideo(
       ((videoRows ?? []) as any[]).map((row) => ({
@@ -323,13 +323,17 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
         createdAt: video.created_at,
         executionMode: video.execution_mode ?? "UNKNOWN",
         isCurrent: video.id === currentVideoId,
-        // A publication belongs to the exact video that produced it. Records
-        // written before per-video identity existed are kept, but flagged.
+        /*
+         * A publication belongs to the exact video that produced it, and to no
+         * other. Records written before per-video identity existed carry no
+         * video: they are attached to the OLDEST video of that asset and
+         * flagged as history, so a newly made video can never inherit them.
+         */
         publications: ((pubRows ?? []) as any[])
           .filter((entry) =>
             entry.video_id
               ? entry.video_id === video.id
-              : entry.asset_id === video.asset_id && video.id === currentVideoId,
+              : entry.asset_id === video.asset_id && video.id === oldestVideoForAsset(video.asset_id),
           )
           .map((entry) => ({
             platform: entry.platform,

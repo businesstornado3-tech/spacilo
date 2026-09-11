@@ -213,6 +213,50 @@ export function PublishSection({
         </Alert>
       ) : null}
 
+      {videoHistory.length > 1 ? (
+        <div className="rounded-xl border border-border p-4">
+          <p className="type-body-sm font-semibold">Videos in this campaign</p>
+          <p className="mt-1 type-body-xs text-muted-foreground">
+            Each video is published on its own. Choose the one you want to work with — the newest is
+            selected to begin with.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {videoHistory.map((entry, index) => {
+              const chosen = current?.videoId === entry.videoId;
+              return (
+                <li key={entry.videoId}>
+                  <button
+                    type="button"
+                    disabled={!entry.ready}
+                    onClick={() => setSelectedVideoId(entry.videoId)}
+                    className={cn(
+                      "w-full rounded-lg border p-3 text-left disabled:opacity-60",
+                      chosen ? "border-primary bg-secondary" : "border-border",
+                    )}
+                  >
+                    <span className="type-body-sm font-medium">
+                      Video {videoHistory.length - index}: “{entry.title}”
+                      {chosen ? " · selected" : ""}
+                    </span>
+                    <span className="mt-1 block type-body-xs text-muted-foreground">
+                      {entry.seconds} seconds · made{" "}
+                      {new Date(entry.createdAt).toLocaleString("en-GB")}
+                    </span>
+                    <span className="mt-1 block type-body-xs text-muted-foreground">
+                      {entry.ready
+                        ? entry.publishedOn.length > 0
+                          ? `Published to ${entry.publishedOn.join(", ")}.`
+                          : "Not published anywhere yet."
+                        : entry.readyDetail}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
+
       {current ? (
         <div className="rounded-xl border border-border bg-secondary/40 p-4">
           <p className="type-body-sm font-semibold">This video: “{current.title}”</p>

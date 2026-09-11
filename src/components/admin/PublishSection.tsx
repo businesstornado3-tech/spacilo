@@ -12,6 +12,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import * as React from "react";
 
+import { PlatformDestination } from "@/components/admin/PlatformDestination";
 import { Alert } from "@/components/common/Alert";
 import { usePublishingConnections } from "@/hooks/useMarketingVideos";
 import { definition } from "@/lib/marketing/platforms";
@@ -321,6 +322,12 @@ export function PublishSection({
               >
                 Connect
               </button>
+            ) : null}
+
+            {row.platform === "linkedin" ||
+            row.platform === "tiktok" ||
+            row.platform === "pinterest" ? (
+              <PlatformDestination platform={row.platform} />
             ) : null}
 
             {row.action === "PUBLISH" ? (

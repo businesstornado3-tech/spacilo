@@ -2770,6 +2770,8 @@ export type Database = {
           account_id: string | null
           account_label: string | null
           connection: string
+          destination_id: string | null
+          destination_label: string | null
           expires_at: string | null
           last_checked_at: string | null
           last_error: string | null
@@ -2783,6 +2785,8 @@ export type Database = {
           account_id?: string | null
           account_label?: string | null
           connection?: string
+          destination_id?: string | null
+          destination_label?: string | null
           expires_at?: string | null
           last_checked_at?: string | null
           last_error?: string | null
@@ -2796,6 +2800,8 @@ export type Database = {
           account_id?: string | null
           account_label?: string | null
           connection?: string
+          destination_id?: string | null
+          destination_label?: string | null
           expires_at?: string | null
           last_checked_at?: string | null
           last_error?: string | null
@@ -2850,6 +2856,7 @@ export type Database = {
           created_at: string
           error: string | null
           id: string
+          media_id: string | null
           platform: string
           platform_post_id: string | null
           platform_url: string | null
@@ -2865,6 +2872,7 @@ export type Database = {
           created_at?: string
           error?: string | null
           id?: string
+          media_id?: string | null
           platform: string
           platform_post_id?: string | null
           platform_url?: string | null
@@ -2880,6 +2888,7 @@ export type Database = {
           created_at?: string
           error?: string | null
           id?: string
+          media_id?: string | null
           platform?: string
           platform_post_id?: string | null
           platform_url?: string | null

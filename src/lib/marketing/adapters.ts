@@ -49,6 +49,15 @@ export type AdapterContext = {
    * decides what it grants; the stored visibility is read back afterwards.
    */
   youtubePrivacy?: "private" | "unlisted" | "public";
+  /**
+   * The founder-chosen destination WITHIN the connected account: the Pinterest
+   * board, or the LinkedIn author (member or organisation URN). Never guessed.
+   */
+  destinationId?: string | null;
+  /** TikTok only: the privacy level the founder asked for, if any. */
+  tiktokPrivacy?: string | null;
+  /** Pinterest only: a cover belonging to the exact video being pinned. */
+  coverImageUrl?: string | null;
 };
 
 export interface PublishingChannelAdapter {
@@ -278,6 +287,118 @@ function metaAdapter(
   };
 }
 
+/**
+ * LinkedIn, TikTok and Pinterest, through their own official APIs.
+ *
+ * Each publishes the EXACT file it was handed, and each is only ever reported
+ * as published when the platform itself returned a post/pin identifier.
+ */
+function socialAdapter(
+  platform: "linkedin" | "tiktok" | "pinterest",
+  context: AdapterContext,
+  capability: PlatformCapability,
+): PublishingChannelAdapter {
+  const token = context.accessToken as string;
+  // LinkedIn posts as the chosen author; Pinterest pins to the chosen board.
+  const destination = context.destinationId ?? context.accountId ?? null;
+
+  const call = async (
+    asset: PlatformAsset,
+    _campaign: MarketingCampaign,
+  ): Promise<PublishResult> => {
+    void _campaign;
+    const check = validateAssetForPlatform(asset);
+    if (!check.ok) {
+      return {
+        ok: false,
+        state: "VALIDATION_FAILED",
+        error: check.problems.join(" "),
+        retryable: false,
+      };
+    }
+    if (!asset.videoUrl) {
+      return {
+        ok: false,
+        state: "UPLOAD_FAILED",
+        error: "No rendered video file is available to upload.",
+        retryable: true,
+      };
+    }
+
+    if (platform === "linkedin") {
+      if (!destination) {
+        return {
+          ok: false,
+          state: "AUTH_REQUIRED",
+          error: "No LinkedIn author is chosen. Choose the profile or Company Page to post as.",
+          retryable: true,
+        };
+      }
+      const { publishLinkedinVideo } = await import("./linkedin");
+      const { linkedinCopy } = await import("./platform-copy");
+      const copy = linkedinCopy(asset);
+      return publishLinkedinVideo({
+        fetchImpl: context.fetchImpl,
+        accessToken: token,
+        authorUrn: destination,
+        videoUrl: asset.videoUrl,
+        title: copy.title,
+        commentary: copy.body,
+        now: context.now,
+      });
+    }
+
+    if (platform === "tiktok") {
+      const { publishTiktokVideo } = await import("./tiktok");
+      const { tiktokCopy } = await import("./platform-copy");
+      return publishTiktokVideo({
+        fetchImpl: context.fetchImpl,
+        accessToken: token,
+        videoUrl: asset.videoUrl,
+        title: tiktokCopy(asset).title,
+        seconds: asset.seconds,
+        requestedPrivacy: context.tiktokPrivacy ?? null,
+        now: context.now,
+        ...(context.sleep ? { sleep: context.sleep } : {}),
+      });
+    }
+
+    const { publishPinterestVideoPin } = await import("./pinterest");
+    const { pinterestCopy } = await import("./platform-copy");
+    const copy = pinterestCopy(asset);
+    return publishPinterestVideoPin({
+      fetchImpl: context.fetchImpl,
+      accessToken: token,
+      boardId: context.destinationId ?? null,
+      videoUrl: asset.videoUrl,
+      coverImageUrl: context.coverImageUrl ?? asset.thumbnailUrl ?? null,
+      title: copy.title,
+      description: copy.body,
+      link: copy.link,
+      now: context.now,
+      ...(context.sleep ? { sleep: context.sleep } : {}),
+    });
+  };
+
+  return {
+    platform,
+    capability: () => capability,
+    validateAsset: validateAssetForPlatform,
+    upload: call,
+    publish: call,
+    getPublicationStatus: async (platformPostId) => ({
+      state: "PUBLISHED",
+      url:
+        platform === "pinterest"
+          ? `https://www.pinterest.com/pin/${platformPostId}/`
+          : platform === "linkedin"
+            ? `https://www.linkedin.com/feed/update/${platformPostId}/`
+            : `https://www.tiktok.com/video/${platformPostId}`,
+    }),
+    getAnalytics: async () => null,
+  };
+}
+
 /** A platform endpoint description: what a real publish would call. */
 type Endpoint = {
   uploadUrl: (accountId: string) => string;
@@ -394,6 +515,13 @@ export function adapterFor(
   }
   if (platform === "tiktok" && !oauthDefinition("tiktok").approvalNote) {
     return unavailableAdapter(platform, context, "TikTok approval state unknown.");
+  }
+
+  // LinkedIn, TikTok and Pinterest each have a real multi-step official flow —
+  // upload the actual bytes, wait for the platform, then create the post. They
+  // are handled by their own modules, exactly like Meta and YouTube.
+  if (platform === "linkedin" || platform === "tiktok" || platform === "pinterest") {
+    return socialAdapter(platform, context, capability);
   }
 
   const token = context.accessToken;

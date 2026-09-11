@@ -34,6 +34,9 @@ export const PUBLISHABLE_PLATFORMS = [
   "youtube_shorts",
   "instagram",
   "facebook",
+  "tiktok",
+  "linkedin",
+  "pinterest",
 ] as const;
 export type PublishablePlatform = (typeof PUBLISHABLE_PLATFORMS)[number];
 
@@ -119,6 +122,9 @@ const LABEL: Record<PublishablePlatform, string> = {
   youtube_shorts: "YouTube Shorts",
   instagram: "Instagram",
   facebook: "Facebook",
+  tiktok: "TikTok",
+  linkedin: "LinkedIn",
+  pinterest: "Pinterest",
 };
 
 async function assertAdmin(supabase: any): Promise<void> {
@@ -137,13 +143,21 @@ export function platformStateFrom(input: {
     account_id?: string | null;
     account_label?: string | null;
     last_error?: string | null;
+    destination_id?: string | null;
+    destination_label?: string | null;
   } | null;
   hasToken: boolean;
   paused: boolean;
 }): PlatformPublishingState {
   const { platform, connectionRow, hasToken, paused } = input;
   const connected = connectionRow?.connection === "CONNECTED";
-  const destination = connectionRow?.account_label ?? connectionRow?.account_id ?? null;
+  // Pinterest pins to a board and LinkedIn posts as a chosen author, so for
+  // those two the destination is the founder's explicit choice, never the
+  // account itself.
+  const needsChoice = platform === "pinterest" || platform === "linkedin";
+  const destination = needsChoice
+    ? (connectionRow?.destination_label ?? connectionRow?.destination_id ?? null)
+    : (connectionRow?.account_label ?? connectionRow?.account_id ?? null);
   const shares: PublishablePlatform | null = platform === "youtube_shorts" ? "youtube" : null;
   const base = {
     platform,
@@ -183,7 +197,11 @@ export function platformStateFrom(input: {
       capabilityDetail:
         platform === "facebook"
           ? "Connected, but no Facebook Page is selected as the destination."
-          : "Connected, but no destination account or channel has been chosen.",
+          : platform === "pinterest"
+            ? "Connected, but no Pinterest board is chosen to pin to."
+            : platform === "linkedin"
+              ? "Connected, but no LinkedIn author is chosen — your profile or a Company Page."
+              : "Connected, but no destination account or channel has been chosen.",
     };
   }
   if (paused) {
@@ -489,7 +507,9 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
     const connectionKey = platform === "youtube_shorts" ? "youtube" : platform;
     const { data: connectionRows } = await supabase
       .from("marketing_platform_connections")
-      .select("platform, connection, account_id, account_label, last_error");
+      .select(
+        "platform, connection, account_id, account_label, last_error, destination_id, destination_label",
+      );
     const connection = ((connectionRows ?? []) as any[]).find(
       (row) => row.platform === connectionKey,
     );
@@ -499,7 +519,18 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
           ? "No Facebook Page is selected. Choose the Page to publish to first."
           : platform === "instagram"
             ? "No Instagram professional account is stored. Reconnect Instagram."
-            : "No YouTube channel is selected as the destination yet.",
+            : platform === "youtube" || platform === "youtube_shorts"
+              ? "No YouTube channel is selected as the destination yet."
+              : `${LABEL[platform]} is not connected yet.`,
+      );
+    }
+    // Pinterest must be told which board, and LinkedIn who to post as. Neither
+    // is ever guessed.
+    if ((platform === "pinterest" || platform === "linkedin") && !connection.destination_id) {
+      return refuse(
+        platform === "pinterest"
+          ? "Choose the Pinterest board to pin to first."
+          : "Choose the LinkedIn author to post as first — your profile or a Company Page.",
       );
     }
 
@@ -518,9 +549,16 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       const stored = await readInstagramToken();
       accessToken = stored.token;
       if (!accessToken) return refuse(stored.detail);
-    } else {
+    } else if (platform === "youtube" || platform === "youtube_shorts") {
       const { youtubeAccessToken } = await import("@/lib/marketing/youtube-token.server");
       const stored = await youtubeAccessToken();
+      accessToken = stored.token;
+      if (!accessToken) return refuse(stored.detail);
+    } else {
+      // LinkedIn, TikTok and Pinterest each read their OWN stored
+      // authorisation; no platform is ever handed another one's token.
+      const { platformAccessToken } = await import("@/lib/marketing/platform-token.server");
+      const stored = await platformAccessToken(platform);
       accessToken = stored.token;
       if (!accessToken) return refuse(stored.detail);
     }
@@ -599,6 +637,11 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       now,
       fetchImpl: runtimeFetch,
       ...(data.visibility ? { youtubePrivacy: data.visibility } : {}),
+      // The founder's own choice: the Pinterest board or the LinkedIn author.
+      destinationId: connection.destination_id ?? null,
+      // TikTok's privacy choice, when the founder has recorded one. TikTok
+      // itself decides whether that value is actually available.
+      tiktokPrivacy: platform === "tiktok" ? (connection.destination_id ?? null) : null,
     });
 
     const attempt = await attemptPublish({
@@ -652,6 +695,9 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       state: attempt.record.state,
       platform_post_id: attempt.record.platformPostId,
       platform_url: attempt.record.platformUrl,
+      // The platform's own media identifier, when it returned one distinct
+      // from the post id (LinkedIn video URN, Pinterest media id).
+      media_id: (attempt.result as { mediaId?: string | null }).mediaId ?? null,
       // The REAL provider reason is stored verbatim (already sanitised of any
       // token by the adapter), with a short reference the founder can quote.
       error: published

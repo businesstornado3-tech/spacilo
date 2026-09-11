@@ -78,11 +78,12 @@ export const PLATFORMS: readonly PlatformDefinition[] = [
   {
     id: "linkedin",
     label: "LinkedIn",
-    aspects: ["16:9", "1:1"],
+    // LinkedIn accepts vertical video too, which is what these campaigns make.
+    aspects: ["16:9", "1:1", "9:16"],
     maxSeconds: 600,
     apiPublishingSupported: true,
     apiAutonomousSupported: true,
-    note: "LinkedIn organisation posts.",
+    note: "LinkedIn posts, as your profile or a Company Page you administer.",
   },
   {
     id: "pinterest",

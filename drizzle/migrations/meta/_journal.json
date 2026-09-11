@@ -29,6 +29,13 @@
       "when": 1789142185795,
       "tag": "0003_marketing_videos_initiator",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789165296583,
+      "tag": "0004_marketing_platform_destinations",
+      "breakpoints": true
     }
   ]
 }

@@ -122,6 +122,9 @@ const LABEL: Record<PublishablePlatform, string> = {
   youtube_shorts: "YouTube Shorts",
   instagram: "Instagram",
   facebook: "Facebook",
+  tiktok: "TikTok",
+  linkedin: "LinkedIn",
+  pinterest: "Pinterest",
 };
 
 async function assertAdmin(supabase: any): Promise<void> {

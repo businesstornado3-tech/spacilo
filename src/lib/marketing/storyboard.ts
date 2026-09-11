@@ -421,6 +421,8 @@ export function buildStoryboard(input: {
     seconds,
     endCardFromSeconds,
     beats,
+    narration,
+    narrationCapability: NARRATION_CAPABILITY,
     captions,
     segments,
     treatmentId: treatment?.id ?? null,

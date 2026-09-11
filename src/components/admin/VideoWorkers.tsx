@@ -501,6 +501,57 @@ export function VideoWorkers() {
                 </label>
               ))}
             </div>
+            {preferences.autonomousGeneration ? (
+              <div className="mt-3 rounded-lg border border-border p-3">
+                <h6 className="type-body-sm font-semibold">Daily budget for automatic videos</h6>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {[720, 2000, 5000, 10_000].map((pence) => (
+                    <button
+                      key={pence}
+                      type="button"
+                      className={`rounded-md border px-2 py-1 type-body-xs ${
+                        preferences.spend.autonomousDailyPence === pence
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border"
+                      }`}
+                      onClick={() =>
+                        workers.preferences
+                          .mutateAsync({ spend: { autonomousDailyPence: pence } })
+                          .then(() =>
+                            setNotice(
+                              `Automatic video budget set to £${(pence / 100).toFixed(2)} a day.`,
+                            ),
+                          )
+                      }
+                    >
+                      £{(pence / 100).toFixed(2)}
+                    </button>
+                  ))}
+                  <label className="flex items-center gap-2 type-body-xs">
+                    Custom £
+                    <input
+                      type="number"
+                      min={0}
+                      max={1000}
+                      step="0.01"
+                      defaultValue={(preferences.spend.autonomousDailyPence / 100).toFixed(2)}
+                      className="w-24 rounded-md border border-border bg-background px-2 py-1"
+                      onBlur={(event) => {
+                        const pence = Math.round(Number(event.target.value) * 100);
+                        if (!Number.isFinite(pence) || pence < 0) return;
+                        void workers.preferences
+                          .mutateAsync({ spend: { autonomousDailyPence: pence } })
+                          .then(() =>
+                            setNotice(
+                              `Automatic video budget set to £${(pence / 100).toFixed(2)} a day.`,
+                            ),
+                          );
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+            ) : null}
             <p className="mt-3 type-body-xs text-muted-foreground">
               Paid video making is off until you switch it on, and each paid video still has to be
               confirmed on its own. Automatic video making has a daily budget of £

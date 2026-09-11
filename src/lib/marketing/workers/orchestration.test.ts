@@ -199,19 +199,36 @@ describe("no automatic paid fallback", () => {
     expect(plan.ok && plan.provider).toBe("example-paid");
   });
 
-  it("stops a paid generation that would break a spending limit", () => {
+  it("stops an automatic paid generation that would break the automatic budget", () => {
     const plan = planExecution({
       preference: "PAID_CLOUD",
       workers: [browser, paid],
       request,
       paidComputeEnabled: true,
       confirmedPaid: true,
+      initiator: "AUTONOMOUS",
       spend: {
-        caps: { perVideoPence: 1, perDayPence: 1, perCampaignPence: 1, perMonthPence: 1 },
-        counts: { spentTodayPence: 0, spentThisCampaignPence: 0, spentThisMonthPence: 0 },
+        caps: { autonomousDailyPence: 1 },
+        counts: { manualSpentTodayPence: 0, autonomousSpentTodayPence: 0 },
       },
     });
     expect(!plan.ok && plan.status).toBe("SPEND_LIMIT_REACHED");
+  });
+
+  it("lets a founder-made paid generation through the same exhausted budget", () => {
+    const plan = planExecution({
+      preference: "PAID_CLOUD",
+      workers: [browser, paid],
+      request,
+      paidComputeEnabled: true,
+      confirmedPaid: true,
+      initiator: "MANUAL",
+      spend: {
+        caps: { autonomousDailyPence: 1 },
+        counts: { manualSpentTodayPence: 100_000, autonomousSpentTodayPence: 100_000 },
+      },
+    });
+    expect(plan.ok).toBe(true);
   });
 
   it("stops everything while generation is paused", () => {

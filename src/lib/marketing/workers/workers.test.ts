@@ -218,38 +218,46 @@ describe("cost transparency", () => {
     expect(report.infrastructurePence).toBe(120);
   });
 
-  it("blocks a paid generation above the per-video cap", () => {
+  it("never blocks a founder-made paid video, whatever the autonomous budget shows", () => {
     const report = costReport({
       mode: "PAID_CLOUD",
-      resolution: "720p",
-      seconds: 8,
-      confirmedPence: 900,
+      resolution: "1080p",
+      seconds: 30,
+      confirmedPence: 720,
     });
-    const decision = checkSpend(
-      report,
-      { spentTodayPence: 0, spentThisCampaignPence: 0, spentThisMonthPence: 0 },
-      DEFAULT_SPEND_CAPS,
-    );
-    expect(decision.allowed).toBe(false);
+    // The autonomous budget is fully spent — a manual video is still allowed,
+    // and repeating it stays allowed.
+    const counts = { manualSpentTodayPence: 3600, autonomousSpentTodayPence: 720 };
+    expect(checkSpend(report, counts, DEFAULT_SPEND_CAPS, "MANUAL").allowed).toBe(true);
+    expect(checkSpend(report, counts, DEFAULT_SPEND_CAPS, "MANUAL").allowed).toBe(true);
   });
 
-  it("blocks a paid generation that would break the daily cap", () => {
+  it("blocks an automatic video once today's automatic budget is used up", () => {
     const report = costReport({
       mode: "PAID_CLOUD",
       resolution: "720p",
-      seconds: 8,
-      confirmedPence: 150,
+      seconds: 10,
+      confirmedPence: 120,
     });
     const decision = checkSpend(
       report,
-      {
-        spentTodayPence: DEFAULT_SPEND_CAPS.perDayPence - 50,
-        spentThisCampaignPence: 0,
-        spentThisMonthPence: 0,
-      },
+      { manualSpentTodayPence: 100_000, autonomousSpentTodayPence: 700 },
       DEFAULT_SPEND_CAPS,
+      "AUTONOMOUS",
     );
     expect(decision.allowed).toBe(false);
+    // Founder spending must not be what stops it.
+    expect(!decision.allowed && decision.reason).toContain("automatic");
+  });
+
+  it("counts only automatic spend against the automatic budget", () => {
+    const caps = { autonomousDailyPence: 1000 };
+    expect(
+      autonomousRemainingPence(
+        { manualSpentTodayPence: 5000, autonomousSpentTodayPence: 400 },
+        caps,
+      ),
+    ).toBe(600);
   });
 
   it("never blocks a free generation", () => {
@@ -257,8 +265,9 @@ describe("cost transparency", () => {
     expect(
       checkSpend(
         report,
-        { spentTodayPence: 9999, spentThisCampaignPence: 9999, spentThisMonthPence: 9999 },
+        { manualSpentTodayPence: 9999, autonomousSpentTodayPence: 9999 },
         DEFAULT_SPEND_CAPS,
+        "AUTONOMOUS",
       ).allowed,
     ).toBe(true);
   });

@@ -197,7 +197,11 @@ export function platformStateFrom(input: {
       capabilityDetail:
         platform === "facebook"
           ? "Connected, but no Facebook Page is selected as the destination."
-          : "Connected, but no destination account or channel has been chosen.",
+          : platform === "pinterest"
+            ? "Connected, but no Pinterest board is chosen to pin to."
+            : platform === "linkedin"
+              ? "Connected, but no LinkedIn author is chosen — your profile or a Company Page."
+              : "Connected, but no destination account or channel has been chosen.",
     };
   }
   if (paused) {

@@ -49,6 +49,15 @@ export type AdapterContext = {
    * decides what it grants; the stored visibility is read back afterwards.
    */
   youtubePrivacy?: "private" | "unlisted" | "public";
+  /**
+   * The founder-chosen destination WITHIN the connected account: the Pinterest
+   * board, or the LinkedIn author (member or organisation URN). Never guessed.
+   */
+  destinationId?: string | null;
+  /** TikTok only: the privacy level the founder asked for, if any. */
+  tiktokPrivacy?: string | null;
+  /** Pinterest only: a cover belonging to the exact video being pinned. */
+  coverImageUrl?: string | null;
 };
 
 export interface PublishingChannelAdapter {

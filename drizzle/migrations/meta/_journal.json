@@ -22,6 +22,13 @@
       "when": 1789140087320,
       "tag": "0002_publications_unique_per_video",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789142185795,
+      "tag": "0003_marketing_videos_initiator",
+      "breakpoints": true
     }
   ]
 }

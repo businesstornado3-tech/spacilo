@@ -274,6 +274,12 @@ const generateSchema = z.object({
   confirmPaid: z.boolean().default(false),
   /** Which paid preset to use. Only read on the paid route. */
   quality: z.enum(["SHORT", "STANDARD", "HIGHEST"]).optional(),
+  /**
+   * Who initiated this. The Studio's Generate button is always MANUAL; only
+   * EarnRoom's own automatic runs may pass AUTONOMOUS, and only those are
+   * measured against the autonomous daily budget.
+   */
+  initiator: z.enum(["MANUAL", "AUTONOMOUS"]).default("MANUAL"),
 });
 
 export type GenerateVideoResult = {
@@ -363,30 +369,27 @@ async function candidateWorkers(supabase: any, browser: unknown) {
   return { workers, endpoints: snapshot.endpoints };
 }
 
-/** Paid spend already committed today, this campaign and this month. */
-async function paidSpend(supabase: any, campaignId: string) {
+/**
+ * Today's paid spend, split by who asked for it.
+ *
+ * Only the autonomous figure is ever a limit. The manual figure exists for
+ * reporting and audit, and never blocks a founder-initiated generation.
+ */
+async function paidSpend(supabase: any) {
   const dayStart = new Date();
   dayStart.setUTCHours(0, 0, 0, 0);
-  const monthStart = new Date(dayStart);
-  monthStart.setUTCDate(1);
-  const sum = (rows: any[] | null) =>
-    ((rows ?? []) as any[]).reduce((total, row) => total + Number(row.api_cost_pence ?? 0), 0);
-
-  const [today, campaign, month] = await Promise.all([
-    supabase
-      .from("marketing_videos")
-      .select("api_cost_pence")
-      .gte("created_at", dayStart.toISOString()),
-    supabase.from("marketing_videos").select("api_cost_pence").eq("campaign_id", campaignId),
-    supabase
-      .from("marketing_videos")
-      .select("api_cost_pence")
-      .gte("created_at", monthStart.toISOString()),
-  ]);
+  const { data } = await supabase
+    .from("marketing_videos")
+    .select("api_cost_pence, initiator")
+    .gte("created_at", dayStart.toISOString());
+  const rows = (data ?? []) as any[];
+  const sum = (autonomous: boolean) =>
+    rows
+      .filter((row) => (row.initiator === "AUTONOMOUS") === autonomous)
+      .reduce((total, row) => total + Number(row.api_cost_pence ?? 0), 0);
   return {
-    spentTodayPence: sum(today.data),
-    spentThisCampaignPence: sum(campaign.data),
-    spentThisMonthPence: sum(month.data),
+    manualSpentTodayPence: sum(false),
+    autonomousSpentTodayPence: sum(true),
   };
 }
 
@@ -440,7 +443,7 @@ export const previewVideoWorkerPlan = createServerFn({ method: "POST" })
       },
       paidComputeEnabled: preferences.paidComputeEnabled,
       generationPaused: preferences.generationPaused,
-      spend: { caps: preferences.spend, counts: await paidSpend(supabase, data.campaignId) },
+      spend: { caps: preferences.spend, counts: await paidSpend(supabase) },
     });
 
     if (!plan.ok) {
@@ -579,7 +582,8 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
       paidComputeEnabled: preferences.paidComputeEnabled,
       confirmedPaid: data.confirmPaid,
       generationPaused: preferences.generationPaused,
-      spend: { caps: preferences.spend, counts: await paidSpend(supabase, campaign.id) },
+      spend: { caps: preferences.spend, counts: await paidSpend(supabase) },
+      initiator: data.initiator,
       infrastructurePencePerGpuMinute: config.infrastructurePencePerGpuMinute,
       gpuMinutes,
     });
@@ -685,6 +689,9 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
       job_phase: "GENERATING_VIDEO",
       infrastructure_cost_pence: cost.infrastructurePence,
       attempt,
+      // Who asked for this video. Only AUTONOMOUS spend counts against the
+      // autonomous daily budget; a founder-made video never does.
+      initiator: data.initiator,
     };
 
     const failNow = async (status: string, reason: string, offerPaid: boolean) => {

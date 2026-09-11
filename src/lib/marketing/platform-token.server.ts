@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any --
+ * The marketing tables were added after the generated Supabase types were last
+ * produced, so the query builder is untyped here.
+ */
 /**
  * The stored authorisation for LinkedIn, TikTok and Pinterest — server only.
  *

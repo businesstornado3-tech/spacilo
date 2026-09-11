@@ -1772,6 +1772,69 @@ export type Database = {
         }
         Relationships: []
       }
+      growth_outreach_emails: {
+        Row: {
+          campaign_id: string
+          channel: string
+          content_version: string
+          created_at: string
+          detected_intent: string | null
+          eligibility_verdict: string
+          failure_reason: string | null
+          id: string
+          location_label: string | null
+          opportunity_key: string | null
+          prospect_type: string | null
+          provider_message_id: string | null
+          provider_thread_id: string | null
+          recipient_email: string
+          sender_account: string
+          source: string
+          status: string
+          subject: string
+        }
+        Insert: {
+          campaign_id: string
+          channel?: string
+          content_version: string
+          created_at?: string
+          detected_intent?: string | null
+          eligibility_verdict: string
+          failure_reason?: string | null
+          id?: string
+          location_label?: string | null
+          opportunity_key?: string | null
+          prospect_type?: string | null
+          provider_message_id?: string | null
+          provider_thread_id?: string | null
+          recipient_email: string
+          sender_account: string
+          source: string
+          status: string
+          subject: string
+        }
+        Update: {
+          campaign_id?: string
+          channel?: string
+          content_version?: string
+          created_at?: string
+          detected_intent?: string | null
+          eligibility_verdict?: string
+          failure_reason?: string | null
+          id?: string
+          location_label?: string | null
+          opportunity_key?: string | null
+          prospect_type?: string | null
+          provider_message_id?: string | null
+          provider_thread_id?: string | null
+          recipient_email?: string
+          sender_account?: string
+          source?: string
+          status?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       guest_spacefit_runs: {
         Row: {
           client_request_id: string | null

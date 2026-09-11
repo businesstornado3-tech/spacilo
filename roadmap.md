@@ -19,10 +19,10 @@
 - [ ] Verify focused tests, type safety, and the live Founder Console without generation, credits, or publication
 
 ## Gmail outreach delivery channel (requested 11 Sep)
-- [ ] Audit Gmail connector scopes; report whether broad permissions are connector-imposed
-- [ ] Connect Gmail with minimum scope (gmail.send only) for businesstornado3@gmail.com
-- [ ] Server-side send helper + safe self-test (no prospect email)
-- [ ] Outreach eligibility gates reuse existing market-intelligence signals (no new intelligence system)
-- [ ] Outreach attempt records: campaign, source, intent, prospect type, location, channel, recipient, sender, timestamp, content version, result, failure reason, message id
-- [ ] Founder Console "Gmail outreach" section with status/sending/last test/last outreach/sent today/errors + Connect/Reconnect
+- [x] Audit Gmail connector scopes; report whether broad permissions are connector-imposed
+- [x] Gmail connected as businesstornado3@gmail.com (connector grants read/send/compose/modify; EarnRoom code calls send only)
+- [x] Server-side send helper + safe self-test (no prospect email)
+- [x] Outreach eligibility gates reuse existing market-intelligence signals (no new intelligence system)
+- [x] Outreach attempt records: campaign, source, intent, prospect type, location, channel, recipient, sender, timestamp, content version, result, failure reason, message id
+- [x] Founder Console "Gmail outreach" section with status/sending/last test/last outreach/sent today/errors + Connect/Reconnect
 - [ ] No real prospect email sent until founder approves the first one

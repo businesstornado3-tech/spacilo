@@ -12,6 +12,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { AdminShell, AdminSectionBlock } from "@/components/admin/AdminShell";
+import { GmailOutreach } from "@/components/admin/GmailOutreach";
 import { MarketingVideoPanel } from "@/components/admin/MarketingVideoPanel";
 import { PublishSection } from "@/components/admin/PublishSection";
 import { PublishingModeSection } from "@/components/admin/PublishingModeSection";
@@ -247,6 +248,11 @@ function MarketingStudioRoute() {
               campaignId={today?.id ?? null}
               campaignApproved={approved && !safetyFailed}
             />
+          </AdminSectionBlock>
+
+          {/* 6 — the outreach mailbox: one honest status, one safe test */}
+          <AdminSectionBlock id="gmail-outreach" title="Gmail outreach">
+            <GmailOutreach />
           </AdminSectionBlock>
         </div>
       ) : null}

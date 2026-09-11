@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789118229327,
+      "tag": "0000_create_growth_outreach_emails",
+      "breakpoints": true
+    }
+  ]
+}

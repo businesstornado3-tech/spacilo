@@ -7,10 +7,15 @@
  * Preview while Facebook got the paid production film — the same campaign,
  * two different videos.
  *
- * The rule here is deterministic and shared by every platform: one campaign
- * publishes ONE production video, the newest stored file from the highest
- * production route present. A Browser Preview is only ever published when the
- * campaign genuinely has nothing else.
+ * A campaign may now hold many videos and each one is published in its own
+ * right, so this module answers two separate questions:
+ *
+ *   - which video the Studio should have selected when it opens: the newest
+ *     stored file (the one just made), with the production route only breaking
+ *     a tie between files made at the same moment;
+ *   - `resolveSelectedVideo`: whether the exact video the founder chose can be
+ *     published. There is no substitution here — if that video has no stored
+ *     file, publishing refuses rather than sending a different one.
  *
  * Pure module: no network, no database.
  */

@@ -14,7 +14,7 @@ const NOW = Date.parse("2026-06-15T09:00:00Z");
 const FILE = new Response(new Uint8Array([1, 2, 3, 4]), { status: 200 });
 
 function json(body: unknown, status = 200, headers?: Record<string, string>): Response {
-  return new Response(JSON.stringify(body), { status, headers });
+  return new Response(JSON.stringify(body), { status, ...(headers ? { headers } : {}) });
 }
 
 function sequence(responses: Response[]): typeof fetch {

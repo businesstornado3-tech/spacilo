@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { resolveProductionVideo } from "./production-asset";
+import { resolveProductionVideo, resolveSelectedVideo } from "./production-asset";
 
 const rows = [
   {
@@ -51,8 +51,28 @@ describe("per-video publication identity", () => {
 
   it("flags a pre-identity record as history rather than current state", () => {
     const records = [{ videoId: null, assetId: "asset-1", state: "PUBLISHED" }];
-    const attached = publicationsFor(rows[1]!, "video-new", records);
+    const attached = publicationsFor(rows[0]!, "video-old", records);
     expect(attached).toHaveLength(1);
     expect(attached[0]!.historical).toBe(true);
+  });
+
+  it("keeps each video of a campaign independently publishable", () => {
+    // Video one is on Facebook; video two is on Instagram. Neither result
+    // may leak onto the other video's cards.
+    const records = [
+      { videoId: "video-old", assetId: "asset-1", state: "PUBLISHED", platform: "facebook" },
+      { videoId: "video-new", assetId: "asset-1", state: "PUBLISHED", platform: "instagram" },
+    ];
+    const first = publicationsFor(rows[0]!, "video-new", records);
+    const second = publicationsFor(rows[1]!, "video-new", records);
+    expect(first.map((entry) => entry.platform)).toEqual(["facebook"]);
+    expect(second.map((entry) => entry.platform)).toEqual(["instagram"]);
+  });
+
+  it("selects the video the founder chose, never a different one", () => {
+    const chosen = resolveSelectedVideo(rows, "video-old");
+    expect(chosen.ok && chosen.video.id).toBe("video-old");
+    expect(chosen.ok && chosen.video.storagePath).toBe("campaign/old.mp4");
+    expect(resolveSelectedVideo(rows, "video-missing").ok).toBe(false);
   });
 });

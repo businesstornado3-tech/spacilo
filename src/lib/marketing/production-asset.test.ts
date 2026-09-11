@@ -51,6 +51,23 @@ describe("one campaign publishes one production video", () => {
     expect(result.ok).toBe(false);
   });
 
+  it("never publishes an intermediate part of a longer film", () => {
+    // While a 30-second film is being made part by part, nothing is stored:
+    // only the finished, branded film has a file behind it.
+    const result = resolveProductionVideo([
+      row({ id: "part-in-progress", executionMode: "PAID_CLOUD", storagePath: null }),
+    ]);
+    expect(result.ok).toBe(false);
+  });
+
+  it("publishes nothing when a part failed part-way through", () => {
+    const result = resolveProductionVideo([
+      row({ id: "failed-30s", executionMode: "PAID_CLOUD", storagePath: null }),
+      row({ id: "also-failed", executionMode: "PAID_CLOUD", storagePath: null }),
+    ]);
+    expect(result.ok).toBe(false);
+  });
+
   it("keeps campaigns apart: only the rows given are considered", () => {
     const a = resolveProductionVideo([row({ id: "a", assetId: "A-1" })]);
     const b = resolveProductionVideo([row({ id: "b", assetId: "B-1" })]);

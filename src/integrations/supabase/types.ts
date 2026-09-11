@@ -2857,6 +2857,7 @@ export type Database = {
           retry_count: number
           state: string
           updated_at: string
+          video_id: string | null
         }
         Insert: {
           asset_id: string
@@ -2871,6 +2872,7 @@ export type Database = {
           retry_count?: number
           state: string
           updated_at?: string
+          video_id?: string | null
         }
         Update: {
           asset_id?: string
@@ -2885,6 +2887,7 @@ export type Database = {
           retry_count?: number
           state?: string
           updated_at?: string
+          video_id?: string | null
         }
         Relationships: [
           {
@@ -2892,6 +2895,13 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketing_publications_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_videos"
             referencedColumns: ["id"]
           },
         ]

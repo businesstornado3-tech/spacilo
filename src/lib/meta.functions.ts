@@ -598,17 +598,22 @@ export const publishMetaVideo = createServerFn({ method: "POST" })
 
     const published = attempt.record.state === "PUBLISHED";
 
-    /* The existing publication record, keyed the existing way. */
-    const { data: existing } = await supabase
+    /* The publication record for THIS exact video, or a pre-identity record
+     * for the asset that can be adopted. Never another video's record. */
+    const { data: existingRows } = await supabase
       .from("marketing_publications")
-      .select("id")
+      .select("id, video_id, asset_id")
       .eq("campaign_id", video.campaign_id)
-      .eq("asset_id", video.asset_id)
-      .eq("platform", platform)
-      .maybeSingle();
+      .eq("platform", platform);
+    const candidates = (existingRows ?? []) as any[];
+    const existing =
+      candidates.find((row) => row.video_id === video.id) ??
+      candidates.find((row) => !row.video_id && row.asset_id === video.asset_id) ??
+      null;
     const publicationRow = {
       campaign_id: video.campaign_id,
       asset_id: video.asset_id,
+      video_id: video.id,
       platform,
       state: attempt.record.state,
       platform_post_id: attempt.record.platformPostId,

@@ -84,8 +84,11 @@ export function PublishSection({
   }
 
   const branded = surface.assets.filter((asset) => asset.brandedArtifactReady);
-  const assetFor = (platform: StudioPlatform) =>
-    branded.find((asset) => asset.producedFor === platform) ?? branded[0] ?? null;
+  // Exactly one video is publishable at a time: the campaign's current
+  // production video. An older video's result never speaks for this one.
+  const current =
+    branded.find((asset) => asset.videoId === surface.currentVideoId) ?? branded[0] ?? null;
+  const assetFor = (_platform: StudioPlatform) => current;
 
   const connectionInputs: StudioConnectionInput[] = snapshot.platforms.map((entry) => ({
     platform: entry.platform,
@@ -99,20 +102,28 @@ export function PublishSection({
         : null,
   }));
 
-  const publications = branded.flatMap((asset) =>
-    asset.publications.map((entry) => ({
+  // Only the current video's own results. Historical records from an earlier
+  // video of the same campaign are shown separately, never as this one's state.
+  const publications = (current?.publications ?? [])
+    .filter((entry) => !entry.historical)
+    .map((entry) => ({
       platform: entry.platform,
       state: entry.state,
       platformUrl: entry.platformUrl,
       platformPostId: entry.platformPostId,
       error: entry.error,
-    })),
+    }));
+
+  const historical = branded.flatMap((asset) =>
+    asset.publications
+      .filter((entry) => entry.historical && entry.state === "PUBLISHED")
+      .map((entry) => ({ ...entry, videoId: asset.videoId })),
   );
 
   const rows = studioPlatformRows({
     connections: connectionInputs,
     publications,
-    videoReady: branded.length > 0,
+    videoReady: Boolean(current),
     campaignApproved,
     publishingPaused: surface.publishingPaused,
     publishing: busy,
@@ -139,6 +150,14 @@ export function PublishSection({
       });
       return;
     }
+    // Manual publishing always confirms the exact video being sent.
+    const confirmed = window.confirm(
+      `Publish this exact video to ${STUDIO_PLATFORM_LABEL[platform]}?\n\n` +
+        `“${asset.title}” · ${asset.seconds}s · ${asset.aspect} · made ${new Date(
+          asset.createdAt,
+        ).toLocaleString("en-GB")}`,
+    );
+    if (!confirmed) return;
     setNotice(null);
     setBusy(platform);
     mutation.mutate(
@@ -174,6 +193,34 @@ export function PublishSection({
         <Alert tone={notice.ok ? "success" : "error"} title={notice.ok ? "Published" : "Not done"}>
           {notice.text}
         </Alert>
+      ) : null}
+
+      {current ? (
+        <div className="rounded-xl border border-border bg-secondary/40 p-4">
+          <p className="type-body-sm font-semibold">This video: “{current.title}”</p>
+          <p className="mt-1 type-body-xs text-muted-foreground">
+            {current.seconds} seconds · {current.aspect} · made{" "}
+            {new Date(current.createdAt).toLocaleString("en-GB")}
+          </p>
+          <p className="mt-1 type-body-xs text-muted-foreground">
+            The cards below show where this video has been published. Anything published earlier in
+            this campaign was a different video.
+          </p>
+          {historical.length > 0 ? (
+            <p className="mt-1 type-body-xs text-muted-foreground">
+              Earlier videos in this campaign were already published to:{" "}
+              {[
+                ...new Set(
+                  historical.map(
+                    (entry) =>
+                      STUDIO_PLATFORM_LABEL[entry.platform as StudioPlatform] ?? entry.platform,
+                  ),
+                ),
+              ].join(", ")}
+              .
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       <ul className="grid gap-3 sm:grid-cols-2">

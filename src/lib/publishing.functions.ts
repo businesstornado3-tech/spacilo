@@ -73,6 +73,12 @@ export type AssetPublicationState = {
   platformUrl: string | null;
   error: string | null;
   publishedAt: string | null;
+  /**
+   * True when the record predates per-video publication identity, i.e. it
+   * belongs to an earlier video of the same asset. A historical record never
+   * makes the current video look published.
+   */
+  historical: boolean;
 };
 
 export type PublishableAsset = {
@@ -88,6 +94,13 @@ export type PublishableAsset = {
   /** True only when the final branded file is stored. */
   brandedArtifactReady: boolean;
   artifactDetail: string;
+  /** When this exact video was made, so the newest one is identifiable. */
+  createdAt: string;
+  /** How it was made: PAID_CLOUD, FREE_CLOUD, LOCAL or BROWSER. */
+  executionMode: string;
+  /** True for the one video this campaign publishes right now. */
+  isCurrent: boolean;
+  /** Publications for THIS video only (plus flagged historical ones). */
   publications: AssetPublicationState[];
 };
 
@@ -97,6 +110,8 @@ export type PublishingSurface = {
   platforms: PlatformPublishingState[];
   assets: PublishableAsset[];
   publishingPaused: boolean;
+  /** The exact video every platform publishes today, when one exists. */
+  currentVideoId: string | null;
 };
 
 const LABEL: Record<PublishablePlatform, string> = {
@@ -245,6 +260,7 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
         platforms,
         assets: [],
         publishingPaused: pausedAll,
+        currentVideoId: null,
       };
     }
 
@@ -256,13 +272,31 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
         .maybeSingle(),
       supabase
         .from("marketing_videos")
-        .select("id, asset_id, storage_path, status, aspect, seconds")
-        .eq("campaign_id", campaignId),
+        .select("id, asset_id, storage_path, status, aspect, seconds, created_at, execution_mode")
+        .eq("campaign_id", campaignId)
+        .order("created_at", { ascending: false }),
       supabase
         .from("marketing_publications")
-        .select("asset_id, platform, state, platform_post_id, platform_url, error, published_at")
+        .select(
+          "asset_id, video_id, platform, state, platform_post_id, platform_url, error, published_at",
+        )
         .eq("campaign_id", campaignId),
     ]);
+
+    // One campaign publishes ONE production video: the newest file from the
+    // highest production route. Everything older is history.
+    const { resolveProductionVideo } = await import("@/lib/marketing/production-asset");
+    const production = resolveProductionVideo(
+      ((videoRows ?? []) as any[]).map((row) => ({
+        id: row.id,
+        assetId: row.asset_id,
+        storagePath: row.storage_path ?? null,
+        executionMode: row.execution_mode ?? null,
+        createdAt: row.created_at,
+        seconds: row.seconds ?? null,
+      })),
+    );
+    const currentVideoId = production.ok ? production.video.id : null;
 
     const campaign = (campaignRow?.campaign ?? null) as any;
     const assets: PublishableAsset[] = [];
@@ -286,8 +320,17 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
         artifactDetail: branded
           ? "Final branded EarnRoom video stored and validated."
           : `Not publishable: the branded EarnRoom file is not stored yet (${video.status ?? "unknown"}). The raw AI file is never published.`,
+        createdAt: video.created_at,
+        executionMode: video.execution_mode ?? "UNKNOWN",
+        isCurrent: video.id === currentVideoId,
+        // A publication belongs to the exact video that produced it. Records
+        // written before per-video identity existed are kept, but flagged.
         publications: ((pubRows ?? []) as any[])
-          .filter((entry) => entry.asset_id === video.asset_id)
+          .filter((entry) =>
+            entry.video_id
+              ? entry.video_id === video.id
+              : entry.asset_id === video.asset_id && video.id === currentVideoId,
+          )
           .map((entry) => ({
             platform: entry.platform,
             state: entry.state,
@@ -295,6 +338,7 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
             platformUrl: entry.platform_url ?? null,
             error: entry.error ?? null,
             publishedAt: entry.published_at ?? null,
+            historical: !entry.video_id,
           })),
       });
     }
@@ -302,6 +346,7 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
     return {
       campaignId,
       campaignStatus: campaignRow?.status ?? null,
+      currentVideoId,
       platforms,
       assets,
       publishingPaused: pausedAll,
@@ -400,15 +445,21 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       );
     }
 
-    /* Duplicate protection — one confirmed publication per asset per platform. */
-    const { data: existingPub } = await supabase
+    /* Duplicate protection — one confirmed publication per VIDEO per platform.
+     * A record from an earlier video of the same asset is history: it must
+     * never make a newly produced video look published. */
+    const { data: videoPubRows } = await supabase
       .from("marketing_publications")
-      .select("id, state, platform_post_id, platform_url")
+      .select("id, state, platform_post_id, platform_url, video_id, asset_id")
       .eq("campaign_id", video.campaign_id)
-      .eq("asset_id", video.asset_id)
-      .eq("platform", platform)
-      .maybeSingle();
-    if (existingPub?.state === "PUBLISHED") {
+      .eq("platform", platform);
+    const rows = (videoPubRows ?? []) as any[];
+    const existingPub =
+      rows.find((row) => row.video_id === video.id) ??
+      // Adopt a pre-identity record for this asset rather than duplicating it.
+      rows.find((row) => !row.video_id && row.asset_id === video.asset_id) ??
+      null;
+    if (existingPub?.state === "PUBLISHED" && existingPub.video_id === video.id) {
       return {
         ok: true,
         state: "PUBLISHED",
@@ -584,6 +635,7 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
     const publicationRow = {
       campaign_id: video.campaign_id,
       asset_id: video.asset_id,
+      video_id: video.id,
       platform,
       state: attempt.record.state,
       platform_post_id: attempt.record.platformPostId,

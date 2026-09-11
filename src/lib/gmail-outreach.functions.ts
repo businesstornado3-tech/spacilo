@@ -413,3 +413,165 @@ export const testGmailSendCapability = createServerFn({ method: "POST" })
       };
     },
   );
+
+/* ------------------------------------------------- outreach mode + review */
+
+export type OutreachSettings = {
+  /** MANUAL is the default: every email is approved one at a time. */
+  mode: "MANUAL" | "AUTONOMOUS";
+  /** Emergency stop for outreach only. */
+  paused: boolean;
+  /** The most emails autonomous outreach may send in one day. */
+  maxDailyAutonomous: number;
+};
+
+const DEFAULT_OUTREACH_SETTINGS: OutreachSettings = {
+  mode: "MANUAL",
+  paused: false,
+  maxDailyAutonomous: 5,
+};
+
+/** Reads the stored outreach settings, falling back to the safe defaults. */
+export function outreachSettingsFrom(stored: unknown): OutreachSettings {
+  const value = (stored ?? {}) as Record<string, unknown>;
+  const mode = value["mode"] === "AUTONOMOUS" ? "AUTONOMOUS" : "MANUAL";
+  const limit = Number(value["maxDailyAutonomous"]);
+  return {
+    mode,
+    paused: value["paused"] === true,
+    maxDailyAutonomous: Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 5,
+  };
+}
+
+async function readOutreachSettings(admin: any): Promise<OutreachSettings> {
+  const { data } = await admin
+    .from("marketing_settings")
+    .select("settings")
+    .eq("id", true)
+    .maybeSingle();
+  return outreachSettingsFrom((data?.settings as any)?.outreach ?? DEFAULT_OUTREACH_SETTINGS);
+}
+
+export const getOutreachSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<OutreachSettings> => {
+    const supabase = context.supabase as any;
+    await assertAdmin(supabase);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    return readOutreachSettings(supabaseAdmin as any);
+  });
+
+const outreachSettingsSchema = z.object({
+  mode: z.enum(["MANUAL", "AUTONOMOUS"]).optional(),
+  paused: z.boolean().optional(),
+  maxDailyAutonomous: z.number().int().min(1).max(100).optional(),
+  /** Switching to autonomous needs the founder's explicit go-ahead. */
+  confirmAutonomous: z.boolean().optional(),
+});
+
+export const updateOutreachSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => outreachSettingsSchema.parse(data))
+  .handler(async ({ data, context }): Promise<OutreachSettings> => {
+    const supabase = context.supabase as any;
+    await assertAdmin(supabase);
+    if (data.mode === "AUTONOMOUS" && data.confirmAutonomous !== true) {
+      throw new Error("Autonomous outreach needs your explicit confirmation.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await (supabaseAdmin as any)
+      .from("marketing_settings")
+      .select("settings")
+      .eq("id", true)
+      .maybeSingle();
+    const settings = (row?.settings ?? {}) as Record<string, unknown>;
+    const next: OutreachSettings = {
+      ...outreachSettingsFrom(settings["outreach"]),
+      ...(data.mode ? { mode: data.mode } : {}),
+      ...(data.paused === undefined ? {} : { paused: data.paused }),
+      ...(data.maxDailyAutonomous === undefined
+        ? {}
+        : { maxDailyAutonomous: data.maxDailyAutonomous }),
+    };
+    await (supabaseAdmin as any)
+      .from("marketing_settings")
+      .upsert(
+        { id: true, settings: { ...settings, outreach: next }, updated_by: context.userId },
+        { onConflict: "id" },
+      );
+    await (supabaseAdmin as any).from("marketing_audit").insert({
+      action: "outreach_settings_updated",
+      detail: `Outreach mode ${next.mode}, ${next.paused ? "paused" : "active"}, up to ${next.maxDailyAutonomous} autonomous emails a day.`,
+      actor: "human",
+      actor_id: context.userId,
+    });
+    return next;
+  });
+
+export type OutreachReview = {
+  settings: OutreachSettings;
+  gmailReady: boolean;
+  /** Autonomous emails already confirmed sent today. */
+  sentToday: number;
+  cards: import("@/lib/growth/outreach-cards").OutreachCard[];
+};
+
+/**
+ * The founder's outreach review list: what EarnRoom found, what it believes,
+ * and the exact email it would send. Reading this sends nothing.
+ */
+export const listOutreachOpportunities = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<OutreachReview> => {
+    const supabase = context.supabase as any;
+    await assertAdmin(supabase);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+    const { buildOutreachCard } = await import("@/lib/growth/outreach-cards");
+
+    const [snapshot, settings, { data: rows }] = await Promise.all([
+      buildSnapshot(admin),
+      readOutreachSettings(admin),
+      admin
+        .from("growth_opportunities")
+        .select(
+          "key, connector_id, situation, pain_points, audience, fit, evidence, latest_seen_at, status",
+        )
+        .order("latest_seen_at", { ascending: false })
+        .limit(20),
+    ]);
+
+    const { data: contacted } = await admin
+      .from("growth_outreach_emails")
+      .select("opportunity_key")
+      .eq("status", "SENT");
+    const already = new Set(
+      ((contacted ?? []) as any[]).map((row) => row.opportunity_key).filter(Boolean),
+    );
+
+    const cards = ((rows ?? []) as any[]).map((row) =>
+      buildOutreachCard({
+        opportunity: {
+          key: row.key,
+          connectorId: row.connector_id,
+          situation: row.situation ?? {},
+          painPoints: row.pain_points ?? [],
+          audience: row.audience ?? {},
+          fit: row.fit ?? {},
+          evidence: row.evidence ?? [],
+          latestSeen: Date.parse(row.latest_seen_at),
+        } as any,
+        contact: null,
+        alreadyContacted: already.has(row.key),
+        gmailReady: snapshot.view.sendingReady,
+        paused: settings.paused,
+      }),
+    );
+
+    return {
+      settings,
+      gmailReady: snapshot.view.sendingReady,
+      sentToday: snapshot.sentToday,
+      cards,
+    };
+  });

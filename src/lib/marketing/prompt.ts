@@ -56,7 +56,9 @@ function timedScenes(asset: PlatformAsset, campaign: MarketingCampaign): string[
     const length = Math.max(1, Math.round(scene.seconds * scale));
     const from = cursor;
     cursor += length;
-    return `[${from}-${Math.min(asset.seconds, cursor)}s] ${scene.visual} Voiceover: ${scene.voiceover} On-screen caption: "${scene.caption}"`;
+    // Only what the camera sees. Wording and voice belong to the deterministic
+    // production layer, never to the video model.
+    return `[${from}-${Math.min(asset.seconds, cursor)}s] ${scene.visual}`;
   });
 }
 

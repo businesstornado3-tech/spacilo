@@ -326,11 +326,47 @@ export const Route = createFileRoute("/api/public/marketing/oauth/$platform")({
         }
 
 
+        /*
+         * Who the founder actually signed in as. Asked of the platform itself
+         * — never assumed — so the Studio can name the account truthfully. A
+         * failure here does not undo the connection; it just leaves the label
+         * empty until the destination panel reads it.
+         */
+        let accountId: string | null = null;
+        let accountLabel: string | null = null;
+        try {
+          if (platform === "linkedin") {
+            const { fetchLinkedinMember } = await import("@/lib/marketing/linkedin");
+            const member = await fetchLinkedinMember(runtimeFetch, accessToken);
+            if (member.ok) {
+              accountId = member.value.urn;
+              accountLabel = member.value.name;
+            }
+          } else if (platform === "tiktok") {
+            const { fetchTiktokUser } = await import("@/lib/marketing/tiktok");
+            const user = await fetchTiktokUser(runtimeFetch, accessToken);
+            if (user.ok) {
+              accountId = user.value.openId;
+              accountLabel = user.value.username ? `@${user.value.username}` : user.value.openId;
+            }
+          } else if (platform === "pinterest") {
+            const { fetchPinterestAccount } = await import("@/lib/marketing/pinterest");
+            const account = await fetchPinterestAccount(runtimeFetch, accessToken);
+            if (account.ok) {
+              accountId = account.value.username;
+              accountLabel = `@${account.value.username}`;
+            }
+          }
+        } catch {
+          accountId = null;
+        }
+
         await supabaseAdmin.from("marketing_platform_connections").upsert(
           {
             platform,
             connection: "CONNECTED",
             scopes,
+            ...(accountId ? { account_id: accountId, account_label: accountLabel } : {}),
             expires_at: expiresAt,
             last_error: null,
             last_checked_at: new Date().toISOString(),

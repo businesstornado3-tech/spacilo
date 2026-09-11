@@ -143,13 +143,21 @@ export function platformStateFrom(input: {
     account_id?: string | null;
     account_label?: string | null;
     last_error?: string | null;
+    destination_id?: string | null;
+    destination_label?: string | null;
   } | null;
   hasToken: boolean;
   paused: boolean;
 }): PlatformPublishingState {
   const { platform, connectionRow, hasToken, paused } = input;
   const connected = connectionRow?.connection === "CONNECTED";
-  const destination = connectionRow?.account_label ?? connectionRow?.account_id ?? null;
+  // Pinterest pins to a board and LinkedIn posts as a chosen author, so for
+  // those two the destination is the founder's explicit choice, never the
+  // account itself.
+  const needsChoice = platform === "pinterest" || platform === "linkedin";
+  const destination = needsChoice
+    ? (connectionRow?.destination_label ?? connectionRow?.destination_id ?? null)
+    : (connectionRow?.account_label ?? connectionRow?.account_id ?? null);
   const shares: PublishablePlatform | null = platform === "youtube_shorts" ? "youtube" : null;
   const base = {
     platform,

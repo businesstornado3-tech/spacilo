@@ -134,7 +134,9 @@ export const getGmailOutreachStatus = createServerFn({ method: "GET" })
 export const testGmailOutreachConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(
-    async ({ context }): Promise<{ ok: boolean; detail: string; snapshot: GmailOutreachSnapshot }> => {
+    async ({
+      context,
+    }): Promise<{ ok: boolean; detail: string; snapshot: GmailOutreachSnapshot }> => {
       const supabase = context.supabase as any;
       await assertAdmin(supabase);
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -244,7 +246,13 @@ export const sendOutreachEmail = createServerFn({ method: "POST" })
     };
 
     if (!looksLikeEmailAddress(data.recipientEmail)) {
-      await record("BLOCKED", "The address is not a valid email address.", "NOT_ELIGIBLE", null, null);
+      await record(
+        "BLOCKED",
+        "The address is not a valid email address.",
+        "NOT_ELIGIBLE",
+        null,
+        null,
+      );
       return {
         sent: false,
         status: "BLOCKED",
@@ -256,7 +264,12 @@ export const sendOutreachEmail = createServerFn({ method: "POST" })
     const snapshot = await buildSnapshot(supabaseAdmin as any);
     if (!snapshot.view.sendingReady) {
       await record("BLOCKED", snapshot.view.detail, "NOT_ELIGIBLE", null, null);
-      return { sent: false, status: snapshot.view.status, detail: snapshot.view.detail, messageId: null };
+      return {
+        sent: false,
+        status: snapshot.view.status,
+        detail: snapshot.view.detail,
+        messageId: null,
+      };
     }
 
     // The existing gate decides. Nothing here can overrule it.

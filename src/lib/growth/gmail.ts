@@ -179,7 +179,10 @@ export function buildOutreachMessage(signal: OutreachSignal): OutreachMessage {
 
   const claims: { claim: string; evidence: string }[] = [
     { claim: "The person is looking for this.", evidence: signal.lookingFor },
-    { claim: "Seen on this public source.", evidence: `${signal.sourceName}: ${signal.sourceContext}` },
+    {
+      claim: "Seen on this public source.",
+      evidence: `${signal.sourceName}: ${signal.sourceContext}`,
+    },
   ];
   if (signal.statedProblem) {
     claims.push({ claim: "Stated problem or opportunity.", evidence: signal.statedProblem });
@@ -200,10 +203,7 @@ function base64(bytes: Uint8Array): string {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
   // btoa exists in the worker runtime; Buffer is used when it does not.
-  return typeof btoa === "function"
-    ? btoa(binary)
-    : // eslint-disable-next-line no-undef
-      Buffer.from(bytes).toString("base64");
+  return typeof btoa === "function" ? btoa(binary) : Buffer.from(bytes).toString("base64");
 }
 
 function encodeHeader(value: string): string {

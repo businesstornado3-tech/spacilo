@@ -18,8 +18,10 @@ import {
 import { cn } from "@/lib/utils";
 
 function tone(status: string): string {
-  if (status === "SENDING_READY") return "border-success/30 bg-success-soft text-success-soft-foreground";
-  if (status === "CONNECTED") return "border-success/30 bg-success-soft text-success-soft-foreground";
+  if (status === "SENDING_READY")
+    return "border-success/30 bg-success-soft text-success-soft-foreground";
+  if (status === "CONNECTED")
+    return "border-success/30 bg-success-soft text-success-soft-foreground";
   if (status === "REAUTHORIZATION_REQUIRED" || status === "SENDING_UNAVAILABLE") {
     return "border-destructive/30 bg-destructive/10 text-destructive";
   }
@@ -106,9 +108,13 @@ export function GmailOutreach() {
       </div>
 
       {snapshot.view.action !== "NONE" ? (
-        <Alert tone="warning" title={snapshot.view.action === "CONNECT" ? "Connect Gmail" : "Reconnect Gmail"}>
-          Open Project settings → Connectors and {snapshot.view.action === "CONNECT" ? "connect" : "reconnect"}{" "}
-          Gmail as {snapshot.account}.
+        <Alert
+          tone="warning"
+          title={snapshot.view.action === "CONNECT" ? "Connect Gmail" : "Reconnect Gmail"}
+        >
+          Open Project settings → Connectors and{" "}
+          {snapshot.view.action === "CONNECT" ? "connect" : "reconnect"} Gmail as {snapshot.account}
+          .
         </Alert>
       ) : null}
 
@@ -124,17 +130,15 @@ export function GmailOutreach() {
           <ul className="mt-2 space-y-1 type-body-xs text-muted-foreground">
             {snapshot.recent.map((row) => (
               <li key={`${row.at}-${row.recipient}`}>
-                {new Date(row.at).toLocaleString("en-GB")} · {row.recipient} · {row.prospectType ?? "—"} ·{" "}
-                {row.source} · {row.status}
+                {new Date(row.at).toLocaleString("en-GB")} · {row.recipient} ·{" "}
+                {row.prospectType ?? "—"} · {row.source} · {row.status}
                 {row.messageId ? ` · ${row.messageId}` : ""}
               </li>
             ))}
           </ul>
         </details>
       ) : (
-        <p className="type-body-xs text-muted-foreground">
-          No outreach email has been sent yet.
-        </p>
+        <p className="type-body-xs text-muted-foreground">No outreach email has been sent yet.</p>
       )}
     </div>
   );

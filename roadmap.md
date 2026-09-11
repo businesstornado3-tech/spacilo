@@ -20,7 +20,7 @@
 
 ## Gmail outreach delivery channel (requested 11 Sep)
 - [x] Audit Gmail connector scopes; report whether broad permissions are connector-imposed
-- [x] Connect Gmail with minimum scope (gmail.send only) for businesstornado3@gmail.com
+- [x] Gmail connected as businesstornado3@gmail.com (connector grants read/send/compose/modify; EarnRoom code calls send only)
 - [x] Server-side send helper + safe self-test (no prospect email)
 - [x] Outreach eligibility gates reuse existing market-intelligence signals (no new intelligence system)
 - [x] Outreach attempt records: campaign, source, intent, prospect type, location, channel, recipient, sender, timestamp, content version, result, failure reason, message id

@@ -13,8 +13,7 @@
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
 
 export type GmailCallResult<T> =
-  | { ok: true; value: T }
-  | { ok: false; authorisation: boolean; status: number; error: string };
+  { ok: true; value: T } | { ok: false; authorisation: boolean; status: number; error: string };
 
 function credentials(): { lovableKey: string; connectionKey: string } | null {
   const lovableKey = process.env["LOVABLE_API_KEY"];
@@ -29,9 +28,7 @@ export function gmailCredentialsPresent(): boolean {
 
 /** Strips anything token-shaped out of a provider message before it is stored. */
 export function sanitiseGmailError(text: string): string {
-  return text
-    .replace(/[A-Za-z0-9_\-.]{40,}/g, "[redacted]")
-    .slice(0, 500);
+  return text.replace(/[A-Za-z0-9_\-.]{40,}/g, "[redacted]").slice(0, 500);
 }
 
 async function call<T>(

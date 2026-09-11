@@ -23,7 +23,9 @@ const READY: GmailStatusInput = {
 describe("Gmail connection status is never optimistic", () => {
   it("reports each state exactly", () => {
     expect(gmailStatusView({ ...READY, credentialsPresent: false }).status).toBe("NOT_CONNECTED");
-    expect(gmailStatusView({ ...READY, accountVerified: false }).status).toBe("CONNECTION_REQUIRED");
+    expect(gmailStatusView({ ...READY, accountVerified: false }).status).toBe(
+      "CONNECTION_REQUIRED",
+    );
     expect(gmailStatusView({ ...READY, authorisationFailed: true }).status).toBe(
       "REAUTHORIZATION_REQUIRED",
     );
@@ -115,7 +117,9 @@ describe("the wire format", () => {
 
 describe("provider errors never carry credentials", () => {
   it("redacts token-shaped material", () => {
-    const text = sanitiseGmailError("failed with ya29.A0ARrdaM9abcdefghijklmnopqrstuvwxyz0123456789");
+    const text = sanitiseGmailError(
+      "failed with ya29.A0ARrdaM9abcdefghijklmnopqrstuvwxyz0123456789",
+    );
     expect(text).toContain("[redacted]");
     expect(text).not.toContain("ya29.A0ARrdaM9abcdefghijklmnopqrstuvwxyz0123456789");
   });

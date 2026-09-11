@@ -69,7 +69,56 @@ function describe(best: StoredVideoRow): ProductionVideoResult {
       executionMode: mode,
       createdAt: best.createdAt,
       previewOnly,
-      provenance: `Published the campaign's production video ${best.id} (${mode}, asset ${best.assetId}).`,
+      provenance: `Published video ${best.id} (${mode}, asset ${best.assetId}), the exact stored file chosen for this publication.`,
     },
   };
+}
+
+/**
+ * The video the Studio opens on: the newest stored file in the campaign.
+ *
+ * This is a starting selection for the founder, not a rule about what may be
+ * published — every stored video in the campaign can be published on its own.
+ */
+export function resolveProductionVideo(rows: readonly StoredVideoRow[]): ProductionVideoResult {
+  const stored = rows.filter((row) => Boolean(row.storagePath));
+  if (stored.length === 0) {
+    return {
+      ok: false,
+      reason:
+        "No final branded EarnRoom video is stored for this campaign yet, so nothing can be published.",
+    };
+  }
+
+  const newest = [...stored].sort((a, b) => {
+    const byTime = Date.parse(b.createdAt) - Date.parse(a.createdAt);
+    if (byTime !== 0) return byTime;
+    const byRoute = rank(b.executionMode) - rank(a.executionMode);
+    if (byRoute !== 0) return byRoute;
+    return a.id.localeCompare(b.id);
+  })[0]!;
+
+  return describe(newest);
+}
+
+/**
+ * The exact video the founder chose. Nothing is ever substituted: an unknown
+ * id, or a video with no stored file, refuses instead of falling back.
+ */
+export function resolveSelectedVideo(
+  rows: readonly StoredVideoRow[],
+  videoId: string,
+): ProductionVideoResult {
+  const row = rows.find((entry) => entry.id === videoId);
+  if (!row) {
+    return { ok: false, reason: "That video is not part of this campaign." };
+  }
+  if (!row.storagePath) {
+    return {
+      ok: false,
+      reason:
+        "This video has no finished, branded file stored yet, so there is nothing to publish. Nothing else will be sent in its place.",
+    };
+  }
+  return describe(row);
 }

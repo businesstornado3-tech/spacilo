@@ -507,7 +507,9 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
     const connectionKey = platform === "youtube_shorts" ? "youtube" : platform;
     const { data: connectionRows } = await supabase
       .from("marketing_platform_connections")
-      .select("platform, connection, account_id, account_label, last_error");
+      .select(
+        "platform, connection, account_id, account_label, last_error, destination_id, destination_label",
+      );
     const connection = ((connectionRows ?? []) as any[]).find(
       (row) => row.platform === connectionKey,
     );
@@ -517,7 +519,18 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
           ? "No Facebook Page is selected. Choose the Page to publish to first."
           : platform === "instagram"
             ? "No Instagram professional account is stored. Reconnect Instagram."
-            : "No YouTube channel is selected as the destination yet.",
+            : platform === "youtube" || platform === "youtube_shorts"
+              ? "No YouTube channel is selected as the destination yet."
+              : `${LABEL[platform]} is not connected yet.`,
+      );
+    }
+    // Pinterest must be told which board, and LinkedIn who to post as. Neither
+    // is ever guessed.
+    if ((platform === "pinterest" || platform === "linkedin") && !connection.destination_id) {
+      return refuse(
+        platform === "pinterest"
+          ? "Choose the Pinterest board to pin to first."
+          : "Choose the LinkedIn author to post as first — your profile or a Company Page.",
       );
     }
 

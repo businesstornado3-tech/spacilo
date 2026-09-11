@@ -206,10 +206,8 @@ const PREFERENCES = z.object({
   publishingPaused: z.boolean().optional(),
   spend: z
     .object({
-      perVideoPence: z.number().optional(),
-      perDayPence: z.number().optional(),
-      perCampaignPence: z.number().optional(),
-      perMonthPence: z.number().optional(),
+      // The only money limit: the daily budget for AUTONOMOUS generations.
+      autonomousDailyPence: z.number().int().min(0).max(100_000).optional(),
     })
     .optional(),
 });

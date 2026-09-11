@@ -346,11 +346,11 @@ describe("founder settings", () => {
     expect(off.defaultWorker).toBe("AUTO");
   });
 
-  it("keeps money caps inside sane bounds and carries no video-count quota", () => {
+  it("keeps the autonomous budget inside sane bounds and carries no video-count quota", () => {
     const prefs = readWorkerPreferences({
-      videoWorker: { spend: { perDayPence: 999_999 }, usage: { maxVideosPerDay: 9999 } },
+      videoWorker: { spend: { autonomousDailyPence: 999_999 }, usage: { maxVideosPerDay: 9999 } },
     });
-    expect(prefs.spend.perDayPence).toBe(100_000);
+    expect(prefs.spend.autonomousDailyPence).toBe(100_000);
     expect((prefs as Record<string, unknown>)["usage"]).toBeUndefined();
   });
 });

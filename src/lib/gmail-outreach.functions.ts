@@ -61,18 +61,38 @@ async function readChecks(admin: any) {
   return (data ?? []) as { action: string; detail: string; created_at: string }[];
 }
 
-async function buildSnapshot(admin: any): Promise<GmailOutreachSnapshot> {
-  const [{ gmailCredentialsPresent }, { channelMayTransmit }, { outboundHalted }] =
-    await Promise.all([
-      import("@/lib/growth/gmail.server"),
-      import("@/lib/growth/channels"),
-      import("@/lib/growth/config"),
-    ]);
+/** The last founder test send Gmail actually accepted. */
+async function readSendProof(admin: any) {
+  const { data } = await admin
+    .from("marketing_audit")
+    .select("action, detail, created_at")
+    .in("action", ["gmail_send_verified", "gmail_send_failed"])
+    .order("created_at", { ascending: false })
+    .limit(5);
+  return (data ?? []) as { action: string; detail: string; created_at: string }[];
+}
 
-  const checks = await readChecks(admin);
+async function buildSnapshot(admin: any): Promise<GmailOutreachSnapshot> {
+  const [
+    { gmailCredentialsPresent },
+    { channelMayTransmit, channelBlockReason },
+    { outboundHalted },
+    { activateGmailEmailChannel },
+  ] = await Promise.all([
+    import("@/lib/growth/gmail.server"),
+    import("@/lib/growth/channels"),
+    import("@/lib/growth/config"),
+    import("@/lib/growth/gmail-channel.server"),
+  ]);
+
+  const [checks, sendProofs] = await Promise.all([readChecks(admin), readSendProof(admin)]);
   const lastCheck = checks[0] ?? null;
   const lastGood = checks.find((row) => row.action === "gmail_connection_verified") ?? null;
   const verifiedAccount = lastGood ? (lastGood.detail.match(/[^\s<]+@[^\s>]+/)?.[0] ?? null) : null;
+  const lastSendProof = sendProofs.find((row) => row.action === "gmail_send_verified") ?? null;
+
+  // Authorise the existing email channel from the facts, before it is read.
+  activateGmailEmailChannel({ verifiedAccount, sendVerified: Boolean(lastSendProof) });
 
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
@@ -90,12 +110,16 @@ async function buildSnapshot(admin: any): Promise<GmailOutreachSnapshot> {
   return {
     account: OUTREACH_SENDER,
     verifiedAccount,
+    lastTestSendAt: lastSendProof?.created_at ?? null,
+    lastTestSendDetail: sendProofs[0]?.detail ?? null,
     view: gmailStatusView({
       credentialsPresent: gmailCredentialsPresent(),
       accountVerified: Boolean(lastGood),
       verifiedAccount,
       authorisationFailed: lastCheck?.action === "gmail_connection_failed",
       channelMayTransmit: channelMayTransmit("email"),
+      channelBlockReason: channelBlockReason("email"),
+      sendVerified: Boolean(lastSendProof),
       outboundHalted: outboundHalted(),
     }),
     lastTestAt: lastCheck?.created_at ?? null,

@@ -79,7 +79,7 @@ export function useCampaignVideos(campaignId: string | null) {
         /** Founder's worker choice for this generation. */
         worker?: "AUTO" | "BROWSER" | "LOCAL" | "FREE_CLOUD" | "PAID_CLOUD";
         /** Which paid preset the founder chose, on the paid route only. */
-        quality?: "STANDARD" | "HIGHEST";
+        quality?: "SHORT" | "STANDARD" | "HIGHEST";
         browser?: unknown;
       }) =>
         generate({

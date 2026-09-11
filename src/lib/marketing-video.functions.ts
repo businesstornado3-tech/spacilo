@@ -273,7 +273,7 @@ const generateSchema = z.object({
   /** Explicit founder confirmation that a paid generation may be charged. */
   confirmPaid: z.boolean().default(false),
   /** Which paid preset to use. Only read on the paid route. */
-  quality: z.enum(["STANDARD", "HIGHEST"]).optional(),
+  quality: z.enum(["SHORT", "STANDARD", "HIGHEST"]).optional(),
 });
 
 export type GenerateVideoResult = {
@@ -878,10 +878,35 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
     if (paidConfig.state !== "CONFIGURED") {
       return failNow("PROVIDER_NOT_CONFIGURED", paidConfig.detail, false);
     }
-    const job = await paidProvider.createVideoJob({
-      prompt: spec.prompt,
-      aspect: asset.aspect,
+
+    /*
+     * A paid film is storyboarded before a single second is generated: real
+     * beats, a real ending, and on-screen wording with explicit start and end
+     * times that EarnRoom draws itself. The service films at most
+     * PROVIDER_MAX_SECONDS at a time, so a longer film is a chain of
+     * continuations — the first part is created here, the rest when each part
+     * finishes.
+     */
+    const { buildStoryboard, validateStoryboard } = await import("@/lib/marketing/storyboard");
+    const storyboard = buildStoryboard({
+      campaign,
+      asset,
       seconds,
+      maxSegmentSeconds: paidProvider.PROVIDER_MAX_SECONDS,
+    });
+    const storyboardCheck = validateStoryboard(storyboard, {
+      seconds,
+      maxSegmentSeconds: paidProvider.PROVIDER_MAX_SECONDS,
+    });
+    if (!storyboardCheck.passed) {
+      return failNow("STORYBOARD_INVALID", storyboardCheck.failures.join(" "), false);
+    }
+
+    const firstSegment = storyboard.segments[0]!;
+    const job = await paidProvider.createVideoJob({
+      prompt: firstSegment.prompt,
+      aspect: asset.aspect,
+      seconds: firstSegment.seconds,
       resolution: resolution as "360p" | "720p" | "1080p",
     });
     if (!job.ok) return failNow(job.status, job.reason, false);
@@ -895,6 +920,13 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
         provider_model: job.model,
         model_version: job.model,
         provider_job_id: job.jobId,
+        prompt: firstSegment.prompt,
+        generation_settings: {
+          ...(base["generation_settings"] as object),
+          storyboard,
+          segmentIndex: 0,
+          segmentCount: storyboard.segments.length,
+        },
         // An estimate, recorded as an estimate. Never presented as a charge.
         api_cost_pence: execution.cost.pence ?? 0,
         status: "GENERATING",
@@ -907,7 +939,7 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
     await supabase.from("marketing_audit").insert({
       campaign_id: campaign.id,
       action: "paid_video_generation_started",
-      detail: `Paid provider generation explicitly confirmed for ${asset.platform}. ${execution.cost.line}.`,
+      detail: `Paid provider generation explicitly confirmed for ${asset.platform}: ${seconds}s at ${resolution}, filmed as ${storyboard.segments.length} continuous part(s). ${execution.cost.line}.`,
       actor: "human",
       actor_id: context.userId,
     });
@@ -1032,6 +1064,51 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
       return { video: await rowToVideo(supabase, updated ?? row) };
     }
 
+    /* ---- a longer paid film arrives one part at a time ----
+     * The hosted service films at most PROVIDER_MAX_SECONDS in one job, so a
+     * 30-second film is a chain of continuations of the same scene. When a
+     * part finishes and the storyboard has more to tell, the finished footage
+     * is sent straight back to be continued. Nothing is stored, probed or
+     * branded until the last part is in. */
+    const genSettings = (row.generation_settings ?? {}) as Record<string, unknown>;
+    const storyboard = genSettings["storyboard"] as
+      | { segments: { index: number; seconds: number; prompt: string }[]; captions: unknown[] }
+      | undefined;
+    const segmentIndex =
+      typeof genSettings["segmentIndex"] === "number" ? (genSettings["segmentIndex"] as number) : 0;
+    const nextSegment = storyboard?.segments?.[segmentIndex + 1];
+    if (kind === "PAID_HOSTED" && storyboard && nextSegment) {
+      const extension = await paidProvider.extendVideoJob({
+        sourceMp4: poll.bytes,
+        prompt: nextSegment.prompt,
+        seconds: nextSegment.seconds,
+        resolution: (row.resolution ?? "720p") as "360p" | "720p" | "1080p",
+      });
+      if (!extension.ok) return fail("VIDEO_GENERATION_FAILED", extension.reason);
+
+      const { data: continued } = await supabase
+        .from("marketing_videos")
+        .update({
+          provider_job_id: extension.jobId,
+          queue_state: "GENERATING",
+          job_phase: `PART_${segmentIndex + 2}_OF_${storyboard.segments.length}`,
+          generation_settings: { ...genSettings, segmentIndex: segmentIndex + 1 },
+        })
+        .eq("id", row.id)
+        .select("*")
+        .single();
+
+      await supabase.from("marketing_audit").insert({
+        campaign_id: row.campaign_id,
+        action: "paid_video_part_continued",
+        detail: `Part ${segmentIndex + 1} of ${storyboard.segments.length} finished; the same scene is being continued for another ${nextSegment.seconds}s. No new film was started.`,
+        actor: "engine",
+        actor_id: context.userId,
+      });
+
+      return { video: await rowToVideo(supabase, continued ?? row) };
+    }
+
     /* ---- probe the real file before trusting anything about it ---- */
     await supabase.from("marketing_videos").update({ queue_state: "VALIDATING" }).eq("id", row.id);
     const media = validateMedia(poll.bytes, {
@@ -1085,7 +1162,17 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
         seconds: Math.round(media.probe.durationSeconds ?? row.seconds),
         tagline: taglineFor(campaign?.opportunity.key ?? row.campaign_id),
         cta: asset?.cta ?? "",
+        // EarnRoom's own timed wording, never the model's.
+        captions: (storyboard?.captions ?? []) as {
+          text: string;
+          fromSeconds: number;
+          toSeconds: number;
+        }[],
       });
+
+      const { validateCompositionPlan } = await import("@/lib/marketing/branding/composition");
+      const planCheck = validateCompositionPlan(compositionPlan);
+      if (!planCheck.passed) return fail("BRAND_VALIDATION_FAILED", planCheck.failures.join(" "));
 
       const { data: awaiting } = await supabase
         .from("marketing_videos")

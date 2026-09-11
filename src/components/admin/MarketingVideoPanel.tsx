@@ -26,6 +26,7 @@ import {
 import { estimatedCostPence } from "@/lib/marketing/usage";
 import {
   PAID_PRESETS,
+  PAID_QUALITIES,
   paidConfirmationMessage,
   paidPresetCostLine,
   paidPresetCostPence,
@@ -178,8 +179,8 @@ export function MarketingVideoPanel({
   const blocked = selection.ok ? null : selection.message;
 
   /**
-   * The paid route, start to finish, in one place: choose Standard or Highest
-   * quality, press Generate, confirm once. Nothing paid can begin any other
+   * The paid route, start to finish, in one place: choose Short, Standard or
+   * Highest quality, press Generate, confirm once. Nothing paid can begin any other
    * way, and no free route is ever promoted to this one.
    */
   const startPaid = async (quality: PaidQuality) => {
@@ -513,7 +514,7 @@ export function MarketingVideoPanel({
               </div>
               {card.mode === "PAID_CLOUD" && card.available ? (
                 <div className="mt-3 space-y-2 border-t border-border pt-3">
-                  {(["STANDARD", "HIGHEST"] as const).map((quality) => (
+                  {PAID_QUALITIES.map((quality) => (
                     <label
                       key={quality}
                       className={cn(

@@ -140,12 +140,22 @@ function beatLengths(
   return lengths;
 }
 
-/** Campaign-specific direction for each beat, never a fixed script. */
+/**
+ * Campaign-specific direction for each beat, never a fixed script.
+ *
+ * Everything here is written by the intelligence layer, so every line is put
+ * through the brand filter before it can reach a generation service.
+ */
 function directions(campaign: MarketingCampaign, asset: PlatformAsset): Record<BeatRole, string> {
   const scenes = campaign.story.scenes;
-  const place = campaign.opportunity.location?.name ?? "the UK";
-  const visual = (index: number) => scenes[Math.min(index, Math.max(0, scenes.length - 1))]?.visual;
-  return {
+  const place = sanitizeProviderText(campaign.opportunity.location?.name ?? "the UK");
+  const visual = (index: number) => {
+    const raw = scenes[Math.min(index, Math.max(0, scenes.length - 1))]?.visual;
+    const clean = raw ? sanitizeProviderText(raw) : "";
+    return clean.length > 0 ? clean : undefined;
+  };
+  const problem = sanitizeProviderText(campaign.opportunity.problem);
+  const plan: Record<BeatRole, string> = {
     HOOK: visual(0) ?? `The situation opens in ${place}: ${campaign.opportunity.problem}`,
     PERSON:
       visual(1) ??

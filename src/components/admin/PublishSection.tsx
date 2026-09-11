@@ -125,6 +125,19 @@ export function PublishSection({
       .map((entry) => ({ ...entry, videoId: asset.videoId })),
   );
 
+  /** Where each video of this campaign has been published, in its own right. */
+  const videoHistory = surface.assets.map((asset) => ({
+    videoId: asset.videoId,
+    title: asset.title,
+    seconds: asset.seconds,
+    createdAt: asset.createdAt,
+    ready: asset.brandedArtifactReady,
+    readyDetail: asset.artifactDetail,
+    publishedOn: asset.publications
+      .filter((entry) => entry.state === "PUBLISHED" && !entry.historical)
+      .map((entry) => STUDIO_PLATFORM_LABEL[entry.platform as StudioPlatform] ?? entry.platform),
+  }));
+
   const rows = studioPlatformRows({
     connections: connectionInputs,
     publications,

@@ -209,15 +209,19 @@ export function PublishSection({
           {historical.length > 0 ? (
             <p className="mt-1 type-body-xs text-muted-foreground">
               Earlier videos in this campaign were already published to:{" "}
-              {[...new Set(historical.map((entry) => STUDIO_PLATFORM_LABEL[
-                entry.platform as StudioPlatform
-              ] ?? entry.platform))].join(", ")}
+              {[
+                ...new Set(
+                  historical.map(
+                    (entry) =>
+                      STUDIO_PLATFORM_LABEL[entry.platform as StudioPlatform] ?? entry.platform,
+                  ),
+                ),
+              ].join(", ")}
               .
             </p>
           ) : null}
         </div>
       ) : null}
-
 
       <ul className="grid gap-3 sm:grid-cols-2">
         {rows.map((row) => (

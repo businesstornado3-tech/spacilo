@@ -228,7 +228,10 @@ export function GmailOutreach() {
         <div className="space-y-3">
           <p className="type-body-sm font-semibold">People EarnRoom has found</p>
           {review.data.cards.map((card) => (
-            <article key={card.opportunityKey} className="space-y-2 rounded-lg border border-border p-3">
+            <article
+              key={card.opportunityKey}
+              className="space-y-2 rounded-lg border border-border p-3"
+            >
               <p className="type-body-sm font-semibold">
                 {card.prospectType === "HOST" ? "Possible host" : "Possible renter"}
                 {card.location ? ` · ${card.location}` : ""}
@@ -284,7 +287,6 @@ export function GmailOutreach() {
           EarnRoom has not found anyone to contact yet.
         </p>
       ) : null}
-
 
       {snapshot.recent.length > 0 ? (
         <details className="rounded-lg border border-border p-3">

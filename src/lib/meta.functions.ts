@@ -115,7 +115,10 @@ export async function readInstagramToken(): Promise<{ token: string | null; deta
     return { token: null, detail: "TOKEN_EXPIRED: the Instagram authorisation has expired." };
   }
   try {
-    return { token: await decryptToken(row.access_token_cipher), detail: "Stored authorisation read." };
+    return {
+      token: await decryptToken(row.access_token_cipher),
+      detail: "Stored authorisation read.",
+    };
   } catch {
     return {
       token: null,
@@ -721,9 +724,7 @@ export type InstagramInsightsResult = {
  */
 export const getInstagramInsights = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
-    z.object({ mediaId: z.string().min(3).max(64) }).parse(data),
-  )
+  .inputValidator((data: unknown) => z.object({ mediaId: z.string().min(3).max(64) }).parse(data))
   .handler(async ({ data, context }): Promise<InstagramInsightsResult> => {
     const supabase = context.supabase as any;
     await assertAdmin(supabase);
@@ -752,16 +753,12 @@ export const getInstagramInsights = createServerFn({ method: "POST" })
       .eq("platform_post_id", data.mediaId)
       .maybeSingle();
     const conversions = (publication?.conversions ?? {}) as Record<string, unknown>;
-    const attributed = [
-      "siteVisits",
-      "registrations",
-      "listings",
-      "enquiries",
-      "bookings",
-    ].map((name) => ({
-      name,
-      value: typeof conversions[name] === "number" ? (conversions[name] as number) : null,
-    }));
+    const attributed = ["siteVisits", "registrations", "listings", "enquiries", "bookings"].map(
+      (name) => ({
+        name,
+        value: typeof conversions[name] === "number" ? (conversions[name] as number) : null,
+      }),
+    );
 
     return {
       ok: true,

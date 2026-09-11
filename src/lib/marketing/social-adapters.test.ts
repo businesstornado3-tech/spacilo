@@ -86,8 +86,12 @@ describe("LinkedIn", () => {
 
 describe("TikTok", () => {
   it("never sends a privacy level TikTok did not offer", () => {
-    const only = resolveTiktokPrivacy(["SELF_ONLY"], "PUBLIC_TO_EVERYONE");
-    expect(only.ok && only.value).toBe("SELF_ONLY");
+    // Asking for public when TikTok only offers private is refused outright,
+    // rather than quietly posting something the founder did not ask for.
+    const refused = resolveTiktokPrivacy(["SELF_ONLY"], "PUBLIC_TO_EVERYONE");
+    expect(refused.ok).toBe(false);
+    const chosen = resolveTiktokPrivacy(["SELF_ONLY"], null);
+    expect(chosen.ok && chosen.value).toBe("SELF_ONLY");
     expect(resolveTiktokPrivacy([], null).ok).toBe(false);
   });
 

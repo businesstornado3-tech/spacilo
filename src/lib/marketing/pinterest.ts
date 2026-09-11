@@ -48,7 +48,8 @@ export async function fetchPinterestAccount(
     ok: true,
     value: {
       username,
-      type: typeof payload["account_type"] === "string" ? (payload["account_type"] as string) : null,
+      type:
+        typeof payload["account_type"] === "string" ? (payload["account_type"] as string) : null,
     },
   };
 }
@@ -112,7 +113,8 @@ export async function publishPinterestVideoPin(
   request: PinterestPublishRequest,
 ): Promise<PinterestPublishOutcome> {
   const { fetchImpl, accessToken } = request;
-  const sleep = request.sleep ?? ((ms: number) => new Promise((resolve) => setTimeout(resolve, ms)));
+  const sleep =
+    request.sleep ?? ((ms: number) => new Promise((resolve) => setTimeout(resolve, ms)));
 
   if (!request.boardId) {
     return {

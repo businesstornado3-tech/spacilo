@@ -67,7 +67,8 @@ export async function fetchLinkedinMember(
   if (typeof sub !== "string" || !sub) {
     return { ok: false, error: "LinkedIn did not return the signed-in member." };
   }
-  const name = typeof payload["name"] === "string" ? (payload["name"] as string) : "LinkedIn member";
+  const name =
+    typeof payload["name"] === "string" ? (payload["name"] as string) : "LinkedIn member";
   return { ok: true, value: { urn: `urn:li:person:${sub}`, name } };
 }
 
@@ -134,7 +135,11 @@ export type LinkedinPublishRequest = {
 
 export type LinkedinPublishOutcome = PublishResult & { mediaId?: string | null };
 
-function failure(error: string, retryable: boolean, state: "UPLOAD_FAILED" | "AUTH_REQUIRED" | "PLATFORM_REJECTED"): LinkedinPublishOutcome {
+function failure(
+  error: string,
+  retryable: boolean,
+  state: "UPLOAD_FAILED" | "AUTH_REQUIRED" | "PLATFORM_REJECTED",
+): LinkedinPublishOutcome {
   return { ok: false, state, error, retryable };
 }
 
@@ -150,7 +155,8 @@ export async function publishLinkedinVideo(
   let bytes: Uint8Array;
   try {
     const file = await fetchImpl(request.videoUrl);
-    if (!file.ok) return failure("The video file could not be read for upload.", true, "UPLOAD_FAILED");
+    if (!file.ok)
+      return failure("The video file could not be read for upload.", true, "UPLOAD_FAILED");
     bytes = new Uint8Array(await file.arrayBuffer());
   } catch {
     return failure("The video file could not be downloaded for upload.", true, "UPLOAD_FAILED");
@@ -190,7 +196,8 @@ export async function publishLinkedinVideo(
   }
   const value = (initPayload["value"] ?? {}) as Record<string, unknown>;
   const videoUrn = typeof value["video"] === "string" ? (value["video"] as string) : null;
-  const uploadToken = typeof value["uploadToken"] === "string" ? (value["uploadToken"] as string) : "";
+  const uploadToken =
+    typeof value["uploadToken"] === "string" ? (value["uploadToken"] as string) : "";
   const instructions = Array.isArray(value["uploadInstructions"])
     ? (value["uploadInstructions"] as Record<string, unknown>[])
     : [];
@@ -212,14 +219,21 @@ export async function publishLinkedinVideo(
     try {
       put = await fetchImpl(uploadUrl, {
         method: "PUT",
-        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/octet-stream" },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/octet-stream",
+        },
         body: slice as unknown as BodyInit,
       });
     } catch {
       return failure("The video file could not be sent to LinkedIn.", true, "UPLOAD_FAILED");
     }
     if (!put.ok) {
-      return failure(`LinkedIn rejected part of the upload (HTTP ${put.status}).`, put.status >= 500, "UPLOAD_FAILED");
+      return failure(
+        `LinkedIn rejected part of the upload (HTTP ${put.status}).`,
+        put.status >= 500,
+        "UPLOAD_FAILED",
+      );
     }
     const etag = put.headers.get("etag");
     if (etag) partIds.push(etag.replaceAll('"', ""));
@@ -253,7 +267,11 @@ export async function publishLinkedinVideo(
         author: authorUrn,
         commentary: request.commentary,
         visibility: "PUBLIC",
-        distribution: { feedDistribution: "MAIN_FEED", targetEntities: [], thirdPartyDistributionChannels: [] },
+        distribution: {
+          feedDistribution: "MAIN_FEED",
+          targetEntities: [],
+          thirdPartyDistributionChannels: [],
+        },
         content: { media: { id: videoUrn, title: request.title.slice(0, 200) } },
         lifecycleState: "PUBLISHED",
         isReshareDisabledByAuthor: false,

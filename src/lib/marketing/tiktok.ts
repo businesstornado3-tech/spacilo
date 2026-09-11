@@ -109,7 +109,12 @@ export function resolveTiktokPrivacy(
       error: `TikTok does not offer "${requested}" for this account. Available: ${options.join(", ")}.`,
     };
   }
-  const preferred = ["SELF_ONLY", "FOLLOWER_OF_CREATOR", "MUTUAL_FOLLOW_FRIENDS", "PUBLIC_TO_EVERYONE"];
+  const preferred = [
+    "SELF_ONLY",
+    "FOLLOWER_OF_CREATOR",
+    "MUTUAL_FOLLOW_FRIENDS",
+    "PUBLIC_TO_EVERYONE",
+  ];
   const chosen = preferred.find((entry) => options.includes(entry)) ?? options[0]!;
   return { ok: true, value: chosen };
 }
@@ -147,7 +152,8 @@ export async function publishTiktokVideo(
   request: TiktokPublishRequest,
 ): Promise<TiktokPublishOutcome> {
   const { fetchImpl, accessToken } = request;
-  const sleep = request.sleep ?? ((ms: number) => new Promise((resolve) => setTimeout(resolve, ms)));
+  const sleep =
+    request.sleep ?? ((ms: number) => new Promise((resolve) => setTimeout(resolve, ms)));
 
   const creator = await fetchTiktokCreatorInfo(fetchImpl, accessToken);
   if (!creator.ok) {
@@ -304,8 +310,7 @@ export async function fetchTiktokPublishStatus(
       status: typeof data["status"] === "string" ? (data["status"] as string) : "PROCESSING",
       postId,
       postUrl: postId ? `https://www.tiktok.com/video/${postId}` : null,
-      failReason:
-        typeof data["fail_reason"] === "string" ? (data["fail_reason"] as string) : null,
+      failReason: typeof data["fail_reason"] === "string" ? (data["fail_reason"] as string) : null,
     },
   };
 }
@@ -332,8 +337,7 @@ export async function fetchTiktokUser(
     return { ok: false, error: tiktokError(payload, status) };
   }
   const user = ((payload["data"] ?? {}) as Record<string, unknown>)["user"] as
-    | Record<string, unknown>
-    | undefined;
+    Record<string, unknown> | undefined;
   const openId = typeof user?.["open_id"] === "string" ? (user["open_id"] as string) : null;
   if (!openId) return { ok: false, error: "TikTok did not return the signed-in account." };
   const username =

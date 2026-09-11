@@ -80,9 +80,8 @@ export const getPlatformDestinations = createServerFn({ method: "GET" })
     if (!stored.token) return { ...base, detail: stored.detail };
 
     if (platform === "linkedin") {
-      const { fetchLinkedinMember, fetchLinkedinOrganizations } = await import(
-        "@/lib/marketing/linkedin"
-      );
+      const { fetchLinkedinMember, fetchLinkedinOrganizations } =
+        await import("@/lib/marketing/linkedin");
       const member = await fetchLinkedinMember(runtimeFetch, stored.token);
       if (!member.ok) return { ...base, detail: member.error };
       const orgs = await fetchLinkedinOrganizations(runtimeFetch, stored.token);
@@ -121,9 +120,8 @@ export const getPlatformDestinations = createServerFn({ method: "GET" })
       };
     }
 
-    const { fetchPinterestAccount, fetchPinterestBoards } = await import(
-      "@/lib/marketing/pinterest"
-    );
+    const { fetchPinterestAccount, fetchPinterestBoards } =
+      await import("@/lib/marketing/pinterest");
     const account = await fetchPinterestAccount(runtimeFetch, stored.token);
     const boards = await fetchPinterestBoards(runtimeFetch, stored.token);
     if (!boards.ok) return { ...base, detail: boards.error };

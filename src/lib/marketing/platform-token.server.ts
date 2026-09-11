@@ -20,9 +20,11 @@ export async function platformAccessToken(platform: string): Promise<StoredPlatf
   const label = LABEL[platform] ?? platform;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { decryptToken } = await import("@/lib/marketing/token-crypto.server");
-  const { data: row } = await (supabaseAdmin as unknown as {
-    from: (table: string) => any;
-  })
+  const { data: row } = await (
+    supabaseAdmin as unknown as {
+      from: (table: string) => any;
+    }
+  )
     .from("marketing_platform_tokens")
     .select("access_token_cipher, expires_at")
     .eq("platform", platform)
@@ -34,7 +36,10 @@ export async function platformAccessToken(platform: string): Promise<StoredPlatf
     return { token: null, detail: `The ${label} authorisation has expired. Reconnect ${label}.` };
   }
   try {
-    return { token: await decryptToken(row.access_token_cipher), detail: "Stored authorisation read." };
+    return {
+      token: await decryptToken(row.access_token_cipher),
+      detail: "Stored authorisation read.",
+    };
   } catch {
     return {
       token: null,

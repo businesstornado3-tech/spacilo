@@ -30,7 +30,9 @@ describe("LinkedIn", () => {
         value: {
           video: "urn:li:video:1",
           uploadToken: "tok",
-          uploadInstructions: [{ uploadUrl: "https://upload.linkedin/1", firstByte: 0, lastByte: 3 }],
+          uploadInstructions: [
+            { uploadUrl: "https://upload.linkedin/1", firstByte: 0, lastByte: 3 },
+          ],
         },
       }),
       new Response(null, { status: 200, headers: { etag: '"part-1"' } }),
@@ -57,7 +59,9 @@ describe("LinkedIn", () => {
         value: {
           video: "urn:li:video:1",
           uploadToken: "tok",
-          uploadInstructions: [{ uploadUrl: "https://upload.linkedin/1", firstByte: 0, lastByte: 3 }],
+          uploadInstructions: [
+            { uploadUrl: "https://upload.linkedin/1", firstByte: 0, lastByte: 3 },
+          ],
         },
       }),
       new Response(null, { status: 200, headers: { etag: '"p"' } }),
@@ -97,7 +101,13 @@ describe("TikTok", () => {
 
   it("publishes only on PUBLISH_COMPLETE and reports actual visibility", async () => {
     const fetchImpl = sequence([
-      json({ data: { creator_username: "earnroom", privacy_level_options: ["SELF_ONLY"], max_video_post_duration_sec: 300 } }),
+      json({
+        data: {
+          creator_username: "earnroom",
+          privacy_level_options: ["SELF_ONLY"],
+          max_video_post_duration_sec: 300,
+        },
+      }),
       json({ data: { publish_id: "pub-1" } }),
       json({ data: { status: "PUBLISH_COMPLETE", publicaly_available_post_id: ["777"] } }),
     ]);

@@ -92,7 +92,12 @@ export function linkedinCopy(source: CampaignCopySource): PlatformCopy {
  */
 export function pinterestCopy(source: CampaignCopySource): PlatformCopy {
   const keywords = source.hashtags
-    .map((tag) => tag.replace(/^#/, "").replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase())
+    .map((tag) =>
+      tag
+        .replace(/^#/, "")
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .toLowerCase(),
+    )
     .filter(Boolean)
     .slice(0, 5);
   const body = clean(

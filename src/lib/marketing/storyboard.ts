@@ -236,8 +236,8 @@ function segmentPrompt(input: {
   const { campaign, asset, beats, index, fromSeconds, seconds } = input;
   const opening =
     index === 0
-      ? `Part 1 of ${Math.ceil(input.total / PROVIDER_MAX_SEGMENT_SECONDS)} of a ${input.total}-second ${asset.aspect} cinematic marketing film for a UK peer-to-peer storage marketplace. Establish the setting, the person and the situation.`
-      : `The scene continues, unbroken, from the previous part of the same ${input.total}-second film. Same people, same place, same light, same lens, same grade. Do not restart the story and do not cut to a new campaign.`;
+      ? `Part 1 of ${Math.ceil(input.total / PROVIDER_MAX_SEGMENT_SECONDS)} of a single ${input.total}-second ${asset.aspect} cinematic film. Establish the setting, the person and the situation.`
+      : `Part ${index + 1} of ${Math.ceil(input.total / PROVIDER_MAX_SEGMENT_SECONDS)}. The scene continues, unbroken, from the previous part of the same ${input.total}-second film: the same people, the same place, the same light, the same lens and the same grade, carrying straight on from the final frame. Do not restart the story, do not repeat the opening shot, and do not cut to an unrelated location.`;
 
   const timed = beats.map((beat) => {
     const from = Math.max(0, Math.round(beat.fromSeconds - fromSeconds));
@@ -245,16 +245,23 @@ function segmentPrompt(input: {
     return `[${from}-${to}s] ${beat.role.replace("_", " ").toLowerCase()}: ${beat.direction}`;
   });
 
-  return [
+  const prompt = [
     opening,
-    `Situation: ${campaign.opportunity.problem}`,
-    `Audience: ${campaign.opportunity.audience.replace(/_/g, " ")}.`,
-    ...input.treatmentLines,
+    `Situation: ${sanitizeProviderText(campaign.opportunity.problem)}`,
+    `Audience: ${sanitizeProviderText(campaign.opportunity.audience.replace(/_/g, " "))}.`,
+    ...input.treatmentLines.map(sanitizeProviderText),
     "Shot plan for this part, timed from its own start:",
     ...timed,
     "One continuous, coherent piece of filmmaking with a small number of deliberate shots. Give each shot room to breathe; do not cram the whole story into the first seconds.",
     ...guardrails(asset),
   ].join("\n");
+
+  // Last line of defence: nothing brand-shaped may survive into a prompt.
+  return prompt
+    .split("\n")
+    .map((line) => (line === PROHIBITION_LINE ? line : sanitizeProviderText(line)))
+    .filter((line) => line.length > 0)
+    .join("\n");
 }
 
 /**

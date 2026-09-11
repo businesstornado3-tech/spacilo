@@ -521,22 +521,32 @@ async function publishCampaignAssets(
     };
 
     /**
-     * Meta fetches the media itself, so a Meta asset is handed a temporary
-     * signed link to that one stored object. Nothing else is exposed and the
-     * link expires shortly after the processing window.
+     * Every platform of this campaign publishes the SAME production video —
+     * the one `resolveProductionVideo` picks. Instagram once received an old
+     * Browser Preview while Facebook received the paid film, because each
+     * platform looked up its own asset row; that can no longer happen, and
+     * there is no fallback to a stale link on the asset.
      */
-    const metaMediaUrl = async (assetId: string): Promise<string | null> => {
-      const { data: video } = await supabase
-        .from("marketing_videos")
-        .select("storage_path")
-        .eq("campaign_id", data.campaignId)
-        .eq("asset_id", assetId)
-        .not("storage_path", "is", null)
-        .maybeSingle();
-      if (!video?.storage_path) return null;
+    const { resolveProductionVideo } = await import("@/lib/marketing/production-asset");
+    const { data: campaignVideoRows } = await supabase
+      .from("marketing_videos")
+      .select("id, asset_id, storage_path, execution_mode, created_at")
+      .eq("campaign_id", data.campaignId);
+    const production = resolveProductionVideo(
+      ((campaignVideoRows ?? []) as any[]).map((entry) => ({
+        id: String(entry.id),
+        assetId: String(entry.asset_id),
+        storagePath: entry.storage_path ?? null,
+        executionMode: entry.execution_mode ?? null,
+        createdAt: String(entry.created_at),
+      })),
+    );
+
+    const productionMediaUrl = async (): Promise<string | null> => {
+      if (!production.ok) return null;
       const { data: signed } = await (supabaseAdmin as any).storage
         .from("marketing-videos")
-        .createSignedUrl(video.storage_path, 3600);
+        .createSignedUrl(production.video.storagePath, 3600);
       return signed?.signedUrl ?? null;
     };
 

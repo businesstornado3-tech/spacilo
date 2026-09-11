@@ -29,12 +29,26 @@ describe("one campaign publishes one production video", () => {
     }
   });
 
-  it("never picks a newer browser preview over the paid film", () => {
+  it("opens on the video that was just made, whichever route made it", () => {
     const result = resolveProductionVideo([
       row({ id: "paid", executionMode: "PAID_CLOUD", createdAt: "2026-09-11T09:00:00Z" }),
-      row({ id: "preview", executionMode: "BROWSER", createdAt: "2026-09-11T23:00:00Z" }),
+      row({ id: "newest", executionMode: "BROWSER", createdAt: "2026-09-11T23:00:00Z" }),
     ]);
-    expect(result.ok && result.video.id).toBe("paid");
+    expect(result.ok && result.video.id).toBe("newest");
+  });
+
+  it("publishes the exact video chosen, and substitutes nothing", () => {
+    const rows = [
+      row({ id: "paid", executionMode: "PAID_CLOUD", createdAt: "2026-09-11T09:00:00Z" }),
+      row({ id: "newest", createdAt: "2026-09-11T23:00:00Z" }),
+    ];
+    expect(resolveSelectedVideo(rows, "paid").ok && resolveSelectedVideo(rows, "paid")).toMatchObject(
+      { ok: true },
+    );
+    const chosen = resolveSelectedVideo(rows, "paid");
+    expect(chosen.ok && chosen.video.id).toBe("paid");
+    expect(resolveSelectedVideo(rows, "not-in-campaign").ok).toBe(false);
+    expect(resolveSelectedVideo([row({ id: "raw", storagePath: null })], "raw").ok).toBe(false);
   });
 
   it("ignores videos with no stored branded file", () => {

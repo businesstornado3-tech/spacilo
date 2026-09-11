@@ -163,11 +163,36 @@ describe("generation parts", () => {
     expect(board.segments.reduce((sum, segment) => sum + segment.seconds, 0)).toBe(30);
   });
 
-  it("asks later parts to continue the same scene, not start a new film", () => {
+  it("asks later stretches to continue the same take, not start a new film", () => {
     const board = long();
-    expect(board.segments[0]!.prompt).toContain("Part 1 of 3");
-    expect(board.segments[1]!.prompt).toContain("continues");
-    expect(board.segments[2]!.prompt).toMatch(/do not restart the story/i);
+    expect(board.segments[0]!.prompt).toMatch(/one single continuous/i);
+    expect(board.segments[1]!.prompt).toMatch(/carry straight on/i);
+    expect(board.segments[2]!.prompt).toMatch(/do not restart/i);
+    expect(board.segments[2]!.prompt).toMatch(/the same person, the same face/i);
+  });
+
+  it("never tells the service it is filming a numbered part", () => {
+    for (const segment of long().segments) {
+      expect(segment.prompt).not.toMatch(/\bpart\s*\d/i);
+      expect(segment.prompt).not.toMatch(/\bsegment\s*\d/i);
+    }
+  });
+
+  it("shows the written story on screen and claims no spoken voice", () => {
+    const board = long();
+    expect(board.narration.length).toBeGreaterThan(0);
+    expect(board.narrationCapability.spoken).toBe(false);
+    board.narration.forEach((cue, index) => {
+      expect(board.captions[index]!.text).toBe(cue.text);
+      expect(board.captions[index]!.fromSeconds).toBe(cue.fromSeconds);
+    });
+  });
+
+  it("leaves every line on screen long enough to read", () => {
+    for (const caption of long().captions) {
+      const words = caption.text.split(" ").filter(Boolean).length;
+      expect(caption.toSeconds - caption.fromSeconds).toBeGreaterThanOrEqual(words / 2.4 - 0.01);
+    }
   });
 
   it("forbids the model from drawing anything written", () => {

@@ -169,11 +169,55 @@ describe("generation parts", () => {
     expect(board.segments[2]!.prompt).toMatch(/do not restart the story/i);
   });
 
-  it("forbids the model from drawing text or any EarnRoom mark", () => {
+  it("forbids the model from drawing anything written", () => {
     for (const segment of long().segments) {
-      expect(segment.prompt).toMatch(/Do not render any text/);
-      expect(segment.prompt).toMatch(/Never invent a company, brand, logo or website/);
+      expect(segment.prompt).toContain(PROHIBITION_LINE);
     }
     expect(validateStoryboard(long(), { seconds: 30 }).passed).toBe(true);
+  });
+
+  it("sends no brand identity to the generation service, in any part", () => {
+    for (const segment of long().segments) {
+      expect(findBrandTerms(segment.prompt)).toEqual([]);
+      expect(segment.prompt.toLowerCase()).not.toContain("earnroom");
+      expect(segment.prompt.toLowerCase()).not.toContain("make space earn");
+      expect(segment.prompt.toLowerCase()).not.toContain(".co.uk");
+    }
+  });
+
+  it("strips branding that campaign copy tries to bring into a scene", () => {
+    const branded = {
+      ...campaign,
+      opportunity: {
+        ...campaign.opportunity,
+        problem: "EarnRoom helps when there is no room — make space earn at earnroom.co.uk.",
+      },
+      story: {
+        ...campaign.story,
+        scenes: campaign.story.scenes.map((scene) => ({
+          ...scene,
+          visual: `${scene.visual} The EarnRoom logo appears on the wall.`,
+        })),
+      },
+    } as unknown as MarketingCampaign;
+
+    const board = buildStoryboard({ campaign: branded, asset, seconds: 30 });
+    for (const segment of board.segments) {
+      expect(findBrandTerms(segment.prompt)).toEqual([]);
+    }
+    expect(validateStoryboard(board, { seconds: 30 }).passed).toBe(true);
+  });
+
+  it("refuses a part that still carries branding", () => {
+    const board = long();
+    const tampered = {
+      ...board,
+      segments: board.segments.map((segment, index) =>
+        index === 1 ? { ...segment, prompt: `${segment.prompt}\nShow the EarnRoom logo.` } : segment,
+      ),
+    };
+    const verdict = validateStoryboard(tampered, { seconds: 30 });
+    expect(verdict.passed).toBe(false);
+    expect(verdict.failures.join(" ").toLowerCase()).toContain("mentions");
   });
 });

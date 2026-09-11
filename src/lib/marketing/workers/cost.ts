@@ -136,11 +136,26 @@ export type SpendCaps = {
   perMonthPence: number;
 };
 
+/**
+ * The most expensive paid preset the founder can actually choose, in pence.
+ * No cap may ever sit below it: a selectable option that can never run is a
+ * false choice, and that is exactly what blocked the 30-second video.
+ */
+export const MOST_EXPENSIVE_PAID_PENCE = 720;
+
 export const DEFAULT_SPEND_CAPS: SpendCaps = {
-  perVideoPence: 200,
-  perDayPence: 500,
-  perCampaignPence: 500,
-  perMonthPence: 5000,
+  perVideoPence: MOST_EXPENSIVE_PAID_PENCE,
+  perDayPence: 2160,
+  perCampaignPence: 2160,
+  perMonthPence: 21_600,
+};
+
+/** No stored preference may sink a cap below what a real option costs. */
+export const MINIMUM_SPEND_CAPS: SpendCaps = {
+  perVideoPence: MOST_EXPENSIVE_PAID_PENCE,
+  perDayPence: MOST_EXPENSIVE_PAID_PENCE,
+  perCampaignPence: MOST_EXPENSIVE_PAID_PENCE,
+  perMonthPence: MOST_EXPENSIVE_PAID_PENCE,
 };
 
 export type SpendCounts = {

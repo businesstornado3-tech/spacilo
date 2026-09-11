@@ -41,11 +41,26 @@ export function GmailOutreach() {
   const fetchStatus = useServerFn(getGmailOutreachStatus);
   const runTest = useServerFn(testGmailOutreachConnection);
   const runSendTest = useServerFn(testGmailSendCapability);
+  const fetchReview = useServerFn(listOutreachOpportunities);
+  const saveOutreach = useServerFn(updateOutreachSettings);
   const [notice, setNotice] = React.useState<string | null>(null);
 
   const query = useQuery<GmailOutreachSnapshot>({
     queryKey: ["gmail", "outreach"],
     queryFn: () => fetchStatus({}),
+  });
+  const review = useQuery<OutreachReview>({
+    queryKey: ["gmail", "outreach", "review"],
+    queryFn: () => fetchReview({}),
+  });
+  const settings = useMutation({
+    mutationFn: (input: {
+      mode?: "MANUAL" | "AUTONOMOUS";
+      paused?: boolean;
+      confirmAutonomous?: boolean;
+    }) => saveOutreach({ data: input }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["gmail", "outreach"] }),
+    onError: (error: Error) => setNotice(error.message),
   });
   const test = useMutation({
     mutationFn: () => runTest({}),

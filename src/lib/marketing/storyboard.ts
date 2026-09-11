@@ -350,18 +350,19 @@ export function buildStoryboard(input: {
   const shares = seconds >= 20 ? LONG_SHARES : SHORT_SHARES;
   const lengths = beatLengths(shares, seconds, seed);
   const direction = directions(campaign, asset);
-  const captionFor = captionLines(campaign, asset);
+  const narrativeFor = narrationLines(campaign, asset);
 
   let cursor = 0;
   const beats: StoryboardBeat[] = lengths.map((entry) => {
     const from = cursor;
     cursor += entry.seconds;
+    const line = entry.role === "END_CARD" ? null : (narrativeFor[entry.role] ?? null);
     return {
       role: entry.role,
       fromSeconds: from,
       toSeconds: Math.min(seconds, cursor),
       direction: direction[entry.role],
-      caption: entry.role === "END_CARD" ? null : (captionFor[entry.role] ?? null),
+      caption: line ? shortLine(pacedLine(line, entry.seconds)) : null,
     };
   });
 
@@ -370,16 +371,21 @@ export function buildStoryboard(input: {
   const endCardFromSeconds =
     beats.find((beat) => beat.role === "END_CARD")?.fromSeconds ?? seconds - END_CARD_SECONDS;
   const captions: CaptionCue[] = [];
+  const narration: NarrationCue[] = [];
   for (const beat of beats) {
     if (!beat.caption) continue;
     const to = Math.min(beat.toSeconds, endCardFromSeconds) - CAPTION_GAP_SECONDS;
     const from = beat.fromSeconds + (beat.fromSeconds === 0 ? 0.3 : CAPTION_GAP_SECONDS / 2);
-    if (to - from < 1) continue;
-    captions.push({
+    // A line that cannot be read comfortably in the time it has is not shown.
+    const readable = beat.caption.split(" ").filter(Boolean).length / NARRATION_WORDS_PER_SECOND;
+    if (to - from < Math.max(1.2, readable)) continue;
+    const cue = {
       text: beat.caption,
       fromSeconds: Number(from.toFixed(2)),
       toSeconds: Number(to.toFixed(2)),
-    });
+    };
+    captions.push(cue);
+    narration.push({ role: beat.role, ...cue });
   }
 
   const treatment = CREATIVE_TREATMENTS.find(

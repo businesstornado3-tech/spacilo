@@ -53,6 +53,10 @@ const BRANDING_NOUNS: { pattern: RegExp; replacement: string }[] = [
 function tidy(text: string): string {
   return text
     .replace(/[ \t]{2,}/g, " ")
+    // Tidy the sentence fragments a removal can leave behind.
+    .replace(/\b(at|on|from|visit|via|to)\s*(?=[.,;:]|$)/gi, "")
+    .replace(/\bthe\s+the\b/gi, "the")
+    .replace(/\s+[—-]\s*(?=[.,;:]|$)/g, "")
     .replace(/\s+([.,;:])/g, "$1")
     .replace(/([.,;:]){2,}/g, "$1")
     .replace(/^[\s.,;:—-]+/, "")

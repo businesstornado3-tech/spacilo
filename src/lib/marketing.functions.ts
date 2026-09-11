@@ -639,7 +639,10 @@ async function publishCampaignAssets(
       await supabase.from("marketing_audit").insert({
         campaign_id: campaign.id,
         action: attempt.record.state === "PUBLISHED" ? "published" : "publication_blocked",
-        detail: attemptDetail(attempt),
+        detail:
+          isMeta && production.ok
+            ? `${attemptDetail(attempt)} ${production.video.provenance}`
+            : attemptDetail(attempt),
         actor: "engine",
         actor_id: userId,
       });

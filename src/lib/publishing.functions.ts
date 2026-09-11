@@ -695,6 +695,9 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       state: attempt.record.state,
       platform_post_id: attempt.record.platformPostId,
       platform_url: attempt.record.platformUrl,
+      // The platform's own media identifier, when it returned one distinct
+      // from the post id (LinkedIn video URN, Pinterest media id).
+      media_id: (attempt.result as { mediaId?: string | null }).mediaId ?? null,
       // The REAL provider reason is stored verbatim (already sanitised of any
       // token by the adapter), with a short reference the founder can quote.
       error: published

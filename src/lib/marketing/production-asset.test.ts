@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveProductionVideo, type StoredVideoRow } from "./production-asset";
+import {
+  resolveProductionVideo,
+  resolveSelectedVideo,
+  type StoredVideoRow,
+} from "./production-asset";
 
 const row = (over: Partial<StoredVideoRow>): StoredVideoRow => ({
   id: "v1",

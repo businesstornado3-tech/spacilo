@@ -83,6 +83,10 @@ export type VideoStoryboard = {
   /** The closing EarnRoom card, always the last stretch of the film. */
   endCardFromSeconds: number;
   beats: readonly StoryboardBeat[];
+  /** The written story, beat by beat. The captions are drawn from these lines. */
+  narration: readonly NarrationCue[];
+  /** Whether the film is actually spoken. Stated, never assumed. */
+  narrationCapability: NarrationCapability;
   captions: readonly CaptionCue[];
   segments: readonly StoryboardSegment[];
   /** The creative treatment this film was built from, when one was chosen. */
@@ -208,32 +212,50 @@ function directions(campaign: MarketingCampaign, asset: PlatformAsset): Record<B
 }
 
 /**
- * The major on-screen lines, drawn from the campaign's own copy. One line per
- * beat at most, never the same line twice, and the closing call to action gets
- * a beat of its own.
+ * The written story, one line per beat.
+ *
+ * This is the single source of the film's words: the on-screen captions are cut
+ * from these very lines, so what a viewer reads is the story being told and
+ * never a second, competing script. Each line is trimmed to what the beat has
+ * time for at a comfortable reading pace.
  */
-function captionLines(
+function narrationLines(
   campaign: MarketingCampaign,
   asset: PlatformAsset,
 ): Record<BeatRole, string | null> {
   const scenes = campaign.story.scenes;
   const used = new Set<string>();
+  const scene = (index: number) => {
+    const entry = scenes[Math.max(0, Math.min(index, scenes.length - 1))];
+    const record = (entry ?? {}) as Record<string, unknown>;
+    const voice = typeof record["voiceover"] === "string" ? record["voiceover"] : null;
+    const caption = typeof record["caption"] === "string" ? record["caption"] : null;
+    return voice ?? caption;
+  };
   const take = (candidate: string | undefined | null): string | null => {
     if (!candidate) return null;
-    const line = shortLine(candidate);
-    const key = line.toLowerCase();
-    if (!line || used.has(key)) return null;
+    const line = candidate.replace(/\s+/g, " ").trim();
+    const key = shortLine(line).toLowerCase();
+    if (!line || !key || used.has(key)) return null;
     used.add(key);
     return line;
   };
   return {
     HOOK: take(asset.hook ?? campaign.story.hook),
-    PERSON: take(scenes[1]?.caption ?? scenes[0]?.caption),
-    PROBLEM: take(scenes[Math.max(0, scenes.length - 3)]?.caption),
-    SOLUTION: take(scenes[Math.max(0, scenes.length - 2)]?.caption),
+    PERSON: take(scene(1)),
+    PROBLEM: take(scene(scenes.length - 3)),
+    SOLUTION: take(scene(scenes.length - 2)),
     PAYOFF: take(asset.cta ?? campaign.story.renterCta),
     END_CARD: null,
   };
+}
+
+/** Trims a spoken line to the number of words the beat has room for. */
+function pacedLine(text: string, seconds: number): string {
+  const words = text.split(" ").filter(Boolean);
+  const room = Math.max(3, Math.floor(seconds * NARRATION_WORDS_PER_SECOND));
+  if (words.length <= room) return words.join(" ");
+  return words.slice(0, room).join(" ").replace(/[,;:]$/, "");
 }
 
 /**

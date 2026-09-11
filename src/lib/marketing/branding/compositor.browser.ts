@@ -119,7 +119,7 @@ function drawBranding(
   plan: BrandCompositionPlan,
   art: Art,
   time: number,
-  tally: { watermark: number; tagline: number; cta: number; endCard: number },
+  tally: { watermark: number; tagline: number; cta: number; endCard: number; caption: number },
 ) {
   const { width, height, safeArea } = plan;
 
@@ -141,7 +141,26 @@ function drawBranding(
       tally.watermark += 1;
     }
 
-    if (plan.persistentTagline) {
+    /*
+     * One major line at a time. While a storyboard caption is on screen the
+     * permanent tagline stands down, so the two can never collide.
+     */
+    const caption = plan.captions.find((cue) => time >= cue.fromSeconds && time < cue.toSeconds);
+    if (caption) {
+      const size = Math.round(height * 0.046);
+      ctx.font = `700 ${size}px ${FONT_DISPLAY}`;
+      const lines = wrapLines(ctx, caption.text, width * (1 - safeArea.left * 2));
+      drawTextBlock(
+        ctx,
+        lines,
+        width / 2,
+        height - height * (safeArea.bottom + 0.055) - lines.length * size * 1.28,
+        size,
+      );
+      tally.caption += 1;
+    }
+
+    if (plan.persistentTagline && !caption) {
       const size = Math.round(height * 0.042);
       ctx.font = `700 ${size}px ${FONT_DISPLAY}`;
       const lines = wrapLines(ctx, plan.persistentTagline.text, width * (1 - safeArea.left * 2));
@@ -155,7 +174,7 @@ function drawBranding(
       tally.tagline += 1;
     }
 
-    if (plan.cta && time >= plan.cta.fromSeconds) {
+    if (plan.cta && !caption && time >= plan.cta.fromSeconds) {
       const size = Math.round(height * 0.032);
       ctx.font = `600 ${size}px ${FONT_BODY}`;
       const lines = wrapLines(ctx, plan.cta.text, width * (1 - safeArea.left * 2));
@@ -351,7 +370,7 @@ export async function composeBranding(
 
     const duration = Number.isFinite(video.duration) ? video.duration : plan.seconds;
     const totalFrames = Math.max(1, Math.round(Math.min(duration, plan.seconds + 0.5) * fps));
-    const tally = { watermark: 0, tagline: 0, cta: 0, endCard: 0 };
+    const tally = { watermark: 0, tagline: 0, cta: 0, endCard: 0, caption: 0 };
     const seekTo = (time: number) =>
       new Promise<void>((resolve) => {
         const done = () => {
@@ -409,6 +428,7 @@ export async function composeBranding(
         watermarkFrames: tally.watermark,
         taglineFrames: tally.tagline,
         ctaFrames: tally.cta,
+        captionFrames: tally.caption,
         endCardFrames: tally.endCard,
         artworkUrls,
         audio: audioCopied ? "copied" : "none",

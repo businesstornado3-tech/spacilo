@@ -24,6 +24,8 @@ export const OFFICIAL_LOCKUP_URL = lockupAsset.url;
 export const OFFICIAL_WORDMARK_URL = wordmarkAsset.url;
 
 export type TimedText = { text: string; fromSeconds: number; toSeconds: number | null };
+/** A caption with a definite start AND a definite end. Never open-ended. */
+export type CaptionLayer = { text: string; fromSeconds: number; toSeconds: number };
 
 export type BrandCompositionPlan = {
   platform: PlatformId;
@@ -44,6 +46,11 @@ export type BrandCompositionPlan = {
   /** The permanent campaign tagline, held in the lower third. */
   persistentTagline: TimedText | null;
   cta: TimedText | null;
+  /**
+   * The film's major on-screen lines, drawn by EarnRoom rather than the video
+   * model. Exactly one is ever on screen, each with an explicit start and end.
+   */
+  captions: readonly CaptionLayer[];
   endCard: {
     fromSeconds: number;
     logoUrl: string;
@@ -78,6 +85,8 @@ export function buildCompositionPlan(input: {
   seconds: number;
   tagline: string;
   cta: string;
+  /** Timed captions from the storyboard, if this film has a storyboard. */
+  captions?: readonly { text: string; fromSeconds: number; toSeconds: number }[];
 }): BrandCompositionPlan {
   const rules = brandRules(input.platform);
   const profile = brandProfile();
@@ -102,6 +111,22 @@ export function buildCompositionPlan(input: {
       layer.value === PRIMARY_TAGLINE,
   );
   const ctaLayer = overlay.layers.find((layer) => layer.kind === "text" && layer.role === "cta");
+
+  /*
+   * Captions are laid out defensively: sorted, clipped to the body of the
+   * film, and any line that would still be up when the next one arrives is
+   * dropped rather than stacked. Overlapping text can never reach the frame.
+   */
+  const captions: CaptionLayer[] = [];
+  for (const cue of [...(input.captions ?? [])].sort((a, b) => a.fromSeconds - b.fromSeconds)) {
+    const from = Math.max(0, cue.fromSeconds);
+    const to = Math.min(cue.toSeconds, endCardFrom);
+    const previous = captions.at(-1);
+    if (to - from < 0.5) continue;
+    if (previous && from < previous.toSeconds) continue;
+    if (!cue.text.trim()) continue;
+    captions.push({ text: cue.text.trim(), fromSeconds: from, toSeconds: to });
+  }
 
   const plan: Omit<BrandCompositionPlan, "digest"> = {
     platform: input.platform,
@@ -133,6 +158,7 @@ export function buildCompositionPlan(input: {
             toSeconds: endCardFrom,
           }
         : null,
+    captions,
     endCard: {
       fromSeconds: endCardFrom,
       logoUrl: OFFICIAL_LOCKUP_URL,
@@ -155,6 +181,7 @@ export function buildCompositionPlan(input: {
         plan.watermark?.url ?? null,
         plan.persistentTagline?.text ?? null,
         plan.cta?.text ?? null,
+        plan.captions.map((cue) => `${cue.text}@${cue.fromSeconds}-${cue.toSeconds}`),
         plan.endCard.tagline,
         plan.endCard.website,
         plan.endCard.logoUrl,
@@ -176,12 +203,77 @@ export type CompositionReceipt = {
   watermarkFrames: number;
   taglineFrames: number;
   ctaFrames: number;
+  /** Frames on which a storyboard caption was drawn. */
+  captionFrames?: number;
   endCardFrames: number;
   /** The artwork files genuinely loaded and painted into the frames. */
   artworkUrls: string[];
   audio: "copied" | "none";
   bytes: number;
 };
+
+/**
+ * Checks the plan itself, before a frame is drawn: no overlapping text, no
+ * stacked captions, nothing left standing over the closing card, and every
+ * line short enough to read.
+ */
+export function validateCompositionPlan(plan: BrandCompositionPlan): CompositionVerdict {
+  const checks: CompositionCheck[] = [];
+  const add = (id: string, passed: boolean, detail: string) => checks.push({ id, passed, detail });
+
+  let overlapping = false;
+  let late = false;
+  let long = false;
+  let repeated = false;
+  const seen = new Set<string>();
+  plan.captions.forEach((cue, index) => {
+    const previous = plan.captions[index - 1];
+    if (previous && cue.fromSeconds < previous.toSeconds) overlapping = true;
+    if (cue.toSeconds > plan.endCard.fromSeconds + 0.01) late = true;
+    if (cue.text.length > 60) long = true;
+    const key = cue.text.toLowerCase();
+    if (seen.has(key)) repeated = true;
+    seen.add(key);
+  });
+
+  add(
+    "captions_sequential",
+    !overlapping,
+    overlapping
+      ? "Two on-screen lines would be visible at the same time."
+      : "Each on-screen line disappears before the next one appears.",
+  );
+  add(
+    "captions_clear_of_end_card",
+    !late,
+    late
+      ? "An on-screen line would still be up when the EarnRoom card starts."
+      : "Every on-screen line is gone before the EarnRoom card.",
+  );
+  add("captions_readable", !long, long ? "An on-screen line is too long." : "Lines are short.");
+  add(
+    "captions_unique",
+    !repeated,
+    repeated ? "The same headline repeats across scenes." : "No headline is repeated.",
+  );
+  add(
+    "end_card_time",
+    plan.seconds - plan.endCard.fromSeconds >= 2.5,
+    `The EarnRoom card holds for ${(plan.seconds - plan.endCard.fromSeconds).toFixed(1)}s.`,
+  );
+  const safe = plan.safeArea;
+  const safeOk = [safe.top, safe.bottom, safe.left, safe.right].every(
+    (value) => value >= 0.03 && value <= 0.3,
+  );
+  add(
+    "safe_area",
+    safeOk,
+    safeOk ? "Text sits inside the platform safe area." : "The safe area is not usable.",
+  );
+
+  const failures = checks.filter((check) => !check.passed).map((check) => check.detail);
+  return { passed: failures.length === 0, checks, failures };
+}
 
 export type CompositionCheck = { id: string; passed: boolean; detail: string };
 export type CompositionVerdict = {

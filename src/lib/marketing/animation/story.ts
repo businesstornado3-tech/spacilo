@@ -18,14 +18,7 @@ import type { EnvironmentId } from "./environments";
 
 /** The job a beat does in the advertisement. */
 export type StoryBeat =
-  | "hook"
-  | "problem"
-  | "pain"
-  | "discovery"
-  | "solution"
-  | "connection"
-  | "outcome"
-  | "brand";
+  "hook" | "problem" | "pain" | "discovery" | "solution" | "connection" | "outcome" | "brand";
 
 export type CameraShot =
   | "establishing"
@@ -124,7 +117,6 @@ export function moodForBeat(beat: StoryBeat): Mood {
 
 /** Moods that mean the story has resolved. The film must end on one of them. */
 export const RESOLVED_MOODS: readonly Mood[] = ["relief", "delight"];
-
 
 export type StoryTemplateId =
   | "STORAGE_PROBLEM"
@@ -637,9 +629,12 @@ export function addTemplate(value: StoryTemplate): void {
 }
 
 /** Which side of the marketplace the campaign is speaking to. */
-export function sideForAudience(audience: MarketingAudience | null | undefined): "renter" | "host" | "both" {
+export function sideForAudience(
+  audience: MarketingAudience | null | undefined,
+): "renter" | "host" | "both" {
   const value = String(audience ?? "").toLowerCase();
-  if (value.includes("host") || value.includes("owner") || value.includes("landlord")) return "host";
+  if (value.includes("host") || value.includes("owner") || value.includes("landlord"))
+    return "host";
   if (value.includes("both") || value.includes("marketplace")) return "both";
   return "renter";
 }

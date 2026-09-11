@@ -74,14 +74,7 @@ export type Motion =
  * The narrative job a scene does. Ordering of these roles is what gives every
  * campaign video a beginning, a middle and an end.
  */
-export type SceneRole =
-  | "problem"
-  | "pain"
-  | "solution"
-  | "renter"
-  | "host"
-  | "both"
-  | "endcard";
+export type SceneRole = "problem" | "pain" | "solution" | "renter" | "host" | "both" | "endcard";
 
 /** One illustration placed in a scene. Coordinates are fractions of the frame. */
 export type SceneItem = {

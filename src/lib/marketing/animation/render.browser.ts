@@ -243,9 +243,7 @@ function drawText(
     const lineWidth = ctx.measureText(line.text).width;
     let x = plan.width / 2 - lineWidth / 2;
     for (const word of line.words) {
-      const wordProgress = clamp(
-        (options.elapsed - options.startAt - wordIndex * 0.07) / 0.4,
-      );
+      const wordProgress = clamp((options.elapsed - options.startAt - wordIndex * 0.07) / 0.4);
       const wordWidth = ctx.measureText(`${word} `).width;
       ctx.globalAlpha = motion.opacity * easeOut(wordProgress);
       ctx.fillText(word, x + wordWidth / 2, y + (1 - easeOut(wordProgress)) * options.size * 0.3);
@@ -294,7 +292,10 @@ function drawScene(
     const depthScale = 1 + (scale - 1) * (0.5 + item.depth);
     const size = item.size * width * motion.scale * depthScale;
     const originX =
-      (item.x + motion.dx) * width - size / 2 + panX * (0.4 + item.depth) + (item.depth - 0.6) * Math.sin(elapsed * 0.9) * width * 0.004;
+      (item.x + motion.dx) * width -
+      size / 2 +
+      panX * (0.4 + item.depth) +
+      (item.depth - 0.6) * Math.sin(elapsed * 0.9) * width * 0.004;
     const originY = (item.y + motion.dy) * height - size / 2 + panY * (0.4 + item.depth);
 
     ctx.save();
@@ -302,7 +303,15 @@ function drawScene(
     ctx.globalAlpha = motion.opacity * 0.16;
     ctx.fillStyle = PALETTE.ink;
     ctx.beginPath();
-    ctx.ellipse(originX + size / 2, originY + size * 0.98, size * 0.34, size * 0.06, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      originX + size / 2,
+      originY + size * 0.98,
+      size * 0.34,
+      size * 0.06,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.globalAlpha = motion.opacity;
     for (const shape of element(item.element).shapes) {
@@ -315,7 +324,13 @@ function drawScene(
   // A close shot lets the figure grow past the bottom of the frame, so the
   // viewer reads a face rather than a whole doll standing on a floor.
   const crop =
-    scene.framing === "close" ? 0.3 : scene.framing === "twoShot" ? 0.04 : scene.framing === "detail" ? -0.02 : 0;
+    scene.framing === "close"
+      ? 0.3
+      : scene.framing === "twoShot"
+        ? 0.04
+        : scene.framing === "detail"
+          ? -0.02
+          : 0;
   const ground = height * (groundLine(scene.environment) + crop);
   for (const member of scene.cast) {
     const since = elapsed - member.delay;
@@ -409,8 +424,7 @@ function drawScene(
         ? comp.hookScale * 0.9
         : comp.bodyScale;
   const captionSize = Math.round(width * captionScale);
-  const captionY =
-    height * (scene.logo === "endcard" ? 0.6 : comp.captionY) - captionSize * 0.4;
+  const captionY = height * (scene.logo === "endcard" ? 0.6 : comp.captionY) - captionSize * 0.4;
 
   const afterCaption = drawText(ctx, plan, {
     text: scene.caption.text,

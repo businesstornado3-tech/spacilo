@@ -52,9 +52,9 @@ describe("setup never claims progress it cannot prove", () => {
   });
 
   it("moves to connecting only once the machine has paired", () => {
-    expect(setupView({ ...BASE, sessionCreated: true, downloadStarted: true, claimed: true }).stage).toBe(
-      "CONNECTING",
-    );
+    expect(
+      setupView({ ...BASE, sessionCreated: true, downloadStarted: true, claimed: true }).stage,
+    ).toBe("CONNECTING");
   });
 
   it("detects hardware after the first heartbeat", () => {
@@ -129,9 +129,9 @@ describe("a computer that already has the worker", () => {
   });
 
   it("does not download anything again when a session is created for it", () => {
-    expect(
-      computerSetupState({ ...BASE, alreadyInstalled: true, sessionCreated: true }),
-    ).toBe("SETUP_SESSION_CREATED");
+    expect(computerSetupState({ ...BASE, alreadyInstalled: true, sessionCreated: true })).toBe(
+      "SETUP_SESSION_CREATED",
+    );
   });
 
   it("downloads only when the worker is not installed", () => {

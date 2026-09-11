@@ -17,11 +17,7 @@ import { RESOLVED_MOODS } from "./story";
 import { COMPOSITIONS, FRAME_SIZES, type AnimatedPlan } from "./types";
 
 export type QualityStatus =
-  | "DRAFT"
-  | "BROWSER_GENERATED"
-  | "BRAND_VALIDATED"
-  | "PRODUCTION_READY"
-  | "VALIDATION_FAILED";
+  "DRAFT" | "BROWSER_GENERATED" | "BRAND_VALIDATED" | "PRODUCTION_READY" | "VALIDATION_FAILED";
 
 export type QualityCheck = { passed: boolean; failures: string[] };
 
@@ -92,7 +88,8 @@ export function validatePlan(plan: AnimatedPlan): QualityCheck {
   }
   const lower = joined.toLowerCase();
   for (const token of PLACEHOLDERS) {
-    if (lower.includes(token)) failures.push(`Placeholder wording “${token}” is still in the copy.`);
+    if (lower.includes(token))
+      failures.push(`Placeholder wording “${token}” is still in the copy.`);
   }
   if (text.some((line) => !line.trim())) failures.push("A caption is empty.");
 
@@ -156,11 +153,14 @@ export function validatePlan(plan: AnimatedPlan): QualityCheck {
         failures.push(`Scene ${scene.index + 1} uses a character that is not in the library.`);
       }
       if (!isPose(member.pose) || !isExpression(member.expression)) {
-        failures.push(`Scene ${scene.index + 1} asks for a pose or expression that does not exist.`);
+        failures.push(
+          `Scene ${scene.index + 1} asks for a pose or expression that does not exist.`,
+        );
       }
       const inside =
         member.x > plan.composition.safe.side && member.x < 1 - plan.composition.safe.side;
-      if (!inside) failures.push(`A character in scene ${scene.index + 1} stands outside the safe area.`);
+      if (!inside)
+        failures.push(`A character in scene ${scene.index + 1} stands outside the safe area.`);
     }
   }
   // Continuity: the same people throughout, never swapped mid-story.
@@ -176,7 +176,9 @@ export function validatePlan(plan: AnimatedPlan): QualityCheck {
     if (!beats.some((beat) => beat === "hook" || beat === "problem")) {
       failures.push("The story has no beginning.");
     }
-    if (!beats.some((beat) => beat === "solution" || beat === "discovery" || beat === "connection")) {
+    if (
+      !beats.some((beat) => beat === "solution" || beat === "discovery" || beat === "connection")
+    ) {
       failures.push("The story has no middle.");
     }
     if (!beats.some((beat) => beat === "outcome" || beat === "brand")) {
@@ -247,9 +249,14 @@ export function scorePlan(plan: AnimatedPlan): QualityScores {
   return {
     STORY_CONTINUITY: beats.size >= 3 && !failed("story") ? 100 : 60,
     CHARACTER_CONTINUITY: cast.size > 0 && cast.size <= 2 ? 100 : cast.size === 0 ? 70 : 40,
-    BRAND_ACCURACY: plan.brand.logoUrl && plan.brand.tagline === brand.tagline && !failed("brand") ? 100 : 0,
+    BRAND_ACCURACY:
+      plan.brand.logoUrl && plan.brand.tagline === brand.tagline && !failed("brand") ? 100 : 0,
     TEXT_ACCURACY: failed("placeholder") || failed("misspell") ? 0 : 100,
-    VISUAL_COMPLETENESS: plan.scenes.every((s) => s.items.length > 0 || s.cast.length > 0 || s.role === "endcard") ? 100 : 50,
+    VISUAL_COMPLETENESS: plan.scenes.every(
+      (s) => s.items.length > 0 || s.cast.length > 0 || s.role === "endcard",
+    )
+      ? 100
+      : 50,
     SAFE_AREA_COMPLIANCE: failed("safe area") ? 0 : 100,
     SCENE_COMPLETENESS: plan.scenes.every((scene) => scene.seconds >= 1) ? 100 : 50,
     PLATFORM_COMPLIANCE: plan.seconds <= rules.maxSeconds + 0.5 ? 100 : 0,

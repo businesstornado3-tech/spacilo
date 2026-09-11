@@ -78,7 +78,6 @@ describe("animated scene planning", () => {
     expect(last?.subCaption?.text).toBe("Find storage near you");
   });
 
-
   it("matches the platform's frame shape", () => {
     const vertical = buildAnimatedPlan({ campaignId: "c1", asset: asset("tiktok"), story });
     const wide = buildAnimatedPlan({ campaignId: "c1", asset: asset("youtube"), story });

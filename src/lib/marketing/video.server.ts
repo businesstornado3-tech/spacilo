@@ -14,6 +14,11 @@ import type { AspectRatio, ProviderState } from "./types";
 const ENDPOINT = "https://ai.gateway.lovable.dev/v1/videos";
 const PROVIDER_ID = "earnroom-video-service";
 const MODEL = "google/gemini-omni-1.1-flash";
+/**
+ * The longest single generation this model will make. A longer film is built
+ * by extending a finished clip, which is what `extendVideoJob` below does.
+ */
+export const PROVIDER_MAX_SECONDS = 10;
 
 function apiKey(): string | null {
   return process.env["LOVABLE_API_KEY"] ?? null;
@@ -72,7 +77,7 @@ export async function createVideoJob(input: {
     };
   }
   const doFetch = input.fetchImpl ?? fetch;
-  const duration = `${Math.min(10, Math.max(3, Math.round(input.seconds)))}s`;
+  const duration = `${Math.min(PROVIDER_MAX_SECONDS, Math.max(3, Math.round(input.seconds)))}s`;
 
   let response: Response;
   try {
@@ -104,6 +109,76 @@ export async function createVideoJob(input: {
       typeof payload["message"] === "string"
         ? payload["message"]
         : `The video service refused the request (HTTP ${response.status}).`;
+    if (response.status === 402 || response.status === 429) {
+      return { ok: false, status: "LIMIT_REACHED", reason: message };
+    }
+    return { ok: false, status: "FAILED", reason: message };
+  }
+  const jobId = typeof payload["id"] === "string" ? payload["id"] : null;
+  if (!jobId) {
+    return { ok: false, status: "FAILED", reason: "The video service returned no job identifier." };
+  }
+  return { ok: true, jobId, model: MODEL };
+}
+
+/**
+ * Continues a finished clip.
+ *
+ * The service films at most `PROVIDER_MAX_SECONDS` in one job, so a longer
+ * film is made by sending the finished part back as an inline video and asking
+ * for the next seconds of the same scene. Only the new seconds are generated.
+ */
+export async function extendVideoJob(input: {
+  /** The finished clip so far. */
+  sourceMp4: ArrayBuffer;
+  prompt: string;
+  /** New seconds to add, never the running total. */
+  seconds: number;
+  resolution: "360p" | "720p" | "1080p";
+  fetchImpl?: typeof fetch;
+}): Promise<VideoJobCreate> {
+  const key = apiKey();
+  if (!key) {
+    return {
+      ok: false,
+      status: "PROVIDER_NOT_CONFIGURED",
+      reason: "Video generation provider requires configuration.",
+    };
+  }
+  const doFetch = input.fetchImpl ?? fetch;
+  const duration = `${Math.min(PROVIDER_MAX_SECONDS, Math.max(3, Math.round(input.seconds)))}s`;
+  const base64 = Buffer.from(new Uint8Array(input.sourceMp4)).toString("base64");
+
+  let response: Response;
+  try {
+    response = await doFetch(ENDPOINT, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: MODEL,
+        input: [
+          { type: "video", data: base64, mime_type: "video/mp4" },
+          { type: "text", text: input.prompt },
+        ],
+        // No aspect ratio on an extension: the service keeps the source's own.
+        response_format: { type: "video", resolution: input.resolution, duration },
+        generation_config: { video_config: { task: "extend" } },
+      }),
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      status: "FAILED",
+      reason: error instanceof Error ? error.message : "The video service could not be reached.",
+    };
+  }
+
+  const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!response.ok) {
+    const message =
+      typeof payload["message"] === "string"
+        ? payload["message"]
+        : `The video service refused the continuation (HTTP ${response.status}).`;
     if (response.status === 402 || response.status === 429) {
       return { ok: false, status: "LIMIT_REACHED", reason: message };
     }

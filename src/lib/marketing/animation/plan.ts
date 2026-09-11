@@ -96,9 +96,10 @@ const ROLE_ELEMENTS: Record<SceneRole, string[]> = {
  * across scenes instead of every scene drawing something unrelated.
  */
 export function castForStory(story: CampaignStory): string[] {
-  const text = [story.hook, ...story.scenes.map((scene) => `${scene.visual} ${scene.caption}`)].join(
-    " ",
-  );
+  const text = [
+    story.hook,
+    ...story.scenes.map((scene) => `${scene.visual} ${scene.caption}`),
+  ].join(" ");
   return elementsForText(text).slice(0, 2);
 }
 
@@ -132,8 +133,7 @@ function layout(
   // With a character on stage the props sit to the sides and slightly higher,
   // so nothing lands on the person or in the caption band.
   const y = peopled ? stageY - 0.12 : stageY;
-  if (count <= 1)
-    return { x: peopled ? 0.74 : 0.5, y, size: (peopled ? 0.3 : 0.56) * scale };
+  if (count <= 1) return { x: peopled ? 0.74 : 0.5, y, size: (peopled ? 0.3 : 0.56) * scale };
   if (count === 2)
     return {
       x: index === 0 ? (peopled ? 0.2 : 0.32) : peopled ? 0.8 : 0.68,
@@ -248,7 +248,14 @@ function camera(index: number, role: SceneRole, shot: CameraShot): CameraMove {
     case "panRight":
       return { fromScale: 1.06, toScale: 1.06, fromX: -0.05, toX: 0.05, fromY: 0, toY: 0 };
     case "focusCharacter":
-      return { fromScale: 1.08, toScale: 1.16, fromX: drift, toX: drift * 0.4, fromY: 0, toY: -0.01 };
+      return {
+        fromScale: 1.08,
+        toScale: 1.16,
+        fromX: drift,
+        toX: drift * 0.4,
+        fromY: 0,
+        toY: -0.01,
+      };
     case "focusObject":
       return { fromScale: 1.04, toScale: 1.14, fromX: -drift, toX: 0, fromY: 0.02, toY: 0 };
     case "twoShot":
@@ -260,8 +267,7 @@ function camera(index: number, role: SceneRole, shot: CameraShot): CameraMove {
 
 /** Light follows feeling: cooler and flatter early, warmer as the story lands. */
 function backdrop(index: number, role: SceneRole, mood: Mood): SceneBackdrop {
-  if (role === "endcard")
-    return { base: "primary", tint: "primarySoft", motes: 3, horizon: false };
+  if (role === "endcard") return { base: "primary", tint: "primarySoft", motes: 3, horizon: false };
   const tint =
     mood === "tension" || mood === "doubt"
       ? "inkSoft"
@@ -271,7 +277,8 @@ function backdrop(index: number, role: SceneRole, mood: Mood): SceneBackdrop {
           ? "primarySoft"
           : "success";
   return {
-    base: mood === "relief" || mood === "delight" ? "canvas" : index % 2 === 0 ? "canvas" : "surface",
+    base:
+      mood === "relief" || mood === "delight" ? "canvas" : index % 2 === 0 ? "canvas" : "surface",
     tint,
     motes: mood === "tension" || mood === "doubt" ? 4 : 7,
     horizon: true,

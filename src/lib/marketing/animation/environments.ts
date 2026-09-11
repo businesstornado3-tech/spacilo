@@ -32,7 +32,15 @@ export type EnvShape =
       stroke?: string;
       lineWidth?: number;
     }
-  | { kind: "circle"; x: number; y: number; r: number; fill?: string; stroke?: string; lineWidth?: number }
+  | {
+      kind: "circle";
+      x: number;
+      y: number;
+      r: number;
+      fill?: string;
+      stroke?: string;
+      lineWidth?: number;
+    }
   | {
       kind: "path";
       points: readonly { x: number; y: number }[];
@@ -98,7 +106,17 @@ const ENVIRONMENTS: Record<EnvironmentId, Environment> = {
     sky: ["#f7faf8", "#e6eeea"],
     back: [
       { kind: "rect", x: 0, y: 0, w: 1, h: 0.74, fill: WALL },
-      { kind: "rect", x: 0.08, y: 0.16, w: 0.26, h: 0.3, radius: 0.01, fill: "#dceaf2", stroke: LINE, lineWidth: 0.004 },
+      {
+        kind: "rect",
+        x: 0.08,
+        y: 0.16,
+        w: 0.26,
+        h: 0.3,
+        radius: 0.01,
+        fill: "#dceaf2",
+        stroke: LINE,
+        lineWidth: 0.004,
+      },
       { kind: "rect", x: 0.2, y: 0.16, w: 0.006, h: 0.3, fill: LINE },
       ...floor(0.74),
     ],
@@ -117,7 +135,17 @@ const ENVIRONMENTS: Record<EnvironmentId, Environment> = {
     sky: ["#f4f8f6", "#e2ebe7"],
     back: [
       { kind: "rect", x: 0, y: 0, w: 1, h: 0.76, fill: WALL_DEEP },
-      { kind: "rect", x: 0.62, y: 0.24, w: 0.24, h: 0.52, radius: 0.01, fill: "#cfe0d9", stroke: LINE, lineWidth: 0.004 },
+      {
+        kind: "rect",
+        x: 0.62,
+        y: 0.24,
+        w: 0.24,
+        h: 0.52,
+        radius: 0.01,
+        fill: "#cfe0d9",
+        stroke: LINE,
+        lineWidth: 0.004,
+      },
       ...floor(0.76),
     ],
     mid: [
@@ -134,14 +162,28 @@ const ENVIRONMENTS: Record<EnvironmentId, Environment> = {
     sky: ["#eef2f1", "#dde5e2"],
     back: [
       { kind: "rect", x: 0, y: 0, w: 1, h: 0.78, fill: "#dce4e1" },
-      { kind: "rect", x: 0.14, y: 0.14, w: 0.72, h: 0.64, radius: 0.01, fill: "#c9d4d0", stroke: "#a9b7b2", lineWidth: 0.004 },
+      {
+        kind: "rect",
+        x: 0.14,
+        y: 0.14,
+        w: 0.72,
+        h: 0.64,
+        radius: 0.01,
+        fill: "#c9d4d0",
+        stroke: "#a9b7b2",
+        lineWidth: 0.004,
+      },
       { kind: "rect", x: 0.14, y: 0.14, w: 0.72, h: 0.1, fill: "#bcc9c4" },
       { kind: "rect", x: 0.14, y: 0.3, w: 0.72, h: 0.01, fill: "#aebcb7" },
       { kind: "rect", x: 0.14, y: 0.46, w: 0.72, h: 0.01, fill: "#aebcb7" },
       { kind: "rect", x: 0.14, y: 0.62, w: 0.72, h: 0.01, fill: "#aebcb7" },
       ...floor(0.78, "#b9c2be"),
     ],
-    mid: [...shelving(0.64, 0.4, 0.24, 0.38), ...crate(0.66, 0.52, 0.09, 0.1), ...crate(0.77, 0.66, 0.09, 0.1)],
+    mid: [
+      ...shelving(0.64, 0.4, 0.24, 0.38),
+      ...crate(0.66, 0.52, 0.09, 0.1),
+      ...crate(0.77, 0.66, 0.09, 0.1),
+    ],
     fore: [...crate(0.1, 0.64, 0.14, 0.14)],
   },
 
@@ -151,11 +193,31 @@ const ENVIRONMENTS: Record<EnvironmentId, Environment> = {
     sky: ["#f8fbf9", "#e8f0ec"],
     back: [
       { kind: "rect", x: 0, y: 0, w: 1, h: 0.75, fill: CARD },
-      { kind: "rect", x: 0.66, y: 0.18, w: 0.24, h: 0.28, radius: 0.01, fill: "#dceaf2", stroke: LINE, lineWidth: 0.004 },
+      {
+        kind: "rect",
+        x: 0.66,
+        y: 0.18,
+        w: 0.24,
+        h: 0.28,
+        radius: 0.01,
+        fill: "#dceaf2",
+        stroke: LINE,
+        lineWidth: 0.004,
+      },
       ...floor(0.75, "#d8c7ae"),
     ],
     mid: [
-      { kind: "rect", x: 0.1, y: 0.52, w: 0.26, h: 0.23, radius: 0.02, fill: "#e3e9ec", stroke: LINE, lineWidth: 0.004 },
+      {
+        kind: "rect",
+        x: 0.1,
+        y: 0.52,
+        w: 0.26,
+        h: 0.23,
+        radius: 0.02,
+        fill: "#e3e9ec",
+        stroke: LINE,
+        lineWidth: 0.004,
+      },
       { kind: "rect", x: 0.12, y: 0.48, w: 0.1, h: 0.06, radius: 0.02, fill: "#ffffff" },
     ],
     fore: [...crate(0.42, 0.66, 0.11, 0.09)],
@@ -165,10 +227,7 @@ const ENVIRONMENTS: Record<EnvironmentId, Environment> = {
     id: "ENV_STORAGE_SPACE",
     ground: 0.78,
     sky: ["#f2f6f4", "#e2ebe7"],
-    back: [
-      { kind: "rect", x: 0, y: 0, w: 1, h: 0.78, fill: WALL_DEEP },
-      ...floor(0.78, "#c2cbc7"),
-    ],
+    back: [{ kind: "rect", x: 0, y: 0, w: 1, h: 0.78, fill: WALL_DEEP }, ...floor(0.78, "#c2cbc7")],
     mid: [
       ...shelving(0.08, 0.34, 0.34, 0.44),
       ...crate(0.1, 0.46, 0.12, 0.12),
@@ -186,11 +245,38 @@ const ENVIRONMENTS: Record<EnvironmentId, Environment> = {
     sky: ["#e8f2f6", "#dbe9ee"],
     back: [
       { kind: "rect", x: 0.04, y: 0.3, w: 0.24, h: 0.5, fill: "#d5e0dc" },
-      { kind: "path", points: [{ x: 0.04, y: 0.3 }, { x: 0.16, y: 0.2 }, { x: 0.28, y: 0.3 }], closed: true, fill: "#bccac5" },
+      {
+        kind: "path",
+        points: [
+          { x: 0.04, y: 0.3 },
+          { x: 0.16, y: 0.2 },
+          { x: 0.28, y: 0.3 },
+        ],
+        closed: true,
+        fill: "#bccac5",
+      },
       { kind: "rect", x: 0.34, y: 0.36, w: 0.26, h: 0.44, fill: "#e0e9e5" },
-      { kind: "path", points: [{ x: 0.34, y: 0.36 }, { x: 0.47, y: 0.26 }, { x: 0.6, y: 0.36 }], closed: true, fill: "#c6d3ce" },
+      {
+        kind: "path",
+        points: [
+          { x: 0.34, y: 0.36 },
+          { x: 0.47, y: 0.26 },
+          { x: 0.6, y: 0.36 },
+        ],
+        closed: true,
+        fill: "#c6d3ce",
+      },
       { kind: "rect", x: 0.66, y: 0.32, w: 0.28, h: 0.48, fill: "#d5e0dc" },
-      { kind: "path", points: [{ x: 0.66, y: 0.32 }, { x: 0.8, y: 0.22 }, { x: 0.94, y: 0.32 }], closed: true, fill: "#bccac5" },
+      {
+        kind: "path",
+        points: [
+          { x: 0.66, y: 0.32 },
+          { x: 0.8, y: 0.22 },
+          { x: 0.94, y: 0.32 },
+        ],
+        closed: true,
+        fill: "#bccac5",
+      },
       ...floor(0.8, "#c9cfcc"),
     ],
     mid: [
@@ -206,7 +292,17 @@ const ENVIRONMENTS: Record<EnvironmentId, Environment> = {
     ground: 0.86,
     sky: ["#eef5f2", "#dfeae5"],
     back: [
-      { kind: "rect", x: 0.06, y: 0.16, w: 0.88, h: 0.6, radius: 0.03, fill: "#e7efeb", stroke: LINE, lineWidth: 0.004 },
+      {
+        kind: "rect",
+        x: 0.06,
+        y: 0.16,
+        w: 0.88,
+        h: 0.6,
+        radius: 0.03,
+        fill: "#e7efeb",
+        stroke: LINE,
+        lineWidth: 0.004,
+      },
       { kind: "rect", x: 0.06, y: 0.36, w: 0.88, h: 0.02, fill: "#d3dedb" },
       { kind: "rect", x: 0.06, y: 0.58, w: 0.88, h: 0.02, fill: "#d3dedb" },
       { kind: "rect", x: 0.36, y: 0.16, w: 0.02, h: 0.6, fill: "#d3dedb" },

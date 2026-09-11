@@ -172,6 +172,120 @@ export function GmailOutreach() {
         </Alert>
       ) : null}
 
+      {/* How outreach runs: one email at a time by default. */}
+      {review.data ? (
+        <div className="space-y-2 rounded-lg border border-border p-3">
+          <p className="type-body-sm font-semibold">
+            Outreach mode:{" "}
+            {review.data.settings.mode === "AUTONOMOUS"
+              ? "Autonomous (EarnRoom sends approved emails on its own)"
+              : "Manual approval (you approve every email)"}
+          </p>
+          <p className="type-body-xs text-muted-foreground">
+            {review.data.settings.paused
+              ? "Outreach is paused. Nothing will be sent."
+              : `Up to ${review.data.settings.maxDailyAutonomous} emails a day when autonomous. Sent today: ${review.data.sentToday}.`}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={settings.isPending || review.data.settings.mode === "MANUAL"}
+              onClick={() => settings.mutate({ mode: "MANUAL" })}
+              className="min-h-11 rounded-lg border border-border px-3 type-nav text-muted-foreground hover:bg-secondary disabled:opacity-50"
+            >
+              Manual approval
+            </button>
+            <button
+              type="button"
+              disabled={settings.isPending || review.data.settings.mode === "AUTONOMOUS"}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Let EarnRoom send approved outreach emails on its own? Every existing safety and eligibility rule still applies.",
+                  )
+                ) {
+                  settings.mutate({ mode: "AUTONOMOUS", confirmAutonomous: true });
+                }
+              }}
+              className="min-h-11 rounded-lg border border-border px-3 type-nav text-muted-foreground hover:bg-secondary disabled:opacity-50"
+            >
+              Autonomous
+            </button>
+            <button
+              type="button"
+              disabled={settings.isPending}
+              onClick={() => settings.mutate({ paused: !review.data!.settings.paused })}
+              className="min-h-11 rounded-lg border border-border px-3 type-nav text-destructive hover:bg-secondary disabled:opacity-50"
+            >
+              {review.data.settings.paused ? "Resume outreach" : "Pause outreach"}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* What EarnRoom found, and the exact email it would send. */}
+      {review.data && review.data.cards.length > 0 ? (
+        <div className="space-y-3">
+          <p className="type-body-sm font-semibold">People EarnRoom has found</p>
+          {review.data.cards.map((card) => (
+            <article key={card.opportunityKey} className="space-y-2 rounded-lg border border-border p-3">
+              <p className="type-body-sm font-semibold">
+                {card.prospectType === "HOST" ? "Possible host" : "Possible renter"}
+                {card.location ? ` · ${card.location}` : ""}
+              </p>
+              <p className="type-body-xs text-muted-foreground">
+                Found on {card.sourceName}
+                {card.sourceReference ? ` · ${card.sourceReference}` : ""}
+                {card.observedAt ? ` · ${new Date(card.observedAt).toLocaleString("en-GB")}` : ""}
+                {card.discoveredVia ? ` · search: ${card.discoveredVia}` : ""}
+              </p>
+              <p className="type-body-sm">{card.situation}</p>
+              {card.situationEvidence.length > 0 ? (
+                <ul className="space-y-1 type-body-xs text-muted-foreground">
+                  {card.situationEvidence.slice(0, 3).map((quote) => (
+                    <li key={quote}>“{quote}”</li>
+                  ))}
+                </ul>
+              ) : null}
+              {card.painPoints.length > 0 ? (
+                <ul className="space-y-1 type-body-xs text-muted-foreground">
+                  {card.painPoints.slice(0, 3).map((point) => (
+                    <li key={point.label}>
+                      {point.label}: {point.description}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <p className="type-body-xs text-muted-foreground">{card.relevance}</p>
+              <details className="rounded-lg border border-border p-2">
+                <summary className="cursor-pointer type-body-xs font-semibold">
+                  The exact email that would be sent
+                </summary>
+                <p className="mt-2 type-body-xs font-semibold">{card.proposedSubject}</p>
+                <pre className="mt-1 whitespace-pre-wrap type-body-xs text-muted-foreground">
+                  {card.proposedBody}
+                </pre>
+                <ul className="mt-2 space-y-1 type-body-xs text-muted-foreground">
+                  {card.rationale.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              </details>
+              <p className="type-body-xs text-muted-foreground">
+                {card.sendable
+                  ? "Ready for your approval."
+                  : (card.blockerDetail ?? "This one cannot be sent.")}
+              </p>
+            </article>
+          ))}
+        </div>
+      ) : review.data ? (
+        <p className="type-body-xs text-muted-foreground">
+          EarnRoom has not found anyone to contact yet.
+        </p>
+      ) : null}
+
+
       {snapshot.recent.length > 0 ? (
         <details className="rounded-lg border border-border p-3">
           <summary className="cursor-pointer type-body-sm font-semibold">Recent outreach</summary>

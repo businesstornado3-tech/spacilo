@@ -496,7 +496,26 @@ export function validateStoryboard(
     const key = caption.text.toLowerCase();
     if (seen.has(key)) failures.push(`"${caption.text}" is repeated across scenes.`);
     seen.add(key);
+    const words = caption.text.split(" ").filter(Boolean).length;
+    if (caption.toSeconds - caption.fromSeconds < words / NARRATION_WORDS_PER_SECOND - 0.01) {
+      failures.push(`"${caption.text}" is on screen for less time than it takes to read.`);
+    }
   });
+
+  /* The words on screen ARE the story: one written line, one caption. */
+  if (storyboard.narration.length !== storyboard.captions.length) {
+    failures.push("The on-screen wording does not match the story that was written.");
+  }
+  storyboard.narration.forEach((cue, index) => {
+    const caption = storyboard.captions[index];
+    if (!caption || caption.text !== cue.text || caption.fromSeconds !== cue.fromSeconds) {
+      failures.push("A line of the story is not the line shown on screen.");
+    }
+  });
+  if (storyboard.narrationCapability.spoken) {
+    failures.push("This film is described as spoken, but the video service cannot speak.");
+  }
+
 
   const segmentTotal = storyboard.segments.reduce((sum, segment) => sum + segment.seconds, 0);
   if (segmentTotal !== storyboard.seconds) {

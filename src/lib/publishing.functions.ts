@@ -463,12 +463,14 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       .eq("campaign_id", video.campaign_id)
       .eq("platform", platform);
     const rows = (videoPubRows ?? []) as any[];
-    const existingPub =
-      rows.find((row) => row.video_id === video.id) ??
-      // Adopt a pre-identity record for this asset rather than duplicating it.
-      rows.find((row) => !row.video_id && row.asset_id === video.asset_id) ??
-      null;
-    if (existingPub?.state === "PUBLISHED" && existingPub.video_id === video.id) {
+    /*
+     * Only this video's own record counts. A record belonging to another video
+     * of the same campaign — including a pre-identity record with no video on
+     * it — is history and is never reused, never updated and never allowed to
+     * make this video look published.
+     */
+    const existingPub = rows.find((row) => row.video_id === video.id) ?? null;
+    if (existingPub?.state === "PUBLISHED") {
       return {
         ok: true,
         state: "PUBLISHED",

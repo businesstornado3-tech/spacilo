@@ -583,6 +583,7 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
       confirmedPaid: data.confirmPaid,
       generationPaused: preferences.generationPaused,
       spend: { caps: preferences.spend, counts: await paidSpend(supabase) },
+      initiator: data.initiator,
       infrastructurePencePerGpuMinute: config.infrastructurePencePerGpuMinute,
       gpuMinutes,
     });

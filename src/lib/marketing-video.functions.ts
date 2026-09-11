@@ -274,6 +274,12 @@ const generateSchema = z.object({
   confirmPaid: z.boolean().default(false),
   /** Which paid preset to use. Only read on the paid route. */
   quality: z.enum(["SHORT", "STANDARD", "HIGHEST"]).optional(),
+  /**
+   * Who initiated this. The Studio's Generate button is always MANUAL; only
+   * EarnRoom's own automatic runs may pass AUTONOMOUS, and only those are
+   * measured against the autonomous daily budget.
+   */
+  initiator: z.enum(["MANUAL", "AUTONOMOUS"]).default("MANUAL"),
 });
 
 export type GenerateVideoResult = {
@@ -682,6 +688,9 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
       job_phase: "GENERATING_VIDEO",
       infrastructure_cost_pence: cost.infrastructurePence,
       attempt,
+      // Who asked for this video. Only AUTONOMOUS spend counts against the
+      // autonomous daily budget; a founder-made video never does.
+      initiator: data.initiator,
     };
 
     const failNow = async (status: string, reason: string, offerPaid: boolean) => {

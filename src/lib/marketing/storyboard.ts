@@ -401,7 +401,10 @@ export function validateStoryboard(
         `One generation part asks for ${segment.seconds}s, more than the ${maxSegment}s the service will film.`,
       );
     }
-    if (/earnroom|\.co\.uk|logo|wordmark/i.test(segment.prompt.split("Do not render")[0] ?? "")) {
+    if (!/Do not render any text/.test(segment.prompt)) {
+      failures.push("A generation part does not forbid the model from drawing text.");
+    }
+    if (/earnroom|\.co\.uk/i.test(segment.prompt.split("Do not render")[0] ?? "")) {
       failures.push("A generation part asks the model for EarnRoom branding.");
     }
   }

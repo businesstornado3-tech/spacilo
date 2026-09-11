@@ -299,6 +299,11 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
     const currentVideoId = production.ok ? production.video.id : null;
 
     const campaign = (campaignRow?.campaign ?? null) as any;
+    /** The first video ever made for an asset — where pre-identity history sits. */
+    const oldestVideoForAsset = (assetId: string): string | null =>
+      ((videoRows ?? []) as any[])
+        .filter((row) => row.asset_id === assetId)
+        .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at))[0]?.id ?? null;
     const assets: PublishableAsset[] = [];
     for (const video of (videoRows ?? []) as any[]) {
       const source = ((campaign?.assets ?? []) as any[]).find(

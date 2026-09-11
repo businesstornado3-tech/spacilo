@@ -61,6 +61,8 @@ export function PublishSection({
   const fetchSurface = useServerFn(getPublishingSurface);
   const publish = useServerFn(publishVideoToPlatform);
   const [busy, setBusy] = React.useState<StudioPlatform | null>(null);
+  /** Which video the founder is looking at. Null means "the newest one". */
+  const [selectedVideoId, setSelectedVideoId] = React.useState<string | null>(null);
   const [notice, setNotice] = React.useState<{ ok: boolean; text: string } | null>(null);
 
   const surfaceQuery = useQuery<PublishingSurface>({
@@ -84,10 +86,13 @@ export function PublishSection({
   }
 
   const branded = surface.assets.filter((asset) => asset.brandedArtifactReady);
-  // Exactly one video is publishable at a time: the campaign's current
-  // production video. An older video's result never speaks for this one.
+  // Every video in this campaign can be published in its own right. The
+  // founder chooses which one; the newest is simply where the page opens.
   const current =
-    branded.find((asset) => asset.videoId === surface.currentVideoId) ?? branded[0] ?? null;
+    branded.find((asset) => asset.videoId === selectedVideoId) ??
+    branded.find((asset) => asset.videoId === surface.currentVideoId) ??
+    branded[0] ??
+    null;
   const assetFor = (_platform: StudioPlatform) => current;
 
   const connectionInputs: StudioConnectionInput[] = snapshot.platforms.map((entry) => ({

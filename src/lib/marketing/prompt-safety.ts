@@ -56,6 +56,7 @@ function tidy(text: string): string {
     // Tidy the sentence fragments a removal can leave behind.
     .replace(/\b(at|on|from|visit|via|to)\s*(?=[.,;:]|$)/gi, "")
     .replace(/\bthe\s+the\b/gi, "the")
+    .replace(/\b(with|showing|featuring)\s+(?=(on|in|at|above|beside)\b)/gi, "")
     .replace(/\s+[—-]\s*(?=[.,;:]|$)/g, "")
     .replace(/\s+([.,;:])/g, "$1")
     .replace(/([.,;:]){2,}/g, "$1")

@@ -255,7 +255,10 @@ function pacedLine(text: string, seconds: number): string {
   const words = text.split(" ").filter(Boolean);
   const room = Math.max(3, Math.floor(seconds * NARRATION_WORDS_PER_SECOND));
   if (words.length <= room) return words.join(" ");
-  return words.slice(0, room).join(" ").replace(/[,;:]$/, "");
+  return words
+    .slice(0, room)
+    .join(" ")
+    .replace(/[,;:]$/, "");
 }
 
 /**
@@ -515,7 +518,6 @@ export function validateStoryboard(
   if (storyboard.narrationCapability.spoken) {
     failures.push("This film is described as spoken, but the video service cannot speak.");
   }
-
 
   const segmentTotal = storyboard.segments.reduce((sum, segment) => sum + segment.seconds, 0);
   if (segmentTotal !== storyboard.seconds) {

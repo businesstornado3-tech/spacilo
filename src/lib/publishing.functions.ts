@@ -338,7 +338,8 @@ export const getPublishingSurface = createServerFn({ method: "GET" })
           .filter((entry) =>
             entry.video_id
               ? entry.video_id === video.id
-              : entry.asset_id === video.asset_id && video.id === oldestVideoForAsset(video.asset_id),
+              : entry.asset_id === video.asset_id &&
+                video.id === oldestVideoForAsset(video.asset_id),
           )
           .map((entry) => ({
             platform: entry.platform,

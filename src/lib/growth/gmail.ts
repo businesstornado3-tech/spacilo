@@ -24,6 +24,20 @@ export const OUTREACH_CONTENT_VERSION = "earnroom-outreach-v1";
 /** The only Gmail permission EarnRoom's own code needs to do this work. */
 export const REQUIRED_GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.send";
 
+/**
+ * Pulls the account address out of a stored audit sentence.
+ *
+ * The sentence ends "… is businesstornado3@gmail.com." — the full stop is part
+ * of the sentence, not of the address. Keeping it made the stored account look
+ * different from the allowed sender and wrongly reported sending unavailable.
+ */
+export function extractEmailAddress(text: string): string | null {
+  const match = text.match(/[^\s<>",;]+@[^\s<>",;]+/);
+  if (!match) return null;
+  const address = match[0].replace(/[.,;:!?)"'>]+$/, "").toLowerCase();
+  return address.includes("@") && address.split("@")[1] ? address : null;
+}
+
 export type GmailStatus =
   | "NOT_CONNECTED"
   | "CONNECTION_REQUIRED"

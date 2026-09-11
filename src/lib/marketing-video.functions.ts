@@ -1096,7 +1096,7 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
         // be published. The exact stage and the service's own words are kept.
         return fail(
           "VIDEO_GENERATION_FAILED",
-          `Part ${segmentIndex + 2} of ${storyboard.segments.length} could not be filmed: ${extension.reason}`,
+          `The film could not be carried on past ${(segmentIndex + 1) * 10} seconds: ${extension.reason}`,
         );
       }
 
@@ -1105,7 +1105,7 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
         .update({
           provider_job_id: extension.jobId,
           queue_state: "GENERATING",
-          job_phase: `PART_${segmentIndex + 2}_OF_${storyboard.segments.length}`,
+          job_phase: "CONTINUING_FILM",
           generation_settings: { ...genSettings, segmentIndex: segmentIndex + 1 },
         })
         .eq("id", row.id)
@@ -1115,7 +1115,7 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
       await supabase.from("marketing_audit").insert({
         campaign_id: row.campaign_id,
         action: "paid_video_part_continued",
-        detail: `Part ${segmentIndex + 1} of ${storyboard.segments.length} finished; the same scene is being continued for another ${nextSegment.seconds}s. No new film was started.`,
+        detail: `The same unbroken take is being carried on for another ${nextSegment.seconds}s of one continuous film. No new film was started.`,
         actor: "engine",
         actor_id: context.userId,
       });

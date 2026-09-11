@@ -37,6 +37,10 @@ export type GmailOutreachSnapshot = {
   verifiedAccount: string | null;
   view: GmailStatusView;
   lastTestAt: string | null;
+  /** When Gmail last actually accepted a founder test message. */
+  lastTestSendAt: string | null;
+  /** The last test-send outcome, in plain words. */
+  lastTestSendDetail: string | null;
   lastOutreachAt: string | null;
   sentToday: number;
   errors: { at: string; detail: string }[];
@@ -347,3 +351,64 @@ export const sendOutreachEmail = createServerFn({ method: "POST" })
       messageId: result.value.id,
     };
   });
+
+/**
+ * The founder-only test send.
+ *
+ * This proves the Gmail *send* action really works, which an identity check
+ * can never do. The message goes to the connected outreach mailbox itself, so
+ * no prospect and no third party can be reached, and success is claimed only
+ * when Gmail returns a real message id.
+ */
+export const testGmailSendCapability = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ confirm: z.literal(true) }).parse(data))
+  .handler(
+    async ({
+      context,
+    }): Promise<{
+      ok: boolean;
+      detail: string;
+      messageId: string | null;
+      snapshot: GmailOutreachSnapshot;
+    }> => {
+      const supabase = context.supabase as any;
+      await assertAdmin(supabase);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { gmailSend } = await import("@/lib/growth/gmail.server");
+      const { buildTestSendMessage } = await import("@/lib/growth/gmail");
+
+      const before = await buildSnapshot(supabaseAdmin as any);
+      if (!before.view.canTestSend) {
+        return { ok: false, detail: before.view.detail, messageId: null, snapshot: before };
+      }
+
+      const test = buildTestSendMessage();
+      const result = await gmailSend(
+        buildRawEmail({
+          to: OUTREACH_SENDER,
+          from: OUTREACH_SENDER,
+          subject: test.subject,
+          body: test.body,
+        }),
+      );
+
+      const detail = result.ok
+        ? `Gmail accepted the test message and returned message id ${result.value.id}. No prospect email was sent.`
+        : `Gmail send action returned an error: ${result.error}`;
+
+      await (supabaseAdmin as any).from("marketing_audit").insert({
+        action: result.ok ? "gmail_send_verified" : "gmail_send_failed",
+        detail,
+        actor: "human",
+        actor_id: context.userId,
+      });
+
+      return {
+        ok: result.ok,
+        detail,
+        messageId: result.ok ? result.value.id : null,
+        snapshot: await buildSnapshot(supabaseAdmin as any),
+      };
+    },
+  );

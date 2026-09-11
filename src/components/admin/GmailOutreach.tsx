@@ -12,9 +12,12 @@ import * as React from "react";
 import { Alert } from "@/components/common/Alert";
 import {
   getGmailOutreachStatus,
+  listOutreachOpportunities,
   testGmailOutreachConnection,
   testGmailSendCapability,
+  updateOutreachSettings,
   type GmailOutreachSnapshot,
+  type OutreachReview,
 } from "@/lib/gmail-outreach.functions";
 import { cn } from "@/lib/utils";
 

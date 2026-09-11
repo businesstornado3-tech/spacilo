@@ -156,7 +156,7 @@ function directions(campaign: MarketingCampaign, asset: PlatformAsset): Record<B
   };
   const problem = sanitizeProviderText(campaign.opportunity.problem);
   const plan: Record<BeatRole, string> = {
-    HOOK: visual(0) ?? `The situation opens in ${place}: ${campaign.opportunity.problem}`,
+    HOOK: visual(0) ?? `The situation opens in ${place}: ${problem}`,
     PERSON:
       visual(1) ??
       `Stay with the person this happens to. Show their day, their home and their face.`,
@@ -169,8 +169,12 @@ function directions(campaign: MarketingCampaign, asset: PlatformAsset): Record<B
     PAYOFF:
       visual(scenes.length - 1) ??
       `The relief afterwards: the room back, the person calm, life continuing.`,
-    END_CARD: `Hold a still, clean, warm neutral end frame with an empty centre. Draw nothing in it — no text, no logo, no symbol. ${asset.aspect} framing.`,
+    END_CARD: `Hold a still, calm, warm neutral frame with an empty centre and nothing drawn in it. ${asset.aspect} framing.`,
   };
+  for (const role of Object.keys(plan) as BeatRole[]) {
+    plan[role] = sanitizeProviderText(plan[role]);
+  }
+  return plan;
 }
 
 /**

@@ -587,9 +587,31 @@ async function publishCampaignAssets(
       if (record.state === "PUBLISHED") continue;
 
       const isMeta = asset.platform === "facebook" || asset.platform === "instagram";
-      const publishAsset = isMeta
-        ? { ...asset, videoUrl: (await metaMediaUrl(asset.id)) ?? asset.videoUrl }
-        : asset;
+      let publishAsset = asset;
+      if (isMeta) {
+        // No fallback: Meta either gets this campaign's production video or
+        // nothing is published for it.
+        const mediaUrl = await productionMediaUrl();
+        if (!production.ok || !mediaUrl) {
+          const detail = production.ok
+            ? "The production video could not be prepared for upload, so nothing was published."
+            : production.reason;
+          await supabase
+            .from("marketing_publications")
+            .update({ state: "VALIDATION_FAILED", error: detail })
+            .eq("campaign_id", campaign.id)
+            .eq("asset_id", asset.id);
+          await supabase.from("marketing_audit").insert({
+            campaign_id: campaign.id,
+            action: "publication_blocked",
+            detail: `${asset.platform}: ${detail}`,
+            actor: "engine",
+          });
+          results.push({ platform: asset.platform, state: "VALIDATION_FAILED", detail });
+          continue;
+        }
+        publishAsset = { ...asset, videoUrl: mediaUrl };
+      }
 
       const attempt = await attemptPublish({
         adapter: await resolveAdapter(asset.platform),

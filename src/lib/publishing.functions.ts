@@ -34,6 +34,9 @@ export const PUBLISHABLE_PLATFORMS = [
   "youtube_shorts",
   "instagram",
   "facebook",
+  "tiktok",
+  "linkedin",
+  "pinterest",
 ] as const;
 export type PublishablePlatform = (typeof PUBLISHABLE_PLATFORMS)[number];
 

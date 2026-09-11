@@ -503,8 +503,9 @@ export function VideoWorkers() {
             </div>
             <p className="mt-3 type-body-xs text-muted-foreground">
               Paid video making is off until you switch it on, and each paid video still has to be
-              confirmed on its own. Daily limit £{(preferences.spend.perDayPence / 100).toFixed(2)},
-              up to £{(preferences.spend.perVideoPence / 100).toFixed(2)} per video.
+              confirmed on its own. Automatic video making has a daily budget of £
+              {(preferences.spend.autonomousDailyPence / 100).toFixed(2)}. Videos you make yourself
+              are authorised one at a time and are not limited by that budget.
             </p>
           </div>
         </div>

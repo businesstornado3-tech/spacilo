@@ -226,7 +226,12 @@ export function planExecution(input: {
   });
 
   if (input.spend) {
-    const decision = checkSpend(cost, input.spend.counts, input.spend.caps);
+    const decision = checkSpend(
+      cost,
+      input.spend.counts,
+      input.spend.caps,
+      input.initiator ?? "MANUAL",
+    );
     if (!decision.allowed) {
       return {
         ok: false,

@@ -3048,6 +3048,7 @@ export type Database = {
           generation_settings: Json
           id: string
           infrastructure_cost_pence: number | null
+          initiator: string
           job_phase: string | null
           licence_record: Json | null
           media_probe: Json | null
@@ -3089,6 +3090,7 @@ export type Database = {
           generation_settings?: Json
           id?: string
           infrastructure_cost_pence?: number | null
+          initiator?: string
           job_phase?: string | null
           licence_record?: Json | null
           media_probe?: Json | null
@@ -3130,6 +3132,7 @@ export type Database = {
           generation_settings?: Json
           id?: string
           infrastructure_cost_pence?: number | null
+          initiator?: string
           job_phase?: string | null
           licence_record?: Json | null
           media_probe?: Json | null

@@ -147,12 +147,7 @@ export async function extendVideoJob(input: {
   }
   const doFetch = input.fetchImpl ?? fetch;
   const duration = `${Math.min(PROVIDER_MAX_SECONDS, Math.max(3, Math.round(input.seconds)))}s`;
-  const bytes = new Uint8Array(input.sourceMp4);
-  let binary = "";
-  for (let index = 0; index < bytes.length; index += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
-  }
-  const base64 = btoa(binary);
+  const base64 = Buffer.from(new Uint8Array(input.sourceMp4)).toString("base64");
 
   let response: Response;
   try {

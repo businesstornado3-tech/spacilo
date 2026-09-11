@@ -21,6 +21,7 @@
  */
 import { CREATIVE_TREATMENTS, treatmentDirectives } from "./creative";
 import { PROVIDER_MAX_SEGMENT_SECONDS } from "./paid-presets";
+import { PROHIBITION_LINE, findBrandTerms, sanitizeProviderText } from "./prompt-safety";
 import type { MarketingCampaign, PlatformAsset } from "./types";
 
 export type BeatRole = "HOOK" | "PERSON" | "PROBLEM" | "SOLUTION" | "PAYOFF" | "END_CARD";
@@ -139,13 +140,23 @@ function beatLengths(
   return lengths;
 }
 
-/** Campaign-specific direction for each beat, never a fixed script. */
+/**
+ * Campaign-specific direction for each beat, never a fixed script.
+ *
+ * Everything here is written by the intelligence layer, so every line is put
+ * through the brand filter before it can reach a generation service.
+ */
 function directions(campaign: MarketingCampaign, asset: PlatformAsset): Record<BeatRole, string> {
   const scenes = campaign.story.scenes;
-  const place = campaign.opportunity.location?.name ?? "the UK";
-  const visual = (index: number) => scenes[Math.min(index, Math.max(0, scenes.length - 1))]?.visual;
-  return {
-    HOOK: visual(0) ?? `The situation opens in ${place}: ${campaign.opportunity.problem}`,
+  const place = sanitizeProviderText(campaign.opportunity.location?.name ?? "the UK");
+  const visual = (index: number) => {
+    const raw = scenes[Math.min(index, Math.max(0, scenes.length - 1))]?.visual;
+    const clean = raw ? sanitizeProviderText(raw) : "";
+    return clean.length > 0 ? clean : undefined;
+  };
+  const problem = sanitizeProviderText(campaign.opportunity.problem);
+  const plan: Record<BeatRole, string> = {
+    HOOK: visual(0) ?? `The situation opens in ${place}: ${problem}`,
     PERSON:
       visual(1) ??
       `Stay with the person this happens to. Show their day, their home and their face.`,
@@ -158,8 +169,12 @@ function directions(campaign: MarketingCampaign, asset: PlatformAsset): Record<B
     PAYOFF:
       visual(scenes.length - 1) ??
       `The relief afterwards: the room back, the person calm, life continuing.`,
-    END_CARD: `Hold a still, clean, warm neutral end frame with an empty centre. Draw nothing in it — no text, no logo, no symbol. ${asset.aspect} framing.`,
+    END_CARD: `Hold a still, calm, warm neutral frame with an empty centre and nothing drawn in it. ${asset.aspect} framing.`,
   };
+  for (const role of Object.keys(plan) as BeatRole[]) {
+    plan[role] = sanitizeProviderText(plan[role]);
+  }
+  return plan;
 }
 
 /**
@@ -191,14 +206,20 @@ function captionLines(
   };
 }
 
-/** Instructions the model must obey on every segment of every film. */
+/**
+ * Instructions the model must obey on every segment of every film.
+ *
+ * Deliberately free of any identity: the model is told to draw nothing written
+ * at all, and is never told which company the film is for.
+ */
 function guardrails(asset: PlatformAsset): string[] {
   return [
-    "Do not render any text, caption, subtitle, headline, price, logo, wordmark, emblem, watermark, web address or company name anywhere in the picture. All wording and all EarnRoom branding are added afterwards by EarnRoom's own production layer.",
-    "Never invent a company, brand, logo or website.",
+    PROHIBITION_LINE,
+    "Photograph only real surroundings. Keep shop fronts, packaging, screens and posters out of shot or out of focus so no writing is legible.",
     "Real UK homes, streets, weather and people. No American signage, no dollar signs, no imperial units.",
-    "Every person is a general illustration, not a named or real customer. No testimonials, no on-screen statistics, no earnings figures.",
-    `Vertical ${asset.aspect} framing, cinematic, natural light, unhurried. Keep faces and key objects away from the lower third, which EarnRoom's captions occupy.`,
+    "Every person is a general illustration, not a named or real person. No testimonials, no statistics, no money figures.",
+    `Vertical ${asset.aspect} framing, cinematic, natural light, unhurried. Keep faces and key objects out of the lower third of the frame, which is reserved and must stay clear.`,
+    "Audio: natural room tone and quiet, unobtrusive music only. No speech, no narration, no spoken names.",
   ];
 }
 
@@ -215,8 +236,8 @@ function segmentPrompt(input: {
   const { campaign, asset, beats, index, fromSeconds, seconds } = input;
   const opening =
     index === 0
-      ? `Part 1 of ${Math.ceil(input.total / PROVIDER_MAX_SEGMENT_SECONDS)} of a ${input.total}-second ${asset.aspect} cinematic marketing film for a UK peer-to-peer storage marketplace. Establish the setting, the person and the situation.`
-      : `The scene continues, unbroken, from the previous part of the same ${input.total}-second film. Same people, same place, same light, same lens, same grade. Do not restart the story and do not cut to a new campaign.`;
+      ? `Part 1 of ${Math.ceil(input.total / PROVIDER_MAX_SEGMENT_SECONDS)} of a single ${input.total}-second ${asset.aspect} cinematic film. Establish the setting, the person and the situation.`
+      : `Part ${index + 1} of ${Math.ceil(input.total / PROVIDER_MAX_SEGMENT_SECONDS)}. The scene continues, unbroken, from the previous part of the same ${input.total}-second film: the same people, the same place, the same light, the same lens and the same grade, carrying straight on from the final frame. Do not restart the story, do not repeat the opening shot, and do not cut to an unrelated location.`;
 
   const timed = beats.map((beat) => {
     const from = Math.max(0, Math.round(beat.fromSeconds - fromSeconds));
@@ -224,16 +245,23 @@ function segmentPrompt(input: {
     return `[${from}-${to}s] ${beat.role.replace("_", " ").toLowerCase()}: ${beat.direction}`;
   });
 
-  return [
+  const prompt = [
     opening,
-    `Situation: ${campaign.opportunity.problem}`,
-    `Audience: ${campaign.opportunity.audience.replace(/_/g, " ")}.`,
-    ...input.treatmentLines,
+    `Situation: ${sanitizeProviderText(campaign.opportunity.problem)}`,
+    `Audience: ${sanitizeProviderText(campaign.opportunity.audience.replace(/_/g, " "))}.`,
+    ...input.treatmentLines.map(sanitizeProviderText),
     "Shot plan for this part, timed from its own start:",
     ...timed,
     "One continuous, coherent piece of filmmaking with a small number of deliberate shots. Give each shot room to breathe; do not cram the whole story into the first seconds.",
     ...guardrails(asset),
   ].join("\n");
+
+  // Last line of defence: nothing brand-shaped may survive into a prompt.
+  return prompt
+    .split("\n")
+    .map((line) => (line === PROHIBITION_LINE ? line : sanitizeProviderText(line)))
+    .filter((line) => line.length > 0)
+    .join("\n");
 }
 
 /**
@@ -409,11 +437,12 @@ export function validateStoryboard(
         `One generation part asks for ${segment.seconds}s, more than the ${maxSegment}s the service will film.`,
       );
     }
-    if (!/Do not render any text/.test(segment.prompt)) {
+    if (!segment.prompt.includes(PROHIBITION_LINE)) {
       failures.push("A generation part does not forbid the model from drawing text.");
     }
-    if (/earnroom|\.co\.uk/i.test(segment.prompt.split("Do not render")[0] ?? "")) {
-      failures.push("A generation part asks the model for EarnRoom branding.");
+    const leaked = findBrandTerms(segment.prompt);
+    if (leaked.length > 0) {
+      failures.push(`A generation part still mentions ${leaked.join(", ")}.`);
     }
   }
 

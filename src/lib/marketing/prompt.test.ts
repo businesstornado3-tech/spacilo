@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildVideoPrompt } from "./prompt";
+import { PROHIBITION_LINE, findBrandTerms } from "./prompt-safety";
 import type { MarketingCampaign, PlatformAsset } from "./types";
 
 const asset: PlatformAsset = {
@@ -50,13 +51,16 @@ const campaign = {
 } as unknown as MarketingCampaign;
 
 describe("video prompt brand protection", () => {
-  it("forbids the model from inventing any logo or brand mark", () => {
+  it("forbids the model from drawing anything written", () => {
     const spec = buildVideoPrompt(campaign, asset);
-    expect(spec.prompt).toContain(
-      "Do not generate any logo, company logo, brand mark, watermark, or textual brand identity.",
-    );
-    expect(spec.prompt).toContain("applied separately by the deterministic post-production");
-    expect(spec.prompt).toContain("Never write the word EarnRoom");
+    expect(spec.prompt).toContain(PROHIBITION_LINE);
+  });
+
+  it("sends no EarnRoom identity to the model", () => {
+    const spec = buildVideoPrompt(campaign, asset);
+    expect(findBrandTerms(spec.prompt)).toEqual([]);
+    expect(spec.prompt.toLowerCase()).not.toContain("earnroom");
+    expect(spec.prompt.toLowerCase()).not.toContain("make space earn");
   });
 
   it("still carries the approved end-card wording for the deterministic layer", () => {

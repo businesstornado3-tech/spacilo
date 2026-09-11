@@ -1084,7 +1084,14 @@ export const pollCampaignVideo = createServerFn({ method: "POST" })
         seconds: nextSegment.seconds,
         resolution: (row.resolution ?? "720p") as "360p" | "720p" | "1080p",
       });
-      if (!extension.ok) return fail("VIDEO_GENERATION_FAILED", extension.reason);
+      if (!extension.ok) {
+        // A part failed: nothing is stored, nothing is branded and nothing can
+        // be published. The exact stage and the service's own words are kept.
+        return fail(
+          "VIDEO_GENERATION_FAILED",
+          `Part ${segmentIndex + 2} of ${storyboard.segments.length} could not be filmed: ${extension.reason}`,
+        );
+      }
 
       const { data: continued } = await supabase
         .from("marketing_videos")

@@ -7,7 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 import { browserCapability, type BrowserProbe } from "./browser-capability";
-import { checkSpend, costReport, DEFAULT_SPEND_CAPS } from "./cost";
+import { autonomousRemainingPence, checkSpend, costReport, DEFAULT_SPEND_CAPS } from "./cost";
 import { capabilityClass, normaliseHardware } from "./hardware";
 import { mayMoveTo } from "./lifecycle";
 import { moodForObjective, selectMusic, selectVoice, mayUseAsset } from "./media";

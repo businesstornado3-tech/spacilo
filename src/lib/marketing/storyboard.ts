@@ -38,6 +38,36 @@ export type StoryboardBeat = {
 
 export type CaptionCue = { text: string; fromSeconds: number; toSeconds: number };
 
+/** One spoken line of the film's narrative, timed against the beat it belongs to. */
+export type NarrationCue = {
+  role: BeatRole;
+  text: string;
+  fromSeconds: number;
+  toSeconds: number;
+};
+
+/**
+ * Whether the generation service can actually speak the narrative.
+ *
+ * The hosted video models EarnRoom uses produce pictures and ambient sound, not
+ * speech. That is stated here rather than quietly implied: a film whose story
+ * is carried by on-screen wording is never described as narrated.
+ */
+export type NarrationCapability = {
+  /** True only when a service that genuinely speaks the script is in use. */
+  spoken: boolean;
+  detail: string;
+};
+
+export const NARRATION_CAPABILITY: NarrationCapability = {
+  spoken: false,
+  detail:
+    "The video service EarnRoom uses makes pictures and ambient sound only — it cannot speak. The story is written first and then carried on screen, one readable line at a time. No voice is added and none is claimed.",
+};
+
+/** Words a viewer comfortably takes in per second of film. */
+export const NARRATION_WORDS_PER_SECOND = 2.4;
+
 export type StoryboardSegment = {
   index: number;
   fromSeconds: number;

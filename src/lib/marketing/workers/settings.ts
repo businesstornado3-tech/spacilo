@@ -5,7 +5,7 @@
  * table. Paid compute is OFF by default and can only ever be turned on by an
  * explicit founder action.
  */
-import { DEFAULT_SPEND_CAPS, type SpendCaps } from "./cost";
+import { DEFAULT_SPEND_CAPS, MINIMUM_SPEND_CAPS, type SpendCaps } from "./cost";
 import type { WorkerPreference } from "./types";
 
 export type WorkerPreferences = {
@@ -64,15 +64,25 @@ export function readWorkerPreferences(settings: unknown): WorkerPreferences {
     autonomousPublishing: raw["autonomousPublishing"] === true,
     generationPaused: raw["generationPaused"] === true,
     publishingPaused: raw["publishingPaused"] === true,
+    // A cap saved before the 30-second options existed must never make a
+    // selectable option impossible, so every cap is floored at the real cost.
     spend: {
-      perVideoPence: bounded(spend["perVideoPence"], DEFAULT_SPEND_CAPS.perVideoPence, 20_000),
-      perDayPence: bounded(spend["perDayPence"], DEFAULT_SPEND_CAPS.perDayPence, 100_000),
-      perCampaignPence: bounded(
-        spend["perCampaignPence"],
-        DEFAULT_SPEND_CAPS.perCampaignPence,
-        100_000,
+      perVideoPence: Math.max(
+        bounded(spend["perVideoPence"], DEFAULT_SPEND_CAPS.perVideoPence, 20_000),
+        MINIMUM_SPEND_CAPS.perVideoPence,
       ),
-      perMonthPence: bounded(spend["perMonthPence"], DEFAULT_SPEND_CAPS.perMonthPence, 500_000),
+      perDayPence: Math.max(
+        bounded(spend["perDayPence"], DEFAULT_SPEND_CAPS.perDayPence, 100_000),
+        MINIMUM_SPEND_CAPS.perDayPence,
+      ),
+      perCampaignPence: Math.max(
+        bounded(spend["perCampaignPence"], DEFAULT_SPEND_CAPS.perCampaignPence, 100_000),
+        MINIMUM_SPEND_CAPS.perCampaignPence,
+      ),
+      perMonthPence: Math.max(
+        bounded(spend["perMonthPence"], DEFAULT_SPEND_CAPS.perMonthPence, 500_000),
+        MINIMUM_SPEND_CAPS.perMonthPence,
+      ),
     },
   };
 }

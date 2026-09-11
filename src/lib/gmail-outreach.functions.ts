@@ -19,6 +19,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   OUTREACH_SENDER,
   buildOutreachMessage,
+  extractEmailAddress,
   buildRawEmail,
   gmailStatusView,
   looksLikeEmailAddress,
@@ -92,7 +93,7 @@ async function buildSnapshot(admin: any): Promise<GmailOutreachSnapshot> {
   const [checks, sendProofs] = await Promise.all([readChecks(admin), readSendProof(admin)]);
   const lastCheck = checks[0] ?? null;
   const lastGood = checks.find((row) => row.action === "gmail_connection_verified") ?? null;
-  const verifiedAccount = lastGood ? (lastGood.detail.match(/[^\s<]+@[^\s>]+/)?.[0] ?? null) : null;
+  const verifiedAccount = lastGood ? extractEmailAddress(lastGood.detail) : null;
   const lastSendProof = sendProofs.find((row) => row.action === "gmail_send_verified") ?? null;
 
   // Authorise the existing email channel from the facts, before it is read.

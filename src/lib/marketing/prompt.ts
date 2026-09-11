@@ -95,8 +95,8 @@ export function buildVideoPrompt(
   const tagline = taglineFor(campaign.opportunity.key);
   const seconds = Math.min(asset.seconds, def.maxSeconds);
 
-  const prompt = [
-    `A ${seconds}-second ${asset.aspect} marketing film for EarnRoom, a UK peer-to-peer storage marketplace.`,
+  const lines = [
+    `A ${seconds}-second ${asset.aspect} cinematic film set in the UK.`,
     `Situation: ${situation(campaign)}`,
     `Audience: ${campaign.opportunity.audience.replace(/_/g, " ")}. Objective: ${campaign.opportunity.objective.replace(/_/g, " ").toLowerCase()}.`,
     `Platform treatment: ${TREATMENT[asset.platform]}`,
@@ -104,14 +104,20 @@ export function buildVideoPrompt(
     `Visual style: ${profile.visualStyle} Real UK homes, garages, lofts and spare rooms. British people, British streets, British weather. No American signage, no dollar signs, no imperial units.`,
     "Scenes:",
     ...timedScenes(asset, campaign),
-    "Do not generate any logo, company logo, brand mark, watermark, or textual brand identity. EarnRoom branding is applied separately by the deterministic post-production branding layer.",
-    "Never write the word EarnRoom, a web address, or any invented company name into the picture.",
-    `Final 3 seconds: hold a clean, uncluttered end card area on a warm neutral background with space at the centre for a logo and two lines of text. Do not draw any logo, wordmark, emblem or brand symbol yourself — leave that area empty.`,
-    `Spoken closing line — ${asset.cta}`,
-    "Every person shown is a general illustration, not a named or real customer. No testimonials, no on-screen statistics, no prices, no earnings figures.",
-    "No dialogue beyond the voiceover lines above. No extra sound effects beyond quiet room tone and soft, unobtrusive music.",
+    PROHIBITION_LINE,
+    "Photograph only real surroundings; keep shop fronts, packaging, screens and posters out of shot or out of focus so no writing is legible.",
+    `Final 3 seconds: hold a still, clean, warm neutral frame with an empty centre and nothing drawn in it.`,
+    "Every person shown is a general illustration, not a named or real person. No testimonials, no statistics, no prices, no money figures.",
+    "Audio: quiet room tone and soft, unobtrusive music only. No speech, no narration, no spoken names.",
     "Consider micro-detail, expression and timing. Single continuous coherent look across scenes; no scene cuts to unrelated locations.",
-  ].join("\n");
+  ];
+
+  // The wording, the closing card and every brand element are added afterwards
+  // by the deterministic production layer, so no identity reaches the model.
+  const prompt = lines
+    .map((line) => (line === PROHIBITION_LINE ? line : sanitizeProviderText(line)))
+    .filter((line) => line.length > 0)
+    .join("\n");
 
   return {
     campaignId: campaign.id,

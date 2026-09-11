@@ -437,7 +437,7 @@ export const previewVideoWorkerPlan = createServerFn({ method: "POST" })
       },
       paidComputeEnabled: preferences.paidComputeEnabled,
       generationPaused: preferences.generationPaused,
-      spend: { caps: preferences.spend, counts: await paidSpend(supabase, data.campaignId) },
+      spend: { caps: preferences.spend, counts: await paidSpend(supabase) },
     });
 
     if (!plan.ok) {
@@ -576,7 +576,7 @@ export const generateCampaignVideo = createServerFn({ method: "POST" })
       paidComputeEnabled: preferences.paidComputeEnabled,
       confirmedPaid: data.confirmPaid,
       generationPaused: preferences.generationPaused,
-      spend: { caps: preferences.spend, counts: await paidSpend(supabase, campaign.id) },
+      spend: { caps: preferences.spend, counts: await paidSpend(supabase) },
       infrastructurePencePerGpuMinute: config.infrastructurePencePerGpuMinute,
       gpuMinutes,
     });

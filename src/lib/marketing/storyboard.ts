@@ -206,14 +206,20 @@ function captionLines(
   };
 }
 
-/** Instructions the model must obey on every segment of every film. */
+/**
+ * Instructions the model must obey on every segment of every film.
+ *
+ * Deliberately free of any identity: the model is told to draw nothing written
+ * at all, and is never told which company the film is for.
+ */
 function guardrails(asset: PlatformAsset): string[] {
   return [
-    "Do not render any text, caption, subtitle, headline, price, logo, wordmark, emblem, watermark, web address or company name anywhere in the picture. All wording and all EarnRoom branding are added afterwards by EarnRoom's own production layer.",
-    "Never invent a company, brand, logo or website.",
+    PROHIBITION_LINE,
+    "Photograph only real surroundings. Keep shop fronts, packaging, screens and posters out of shot or out of focus so no writing is legible.",
     "Real UK homes, streets, weather and people. No American signage, no dollar signs, no imperial units.",
-    "Every person is a general illustration, not a named or real customer. No testimonials, no on-screen statistics, no earnings figures.",
-    `Vertical ${asset.aspect} framing, cinematic, natural light, unhurried. Keep faces and key objects away from the lower third, which EarnRoom's captions occupy.`,
+    "Every person is a general illustration, not a named or real person. No testimonials, no statistics, no money figures.",
+    `Vertical ${asset.aspect} framing, cinematic, natural light, unhurried. Keep faces and key objects out of the lower third of the frame, which is reserved and must stay clear.`,
+    "Audio: natural room tone and quiet, unobtrusive music only. No speech, no narration, no spoken names.",
   ];
 }
 

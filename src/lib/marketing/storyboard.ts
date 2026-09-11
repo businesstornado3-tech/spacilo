@@ -21,6 +21,7 @@
  */
 import { CREATIVE_TREATMENTS, treatmentDirectives } from "./creative";
 import { PROVIDER_MAX_SEGMENT_SECONDS } from "./paid-presets";
+import { PROHIBITION_LINE, findBrandTerms, sanitizeProviderText } from "./prompt-safety";
 import type { MarketingCampaign, PlatformAsset } from "./types";
 
 export type BeatRole = "HOOK" | "PERSON" | "PROBLEM" | "SOLUTION" | "PAYOFF" | "END_CARD";

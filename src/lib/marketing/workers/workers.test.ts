@@ -247,7 +247,7 @@ describe("cost transparency", () => {
     );
     expect(decision.allowed).toBe(false);
     // Founder spending must not be what stops it.
-    expect(!decision.allowed && decision.reason).toContain("automatic");
+    expect(!decision.allowed && decision.reason).toContain("Automatic video making");
   });
 
   it("counts only automatic spend against the automatic budget", () => {

@@ -115,9 +115,7 @@ export function gmailStatusView(input: GmailStatusInput): GmailStatusView {
   if (!input.channelMayTransmit) {
     return {
       status: "SENDING_UNAVAILABLE",
-      detail:
-        input.channelBlockReason ??
-        "The email channel is not authorised to transmit yet.",
+      detail: input.channelBlockReason ?? "The email channel is not authorised to transmit yet.",
       sendingReady: false,
       canTestSend: false,
       action: "NONE",

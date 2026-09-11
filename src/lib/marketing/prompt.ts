@@ -14,6 +14,7 @@
 import { brandProfile, taglineFor } from "./brand";
 import { CREATIVE_TREATMENTS, treatmentDirectives } from "./creative";
 import { definition } from "./platforms";
+import { PROHIBITION_LINE, sanitizeProviderText } from "./prompt-safety";
 import type { AspectRatio, MarketingCampaign, PlatformAsset, PlatformId } from "./types";
 
 /** How each platform wants the same story treated. */

@@ -110,7 +110,11 @@ describe("founder video route cards", () => {
   it("treats an offline worker as not connected and keeps its own detail", () => {
     const card = founderCard({
       mode: "LOCAL",
-      worker: worker({ mode: "LOCAL", status: "OFFLINE", detail: "Last check-in was 2 hours ago." }),
+      worker: worker({
+        mode: "LOCAL",
+        status: "OFFLINE",
+        detail: "Last check-in was 2 hours ago.",
+      }),
       paidComputeEnabled: false,
     });
     expect(card.status).toBe("NOT CONNECTED");

@@ -134,7 +134,9 @@ describe("timed on-screen wording", () => {
   });
 
   it("never lets wording run into the EarnRoom card", () => {
-    const built = withCaptions([{ text: "Book only the weeks you need", fromSeconds: 24, toSeconds: 30 }]);
+    const built = withCaptions([
+      { text: "Book only the weeks you need", fromSeconds: 24, toSeconds: 30 },
+    ]);
     for (const cue of built.captions) {
       expect(cue.toSeconds).toBeLessThanOrEqual(built.endCard.fromSeconds);
     }

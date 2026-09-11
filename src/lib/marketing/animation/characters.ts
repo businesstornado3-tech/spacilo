@@ -13,10 +13,7 @@
  */
 
 export type CharacterId =
-  | "RENTER_CHARACTER_01"
-  | "HOST_CHARACTER_01"
-  | "NEUTRAL_CHARACTER_01"
-  | "SECONDARY_CHARACTER_01";
+  "RENTER_CHARACTER_01" | "HOST_CHARACTER_01" | "NEUTRAL_CHARACTER_01" | "SECONDARY_CHARACTER_01";
 
 export type CharacterRole = "renter" | "host" | "neutral" | "secondary";
 

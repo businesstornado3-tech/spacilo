@@ -81,9 +81,7 @@ describe("simple video generation modes", () => {
     expect(card.status).toBe("INSTALLER NOT AVAILABLE");
     expect(card.available).toBe(false);
     expect(card.action).toBe("NONE");
-    expect(card.statusNote).toBe(
-      "The EarnRoom Video Worker installer has not been published yet.",
-    );
+    expect(card.statusNote).toBe("The EarnRoom Video Worker installer has not been published yet.");
   });
 
   it("offers a real download only once an installer exists", () => {

@@ -145,9 +145,7 @@ function drawBranding(
      * One major line at a time. While a storyboard caption is on screen the
      * permanent tagline stands down, so the two can never collide.
      */
-    const caption = plan.captions.find(
-      (cue) => time >= cue.fromSeconds && time < cue.toSeconds,
-    );
+    const caption = plan.captions.find((cue) => time >= cue.fromSeconds && time < cue.toSeconds);
     if (caption) {
       const size = Math.round(height * 0.046);
       ctx.font = `700 ${size}px ${FONT_DISPLAY}`;

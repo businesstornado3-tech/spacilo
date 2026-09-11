@@ -136,7 +136,9 @@ describe("story engine", () => {
   });
 
   it("chooses the moving-house template for a moving campaign", () => {
-    expect(selectTemplate({ text: "moving house next month", side: "renter" })).toBe("MOVING_HOUSE");
+    expect(selectTemplate({ text: "moving house next month", side: "renter" })).toBe(
+      "MOVING_HOUSE",
+    );
   });
 
   it("chooses a host template for an unused garage campaign", () => {
@@ -147,7 +149,11 @@ describe("story engine", () => {
 
   it("is deterministic: the same campaign always picks the same template", () => {
     const first = buildStoryboard({ story: movingStory, asset: asset("instagram"), sceneCount: 5 });
-    const second = buildStoryboard({ story: movingStory, asset: asset("instagram"), sceneCount: 5 });
+    const second = buildStoryboard({
+      story: movingStory,
+      asset: asset("instagram"),
+      sceneCount: 5,
+    });
     expect(JSON.stringify(first)).toBe(JSON.stringify(second));
   });
 
@@ -173,7 +179,9 @@ describe("story engine", () => {
       const beats = template(id).beats.map((beat) => beat.beat);
       expect(beats[0] === "hook" || beats[0] === "problem").toBe(true);
       expect(beats).toContain("brand");
-      expect(beats.some((beat) => ["discovery", "solution", "connection"].includes(beat))).toBe(true);
+      expect(beats.some((beat) => ["discovery", "solution", "connection"].includes(beat))).toBe(
+        true,
+      );
     }
   });
 
@@ -211,7 +219,10 @@ describe("planned advertisement", () => {
     expect(tall.width).toBe(720);
     expect(square.width).toBe(720);
     expect(wide.width).toBe(1280);
-    expect(new Set([tall.composition.captionY, square.composition.captionY, wide.composition.captionY]).size).toBe(3);
+    expect(
+      new Set([tall.composition.captionY, square.composition.captionY, wide.composition.captionY])
+        .size,
+    ).toBe(3);
   });
 
   it("passes the deterministic quality gate", () => {

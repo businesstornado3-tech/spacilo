@@ -147,9 +147,21 @@ function motionOffsets(motion: CharacterMotion, elapsed: number, height: number)
   const walkCycle = Math.sin(elapsed * 6.2);
   switch (motion) {
     case "walkIn":
-      return { dx: -(1 - easeOut(elapsed / 1.1)) * height * 0.55, dy: breathe, swing: walkCycle, head: 0, arm: 0 };
+      return {
+        dx: -(1 - easeOut(elapsed / 1.1)) * height * 0.55,
+        dy: breathe,
+        swing: walkCycle,
+        head: 0,
+        arm: 0,
+      };
     case "walkOut":
-      return { dx: easeOut(elapsed / 1.1) * height * 0.55, dy: breathe, swing: walkCycle, head: 0, arm: 0 };
+      return {
+        dx: easeOut(elapsed / 1.1) * height * 0.55,
+        dy: breathe,
+        swing: walkCycle,
+        head: 0,
+        arm: 0,
+      };
     case "lookAround":
       return { dx: 0, dy: breathe, swing: 0, head: Math.sin(elapsed * 1.5) * 0.28, arm: 0 };
     case "lookAtPhone":
@@ -158,15 +170,33 @@ function motionOffsets(motion: CharacterMotion, elapsed: number, height: number)
     case "point":
       return { dx: 0, dy: breathe, swing: 0, head: 0.06, arm: Math.sin(elapsed * 2.1) * 0.16 };
     case "pickUp":
-      return { dx: 0, dy: breathe - easeOut(elapsed / 1.2) * height * 0.02, swing: 0, head: -0.1, arm: 0 };
+      return {
+        dx: 0,
+        dy: breathe - easeOut(elapsed / 1.2) * height * 0.02,
+        swing: 0,
+        head: -0.1,
+        arm: 0,
+      };
     case "putDown":
-      return { dx: 0, dy: breathe + easeOut(elapsed / 1.2) * height * 0.03, swing: 0, head: -0.12, arm: 0 };
+      return {
+        dx: 0,
+        dy: breathe + easeOut(elapsed / 1.2) * height * 0.03,
+        swing: 0,
+        head: -0.12,
+        arm: 0,
+      };
     case "nod":
       return { dx: 0, dy: breathe, swing: 0, head: Math.sin(elapsed * 3.2) * 0.12, arm: 0 };
     case "smallWave":
       return { dx: 0, dy: breathe, swing: 0, head: 0.04, arm: Math.sin(elapsed * 6) * 0.35 };
     case "relief":
-      return { dx: 0, dy: breathe - Math.sin(elapsed * 1.2) * height * 0.006, swing: 0, head: 0.08, arm: 0 };
+      return {
+        dx: 0,
+        dy: breathe - Math.sin(elapsed * 1.2) * height * 0.006,
+        swing: 0,
+        head: 0.08,
+        arm: 0,
+      };
     case "idle":
     default:
       return { dx: 0, dy: breathe, swing: 0, head: Math.sin(elapsed * 0.8) * 0.03, arm: 0 };
@@ -291,8 +321,16 @@ export function drawCharacterFigure(ctx: CanvasRenderingContext2D, request: Figu
   stroke(ctx, [farHip, farKnee, farFoot], limbWidth, shade(design.trousers, -0.12));
 
   const farShoulder: Point = { x: shoulder.x - H * 0.06 * f, y: shoulder.y + H * 0.02 };
-  const farElbow = limb(farShoulder, (spec.armFar.shoulder + move.arm - move.swing * 0.3) * f, H * 0.2);
-  const farHand = limb(farElbow, (spec.armFar.shoulder + spec.armFar.elbow + move.arm) * f, H * 0.19);
+  const farElbow = limb(
+    farShoulder,
+    (spec.armFar.shoulder + move.arm - move.swing * 0.3) * f,
+    H * 0.2,
+  );
+  const farHand = limb(
+    farElbow,
+    (spec.armFar.shoulder + spec.armFar.elbow + move.arm) * f,
+    H * 0.19,
+  );
   stroke(ctx, [farShoulder, farElbow, farHand], limbWidth * 0.86, shade(design.sleeve, -0.1));
 
   /* near leg */
@@ -305,7 +343,15 @@ export function drawCharacterFigure(ctx: CanvasRenderingContext2D, request: Figu
   ctx.fillStyle = design.shoes;
   for (const foot of [farFoot, nearFoot]) {
     ctx.beginPath();
-    ctx.ellipse(foot.x + H * 0.015 * f, foot.y + H * 0.012, H * 0.045, H * 0.018, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      foot.x + H * 0.015 * f,
+      foot.y + H * 0.012,
+      H * 0.045,
+      H * 0.018,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -335,20 +381,60 @@ export function drawCharacterFigure(ctx: CanvasRenderingContext2D, request: Figu
   ctx.fillStyle = design.hair;
   ctx.beginPath();
   if (design.hairStyle === "bob") {
-    ctx.ellipse(headCentre.x, headCentre.y - headR * 0.1, headR * 1.02, headR * 1.02, 0, Math.PI, Math.PI * 2);
+    ctx.ellipse(
+      headCentre.x,
+      headCentre.y - headR * 0.1,
+      headR * 1.02,
+      headR * 1.02,
+      0,
+      Math.PI,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(headCentre.x - headR * 0.9, headCentre.y + headR * 0.15, headR * 0.24, headR * 0.6, 0, 0, Math.PI * 2);
-    ctx.ellipse(headCentre.x + headR * 0.9, headCentre.y + headR * 0.15, headR * 0.24, headR * 0.6, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      headCentre.x - headR * 0.9,
+      headCentre.y + headR * 0.15,
+      headR * 0.24,
+      headR * 0.6,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.ellipse(
+      headCentre.x + headR * 0.9,
+      headCentre.y + headR * 0.15,
+      headR * 0.24,
+      headR * 0.6,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   } else if (design.hairStyle === "tied") {
-    ctx.ellipse(headCentre.x, headCentre.y - headR * 0.16, headR * 0.98, headR * 0.86, 0, Math.PI, Math.PI * 2);
+    ctx.ellipse(
+      headCentre.x,
+      headCentre.y - headR * 0.16,
+      headR * 0.98,
+      headR * 0.86,
+      0,
+      Math.PI,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.beginPath();
     ctx.arc(headCentre.x - headR * f, headCentre.y - headR * 0.5, headR * 0.34, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    ctx.ellipse(headCentre.x, headCentre.y - headR * 0.2, headR * 0.96, headR * 0.8, 0, Math.PI, Math.PI * 2);
+    ctx.ellipse(
+      headCentre.x,
+      headCentre.y - headR * 0.2,
+      headR * 0.96,
+      headR * 0.8,
+      0,
+      Math.PI,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -356,8 +442,16 @@ export function drawCharacterFigure(ctx: CanvasRenderingContext2D, request: Figu
 
   /* near arm, plus whatever is being carried */
   const nearShoulder: Point = { x: shoulder.x + H * 0.06 * f, y: shoulder.y + H * 0.02 };
-  const nearElbow = limb(nearShoulder, (spec.armNear.shoulder - move.arm + move.swing * 0.3) * f, H * 0.2);
-  const nearHand = limb(nearElbow, (spec.armNear.shoulder + spec.armNear.elbow - move.arm) * f, H * 0.19);
+  const nearElbow = limb(
+    nearShoulder,
+    (spec.armNear.shoulder - move.arm + move.swing * 0.3) * f,
+    H * 0.2,
+  );
+  const nearHand = limb(
+    nearElbow,
+    (spec.armNear.shoulder + spec.armNear.elbow - move.arm) * f,
+    H * 0.19,
+  );
 
   if (spec.carry === "box" || spec.carry === "boxes") {
     const centre = { x: (farHand.x + nearHand.x) / 2, y: (farHand.y + nearHand.y) / 2 - H * 0.02 };

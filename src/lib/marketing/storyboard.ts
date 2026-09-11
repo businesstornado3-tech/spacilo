@@ -251,7 +251,10 @@ export function buildStoryboard(input: {
 }): VideoStoryboard {
   const { campaign, asset } = input;
   const seconds = Math.max(5, Math.round(input.seconds));
-  const maxSegment = Math.max(3, Math.round(input.maxSegmentSeconds ?? PROVIDER_MAX_SEGMENT_SECONDS));
+  const maxSegment = Math.max(
+    3,
+    Math.round(input.maxSegmentSeconds ?? PROVIDER_MAX_SEGMENT_SECONDS),
+  );
   const seed = seedOf(`${campaign.id}:${asset.id}:${seconds}`);
   const shares = seconds >= 20 ? LONG_SHARES : SHORT_SHARES;
   const lengths = beatLengths(shares, seconds, seed);
@@ -273,14 +276,19 @@ export function buildStoryboard(input: {
 
   // One major line at a time: each caption ends before the next one begins,
   // and every line is gone before the closing EarnRoom card starts.
-  const endCardFromSeconds = beats.find((beat) => beat.role === "END_CARD")?.fromSeconds ?? seconds - END_CARD_SECONDS;
+  const endCardFromSeconds =
+    beats.find((beat) => beat.role === "END_CARD")?.fromSeconds ?? seconds - END_CARD_SECONDS;
   const captions: CaptionCue[] = [];
   for (const beat of beats) {
     if (!beat.caption) continue;
     const to = Math.min(beat.toSeconds, endCardFromSeconds) - CAPTION_GAP_SECONDS;
     const from = beat.fromSeconds + (beat.fromSeconds === 0 ? 0.3 : CAPTION_GAP_SECONDS / 2);
     if (to - from < 1) continue;
-    captions.push({ text: beat.caption, fromSeconds: Number(from.toFixed(2)), toSeconds: Number(to.toFixed(2)) });
+    captions.push({
+      text: beat.caption,
+      fromSeconds: Number(from.toFixed(2)),
+      toSeconds: Number(to.toFixed(2)),
+    });
   }
 
   const treatment = CREATIVE_TREATMENTS.find(

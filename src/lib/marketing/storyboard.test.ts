@@ -36,10 +36,30 @@ const campaign = {
     hook: "Your completion date moved. The boxes did not.",
     renterCta: "Find storage near you",
     scenes: [
-      { seconds: 5, visual: "A cluttered hallway.", voiceover: "No room left.", caption: "No room left" },
-      { seconds: 5, visual: "A family beside boxes.", voiceover: "Nowhere to go.", caption: "Nowhere to put it" },
-      { seconds: 10, visual: "A neighbour's empty garage.", voiceover: "Space nearby.", caption: "Space nearby" },
-      { seconds: 10, visual: "The hallway clear again.", voiceover: "Room back.", caption: "Room back again" },
+      {
+        seconds: 5,
+        visual: "A cluttered hallway.",
+        voiceover: "No room left.",
+        caption: "No room left",
+      },
+      {
+        seconds: 5,
+        visual: "A family beside boxes.",
+        voiceover: "Nowhere to go.",
+        caption: "Nowhere to put it",
+      },
+      {
+        seconds: 10,
+        visual: "A neighbour's empty garage.",
+        voiceover: "Space nearby.",
+        caption: "Space nearby",
+      },
+      {
+        seconds: 10,
+        visual: "The hallway clear again.",
+        voiceover: "Room back.",
+        caption: "Room back again",
+      },
     ],
   },
 } as unknown as MarketingCampaign;
@@ -110,7 +130,9 @@ describe("on-screen wording", () => {
   });
 
   it("trims a long line on a word boundary rather than mid-word", () => {
-    const line = shortLine("Find affordable, insured, flexible storage space near you this weekend");
+    const line = shortLine(
+      "Find affordable, insured, flexible storage space near you this weekend",
+    );
     expect(line.length).toBeLessThanOrEqual(MAX_CAPTION_CHARS);
     expect(line.endsWith(" ")).toBe(false);
   });

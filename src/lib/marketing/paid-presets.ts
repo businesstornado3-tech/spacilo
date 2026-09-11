@@ -70,7 +70,8 @@ export const PAID_PRESETS: Record<PaidQuality, PaidPreset> = {
   HIGHEST: {
     quality: "HIGHEST",
     title: "Highest quality",
-    description: "The same 30-second film at the highest resolution the service offers: 1080 × 1920.",
+    description:
+      "The same 30-second film at the highest resolution the service offers: 1080 × 1920.",
     resolution: "1080p",
     seconds: 30,
     aspect: "9:16",

@@ -549,9 +549,16 @@ export const publishVideoToPlatform = createServerFn({ method: "POST" })
       const stored = await readInstagramToken();
       accessToken = stored.token;
       if (!accessToken) return refuse(stored.detail);
-    } else {
+    } else if (platform === "youtube" || platform === "youtube_shorts") {
       const { youtubeAccessToken } = await import("@/lib/marketing/youtube-token.server");
       const stored = await youtubeAccessToken();
+      accessToken = stored.token;
+      if (!accessToken) return refuse(stored.detail);
+    } else {
+      // LinkedIn, TikTok and Pinterest each read their OWN stored
+      // authorisation; no platform is ever handed another one's token.
+      const { platformAccessToken } = await import("@/lib/marketing/platform-token.server");
+      const stored = await platformAccessToken(platform);
       accessToken = stored.token;
       if (!accessToken) return refuse(stored.detail);
     }

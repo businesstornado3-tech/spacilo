@@ -9,7 +9,14 @@
  * Pure module: no network, no database, no clock. It never reaches a paid
  * route on its own and never claims a cost it cannot justify.
  */
-import { checkSpend, costReport, type CostReport, type SpendCaps, type SpendCounts } from "./cost";
+import {
+  checkSpend,
+  costReport,
+  type CostReport,
+  type GenerationInitiator,
+  type SpendCaps,
+  type SpendCounts,
+} from "./cost";
 import type { JobPhase } from "./lifecycle";
 import { selectWorker } from "./selection";
 import { WORKER_LABEL } from "./types";
@@ -155,6 +162,8 @@ export function planExecution(input: {
   generationPaused?: boolean;
   requiredCapability?: CapabilityClass;
   spend?: { caps: SpendCaps; counts: SpendCounts };
+  /** MANUAL by default: founder-initiated work is never budget-limited. */
+  initiator?: GenerationInitiator;
   infrastructurePencePerGpuMinute?: number | null;
   gpuMinutes?: number | null;
 }): ExecutionPlan {

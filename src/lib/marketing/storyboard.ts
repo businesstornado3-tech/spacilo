@@ -286,25 +286,36 @@ function segmentPrompt(input: {
   treatmentLines: string[];
 }): string {
   const { campaign, asset, beats, index, fromSeconds, seconds } = input;
+  /*
+   * The service is never told it is filming an instalment: numbered parts
+   * invite a fresh establishing shot and a new mini-story every time. It is
+   * told it is filming one continuous take, and where in that take it is.
+   */
   const opening =
     index === 0
-      ? `Part 1 of ${Math.ceil(input.total / PROVIDER_MAX_SEGMENT_SECONDS)} of a single ${input.total}-second ${asset.aspect} cinematic film. Establish the setting, the person and the situation.`
-      : `Part ${index + 1} of ${Math.ceil(input.total / PROVIDER_MAX_SEGMENT_SECONDS)}. The scene continues, unbroken, from the previous part of the same ${input.total}-second film: the same people, the same place, the same light, the same lens and the same grade, carrying straight on from the final frame. Do not restart the story, do not repeat the opening shot, and do not cut to an unrelated location.`;
+      ? `The opening of one single continuous ${input.total}-second ${asset.aspect} cinematic film, filmed as one unbroken take. Establish the place, the person and the situation calmly.`
+      : `The same single continuous ${input.total}-second film, already ${fromSeconds} seconds in and still running. Carry straight on from the final frame of the footage supplied: do not restart, do not re-establish, do not repeat the opening shot and do not cut to an unrelated place.`;
+
+  const continuity =
+    index === 0
+      ? "Keep one cast and one location: whoever appears in the first seconds stays for the whole film."
+      : "Continuity is absolute: the same person, the same face, the same clothes and hair, the same rooms and street, the same objects, the same weather and time of day, the same lens, the same colour grade and the same unhurried mood as the supplied footage.";
 
   const timed = beats.map((beat) => {
     const from = Math.max(0, Math.round(beat.fromSeconds - fromSeconds));
     const to = Math.min(seconds, Math.round(beat.toSeconds - fromSeconds));
-    return `[${from}-${to}s] ${beat.role.replace("_", " ").toLowerCase()}: ${beat.direction}`;
+    return `[${from}-${to}s] ${beat.direction}`;
   });
 
   const prompt = [
     opening,
+    continuity,
     `Situation: ${sanitizeProviderText(campaign.opportunity.problem)}`,
     `Audience: ${sanitizeProviderText(campaign.opportunity.audience.replace(/_/g, " "))}.`,
     ...input.treatmentLines.map(sanitizeProviderText),
-    "Shot plan for this part, timed from its own start:",
+    "What happens in these seconds, timed from the first frame of this footage:",
     ...timed,
-    "One continuous, coherent piece of filmmaking with a small number of deliberate shots. Give each shot room to breathe; do not cram the whole story into the first seconds.",
+    "One coherent piece of filmmaking with two or three deliberate shots at most. Give each shot room to breathe, move the camera slowly, and do not cram the whole story into the first seconds.",
     ...guardrails(asset),
   ].join("\n");
 

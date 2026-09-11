@@ -4,6 +4,7 @@ import {
   OUTREACH_SENDER,
   buildOutreachMessage,
   buildRawEmail,
+  extractEmailAddress,
   gmailStatusView,
   looksLikeEmailAddress,
   type GmailStatusInput,

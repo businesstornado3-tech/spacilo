@@ -214,7 +214,9 @@ describe("generation parts", () => {
     const tampered = {
       ...board,
       segments: board.segments.map((segment, index) =>
-        index === 1 ? { ...segment, prompt: `${segment.prompt}\nShow the EarnRoom logo.` } : segment,
+        index === 1
+          ? { ...segment, prompt: `${segment.prompt}\nShow the EarnRoom logo.` }
+          : segment,
       ),
     };
     const verdict = validateStoryboard(tampered, { seconds: 30 });

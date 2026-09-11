@@ -25,6 +25,13 @@ export const PROHIBITION_LINE =
 
 /** Identity terms: never acceptable in a provider-facing prompt. */
 const IDENTITY_PATTERNS: { pattern: RegExp; replacement: string }[] = [
+  // A branded object ("the EarnRoom logo on the wall") is removed whole, so no
+  // stray noun is left standing in a scene direction.
+  {
+    pattern:
+      /\b(the\s+)?(earn\s?room|spacilo)('s)?\s+(logo(type)?s?|wordmarks?|watermarks?|signs?|banners?|vans?|brand\w*|name)\b/gi,
+    replacement: "",
+  },
   { pattern: /earnroom\.co\.uk/gi, replacement: "" },
   { pattern: /\bmake\s+space\s+earn\b\.?/gi, replacement: "" },
   { pattern: /\bearn\s?room('s)?\b/gi, replacement: "the storage service" },

@@ -87,7 +87,16 @@ const SKINS = [
   "#6d452c",
   "#523320",
 ];
-const HAIR = ["#1b1512", "#3b2f2a", "#5a3b23", "#7a5230", "#a97d४".replace("४", "4"), "#c9a227", "#8e8e93", "#4a2b2b"];
+const HAIR = [
+  "#1b1512",
+  "#3b2f2a",
+  "#5a3b23",
+  "#7a5230",
+  "#a97d44",
+  "#c9a227",
+  "#8e8e93",
+  "#4a2b2b",
+];
 const HAIR_STYLES: CharacterDesign["hairStyle"][] = ["short", "bob", "tied"];
 const TOPS = [
   "#2f6f8f",

@@ -818,7 +818,7 @@ export async function renderAnimatedPlan(
       music: audioWritten && plan.audio.music.length > 0,
       soundEffects: audioWritten && plan.audio.sfx.length > 0,
       spokenNarration: false,
-      note: audioWritten ? audioNote : audioNote,
+      note: audioNote,
     },
     outcome: {
       width,

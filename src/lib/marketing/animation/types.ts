@@ -206,6 +206,10 @@ export type AnimatedPlan = {
     side: "renter" | "host" | "both";
     characters: readonly string[];
   };
+  /** Who this campaign's film shows, how it is graded, opened and shot. */
+  casting: Casting;
+  /** Comparable description of what this film looks like. */
+  signature: string;
   branding: AppliedBranding;
   composition: Composition;
   /** The official EarnRoom artwork, taken from the app's own asset pointers. */

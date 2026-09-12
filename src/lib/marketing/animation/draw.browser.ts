@@ -15,6 +15,7 @@ import {
   type Expression,
   type Pose,
 } from "./characters";
+import type { CharacterLook } from "./casting";
 import { environment, type EnvShape, type EnvironmentId } from "./environments";
 
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));

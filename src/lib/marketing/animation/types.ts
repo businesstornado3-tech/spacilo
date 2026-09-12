@@ -8,6 +8,7 @@
  * Pure module: no canvas, no DOM, no network, no clock.
  */
 import type { AspectRatio, PlatformId } from "../types";
+import type { BrowserAudioPlan } from "./audio";
 import type { EnvironmentId } from "./environments";
 import type { CameraShot, CharacterCue, Framing, Mood, StoryBeat, StoryTemplateId } from "./story";
 

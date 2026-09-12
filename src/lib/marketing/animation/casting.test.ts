@@ -9,6 +9,8 @@ import {
   similarity,
   visualSignature,
   TOO_SIMILAR,
+  type Casting,
+  type VisualSignatureInput,
 } from "./casting";
 import { buildAnimatedPlan } from "./plan";
 import type { CampaignStory, PlatformAsset } from "../types";
@@ -212,9 +214,7 @@ describe("casting", () => {
   });
 });
 
-function describeFor(casting: Parameters<typeof visualSignature>[0]["looks"] extends never
-  ? never
-  : { opening: string; cameraStyle: string; paletteName: string; looks: Record<string, never> }) {
+function describeFor(casting: Casting): VisualSignatureInput {
   return {
     storyType: "MOVING_HOUSE",
     side: "renter",

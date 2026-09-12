@@ -58,9 +58,11 @@ const COPY: Record<
 > = {
   BROWSER: {
     title: "Browser",
-    description: "Generate directly in your browser. Branded EarnRoom animation, made at no cost.",
+    description:
+      "Make a 30 second branded EarnRoom film here in your browser, with music and sound effects, ready to publish. No cost.",
     cost: "£0",
-    limitation: "Animated EarnRoom film, not AI-generated live-action footage.",
+    limitation:
+      "An animated EarnRoom film with music and sound effects — not live-action footage, and there is no spoken voice.",
   },
   LOCAL: {
     title: "Computer",

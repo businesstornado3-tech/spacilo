@@ -216,9 +216,10 @@ describe("planned advertisement", () => {
     const tall = plan({ asset: asset("instagram", "9:16") });
     const square = plan({ asset: asset("instagram", "1:1") });
     const wide = plan({ asset: asset("youtube", "16:9") });
-    expect(tall.width).toBe(720);
-    expect(square.width).toBe(720);
-    expect(wide.width).toBe(1280);
+    expect(tall.width).toBe(1080);
+    expect(tall.height).toBe(1920);
+    expect(square.width).toBe(1080);
+    expect(wide.width).toBe(1920);
     expect(
       new Set([tall.composition.captionY, square.composition.captionY, wide.composition.captionY])
         .size,

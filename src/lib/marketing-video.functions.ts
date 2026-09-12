@@ -1617,6 +1617,20 @@ export const storeAnimatedVideo = createServerFn({ method: "POST" })
           ])
           .default("DRAFT"),
         qualityFailures: z.array(z.string().max(300)).max(20).default([]),
+        /**
+         * What the browser says it put in the sound track. It is never taken on
+         * trust: the stored file is probed and the two must agree.
+         */
+        audio: z
+          .object({
+            present: z.boolean(),
+            codec: z.string().max(40).nullable().default(null),
+            music: z.boolean().default(false),
+            soundEffects: z.boolean().default(false),
+            spokenNarration: z.literal(false).default(false),
+            note: z.string().max(300).default(""),
+          })
+          .optional(),
         /** Base64 MP4 produced locally. Capped so a request cannot be abused. */
         mp4Base64: z.string().min(100).max(40_000_000),
       })
@@ -1681,7 +1695,17 @@ export const storeAnimatedVideo = createServerFn({ method: "POST" })
         brandingNotes: data.brandingNotes,
         qualityStatus: data.qualityStatus,
         qualityFailures: data.qualityFailures,
-        audio: "none",
+        audio: data.audio
+          ? {
+              ...data.audio,
+              // The probe, not the browser, has the last word on this.
+              trackInFile: media.probe.hasAudioTrack === true,
+            }
+          : {
+              present: false,
+              spokenNarration: false,
+              trackInFile: media.probe.hasAudioTrack === true,
+            },
       },
       media_probe: media.probe,
       prompt: asset?.hook ?? null,
@@ -1736,10 +1760,20 @@ export const storeAnimatedVideo = createServerFn({ method: "POST" })
     // A browser-made clip is only ready when the deterministic quality gate
     // passed as well: the real logo drawn, the story intact, nothing missing.
     const qualityPassed = data.qualityStatus === "PRODUCTION_READY";
-    const passed = brand.passed && qualityPassed;
+    // A browser video is meant to carry its own music and sound effects. If the
+    // browser claimed sound the stored file does not have, that is a failure —
+    // the metadata is never allowed to say something the file does not.
+    const audioClaimed = data.audio?.present === true;
+    const audioInFile = media.probe.hasAudioTrack === true;
+    const audioHonest = audioClaimed === audioInFile;
+    const passed = brand.passed && qualityPassed && audioHonest && audioInFile;
     const failureText = [
       ...(brand.passed ? [] : brand.failures),
       ...(qualityPassed ? [] : data.qualityFailures),
+      ...(audioHonest
+        ? []
+        : ["The sound track recorded in the file does not match what the browser reported."]),
+      ...(audioInFile ? [] : ["The finished video has no sound, so it is not ready to publish."]),
     ].join(" ");
 
     const { data: stored } = await supabase

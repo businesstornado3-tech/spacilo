@@ -63,7 +63,10 @@ describe("simple video generation modes", () => {
     const card = find(cards(), "BROWSER");
     expect(card.title).toBe("Browser");
     expect(card.costLine).toBe("£0");
-    expect(card.limitation).toBe("Animated EarnRoom film, not AI-generated live-action footage.");
+    expect(card.limitation).toContain("not live-action footage");
+    expect(card.limitation).toContain("no spoken voice");
+    expect(card.description).toContain("30 second");
+    expect(card.description).toContain("music and sound effects");
     const words = `${card.title} ${card.description} ${card.limitation}`.toLowerCase();
     for (const banned of ["cinematic AI", "photorealistic", "production-quality", "high-quality"]) {
       expect(words).not.toContain(banned.toLowerCase());

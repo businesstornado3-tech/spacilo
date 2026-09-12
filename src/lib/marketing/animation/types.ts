@@ -8,6 +8,7 @@
  * Pure module: no canvas, no DOM, no network, no clock.
  */
 import type { AspectRatio, PlatformId } from "../types";
+import type { BrowserAudioPlan } from "./audio";
 import type { EnvironmentId } from "./environments";
 import type { CameraShot, CharacterCue, Framing, Mood, StoryBeat, StoryTemplateId } from "./story";
 
@@ -145,8 +146,14 @@ export type AnimatedScene = {
   narration: string;
   /** Where the real EarnRoom artwork is drawn in this scene, if anywhere. */
   logo: "none" | "watermark" | "endcard";
-  transition: "cut" | "fade";
+  /**
+   * How this scene arrives out of the one before it. Varied deliberately: a
+   * film that cuts the same way every time reads as a slide deck.
+   */
+  transition: SceneTransition;
 };
+
+export type SceneTransition = "cut" | "fade" | "slide" | "zoom" | "light";
 
 /** Branding actually applied, after the platform's own rules are honoured. */
 export type AppliedBranding = {
@@ -186,8 +193,12 @@ export type AnimatedPlan = {
   aspect: AspectRatio;
   width: number;
   height: number;
+  /** Which of the two allowed frame sizes this plan was composed for. */
+  frameQuality: FrameQuality;
   fps: number;
   seconds: number;
+  /** The procedural soundtrack this film is rendered with. */
+  audio: BrowserAudioPlan;
   scenes: readonly AnimatedScene[];
   /** The deterministic storyboard this plan was built from. */
   storyboard: {
@@ -209,13 +220,35 @@ export type AnimatedPlan = {
   digest: string;
 };
 
+/**
+ * The full-size frame every browser video aims at. 1080-class vertical is what
+ * Reels, Shorts and TikTok actually want.
+ */
 export const FRAME_SIZES: Record<AspectRatio, { width: number; height: number }> = {
-  // 720p-class frames: sharp on every platform, and small enough to send back
-  // to the server in one request without a paid upload path.
+  "9:16": { width: 1080, height: 1920 },
+  "1:1": { width: 1080, height: 1080 },
+  "16:9": { width: 1920, height: 1080 },
+};
+
+/**
+ * The controlled fallback, used only when the machine cannot encode the full
+ * size. The shape, the length, the story, the audio and the branding are all
+ * unchanged — only the pixel count drops.
+ */
+export const FALLBACK_FRAME_SIZES: Record<AspectRatio, { width: number; height: number }> = {
   "9:16": { width: 720, height: 1280 },
   "1:1": { width: 720, height: 720 },
   "16:9": { width: 1280, height: 720 },
 };
+
+export type FrameQuality = "TARGET" | "FALLBACK";
+
+export function frameSize(
+  aspect: AspectRatio,
+  quality: FrameQuality = "TARGET",
+): { width: number; height: number } {
+  return quality === "FALLBACK" ? FALLBACK_FRAME_SIZES[aspect] : FRAME_SIZES[aspect];
+}
 
 /**
  * Each aspect ratio is composed on its own terms — the tall frame gives the

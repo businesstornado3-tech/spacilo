@@ -114,6 +114,15 @@ export function useCampaignVideos(campaignId: string | null) {
           | "PRODUCTION_READY"
           | "VALIDATION_FAILED";
         qualityFailures: string[];
+        /** What the browser actually recorded into the sound track. */
+        audio?: {
+          present: boolean;
+          codec: string | null;
+          music: boolean;
+          soundEffects: boolean;
+          spokenNarration: false;
+          note: string;
+        };
         mp4Base64: string;
       }) => storeAnimated({ data: { campaignId: campaignId!, ...input } }),
       onSuccess: invalidate,

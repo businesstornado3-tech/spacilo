@@ -192,8 +192,12 @@ export type AnimatedPlan = {
   aspect: AspectRatio;
   width: number;
   height: number;
+  /** Which of the two allowed frame sizes this plan was composed for. */
+  frameQuality: FrameQuality;
   fps: number;
   seconds: number;
+  /** The procedural soundtrack this film is rendered with. */
+  audio: BrowserAudioPlan;
   scenes: readonly AnimatedScene[];
   /** The deterministic storyboard this plan was built from. */
   storyboard: {

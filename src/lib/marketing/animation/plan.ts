@@ -419,6 +419,18 @@ export function buildAnimatedPlan(input: {
     });
   }
 
+  // A short campaign can hand back the same framing for every beat. The film
+  // must still change how close the camera sits, so a deterministic rotation is
+  // applied when the storyboard did not vary it on its own.
+  const storyScenes = scenes.filter((scene) => scene.role !== "endcard");
+  if (storyScenes.length >= 3 && new Set(storyScenes.map((s) => s.framing)).size < 3) {
+    const rotation: Framing[] = ["wide", "medium", "close", "twoShot"];
+    storyScenes.forEach((scene, position) => {
+      scene.framing = rotation[position % rotation.length]!;
+      scene.camera = camera(position, scene.role, scene.shot);
+    });
+  }
+
   const seconds = Number(scenes.reduce((total, scene) => total + scene.seconds, 0).toFixed(2));
 
   const plan: Omit<AnimatedPlan, "digest"> = {

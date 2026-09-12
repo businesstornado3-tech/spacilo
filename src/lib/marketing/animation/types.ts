@@ -219,13 +219,35 @@ export type AnimatedPlan = {
   digest: string;
 };
 
+/**
+ * The full-size frame every browser video aims at. 1080-class vertical is what
+ * Reels, Shorts and TikTok actually want.
+ */
 export const FRAME_SIZES: Record<AspectRatio, { width: number; height: number }> = {
-  // 720p-class frames: sharp on every platform, and small enough to send back
-  // to the server in one request without a paid upload path.
+  "9:16": { width: 1080, height: 1920 },
+  "1:1": { width: 1080, height: 1080 },
+  "16:9": { width: 1920, height: 1080 },
+};
+
+/**
+ * The controlled fallback, used only when the machine cannot encode the full
+ * size. The shape, the length, the story, the audio and the branding are all
+ * unchanged — only the pixel count drops.
+ */
+export const FALLBACK_FRAME_SIZES: Record<AspectRatio, { width: number; height: number }> = {
   "9:16": { width: 720, height: 1280 },
   "1:1": { width: 720, height: 720 },
   "16:9": { width: 1280, height: 720 },
 };
+
+export type FrameQuality = "TARGET" | "FALLBACK";
+
+export function frameSize(
+  aspect: AspectRatio,
+  quality: FrameQuality = "TARGET",
+): { width: number; height: number } {
+  return quality === "FALLBACK" ? FALLBACK_FRAME_SIZES[aspect] : FRAME_SIZES[aspect];
+}
 
 /**
  * Each aspect ratio is composed on its own terms — the tall frame gives the

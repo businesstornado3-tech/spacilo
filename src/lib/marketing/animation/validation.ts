@@ -14,7 +14,8 @@ import { hasCharacter, isExpression, isPose } from "./characters";
 import { hasEnvironment } from "./environments";
 import { brandRules } from "./platform-branding";
 import { RESOLVED_MOODS } from "./story";
-import { COMPOSITIONS, FRAME_SIZES, type AnimatedPlan } from "./types";
+import { validateAudioPlan } from "./audio";
+import { COMPOSITIONS, frameSize, type AnimatedPlan } from "./types";
 
 export type QualityStatus =
   "DRAFT" | "BROWSER_GENERATED" | "BRAND_VALIDATED" | "PRODUCTION_READY" | "VALIDATION_FAILED";
@@ -94,10 +95,12 @@ export function validatePlan(plan: AnimatedPlan): QualityCheck {
   if (text.some((line) => !line.trim())) failures.push("A caption is empty.");
 
   /* ---------------------------------------------------------- composition */
-  const frame = FRAME_SIZES[plan.aspect];
+  const frame = frameSize(plan.aspect, plan.frameQuality);
   if (plan.width !== frame.width || plan.height !== frame.height) {
     failures.push(`The frame is ${plan.width}x${plan.height}, not the ${plan.aspect} size.`);
   }
+  const soundtrack = validateAudioPlan(plan.audio, plan.seconds);
+  failures.push(...soundtrack.failures);
   if (plan.composition.aspect !== plan.aspect) {
     failures.push("The layout was composed for a different shape.");
   }
@@ -296,6 +299,8 @@ export type RenderOutcome = {
   /** Smallest width the lock-up was drawn at, in pixels. */
   smallestLogoPx: number;
   frames: number;
+  /** Whether a real sound track was written into the finished file. */
+  audioPresent?: boolean;
 };
 
 /** Checks the finished file against the plan it was supposed to render. */
@@ -318,6 +323,9 @@ export function validateRender(plan: AnimatedPlan, outcome: RenderOutcome): Qual
   }
   if (outcome.seconds <= 0 || outcome.frames <= 0) failures.push("The finished video is empty.");
   if (outcome.bytes < 20_000) failures.push("The finished file is too small to be a real video.");
+  if (outcome.audioPresent === false) {
+    failures.push("The finished video has no sound, so it is not ready to publish.");
+  }
   const wantsPeople = plan.scenes.some((scene) => scene.cast.length > 0);
   if (wantsPeople && (outcome.characterFrames ?? 0) <= 0) {
     failures.push("The people in the story were never drawn into the finished video.");

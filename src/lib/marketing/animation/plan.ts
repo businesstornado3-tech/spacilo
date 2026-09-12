@@ -384,12 +384,44 @@ export function buildAnimatedPlan(input: {
     sceneCount: story.scenes.length,
   });
 
+  const boardFor = (position: number) =>
+    storyboard.scenes[position] ?? storyboard.scenes.at(-1) ?? null;
+
+  // Who this campaign shows, how it is graded, how it opens and how it is shot.
+  // Two campaigns that would look alike are cast apart before anything is drawn.
+  const shotsFor = (chosen: Casting): CameraShot[] =>
+    story.scenes.map((_, position) => {
+      const board = boardFor(position);
+      const base: CameraShot = board?.shot ?? "slowPush";
+      return position === 0 ? OPENING_SHOTS[chosen.opening] : styledShot(base, chosen.cameraStyle, position);
+    });
+
+  const { casting, signature } = castingWithDiversity({
+    campaignId,
+    storyType: storyboard.template,
+    characters: storyboard.characters,
+    side: storyboard.side,
+    recentSignatures: input.recentSignatures ?? [],
+    describe: (chosen) => ({
+      storyType: storyboard.template,
+      side: storyboard.side,
+      opening: chosen.opening,
+      cameraStyle: chosen.cameraStyle,
+      paletteName: chosen.paletteName,
+      environments: storyboard.scenes.map((board) => board.environment),
+      props: storyboard.scenes.flatMap((board) => [...board.props]),
+      looks: chosen.looks,
+      shots: shotsFor(chosen),
+    }),
+  });
+  const shots = shotsFor(casting);
+
   // A short campaign can hand back the same framing for every beat. The film
   // must still change how close the camera sits, so a deterministic rotation is
   // used when the storyboard did not vary the framing on its own.
-  const boardFramings = story.scenes.map((_, position) => {
-    const board = storyboard.scenes[position] ?? storyboard.scenes.at(-1) ?? null;
-    return board?.framing ?? framingForShot(board?.shot ?? "slowPush");
+  const boardFramings = shots.map((shot, position) => {
+    const board = boardFor(position);
+    return position === 0 ? framingForShot(shot) : (board?.framing ?? framingForShot(shot));
   });
   const rotation: Framing[] = ["wide", "medium", "close", "twoShot"];
   const framings =
@@ -399,8 +431,13 @@ export function buildAnimatedPlan(input: {
 
   const scenes: AnimatedScene[] = story.scenes.map((scene, position) => {
     const role = roles[position] ?? "solution";
-    const board = storyboard.scenes[position] ?? storyboard.scenes.at(-1) ?? null;
-    const shot: CameraShot = board?.shot ?? "slowPush";
+    const plain = boardFor(position);
+    // The opening scene leads with the object this campaign is actually about.
+    const board =
+      plain && position === 0
+        ? { ...plain, props: [OPENING_PROPS[casting.opening], ...plain.props] }
+        : plain;
+    const shot: CameraShot = shots[position] ?? board?.shot ?? "slowPush";
     const framing = framings[position] ?? board?.framing ?? framingForShot(shot);
     const mood = board?.mood ?? moodForBeat(board?.beat ?? "solution");
     return {

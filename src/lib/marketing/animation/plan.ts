@@ -29,6 +29,7 @@ import {
   type StoryboardScene,
 } from "./story";
 import { environment } from "./environments";
+import { castingWithDiversity, type Casting, type OpeningId } from "./casting";
 import { elementsForText } from "./library";
 import { applyBranding, brandRules } from "./platform-branding";
 import { buildAudioPlan } from "./audio";

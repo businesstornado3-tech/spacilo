@@ -187,7 +187,19 @@ describe("casting", () => {
     const same = visualSignature(base);
     expect(similarity(same, visualSignature(base))).toBe(1);
     expect(
-      similarity(same, visualSignature({ ...base, paletteName: "cool", storyType: "DOWNSIZING" })),
+      similarity(
+        same,
+        visualSignature({
+          ...base,
+          storyType: "DOWNSIZING",
+          opening: "garageReveal",
+          cameraStyle: "pan",
+          paletteName: "cool",
+          environments: ["GARAGE"],
+          shots: ["reveal"],
+          looks: { a: { top: "#999999", hair: "#888888", skin: "#777777" } },
+        }),
+      ),
     ).toBeLessThan(TOO_SIMILAR);
     expect(signatureDigest(same)).toHaveLength(8);
     expect(seedFrom("a")).not.toBe(seedFrom("b"));

@@ -347,6 +347,11 @@ export function buildAnimatedPlan(input: {
   frameQuality?: FrameQuality;
   /** How long the finished film should run. Browser videos aim at 30 seconds. */
   targetSeconds?: number;
+  /**
+   * Visual signatures of recently made browser films. A new campaign that would
+   * look like one of them is cast differently instead.
+   */
+  recentSignatures?: readonly string[];
 }): AnimatedPlan {
   const { campaignId, asset, story } = input;
   const rules = brandRules(asset.platform);

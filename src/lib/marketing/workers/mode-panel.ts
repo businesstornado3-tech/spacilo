@@ -138,7 +138,10 @@ export function simpleModeCards(input: {
     };
 
     if (mode === "BROWSER") {
-      const supported = input.browserSupported !== false && ready(worker);
+      // Browser Local runs on this device. It depends on nothing else: no
+      // paired computer, no cloud worker, no provider. A registered browser row
+      // can still report itself unusable, but its absence never blocks it.
+      const supported = input.browserSupported !== false && (worker === null || ready(worker));
       if (!supported) {
         return card({
           ...shell,

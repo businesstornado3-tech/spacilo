@@ -295,6 +295,40 @@ function backdrop(index: number, role: SceneRole, mood: Mood): SceneBackdrop {
   };
 }
 
+/** How the film opens, in camera terms. The first seconds belong to the story. */
+const OPENING_SHOTS: Record<OpeningId, CameraShot> = {
+  boxesBlockingDoor: "focusObject",
+  crowdedRoom: "establishing",
+  vanArrival: "panRight",
+  phoneCheck: "focusObject",
+  suitcaseBySide: "focusObject",
+  garageReveal: "reveal",
+  emptyRoomReveal: "slowPull",
+  shelvesReveal: "panLeft",
+};
+
+/** The object the opening is about, drawn on top of whatever the beat asked for. */
+const OPENING_PROPS: Record<OpeningId, string> = {
+  boxesBlockingDoor: "box-stack",
+  crowdedRoom: "sofa",
+  vanArrival: "house-delayed",
+  phoneCheck: "search-bar",
+  suitcaseBySide: "suitcase",
+  garageReveal: "garage",
+  emptyRoomReveal: "room",
+  shelvesReveal: "warehouse",
+};
+
+/** Shots the camera style may re-voice. A reveal or a two-shot is never touched. */
+const OPEN_TO_STYLE: readonly CameraShot[] = ["slowPush", "slowPull", "establishing"];
+
+function styledShot(shot: CameraShot, style: Casting["cameraStyle"], index: number): CameraShot {
+  if (style === "mixed" || !OPEN_TO_STYLE.includes(shot)) return shot;
+  if (style === "push") return index % 2 === 0 ? "slowPush" : "establishing";
+  if (style === "pull") return index % 2 === 0 ? "slowPull" : "slowPush";
+  return index % 2 === 0 ? "panRight" : "panLeft";
+}
+
 /**
  * Builds the animated plan for one platform version of a campaign.
  *

@@ -347,6 +347,7 @@ function drawScene(
     const figureHeight = member.scale * height * (1 + (scale - 1) * depth);
     drawCharacterFigure(ctx, {
       characterId: member.character,
+      look: plan.casting.looks[member.character] ?? null,
       pose: member.pose,
       expression: member.expression,
       motion: member.motion,
@@ -361,6 +362,18 @@ function drawScene(
   }
 
   drawEnvironmentLayer(ctx, scene.environment, "fore", { width, height, camera });
+
+  /* ------------------------------------------------------------ colour grade */
+  // One gentle wash chosen for this campaign, so the same place never looks
+  // identical from one film to the next. Never applied over the end card.
+  if (scene.logo !== "endcard" && plan.casting.tint.alpha > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = "soft-light";
+    ctx.globalAlpha = plan.casting.tint.alpha;
+    ctx.fillStyle = plan.casting.tint.colour;
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+  }
 
   /* -------------------------------------------------------------- lighting */
   // A soft key light from above and a gentle vignette: the difference between

@@ -247,10 +247,22 @@ export function MarketingVideoPanel({
     setProgress(0);
     setStage("Drawing the scenes");
     try {
-      const { renderAnimatedPlan } = await import("@/lib/marketing/animation/render.browser");
+      const { renderAnimatedPlan, pickFrameQuality } =
+        await import("@/lib/marketing/animation/render.browser");
       const { validatePlan, validateRender, qualityStatus } =
         await import("@/lib/marketing/animation/validation");
-      const plan = buildAnimatedPlan({ campaignId, asset, story, audience, topic });
+      // Aim at the full 1080-class frame, and drop to the smaller one only if
+      // this computer genuinely cannot record it.
+      const frame = await pickFrameQuality(asset.aspect, 30);
+      const plan = buildAnimatedPlan({
+        campaignId,
+        asset,
+        story,
+        audience,
+        topic,
+        frameQuality: frame.quality,
+        targetSeconds: 30,
+      });
       // Check the plan before a single frame is drawn: a bad plan costs nothing.
       const planCheck = validatePlan(plan);
       if (!planCheck.passed) {
@@ -280,11 +292,12 @@ export function MarketingVideoPanel({
         brandingNotes: [...plan.branding.notes],
         qualityStatus: status,
         qualityFailures: renderCheck.failures,
+        audio: result.audio,
         mp4Base64: await toBase64(result.blob),
       });
       setNotice(
         stored.video.status === "RENDERED"
-          ? `Your video is ready — ${result.seconds.toFixed(1)} seconds, made in this browser, £0. Quality check: production ready.`
+          ? `Your video is ready — ${result.seconds.toFixed(1)} seconds at ${plan.width}x${plan.height}, with music and sound effects, made in this browser for £0. Quality check: production ready.`
           : `The file was made but did not pass its checks: ${stored.video.failureReason ?? "unknown reason"}`,
       );
       return stored.video.status === "RENDERED";

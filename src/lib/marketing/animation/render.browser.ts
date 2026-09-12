@@ -14,9 +14,10 @@
  */
 import { ArrayBufferTarget, Muxer } from "mp4-muxer";
 
+import { renderAudioPlan } from "./audio.browser";
 import { drawCharacterFigure, drawEnvironmentLayer, groundLine } from "./draw.browser";
 import { element } from "./library";
-import type { AnimatedPlan, AnimatedScene, Motion, Paint, Shape } from "./types";
+import { frameSize, type AnimatedPlan, type AnimatedScene, type AspectFrameQuality, type Motion, type Paint, type Shape } from "./types";
 import type { RenderOutcome } from "./validation";
 
 /* ------------------------------------------------------------------ paints */
@@ -513,6 +514,107 @@ async function pickCodec(
   return null;
 }
 
+/** Full-size frames need a bigger pipe than the fallback ones. */
+function bitrateFor(width: number, height: number): number {
+  return width * height >= 1920 * 1080 * 0.9 ? 10_000_000 : 4_500_000;
+}
+
+/**
+ * Picks the largest frame this machine can actually encode: the full 1080-class
+ * frame if the browser supports it, otherwise the smaller one. It never claims
+ * a size it has not checked.
+ */
+export async function pickFrameQuality(
+  aspect: AnimatedPlan["aspect"],
+  fps = 30,
+): Promise<{ quality: "TARGET" | "FALLBACK"; reason: string }> {
+  const target = frameSize(aspect, "TARGET");
+  if (await pickCodec(target.width, target.height, fps)) {
+    return { quality: "TARGET", reason: `Recording at ${target.width}x${target.height}.` };
+  }
+  const fallback = frameSize(aspect, "FALLBACK");
+  return {
+    quality: "FALLBACK",
+    reason: `This computer cannot record at ${target.width}x${target.height}, so the video is made at ${fallback.width}x${fallback.height} instead.`,
+  };
+}
+
+/** AAC first, because that is what every platform expects in an MP4. */
+const AUDIO_CODECS: readonly { codec: string; container: "aac" | "opus" }[] = [
+  { codec: "mp4a.40.2", container: "aac" },
+  { codec: "opus", container: "opus" },
+];
+
+async function pickAudioCodec(
+  sampleRate: number,
+  channels: number,
+): Promise<{ codec: string; container: "aac" | "opus" } | null> {
+  if (typeof AudioEncoder === "undefined") return null;
+  for (const candidate of AUDIO_CODECS) {
+    try {
+      const support = await AudioEncoder.isConfigSupported({
+        codec: candidate.codec,
+        sampleRate,
+        numberOfChannels: channels,
+        bitrate: 128_000,
+      });
+      if (support.supported) return candidate;
+    } catch {
+      // Try the next one.
+    }
+  }
+  return null;
+}
+
+/** Feeds the rendered soundtrack into the file as a real audio track. */
+async function encodeAudio(
+  muxer: Muxer<ArrayBufferTarget>,
+  buffer: AudioBuffer,
+  codec: string,
+): Promise<void> {
+  let failure: Error | null = null;
+  const encoder = new AudioEncoder({
+    output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
+    error: (error) => {
+      failure = error instanceof Error ? error : new Error(String(error));
+    },
+  });
+  encoder.configure({
+    codec,
+    sampleRate: buffer.sampleRate,
+    numberOfChannels: buffer.numberOfChannels,
+    bitrate: 128_000,
+  });
+
+  const channels = buffer.numberOfChannels;
+  const chunkFrames = 1024;
+  const planar = new Float32Array(chunkFrames * channels);
+  for (let offset = 0; offset < buffer.length; offset += chunkFrames) {
+    if (failure) throw failure;
+    const frames = Math.min(chunkFrames, buffer.length - offset);
+    const data = frames === chunkFrames ? planar : new Float32Array(frames * channels);
+    for (let channel = 0; channel < channels; channel += 1) {
+      data.set(
+        buffer.getChannelData(channel).subarray(offset, offset + frames),
+        channel * frames,
+      );
+    }
+    const audioData = new AudioData({
+      format: "f32-planar",
+      sampleRate: buffer.sampleRate,
+      numberOfFrames: frames,
+      numberOfChannels: channels,
+      timestamp: Math.round((offset / buffer.sampleRate) * 1_000_000),
+      data,
+    });
+    encoder.encode(audioData);
+    audioData.close();
+  }
+  await encoder.flush();
+  encoder.close();
+  if (failure) throw failure;
+}
+
 export type RenderResult = {
   blob: Blob;
   bytes: number;
@@ -522,10 +624,18 @@ export type RenderResult = {
   /** What was actually drawn, for the deterministic quality gate. */
   outcome: RenderOutcome;
   /**
-   * Narration and music are not produced in the browser at £0; the campaign
-   * narration is carried in the plan for the local worker's audio pipeline.
+   * What the file actually contains. Music and sound effects are synthesised
+   * locally; there is never a spoken voice, and the flag says so honestly.
    */
-  audio: "none";
+  audio: {
+    present: boolean;
+    codec: string | null;
+    music: boolean;
+    soundEffects: boolean;
+    spokenNarration: false;
+    /** Plain-English note when a machine could not record sound at all. */
+    note: string;
+  };
 };
 
 /**
@@ -542,6 +652,24 @@ export async function renderAnimatedPlan(
   const { width, height, fps } = plan;
   const chosen = await pickCodec(width, height, fps);
   if (!chosen) throw new Error("This browser cannot record video at this size.");
+
+  // The soundtrack is made first, so the file is opened with an audio track in
+  // it rather than having one bolted on afterwards.
+  let soundtrack: AudioBuffer | null = null;
+  let audioCodec: { codec: string; container: "aac" | "opus" } | null = null;
+  let audioNote = "Music and sound effects were made on this computer, at no cost.";
+  try {
+    audioCodec = await pickAudioCodec(plan.audio.sampleRate, 2);
+    if (audioCodec) {
+      soundtrack = await renderAudioPlan(plan.audio);
+    } else {
+      audioNote = "This browser cannot record sound into a video file, so the film is silent.";
+    }
+  } catch {
+    soundtrack = null;
+    audioCodec = null;
+    audioNote = "The soundtrack could not be made on this computer, so the film is silent.";
+  }
 
   const art = await loadArtwork(plan);
 
@@ -561,6 +689,15 @@ export async function renderAnimatedPlan(
   const muxer = new Muxer({
     target: new ArrayBufferTarget(),
     video: { codec: chosen.container, width, height, frameRate: fps },
+    ...(soundtrack && audioCodec
+      ? {
+          audio: {
+            codec: audioCodec.container,
+            numberOfChannels: soundtrack.numberOfChannels,
+            sampleRate: soundtrack.sampleRate,
+          },
+        }
+      : {}),
     fastStart: "in-memory",
   });
 
@@ -571,7 +708,13 @@ export async function renderAnimatedPlan(
       encodeError = error instanceof Error ? error : new Error(String(error));
     },
   });
-  encoder.configure({ codec: chosen.codec, width, height, framerate: fps, bitrate: 4_500_000 });
+  encoder.configure({
+    codec: chosen.codec,
+    width,
+    height,
+    framerate: fps,
+    bitrate: bitrateFor(width, height),
+  });
 
   const totalFrames = Math.max(1, Math.round(plan.seconds * fps));
   const stats: DrawStats = { logoFrames: 0, smallestLogoPx: 0, characterFrames: 0 };
@@ -586,10 +729,33 @@ export async function renderAnimatedPlan(
       const elapsed = f / fps;
       drawScene(ctx, plan, scene, elapsed, art, stats);
 
-      if (scene.transition === "fade" && hasPrevious && f < fadeFrames) {
+      if (scene.transition !== "cut" && hasPrevious && f < fadeFrames) {
+        const t = easeInOut(f / fadeFrames);
         ctx.save();
-        ctx.globalAlpha = 1 - easeInOut(f / fadeFrames);
-        ctx.drawImage(previous, 0, 0);
+        switch (scene.transition) {
+          case "slide":
+            ctx.drawImage(previous, -width * t, 0);
+            break;
+          case "zoom": {
+            const scale = 1 + t * 0.12;
+            ctx.globalAlpha = 1 - t;
+            ctx.translate((width * (1 - scale)) / 2, (height * (1 - scale)) / 2);
+            ctx.scale(scale, scale);
+            ctx.drawImage(previous, 0, 0);
+            break;
+          }
+          case "light":
+            ctx.globalAlpha = 1 - t;
+            ctx.drawImage(previous, 0, 0);
+            ctx.globalAlpha = (1 - t) * 0.65;
+            ctx.fillStyle = PALETTE.white;
+            ctx.fillRect(0, 0, width, height);
+            break;
+          default:
+            ctx.globalAlpha = 1 - t;
+            ctx.drawImage(previous, 0, 0);
+            break;
+        }
         ctx.restore();
       }
 
@@ -618,6 +784,17 @@ export async function renderAnimatedPlan(
   await encoder.flush();
   encoder.close();
   if (encodeError) throw encodeError;
+
+  let audioWritten = false;
+  if (soundtrack && audioCodec) {
+    try {
+      await encodeAudio(muxer, soundtrack, audioCodec.codec);
+      audioWritten = true;
+    } catch {
+      audioNote = "The soundtrack could not be written into the file, so the film is silent.";
+    }
+  }
+
   muxer.finalize();
 
   const buffer = (muxer.target as ArrayBufferTarget).buffer;
@@ -631,7 +808,14 @@ export async function renderAnimatedPlan(
     seconds: frameIndex / fps,
     frames: frameIndex,
     codec: chosen.codec,
-    audio: "none",
+    audio: {
+      present: audioWritten,
+      codec: audioWritten ? (audioCodec?.codec ?? null) : null,
+      music: audioWritten && plan.audio.music.length > 0,
+      soundEffects: audioWritten && plan.audio.sfx.length > 0,
+      spokenNarration: false,
+      note: audioWritten ? audioNote : audioNote,
+    },
     outcome: {
       width,
       height,
@@ -642,6 +826,7 @@ export async function renderAnimatedPlan(
       characterFrames: stats.characterFrames,
       smallestLogoPx: Math.round(stats.smallestLogoPx),
       artworkLoaded: true,
+      audioPresent: audioWritten,
     },
   };
 }

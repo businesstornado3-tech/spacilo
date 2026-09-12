@@ -299,11 +299,16 @@ export function buildAnimatedPlan(input: {
   /** From the existing campaign intelligence; never decided here. */
   audience?: MarketingAudience | null;
   topic?: string | null;
+  /** Full 1080-class frame, or the controlled smaller frame. */
+  frameQuality?: FrameQuality;
+  /** How long the finished film should run. Browser videos aim at 30 seconds. */
+  targetSeconds?: number;
 }): AnimatedPlan {
   const { campaignId, asset, story } = input;
   const rules = brandRules(asset.platform);
   const fps = input.fps ?? 30;
-  const frame = FRAME_SIZES[asset.aspect];
+  const frameQuality = input.frameQuality ?? "TARGET";
+  const frame = frameSize(asset.aspect, frameQuality);
   const composition = COMPOSITIONS[asset.aspect];
   const website = siteOrigin().replace(/^https?:\/\//, "");
 

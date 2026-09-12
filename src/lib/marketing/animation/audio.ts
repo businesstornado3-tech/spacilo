@@ -180,7 +180,7 @@ export function buildAudioPlan(
     music.push({
       at: Number(cursor.toFixed(3)),
       seconds: Number(scene.seconds.toFixed(3)),
-      root: scene.role === "endcard" ? 48 : step.root,
+      root: (scene.role === "endcard" ? 48 : step.root) + keyOffset,
       chord: scene.role === "endcard" ? [0, 7, 12, 16, 19] : step.chord,
       intensity: intensityForMood(scene.mood, share),
       pulse: position > 0 && scene.role !== "endcard",

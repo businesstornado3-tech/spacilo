@@ -9,6 +9,7 @@
  */
 import type { AspectRatio, PlatformId } from "../types";
 import type { BrowserAudioPlan } from "./audio";
+import type { Casting } from "./casting";
 import type { EnvironmentId } from "./environments";
 import type { CameraShot, CharacterCue, Framing, Mood, StoryBeat, StoryTemplateId } from "./story";
 

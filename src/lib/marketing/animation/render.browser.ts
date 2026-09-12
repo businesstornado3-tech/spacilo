@@ -17,7 +17,14 @@ import { ArrayBufferTarget, Muxer } from "mp4-muxer";
 import { renderAudioPlan } from "./audio.browser";
 import { drawCharacterFigure, drawEnvironmentLayer, groundLine } from "./draw.browser";
 import { element } from "./library";
-import { frameSize, type AnimatedPlan, type AnimatedScene, type AspectFrameQuality, type Motion, type Paint, type Shape } from "./types";
+import {
+  frameSize,
+  type AnimatedPlan,
+  type AnimatedScene,
+  type Motion,
+  type Paint,
+  type Shape,
+} from "./types";
 import type { RenderOutcome } from "./validation";
 
 /* ------------------------------------------------------------------ paints */

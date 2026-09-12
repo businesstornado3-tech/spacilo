@@ -208,7 +208,8 @@ export type VisualSignatureInput = {
   paletteName: string;
   environments: readonly string[];
   props: readonly string[];
-  looks: Record<string, CharacterLook> | Record<string, { top: string; hair: string; skin: string }>;
+  looks:
+    Record<string, CharacterLook> | Record<string, { top: string; hair: string; skin: string }>;
   shots: readonly string[];
 };
 

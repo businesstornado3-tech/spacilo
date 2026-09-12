@@ -143,9 +143,9 @@ describe("casting", () => {
           side: "renter",
         }).looks["RENTER_CHARACTER_01"]!,
     );
-    expect(new Set(looks.map((look) => `${look.top}${look.hair}${look.skin}`)).size).toBeGreaterThan(
-      1,
-    );
+    expect(
+      new Set(looks.map((look) => `${look.top}${look.hair}${look.skin}`)).size,
+    ).toBeGreaterThan(1);
   });
 
   it("keeps one person consistent across a whole film", () => {

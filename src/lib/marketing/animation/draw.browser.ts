@@ -380,7 +380,12 @@ export function drawCharacterFigure(ctx: CanvasRenderingContext2D, request: Figu
     shoulder.x + H * 0.105 * build,
     shoulder.y,
   );
-  ctx.quadraticCurveTo(shoulder.x, shoulder.y - H * 0.05, shoulder.x - H * 0.105 * build, shoulder.y);
+  ctx.quadraticCurveTo(
+    shoulder.x,
+    shoulder.y - H * 0.05,
+    shoulder.x - H * 0.105 * build,
+    shoulder.y,
+  );
   ctx.closePath();
   const torso = ctx.createLinearGradient(shoulder.x, shoulder.y, shoulder.x, hip.y);
   torso.addColorStop(0, shade(design.top, 0.08));

@@ -354,11 +354,7 @@ export function MarketingVideoPanel({
     async (video: MarketingVideoRow) => {
       if (!video.rawPlaybackUrl || !video.brandingPlan) return;
       brandingStarted.current.add(video.id);
-      const at = begin(
-        brandingMode.current,
-        video.assetId,
-        "Adding the EarnRoom branding",
-      );
+      const at = begin(brandingMode.current, video.assetId, "Adding the EarnRoom branding");
       try {
         const { composeBranding } = await import("@/lib/marketing/branding/compositor.browser");
         const result = await composeBranding(video.rawPlaybackUrl, video.brandingPlan, {

@@ -393,7 +393,9 @@ export function buildAnimatedPlan(input: {
     story.scenes.map((_, position) => {
       const board = boardFor(position);
       const base: CameraShot = board?.shot ?? "slowPush";
-      return position === 0 ? OPENING_SHOTS[chosen.opening] : styledShot(base, chosen.cameraStyle, position);
+      return position === 0
+        ? OPENING_SHOTS[chosen.opening]
+        : styledShot(base, chosen.cameraStyle, position);
     });
 
   const { casting, signature } = castingWithDiversity({

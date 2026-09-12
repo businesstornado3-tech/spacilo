@@ -344,11 +344,24 @@ export function buildAnimatedPlan(input: {
     sceneCount: story.scenes.length,
   });
 
+  // A short campaign can hand back the same framing for every beat. The film
+  // must still change how close the camera sits, so a deterministic rotation is
+  // used when the storyboard did not vary the framing on its own.
+  const boardFramings = story.scenes.map((_, position) => {
+    const board = storyboard.scenes[position] ?? storyboard.scenes.at(-1) ?? null;
+    return board?.framing ?? framingForShot(board?.shot ?? "slowPush");
+  });
+  const rotation: Framing[] = ["wide", "medium", "close", "twoShot"];
+  const framings =
+    boardFramings.length >= 3 && new Set(boardFramings).size < 3
+      ? boardFramings.map((_, position) => rotation[position % rotation.length]!)
+      : boardFramings;
+
   const scenes: AnimatedScene[] = story.scenes.map((scene, position) => {
     const role = roles[position] ?? "solution";
     const board = storyboard.scenes[position] ?? storyboard.scenes.at(-1) ?? null;
     const shot: CameraShot = board?.shot ?? "slowPush";
-    const framing = board?.framing ?? framingForShot(shot);
+    const framing = framings[position] ?? board?.framing ?? framingForShot(shot);
     const mood = board?.mood ?? moodForBeat(board?.beat ?? "solution");
     return {
       index: position,
@@ -416,18 +429,6 @@ export function buildAnimatedPlan(input: {
       narration: asset.cta,
       logo: "endcard",
       transition: "fade",
-    });
-  }
-
-  // A short campaign can hand back the same framing for every beat. The film
-  // must still change how close the camera sits, so a deterministic rotation is
-  // applied when the storyboard did not vary it on its own.
-  const storyScenes = scenes.filter((scene) => scene.role !== "endcard");
-  if (storyScenes.length >= 3 && new Set(storyScenes.map((s) => s.framing)).size < 3) {
-    const rotation: Framing[] = ["wide", "medium", "close", "twoShot"];
-    storyScenes.forEach((scene, position) => {
-      scene.framing = rotation[position % rotation.length]!;
-      scene.camera = camera(position, scene.role, scene.shot);
     });
   }
 

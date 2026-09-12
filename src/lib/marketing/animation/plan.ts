@@ -521,13 +521,15 @@ export function buildAnimatedPlan(input: {
     frameQuality,
     fps,
     seconds,
-    audio: buildAudioPlan(scenes),
+    audio: buildAudioPlan(scenes, { keyOffset: casting.audioKey }),
     scenes,
     storyboard: {
       template: storyboard.template,
       side: storyboard.side,
       characters: storyboard.characters,
     },
+    casting,
+    signature,
     branding,
     composition,
     brand: {

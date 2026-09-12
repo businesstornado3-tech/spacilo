@@ -162,7 +162,13 @@ function cuesForScene(scene: AnimatedScene, start: number): AudioCue[] {
  * Builds the whole soundtrack from the scenes that were already planned, so a
  * sound can never land on a picture that is not there.
  */
-export function buildAudioPlan(scenes: readonly AnimatedScene[]): BrowserAudioPlan {
+export function buildAudioPlan(
+  scenes: readonly AnimatedScene[],
+  /** Semitones the whole bed is moved by, so campaigns do not all sound alike. */
+  options: { keyOffset?: number } = {},
+): BrowserAudioPlan {
+  // Two octaves either way at most, so the bed stays in a comfortable range.
+  const keyOffset = Math.max(-5, Math.min(5, Math.round(options.keyOffset ?? 0)));
   const music: MusicSection[] = [];
   const ambience: AmbienceSection[] = [];
   const sfx: AudioCue[] = [];

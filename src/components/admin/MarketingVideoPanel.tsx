@@ -205,6 +205,12 @@ export function MarketingVideoPanel({
   });
   const blocked = selection.ok ? null : selection.message;
 
+  // Switching mode clears the "choose a mode" message. Each mode's own attempt
+  // is kept, so going back to it shows that mode's real outcome again.
+  React.useEffect(() => {
+    setChoiceNotice(null);
+  }, [choice]);
+
   /**
    * The paid route, start to finish, in one place: choose Short, Standard or
    * Highest quality, press Generate, confirm once. Nothing paid can begin any other
@@ -213,15 +219,15 @@ export function MarketingVideoPanel({
   const startPaid = async (quality: PaidQuality) => {
     if (!core) return;
     setConfirmingPaid(false);
+    const at = begin("PAID_CLOUD", core.id, "Starting the paid generation");
     if (snapshot?.paidProviderConfigured !== true) {
-      setNotice("The paid video service is not configured, so no paid video can be made.");
+      fail(at, "The paid video service is not configured, so no paid video can be made.");
       return;
     }
     if (snapshot.preferences.generationPaused) {
-      setNotice("Video generation is paused, so no paid video can be made.");
+      fail(at, "Video generation is paused, so no paid video can be made.");
       return;
     }
-    setStage("Starting the paid generation");
     try {
       // Pressing Generate and confirming is the founder's explicit choice, so
       // the paid route is armed here rather than on a separate settings page.
@@ -235,13 +241,11 @@ export function MarketingVideoPanel({
         browser,
         confirmPaid: true,
       });
-      setNotice(
-        `${result.workerLabel ? `Using ${result.workerLabel}. ` : ""}${result.detail} ${paidPresetCostLine(quality)} (estimate).`,
-      );
-      setStage(result.started ? "Making your video" : null);
+      const line = `${result.workerLabel ? `Using ${result.workerLabel}. ` : ""}${result.detail} ${paidPresetCostLine(quality)} (estimate).`;
+      if (result.started) done(at, line);
+      else fail(at, line);
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "The paid video could not be started.");
-      setStage(null);
+      fail(at, error instanceof Error ? error.message : "The paid video could not be started.");
     }
   };
 
@@ -343,6 +347,9 @@ export function MarketingVideoPanel({
    * composed onto the pixels here and checked frame by frame.
    */
   const brandingStarted = React.useRef<Set<string>>(new Set());
+  // Branding is composed here in the browser for whichever route made the film;
+  // Paid Cloud is the only route that ever hands back unbranded pixels.
+  const brandingMode = React.useRef<GenerationMode>("PAID_CLOUD");
   const addBranding = React.useCallback(
     async (video: MarketingVideoRow) => {
       if (!video.rawPlaybackUrl || !video.brandingPlan) return;
@@ -762,8 +769,8 @@ export function MarketingVideoPanel({
               onClick={() =>
                 videos.cancel
                   .mutateAsync(coreVideo.id)
-                  .then((result) => setNotice(result.detail))
-                  .catch((error: Error) => setNotice(error.message))
+                  .then((result) => setChoiceNotice(result.detail))
+                  .catch((error: Error) => setChoiceNotice(error.message))
               }
               className="min-h-11 rounded-lg border border-border px-4 type-nav text-destructive hover:bg-secondary disabled:opacity-60"
             >

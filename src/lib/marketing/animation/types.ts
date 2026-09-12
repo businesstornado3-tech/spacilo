@@ -145,8 +145,14 @@ export type AnimatedScene = {
   narration: string;
   /** Where the real EarnRoom artwork is drawn in this scene, if anywhere. */
   logo: "none" | "watermark" | "endcard";
-  transition: "cut" | "fade";
+  /**
+   * How this scene arrives out of the one before it. Varied deliberately: a
+   * film that cuts the same way every time reads as a slide deck.
+   */
+  transition: SceneTransition;
 };
+
+export type SceneTransition = "cut" | "fade" | "slide" | "zoom" | "light";
 
 /** Branding actually applied, after the platform's own rules are honoured. */
 export type AppliedBranding = {

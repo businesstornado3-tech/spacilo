@@ -129,6 +129,10 @@ export type StoryTemplateId =
   | "RENOVATION_STORAGE"
   | "SEASONAL_STORAGE"
   | "LOCAL_STORAGE_NEED"
+  | "SMALL_BUSINESS_STOCK"
+  | "DOWNSIZING"
+  | "GROWING_FAMILY"
+  | "TRAVEL_TEMPORARY"
   | "TWO_SIDED_MARKETPLACE";
 
 export type Storyboard = {
@@ -610,6 +614,121 @@ const TEMPLATES: Record<StoryTemplateId, StoryTemplate> = {
         shot: "slowPull",
         note: "Both sides end better off than they started.",
       },
+      BRAND,
+    ],
+  },
+  SMALL_BUSINESS_STOCK: {
+    id: "SMALL_BUSINESS_STOCK",
+    side: "renter",
+    keywords: ["business", "stock", "inventory", "shop", "orders", "market stall", "ecommerce"],
+    beats: [
+      {
+        beat: "hook",
+        environment: "ENV_SPARE_ROOM",
+        cast: [cue(RENTER, "holdingBox", "concerned", "putDown", 0.33, 0.46, 1)],
+        props: ["box-stack"],
+        shot: "establishing",
+        note: "Stock is stacked where a small business used to work.",
+      },
+      {
+        beat: "problem",
+        environment: "ENV_SPARE_ROOM",
+        cast: [cue(RENTER, "lookingAround", "concerned", "lookAround", 0.33, 0.46, 1)],
+        props: ["box", "warning"],
+        shot: "panRight",
+        note: "Every new order needs room the room does not have.",
+      },
+      DISCOVERY_PHONE,
+      SOLUTION_MAP,
+      CONNECTION,
+      OUTCOME_RENTER,
+      BRAND,
+    ],
+  },
+
+  DOWNSIZING: {
+    id: "DOWNSIZING",
+    side: "renter",
+    keywords: ["downsize", "downsizing", "smaller place", "retire", "less room"],
+    beats: [
+      {
+        beat: "hook",
+        environment: "ENV_HOME_LIVING_ROOM",
+        cast: [cue(RENTER, "thinking", "thinking", "lookAround", 0.34, 0.48, 1)],
+        props: ["sofa", "box-stack"],
+        shot: "establishing",
+        note: "A lifetime of belongings, and a smaller home to fit them in.",
+      },
+      {
+        beat: "pain",
+        environment: "ENV_MOVING_DAY",
+        cast: [cue(RENTER, "worried", "concerned", "idle", 0.34, 0.48, 1)],
+        props: ["warning", "box"],
+        shot: "focusCharacter",
+        note: "Nothing here should be thrown away in a hurry.",
+      },
+      DISCOVERY_PHONE,
+      SOLUTION_MAP,
+      CONNECTION,
+      OUTCOME_RENTER,
+      BRAND,
+    ],
+  },
+
+  GROWING_FAMILY: {
+    id: "GROWING_FAMILY",
+    side: "renter",
+    keywords: ["family", "baby", "nursery", "children", "kids", "growing"],
+    beats: [
+      {
+        beat: "hook",
+        environment: "ENV_SPARE_ROOM",
+        cast: [cue(RENTER, "carryingBoxes", "neutral", "walkIn", 0.32, 0.46, 1)],
+        props: ["box"],
+        shot: "establishing",
+        note: "The box room has to become a bedroom.",
+      },
+      {
+        beat: "problem",
+        environment: "ENV_HOME_LIVING_ROOM",
+        cast: [cue(RENTER, "worried", "concerned", "lookAround", 0.34, 0.48, 1)],
+        props: ["box-stack", "warning"],
+        shot: "slowPush",
+        note: "Everything that was in it now has nowhere to go.",
+      },
+      DISCOVERY_PHONE,
+      SOLUTION_MAP,
+      CONNECTION,
+      OUTCOME_RENTER,
+      BRAND,
+    ],
+  },
+
+  TRAVEL_TEMPORARY: {
+    id: "TRAVEL_TEMPORARY",
+    side: "renter",
+    keywords: ["travel", "travelling", "abroad", "sabbatical", "few months", "temporary"],
+    beats: [
+      {
+        beat: "hook",
+        environment: "ENV_SPARE_ROOM",
+        cast: [cue(RENTER, "holdingBox", "hopeful", "putDown", 0.33, 0.46, 1)],
+        props: ["box"],
+        shot: "establishing",
+        note: "A room being packed up before a few months away.",
+      },
+      {
+        beat: "pain",
+        environment: "ENV_STREET",
+        cast: [cue(RENTER, "worried", "concerned", "lookAround", 0.32, 0.44, 1)],
+        props: ["warning", "box-stack"],
+        shot: "panLeft",
+        note: "Paying rent on an empty room makes no sense.",
+      },
+      DISCOVERY_PHONE,
+      SOLUTION_MAP,
+      CONNECTION,
+      OUTCOME_RENTER,
       BRAND,
     ],
   },

@@ -15,6 +15,17 @@ import { Alert } from "@/components/common/Alert";
 import { useCampaignVideos } from "@/hooks/useMarketingVideos";
 import type { MarketingVideoRow } from "@/lib/marketing-video.functions";
 import { useVideoWorkers } from "@/hooks/useVideoWorkers";
+import {
+  activeAttempt,
+  failAttempt,
+  isRunning,
+  startAttempt,
+  succeedAttempt,
+  updateAttempt,
+  EMPTY_GENERATION_STATE,
+  type GenerationMode,
+  type GenerationState,
+} from "@/lib/marketing/workers/generation-state";
 import { buildAnimatedPlan } from "@/lib/marketing/animation";
 import { ComputerSetup } from "@/components/admin/ComputerSetup";
 import {
@@ -126,17 +137,33 @@ export function MarketingVideoPanel({
   const videos = useCampaignVideos(campaignId);
   const workers = useVideoWorkers(true);
   const rows = videos.query.data?.videos ?? [];
-  const [notice, setNotice] = React.useState<string | null>(null);
   const [support, setSupport] = React.useState<{ supported: boolean; reason: string } | null>(null);
-  const [busy, setBusy] = React.useState<string | null>(null);
-  const [stage, setStage] = React.useState<string | null>(null);
-  const [progress, setProgress] = React.useState(0);
+  // Each mode keeps its own attempt, so a Computer failure can never appear
+  // while Browser is selected, and nothing a mode says leaks into another.
+  const [generation, setGeneration] = React.useState<GenerationState>(EMPTY_GENERATION_STATE);
+  // The only message that belongs to no mode: "choose a mode first".
+  const [choiceNotice, setChoiceNotice] = React.useState<string | null>(null);
   // Exactly one mode is ever active. Nothing is chosen for the founder, and a
   // free choice is never promoted to a paid one.
   const [choice, setChoice] = React.useState<WorkerChoice>(null);
   const [showSetup, setShowSetup] = React.useState(false);
   const [setupMode, setSetupMode] = React.useState<"LOCAL" | "FREE_CLOUD">("LOCAL");
   const setupRef = React.useRef<HTMLDivElement | null>(null);
+
+  type Attempt = { mode: GenerationMode; attemptId: string };
+  const attemptCount = React.useRef(0);
+  const begin = (mode: GenerationMode, assetId: string, stage: string): Attempt => {
+    attemptCount.current += 1;
+    const attemptId = `${mode}-${assetId}-${attemptCount.current}`;
+    setGeneration((state) => startAttempt(state, { campaignId, assetId, mode, attemptId, stage }));
+    return { mode, attemptId };
+  };
+  const note = (at: Attempt, patch: { stage?: string | null; progress?: number }) =>
+    setGeneration((state) => updateAttempt(state, at.mode, at.attemptId, patch));
+  const fail = (at: Attempt, message: string) =>
+    setGeneration((state) => failAttempt(state, at.mode, at.attemptId, { message }));
+  const done = (at: Attempt, message: string) =>
+    setGeneration((state) => succeedAttempt(state, at.mode, at.attemptId, message));
 
   const browser = workers.browser;
   const snapshot = workers.query.data;
@@ -178,6 +205,12 @@ export function MarketingVideoPanel({
   });
   const blocked = selection.ok ? null : selection.message;
 
+  // Switching mode clears the "choose a mode" message. Each mode's own attempt
+  // is kept, so going back to it shows that mode's real outcome again.
+  React.useEffect(() => {
+    setChoiceNotice(null);
+  }, [choice]);
+
   /**
    * The paid route, start to finish, in one place: choose Short, Standard or
    * Highest quality, press Generate, confirm once. Nothing paid can begin any other
@@ -186,15 +219,15 @@ export function MarketingVideoPanel({
   const startPaid = async (quality: PaidQuality) => {
     if (!core) return;
     setConfirmingPaid(false);
+    const at = begin("PAID_CLOUD", core.id, "Starting the paid generation");
     if (snapshot?.paidProviderConfigured !== true) {
-      setNotice("The paid video service is not configured, so no paid video can be made.");
+      fail(at, "The paid video service is not configured, so no paid video can be made.");
       return;
     }
     if (snapshot.preferences.generationPaused) {
-      setNotice("Video generation is paused, so no paid video can be made.");
+      fail(at, "Video generation is paused, so no paid video can be made.");
       return;
     }
-    setStage("Starting the paid generation");
     try {
       // Pressing Generate and confirming is the founder's explicit choice, so
       // the paid route is armed here rather than on a separate settings page.
@@ -208,13 +241,11 @@ export function MarketingVideoPanel({
         browser,
         confirmPaid: true,
       });
-      setNotice(
-        `${result.workerLabel ? `Using ${result.workerLabel}. ` : ""}${result.detail} ${paidPresetCostLine(quality)} (estimate).`,
-      );
-      setStage(result.started ? "Making your video" : null);
+      const line = `${result.workerLabel ? `Using ${result.workerLabel}. ` : ""}${result.detail} ${paidPresetCostLine(quality)} (estimate).`;
+      if (result.started) done(at, line);
+      else fail(at, line);
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "The paid video could not be started.");
-      setStage(null);
+      fail(at, error instanceof Error ? error.message : "The paid video could not be started.");
     }
   };
 
@@ -242,10 +273,8 @@ export function MarketingVideoPanel({
     };
   }, []);
 
-  const makeAnimation = async (asset: PlatformAsset) => {
-    setBusy(asset.id);
-    setProgress(0);
-    setStage("Drawing the scenes");
+  const makeAnimation = async (asset: PlatformAsset, at: Attempt) => {
+    note(at, { stage: "Drawing the scenes", progress: 0 });
     try {
       const { renderAnimatedPlan, pickFrameQuality } =
         await import("@/lib/marketing/animation/render.browser");
@@ -266,16 +295,18 @@ export function MarketingVideoPanel({
       // Check the plan before a single frame is drawn: a bad plan costs nothing.
       const planCheck = validatePlan(plan);
       if (!planCheck.passed) {
-        setNotice(`This video was not made: ${planCheck.failures.join(" ")}`);
+        fail(at, `This video was not made: ${planCheck.failures.join(" ")}`);
         return false;
       }
       const result = await renderAnimatedPlan(plan, {
         onProgress: (value) => {
-          setProgress(value);
-          setStage(value > 0.85 ? "Saving the finished video" : "Drawing the scenes");
+          note(at, {
+            progress: value,
+            stage: value > 0.85 ? "Saving the finished video" : "Drawing the scenes",
+          });
         },
       });
-      setStage("Checking the branding");
+      note(at, { stage: "Checking the branding" });
       // Check what was actually drawn, not what was intended.
       const renderCheck = validateRender(plan, result.outcome);
       const status = qualityStatus({ plan: planCheck, render: renderCheck });
@@ -295,19 +326,17 @@ export function MarketingVideoPanel({
         audio: result.audio,
         mp4Base64: await toBase64(result.blob),
       });
-      setNotice(
-        stored.video.status === "RENDERED"
+      const rendered = stored.video.status === "RENDERED";
+      (rendered ? done : fail)(
+        at,
+        rendered
           ? `Your video is ready — ${result.seconds.toFixed(1)} seconds at ${plan.width}x${plan.height}, with music and sound effects, made in this browser for £0. Quality check: production ready.`
           : `The file was made but did not pass its checks: ${stored.video.failureReason ?? "unknown reason"}`,
       );
-      return stored.video.status === "RENDERED";
+      return rendered;
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "The video could not be made.");
+      fail(at, error instanceof Error ? error.message : "The video could not be made.");
       return false;
-    } finally {
-      setBusy(null);
-      setProgress(0);
-      setStage(null);
     }
   };
 
@@ -318,41 +347,42 @@ export function MarketingVideoPanel({
    * composed onto the pixels here and checked frame by frame.
    */
   const brandingStarted = React.useRef<Set<string>>(new Set());
+  // Branding is composed here in the browser for whichever route made the film;
+  // Paid Cloud is the only route that ever hands back unbranded pixels.
+  const brandingMode = React.useRef<GenerationMode>("PAID_CLOUD");
   const addBranding = React.useCallback(
     async (video: MarketingVideoRow) => {
       if (!video.rawPlaybackUrl || !video.brandingPlan) return;
       brandingStarted.current.add(video.id);
-      setBusy(video.assetId);
-      setProgress(0);
-      setStage("Adding the EarnRoom branding");
+      const at = begin(brandingMode.current, video.assetId, "Adding the EarnRoom branding");
       try {
         const { composeBranding } = await import("@/lib/marketing/branding/compositor.browser");
         const result = await composeBranding(video.rawPlaybackUrl, video.brandingPlan, {
-          onProgress: (value) => setProgress(value),
+          onProgress: (value) => note(at, { progress: value }),
         });
-        setStage("Checking the branding");
+        note(at, { stage: "Checking the branding" });
         const stored = await videos.storeBranded.mutateAsync({
           videoId: video.id,
           receipt: result.receipt,
           mp4Base64: await toBase64(result.blob),
         });
-        setNotice(
-          stored.video.status === "RENDERED"
+        const ok = stored.video.status === "RENDERED";
+        (ok ? done : fail)(
+          at,
+          ok
             ? `EarnRoom branding added — the logo is on the closing card and "Make space earn." runs through the film.`
             : `The branding was refused: ${stored.video.failureReason ?? "unknown reason"}`,
         );
       } catch (error) {
-        setNotice(
+        fail(
+          at,
           error instanceof Error
             ? `The EarnRoom branding could not be added: ${error.message}`
             : "The EarnRoom branding could not be added.",
         );
-      } finally {
-        setBusy(null);
-        setProgress(0);
-        setStage(null);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [videos],
   );
 
@@ -373,14 +403,15 @@ export function MarketingVideoPanel({
     // silently, and no generation starts on an unavailable route.
     const gate = validateModeSelection(modeCards, choice);
     if (!gate.ok || choice === null) {
-      setNotice(gate.message ?? "Choose a video generation mode first.");
+      setChoiceNotice(gate.message ?? "Choose a video generation mode first.");
       return false;
     }
+    setChoiceNotice(null);
+    const at = begin(choice, asset.id, "Choosing where to make it");
     // Paid Cloud has one switch. It is on, the founder chose it, and pressing
     // Generate Paid Video is the confirmation — there is no second dialog.
     const confirmPaid = choice === "PAID_CLOUD" && paidEnabled;
     try {
-      setStage("Choosing where to make it");
       const result = await videos.generate.mutateAsync({
         assetId: asset.id,
         tier,
@@ -391,22 +422,24 @@ export function MarketingVideoPanel({
 
       if (result.status === "CONFIRMATION_REQUIRED") {
         // Only reachable when Paid Cloud is off: nothing paid may start.
-        setNotice("Paid Cloud is switched off, so no paid video can be made.");
-        setStage(null);
+        fail(at, "Paid Cloud is switched off, so no paid video can be made.");
         return false;
       }
 
       const route = result.workerLabel ? `Using ${result.workerLabel}. ` : "";
       if (result.status === "BROWSER_RENDER_REQUIRED") {
-        setNotice(`${route}${result.reason ?? ""}`);
-        return makeAnimation(asset);
+        note(at, { stage: `${route}${result.reason ?? ""}`.trim() || "Drawing the scenes" });
+        return makeAnimation(asset, at);
       }
-      setNotice(`${route}${result.detail}`);
-      setStage(result.started ? "Making your video" : null);
+      if (result.started) {
+        note(at, { stage: "Making your video" });
+        done(at, `${route}${result.detail}`);
+      } else {
+        fail(at, `${route}${result.detail}`);
+      }
       return result.started;
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "The video could not be started.");
-      setStage(null);
+      fail(at, error instanceof Error ? error.message : "The video could not be started.");
       return false;
     }
   };
@@ -414,6 +447,12 @@ export function MarketingVideoPanel({
   const core = assets[0] ?? null;
   const coreVideo = core ? (rows.find((row) => row.assetId === core.id) ?? null) : null;
   const versions = assets.slice(1);
+  // Only the selected mode's own attempt is ever read here.
+  const active = activeAttempt(generation, choice, { campaignId });
+  const notice = active?.message ?? choiceNotice;
+  const stage = active?.stage ?? null;
+  const progress = active?.progress ?? 0;
+  const busy = isRunning(generation, choice, { campaignId }) ? (active?.assetId ?? null) : null;
   const working = busy !== null || videos.generate.isPending || videos.storeAnimated.isPending;
 
   /** One button: make the main video, then each platform's version of it. */
@@ -421,11 +460,7 @@ export function MarketingVideoPanel({
     if (!core) return;
     const ok = await run(core, "draft");
     if (!ok) return;
-    for (const asset of versions) {
-      setStage(`Making the ${definition(asset.platform).label} version`);
-      await run(asset, "draft");
-    }
-    setStage(null);
+    for (const asset of versions) await run(asset, "draft");
   };
 
   return (
@@ -730,8 +765,8 @@ export function MarketingVideoPanel({
               onClick={() =>
                 videos.cancel
                   .mutateAsync(coreVideo.id)
-                  .then((result) => setNotice(result.detail))
-                  .catch((error: Error) => setNotice(error.message))
+                  .then((result) => setChoiceNotice(result.detail))
+                  .catch((error: Error) => setChoiceNotice(error.message))
               }
               className="min-h-11 rounded-lg border border-border px-4 type-nav text-destructive hover:bg-secondary disabled:opacity-60"
             >

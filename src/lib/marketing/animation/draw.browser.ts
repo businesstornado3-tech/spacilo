@@ -15,6 +15,7 @@ import {
   type Expression,
   type Pose,
 } from "./characters";
+import type { CharacterLook } from "./casting";
 import { environment, type EnvShape, type EnvironmentId } from "./environments";
 
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
@@ -117,6 +118,11 @@ export type FigureRequest = {
   /** Total figure height in pixels. */
   height: number;
   facing: 1 | -1;
+  /**
+   * This campaign's fixed appearance for this person. Absent falls back to the
+   * library default, so nothing breaks when no casting was supplied.
+   */
+  look?: CharacterLook | null;
   /** Seconds since the character entered the scene. */
   elapsed: number;
   /** 0..1 fade for the character's entrance. */
@@ -283,7 +289,10 @@ function drawFace(
  * objects sit correctly in front of the body.
  */
 export function drawCharacterFigure(ctx: CanvasRenderingContext2D, request: FigureRequest) {
-  const design = character(request.characterId as never);
+  const design = request.look ?? character(request.characterId as never);
+  // Appearance only: how wide the body is drawn and how large the head reads.
+  const build = request.look?.build ?? 1;
+  const headScale = request.look?.headScale ?? 1;
   const spec = poseSpec(request.pose);
   const move = motionOffsets(request.motion, request.elapsed, request.height);
   const H = request.height;
@@ -294,7 +303,7 @@ export function drawCharacterFigure(ctx: CanvasRenderingContext2D, request: Figu
 
   const hip: Point = { x: cx + spec.lean * H * 0.08 * f, y: ground - H * 0.46 };
   const shoulder: Point = { x: cx + spec.lean * H * 0.16 * f, y: ground - H * 0.8 };
-  const headR = H * 0.1;
+  const headR = H * 0.1 * headScale;
   const headCentre: Point = {
     x: shoulder.x + (spec.headTurn + move.head) * H * 0.02 * f,
     y: ground - H * 0.9 + spec.headTilt * H * 0.008,
@@ -357,11 +366,26 @@ export function drawCharacterFigure(ctx: CanvasRenderingContext2D, request: Figu
 
   /* torso */
   ctx.beginPath();
-  ctx.moveTo(shoulder.x - H * 0.105, shoulder.y);
-  ctx.quadraticCurveTo(shoulder.x - H * 0.12, hip.y - H * 0.1, hip.x - H * 0.085, hip.y + H * 0.02);
-  ctx.lineTo(hip.x + H * 0.085, hip.y + H * 0.02);
-  ctx.quadraticCurveTo(shoulder.x + H * 0.12, hip.y - H * 0.1, shoulder.x + H * 0.105, shoulder.y);
-  ctx.quadraticCurveTo(shoulder.x, shoulder.y - H * 0.05, shoulder.x - H * 0.105, shoulder.y);
+  ctx.moveTo(shoulder.x - H * 0.105 * build, shoulder.y);
+  ctx.quadraticCurveTo(
+    shoulder.x - H * 0.12 * build,
+    hip.y - H * 0.1,
+    hip.x - H * 0.085 * build,
+    hip.y + H * 0.02,
+  );
+  ctx.lineTo(hip.x + H * 0.085 * build, hip.y + H * 0.02);
+  ctx.quadraticCurveTo(
+    shoulder.x + H * 0.12 * build,
+    hip.y - H * 0.1,
+    shoulder.x + H * 0.105 * build,
+    shoulder.y,
+  );
+  ctx.quadraticCurveTo(
+    shoulder.x,
+    shoulder.y - H * 0.05,
+    shoulder.x - H * 0.105 * build,
+    shoulder.y,
+  );
   ctx.closePath();
   const torso = ctx.createLinearGradient(shoulder.x, shoulder.y, shoulder.x, hip.y);
   torso.addColorStop(0, shade(design.top, 0.08));
@@ -439,6 +463,29 @@ export function drawCharacterFigure(ctx: CanvasRenderingContext2D, request: Figu
   }
 
   drawFace(ctx, headCentre, headR, move.head, request.expression, design, f);
+
+  /* glasses, when this campaign's character wears them */
+  if (request.look?.glasses) {
+    ctx.strokeStyle = "#2c3742";
+    ctx.lineWidth = Math.max(1, headR * 0.08);
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.ellipse(
+        headCentre.x + side * headR * 0.36,
+        headCentre.y - headR * 0.08,
+        headR * 0.26,
+        headR * 0.22,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.moveTo(headCentre.x - headR * 0.1, headCentre.y - headR * 0.08);
+    ctx.lineTo(headCentre.x + headR * 0.1, headCentre.y - headR * 0.08);
+    ctx.stroke();
+  }
 
   /* near arm, plus whatever is being carried */
   const nearShoulder: Point = { x: shoulder.x + H * 0.06 * f, y: shoulder.y + H * 0.02 };

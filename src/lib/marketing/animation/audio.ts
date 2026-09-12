@@ -162,7 +162,13 @@ function cuesForScene(scene: AnimatedScene, start: number): AudioCue[] {
  * Builds the whole soundtrack from the scenes that were already planned, so a
  * sound can never land on a picture that is not there.
  */
-export function buildAudioPlan(scenes: readonly AnimatedScene[]): BrowserAudioPlan {
+export function buildAudioPlan(
+  scenes: readonly AnimatedScene[],
+  /** Semitones the whole bed is moved by, so campaigns do not all sound alike. */
+  options: { keyOffset?: number } = {},
+): BrowserAudioPlan {
+  // Two octaves either way at most, so the bed stays in a comfortable range.
+  const keyOffset = Math.max(-5, Math.min(5, Math.round(options.keyOffset ?? 0)));
   const music: MusicSection[] = [];
   const ambience: AmbienceSection[] = [];
   const sfx: AudioCue[] = [];
@@ -174,7 +180,9 @@ export function buildAudioPlan(scenes: readonly AnimatedScene[]): BrowserAudioPl
     music.push({
       at: Number(cursor.toFixed(3)),
       seconds: Number(scene.seconds.toFixed(3)),
-      root: scene.role === "endcard" ? 48 : step.root,
+      // The closing card always lands on the brand chord, whatever key the
+      // rest of the film was set in.
+      root: scene.role === "endcard" ? 48 : step.root + keyOffset,
       chord: scene.role === "endcard" ? [0, 7, 12, 16, 19] : step.chord,
       intensity: intensityForMood(scene.mood, share),
       pulse: position > 0 && scene.role !== "endcard",

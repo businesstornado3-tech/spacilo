@@ -29,6 +29,7 @@ import {
   type StoryboardScene,
 } from "./story";
 import { environment } from "./environments";
+import { castingWithDiversity, type Casting, type OpeningId } from "./casting";
 import { elementsForText } from "./library";
 import { applyBranding, brandRules } from "./platform-branding";
 import { buildAudioPlan } from "./audio";
@@ -294,6 +295,40 @@ function backdrop(index: number, role: SceneRole, mood: Mood): SceneBackdrop {
   };
 }
 
+/** How the film opens, in camera terms. The first seconds belong to the story. */
+const OPENING_SHOTS: Record<OpeningId, CameraShot> = {
+  boxesBlockingDoor: "focusObject",
+  crowdedRoom: "establishing",
+  vanArrival: "panRight",
+  phoneCheck: "focusObject",
+  suitcaseBySide: "focusObject",
+  garageReveal: "reveal",
+  emptyRoomReveal: "slowPull",
+  shelvesReveal: "panLeft",
+};
+
+/** The object the opening is about, drawn on top of whatever the beat asked for. */
+const OPENING_PROPS: Record<OpeningId, string> = {
+  boxesBlockingDoor: "box-stack",
+  crowdedRoom: "sofa",
+  vanArrival: "house-delayed",
+  phoneCheck: "search-bar",
+  suitcaseBySide: "suitcase",
+  garageReveal: "garage",
+  emptyRoomReveal: "room",
+  shelvesReveal: "warehouse",
+};
+
+/** Shots the camera style may re-voice. A reveal or a two-shot is never touched. */
+const OPEN_TO_STYLE: readonly CameraShot[] = ["slowPush", "slowPull", "establishing"];
+
+function styledShot(shot: CameraShot, style: Casting["cameraStyle"], index: number): CameraShot {
+  if (style === "mixed" || !OPEN_TO_STYLE.includes(shot)) return shot;
+  if (style === "push") return index % 2 === 0 ? "slowPush" : "establishing";
+  if (style === "pull") return index % 2 === 0 ? "slowPull" : "slowPush";
+  return index % 2 === 0 ? "panRight" : "panLeft";
+}
+
 /**
  * Builds the animated plan for one platform version of a campaign.
  *
@@ -312,6 +347,11 @@ export function buildAnimatedPlan(input: {
   frameQuality?: FrameQuality;
   /** How long the finished film should run. Browser videos aim at 30 seconds. */
   targetSeconds?: number;
+  /**
+   * Visual signatures of recently made browser films. A new campaign that would
+   * look like one of them is cast differently instead.
+   */
+  recentSignatures?: readonly string[];
 }): AnimatedPlan {
   const { campaignId, asset, story } = input;
   const rules = brandRules(asset.platform);
@@ -344,12 +384,46 @@ export function buildAnimatedPlan(input: {
     sceneCount: story.scenes.length,
   });
 
+  const boardFor = (position: number) =>
+    storyboard.scenes[position] ?? storyboard.scenes.at(-1) ?? null;
+
+  // Who this campaign shows, how it is graded, how it opens and how it is shot.
+  // Two campaigns that would look alike are cast apart before anything is drawn.
+  const shotsFor = (chosen: Casting): CameraShot[] =>
+    story.scenes.map((_, position) => {
+      const board = boardFor(position);
+      const base: CameraShot = board?.shot ?? "slowPush";
+      return position === 0
+        ? OPENING_SHOTS[chosen.opening]
+        : styledShot(base, chosen.cameraStyle, position);
+    });
+
+  const { casting, signature } = castingWithDiversity({
+    campaignId,
+    storyType: storyboard.template,
+    characters: storyboard.characters,
+    side: storyboard.side,
+    recentSignatures: input.recentSignatures ?? [],
+    describe: (chosen) => ({
+      storyType: storyboard.template,
+      side: storyboard.side,
+      opening: chosen.opening,
+      cameraStyle: chosen.cameraStyle,
+      paletteName: chosen.paletteName,
+      environments: storyboard.scenes.map((board) => board.environment),
+      props: storyboard.scenes.flatMap((board) => [...board.props]),
+      looks: chosen.looks,
+      shots: shotsFor(chosen),
+    }),
+  });
+  const shots = shotsFor(casting);
+
   // A short campaign can hand back the same framing for every beat. The film
   // must still change how close the camera sits, so a deterministic rotation is
   // used when the storyboard did not vary the framing on its own.
-  const boardFramings = story.scenes.map((_, position) => {
-    const board = storyboard.scenes[position] ?? storyboard.scenes.at(-1) ?? null;
-    return board?.framing ?? framingForShot(board?.shot ?? "slowPush");
+  const boardFramings = shots.map((shot, position) => {
+    const board = boardFor(position);
+    return position === 0 ? framingForShot(shot) : (board?.framing ?? framingForShot(shot));
   });
   const rotation: Framing[] = ["wide", "medium", "close", "twoShot"];
   const framings =
@@ -359,8 +433,13 @@ export function buildAnimatedPlan(input: {
 
   const scenes: AnimatedScene[] = story.scenes.map((scene, position) => {
     const role = roles[position] ?? "solution";
-    const board = storyboard.scenes[position] ?? storyboard.scenes.at(-1) ?? null;
-    const shot: CameraShot = board?.shot ?? "slowPush";
+    const plain = boardFor(position);
+    // The opening scene leads with the object this campaign is actually about.
+    const board =
+      plain && position === 0
+        ? { ...plain, props: [OPENING_PROPS[casting.opening], ...plain.props] }
+        : plain;
+    const shot: CameraShot = shots[position] ?? board?.shot ?? "slowPush";
     const framing = framings[position] ?? board?.framing ?? framingForShot(shot);
     const mood = board?.mood ?? moodForBeat(board?.beat ?? "solution");
     return {
@@ -444,13 +523,15 @@ export function buildAnimatedPlan(input: {
     frameQuality,
     fps,
     seconds,
-    audio: buildAudioPlan(scenes),
+    audio: buildAudioPlan(scenes, { keyOffset: casting.audioKey }),
     scenes,
     storyboard: {
       template: storyboard.template,
       side: storyboard.side,
       characters: storyboard.characters,
     },
+    casting,
+    signature,
     branding,
     composition,
     brand: {

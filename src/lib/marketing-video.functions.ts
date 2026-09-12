@@ -1701,7 +1701,11 @@ export const storeAnimatedVideo = createServerFn({ method: "POST" })
               // The probe, not the browser, has the last word on this.
               trackInFile: media.probe.hasAudioTrack === true,
             }
-          : { present: false, spokenNarration: false, trackInFile: media.probe.hasAudioTrack === true },
+          : {
+              present: false,
+              spokenNarration: false,
+              trackInFile: media.probe.hasAudioTrack === true,
+            },
       },
       media_probe: media.probe,
       prompt: asset?.hook ?? null,

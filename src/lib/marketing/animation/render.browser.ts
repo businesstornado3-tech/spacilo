@@ -601,10 +601,7 @@ async function encodeAudio(
     const frames = Math.min(chunkFrames, buffer.length - offset);
     const data = frames === chunkFrames ? planar : new Float32Array(frames * channels);
     for (let channel = 0; channel < channels; channel += 1) {
-      data.set(
-        buffer.getChannelData(channel).subarray(offset, offset + frames),
-        channel * frames,
-      );
+      data.set(buffer.getChannelData(channel).subarray(offset, offset + frames), channel * frames);
     }
     const audioData = new AudioData({
       format: "f32-planar",

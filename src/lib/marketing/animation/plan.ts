@@ -31,17 +31,26 @@ import {
 import { environment } from "./environments";
 import { elementsForText } from "./library";
 import { applyBranding, brandRules } from "./platform-branding";
+import { buildAudioPlan } from "./audio";
 import {
   COMPOSITIONS,
-  FRAME_SIZES,
+  frameSize,
   type AnimatedPlan,
   type AnimatedScene,
   type CameraMove,
+  type FrameQuality,
   type Motion,
   type SceneBackdrop,
   type SceneItem,
   type SceneRole,
+  type SceneTransition,
 } from "./types";
+
+/** Every free browser video is a thirty second film unless a platform is shorter. */
+export const BROWSER_TARGET_SECONDS = 30;
+
+/** Scene arrivals are cycled, so the film never cuts the same way twice running. */
+const TRANSITIONS: SceneTransition[] = ["fade", "slide", "zoom", "light", "fade", "slide"];
 
 const ENTRANCES: Motion[] = ["rise", "slide-left", "pop", "zoom", "slide-right", "bounce"];
 

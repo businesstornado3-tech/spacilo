@@ -328,9 +328,10 @@ export function buildAnimatedPlan(input: {
     cta: asset.cta,
   });
 
-  const budget = Math.min(asset.seconds, rules.maxSeconds);
+  const target = input.targetSeconds ?? BROWSER_TARGET_SECONDS;
+  const budget = Math.min(Math.max(asset.seconds, target), rules.maxSeconds);
   const storySeconds = story.scenes.reduce((total, scene) => total + scene.seconds, 0) || 1;
-  const endCardSeconds = branding.showEndCard ? Math.min(3, budget * 0.24) : 0;
+  const endCardSeconds = branding.showEndCard ? Math.min(4, Math.max(3, budget * 0.12)) : 0;
   const scale = (budget - endCardSeconds) / storySeconds;
 
   const roles = rolesForStory(story.scenes.length);
@@ -381,7 +382,7 @@ export function buildAnimatedPlan(input: {
           : null,
       narration: scene.voiceover,
       logo: branding.showWatermark ? "watermark" : "none",
-      transition: position === 0 ? "cut" : "fade",
+      transition: position === 0 ? "cut" : TRANSITIONS[(position - 1) % TRANSITIONS.length]!,
     };
   });
 
@@ -427,8 +428,10 @@ export function buildAnimatedPlan(input: {
     aspect: asset.aspect,
     width: frame.width,
     height: frame.height,
+    frameQuality,
     fps,
     seconds,
+    audio: buildAudioPlan(scenes),
     scenes,
     storyboard: {
       template: storyboard.template,
